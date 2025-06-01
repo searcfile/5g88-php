@@ -140,21 +140,23 @@
 
     // Fungsi load daftar user (doc id) dari collection messages
     async function loadUserList() {
-      userSelect.innerHTML = '<option value="">Pilih User</option>';
-      try {
-        const messagesRef = collection(db, "messages");
-        const usersSnapshot = await getDocs(messagesRef);
-        snapshot.forEach(doc => {
-          const option = document.createElement("option");
-          option.value = doc.id;
-          option.textContent = doc.id; // Bisa diganti dengan nama user kalau ada di DB
-          userSelect.appendChild(option);
-        });
-        userSelect.disabled = false;
-      } catch (error) {
-        alert("Gagal memuat daftar user: " + error.message);
-      }
-    }
+  userSelect.innerHTML = '<option value="">Pilih User</option>';
+  try {
+    const messagesRef = collection(db, "messages");
+    const usersSnapshot = await getDocs(messagesRef);
+
+    usersSnapshot.forEach(doc => {
+      const option = document.createElement("option");
+      option.value = doc.id;
+      option.textContent = doc.id; // Bisa diganti dengan nama user kalau ada di DB
+      userSelect.appendChild(option);
+    });
+
+    userSelect.disabled = false;
+  } catch (error) {
+    alert("Gagal memuat daftar user: " + error.message);
+  }
+}
 
     // Fungsi listen chat dari user terpilih
     function listenToMessages(userId) {
