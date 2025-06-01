@@ -2,106 +2,168 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Chat</title>
+  <title>Admin Chat Panel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       background: #000;
       color: gold;
       font-family: 'Segoe UI', sans-serif;
-      margin: 0;
       display: flex;
       flex-direction: column;
       height: 100vh;
+      margin: 0;
     }
+
+    select, .chat-box, .input-area {
+      width: 100%;
+    }
+
+    select {
+      padding: 10px;
+      background: black;
+      color: gold;
+      border: 1px solid gold;
+    }
+
     .chat-box {
       flex: 1;
       overflow-y: auto;
       padding: 10px;
+      background: #111;
     }
-    .message {
-      margin: 5px 0;
+
+    .input-area {
+      display: flex;
       padding: 10px;
       background: #111;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+    }
+
+    button {
+      margin-left: 10px;
+      background: gold;
+      color: black;
+      border: none;
+      border-radius: 8px;
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .message {
+      margin: 6px 0;
+      padding: 10px;
       border-radius: 10px;
       max-width: 80%;
     }
-    .message.admin {
-      background: gold;
-      color: #000;
-      align-self: flex-end;
-    }
-    .message.user {
+
+    .from-user {
       background: white;
-      color: #000;
+      color: black;
       align-self: flex-start;
     }
-    .input-area {
-      display: flex;
-      border-top: 1px solid gold;
-      padding: 10px;
-      background: #111;
-    }
-    input {
-      flex: 1;
-      padding: 8px;
-      border: none;
-      border-radius: 8px;
-    }
-    button {
+
+    .from-admin {
       background: gold;
-      border: none;
-      padding: 10px;
-      margin-left: 8px;
-      border-radius: 8px;
-      cursor: pointer;
+      color: black;
+      align-self: flex-end;
+    }
+
+    .chat-box div {
+      display: flex;
+      flex-direction: column;
     }
   </style>
 </head>
 <body>
+  <select id="userSelect">
+    <option value="">Pilih User</option>
+  </select>
+
   <div class="chat-box" id="chatBox"></div>
+
   <div class="input-area">
-    <input type="text" id="msgInput" placeholder="Type a message...">
-    <button onclick="sendMessage()">Send</button>
+    <input type="text" id="message" placeholder="Tulis balasan...">
+    <button id="send">Kirim</button>
   </div>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  <script src="config.js"></script>
-  <script>
-    auth.signInWithEmailAndPassword(prompt("Admin Email:"), prompt("Password:"))
-      .then(() => listenMessages());
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    function sendMessage() {
-      const text = document.getElementById("msgInput").value;
-      if (!text.trim()) return;
-      db.collection("messages").add({
-        text,
-        sender: "Admin",
-        type: "admin",
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    const firebaseConfig = {
+      apiKey: "API_KEY",
+      authDomain: "yourapp.firebaseapp.com",
+      projectId: "yourapp",
+      storageBucket: "yourapp.appspot.com",
+      messagingSenderId: "xxx",
+      appId: "xxx"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const userSelect = document.getElementById("userSelect");
+    const chatBox = document.getElementById("chatBox");
+    const messageInput = document.getElementById("message");
+    const sendBtn = document.getElementById("send");
+
+    let selectedUser = null;
+
+    async function fetchUsers() {
+      const messagesRef = collection(db, "messages");
+      const usersSnapshot = await getDocs(messagesRef);
+      usersSnapshot.forEach(doc => {
+        const option = document.createElement("option");
+        option.value = doc.id;
+        option.textContent = doc.id;
+        userSelect.appendChild(option);
       });
-      document.getElementById("msgInput").value = '';
     }
 
-    function listenMessages() {
-      db.collection("messages")
-        .orderBy("timestamp")
-        .onSnapshot(snapshot => {
-          const box = document.getElementById("chatBox");
-          box.innerHTML = '';
+    let unsubscribe = null;
+
+    userSelect.addEventListener("change", () => {
+      selectedUser = userSelect.value;
+      chatBox.innerHTML = "";
+      if (unsubscribe) unsubscribe(); // Stop previous listener
+
+      if (selectedUser) {
+        const q = query(collection(db, "messages", selectedUser, "chats"), orderBy("time", "asc"));
+        unsubscribe = onSnapshot(q, (snapshot) => {
+          chatBox.innerHTML = "";
           snapshot.forEach(doc => {
-            const data = doc.data();
-            const div = document.createElement("div");
-            div.className = `message ${data.type}`;
-            div.textContent = `${data.sender}: ${data.text}`;
-            box.appendChild(div);
+            const msg = doc.data();
+            const msgDiv = document.createElement("div");
+            msgDiv.classList.add("message");
+            msgDiv.classList.add(msg.sender === "admin" ? "from-admin" : "from-user");
+            msgDiv.textContent = msg.text;
+            chatBox.appendChild(msgDiv);
           });
-          box.scrollTop = box.scrollHeight;
+          chatBox.scrollTop = chatBox.scrollHeight;
         });
-    }
+      }
+    });
+
+    sendBtn.addEventListener("click", async () => {
+      const msg = messageInput.value.trim();
+      if (!msg || !selectedUser) return;
+
+      await addDoc(collection(db, "messages", selectedUser, "chats"), {
+        text: msg,
+        time: Date.now(),
+        sender: "admin"
+      });
+      messageInput.value = "";
+    });
+
+    fetchUsers();
   </script>
 </body>
 </html>
