@@ -142,8 +142,8 @@
     async function loadUserList() {
       userSelect.innerHTML = '<option value="">Pilih User</option>';
       try {
-        const messagesCol = collection(db, "messages");
-        const snapshot = await getDocs(messagesCol);
+        const messagesRef = collection(db, "messages");
+        const usersSnapshot = await getDocs(messagesRef);
         snapshot.forEach(doc => {
           const option = document.createElement("option");
           option.value = doc.id;
@@ -170,9 +170,9 @@
       selectedUser = userId;
 
       const q = query(
-        collection(db, "messages", userId, "chats"),
-        orderBy("time", "asc")
-      );
+  collection(db, "messages", selectedUser, "chats"),
+  orderBy("time", "asc")
+);
 
       unsubscribe = onSnapshot(q, snapshot => {
         chatBox.innerHTML = "";
