@@ -1,30 +1,21 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Admin Chat</title>
+  <meta charset="UTF-8" />
+  <title>Admin Chat - Pilih User & Balas</title>
   <style>
     body {
       font-family: sans-serif;
       margin: 20px;
       background: #f5f5f5;
     }
-
-    #login {
-      padding: 10px 20px;
-      background: gold;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-
     #userSelect {
       padding: 10px;
       margin-bottom: 10px;
       font-size: 16px;
+      width: 100%;
+      max-width: 400px;
     }
-
     .chat-box {
       border: 1px solid #ccc;
       background: #fff;
@@ -34,8 +25,8 @@
       margin-bottom: 10px;
       display: flex;
       flex-direction: column;
+      gap: 5px;
     }
-
     .message {
       margin: 5px 0;
       padding: 8px 12px;
@@ -43,30 +34,26 @@
       max-width: 70%;
       word-wrap: break-word;
     }
-
     .from-admin {
       background: gold;
       align-self: flex-end;
       margin-left: auto;
     }
-
     .from-user {
       background: #eee;
       align-self: flex-start;
       margin-right: auto;
     }
-
     .input-area {
       display: flex;
       gap: 10px;
+      max-width: 400px;
     }
-
     #message {
       flex: 1;
       padding: 10px;
       font-size: 16px;
     }
-
     #send {
       padding: 10px 20px;
       font-size: 16px;
@@ -75,25 +62,37 @@
       border: none;
       cursor: pointer;
     }
-
     #send:hover {
       background-color: #333;
+    }
+    #login {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background: #4285f4;
+      border: none;
+      color: white;
+      margin-bottom: 20px;
+    }
+    #login:hover {
+      background: #3367d6;
     }
   </style>
 </head>
 <body>
   <h2>🛠️ Halaman Admin Chat</h2>
-  <button id="login">Login Admin (Gmail)</button>
 
-  <select id="userSelect">
+  <button id="login">Login dengan Google</button>
+
+  <select id="userSelect" disabled>
     <option value="">Pilih User</option>
   </select>
 
   <div class="chat-box" id="chatBox"></div>
 
   <div class="input-area">
-    <input type="text" id="message" placeholder="Tulis balasan...">
-    <button id="send">Kirim</button>
+    <input type="text" id="message" placeholder="Tulis balasan..." disabled />
+    <button id="send" disabled>Kirim</button>
   </div>
 
   <script type="module">
@@ -129,60 +128,85 @@
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
 
-    let currentUser = null;
-    let selectedUID = "";
-
     const loginBtn = document.getElementById("login");
     const userSelect = document.getElementById("userSelect");
     const chatBox = document.getElementById("chatBox");
     const messageInput = document.getElementById("message");
     const sendBtn = document.getElementById("send");
 
-    loginBtn.addEventListener("click", async () => {
-      try {
-        const result = await signInWithPopup(auth, provider);
-        currentUser = result.user;
-        alert("Login sebagai: " + currentUser.email);
-        loginBtn.style.display = "none";
-        populateUserList();
-      } catch (error) {
-        alert("Login gagal: " + error.message);
-      }
-    });
+    let unsubscribe = null; // untuk stop listen chat lama
+    let currentUser = null; // admin user (login)
+    let selectedUser = null; // user yang dipilih admin untuk chat
 
-    async function populateUserList() {
-      const usersSnapshot = await getDocs(collection(db, "messages"));
-      usersSnapshot.forEach(doc => {
-        const option = document.createElement("option");
-        option.value = doc.id;
-        option.textContent = doc.id;
-        userSelect.appendChild(option);
+    // Fungsi load daftar user (doc id) dari collection messages
+    async function loadUserList() {
+      userSelect.innerHTML = '<option value="">Pilih User</option>';
+      try {
+        const messagesCol = collection(db, "messages");
+        const snapshot = await getDocs(messagesCol);
+        snapshot.forEach(doc => {
+          const option = document.createElement("option");
+          option.value = doc.id;
+          option.textContent = doc.id; // Bisa diganti dengan nama user kalau ada di DB
+          userSelect.appendChild(option);
+        });
+        userSelect.disabled = false;
+      } catch (error) {
+        alert("Gagal memuat daftar user: " + error.message);
+      }
+    }
+
+    // Fungsi listen chat dari user terpilih
+    function listenToMessages(userId) {
+      if (unsubscribe) unsubscribe(); // stop listener sebelumnya
+
+      if (!userId) {
+        chatBox.innerHTML = "";
+        messageInput.disabled = true;
+        sendBtn.disabled = true;
+        return;
+      }
+
+      selectedUser = userId;
+
+      const q = query(
+        collection(db, "messages", userId, "chats"),
+        orderBy("time", "asc")
+      );
+
+      unsubscribe = onSnapshot(q, snapshot => {
+        chatBox.innerHTML = "";
+        snapshot.forEach(doc => {
+          const msg = doc.data();
+          const msgDiv = document.createElement("div");
+          msgDiv.classList.add("message");
+          if (msg.sender === "admin") {
+            msgDiv.classList.add("from-admin");
+          } else {
+            msgDiv.classList.add("from-user");
+          }
+          msgDiv.textContent = msg.text;
+          chatBox.appendChild(msgDiv);
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
+        messageInput.disabled = false;
+        sendBtn.disabled = false;
+      }, err => {
+        alert("Gagal memuat pesan: " + err.message);
       });
     }
 
-    userSelect.addEventListener("change", (e) => {
-      selectedUID = e.target.value;
-      if (selectedUID) {
-        listenToMessages(selectedUID);
-      } else {
-        chatBox.innerHTML = "";
-      }
-    });
-
+    // Kirim pesan dari admin ke user yang dipilih
     async function sendMessage() {
-      const message = messageInput.value.trim();
-      if (!message) return;
-      if (!auth.currentUser) {
-        alert("Silakan login terlebih dahulu.");
-        return;
-      }
-      if (!selectedUID) {
-        alert("Pilih user terlebih dahulu.");
+      const msgText = messageInput.value.trim();
+      if (!msgText) return;
+      if (!selectedUser) {
+        alert("Pilih user dulu.");
         return;
       }
       try {
-        await addDoc(collection(db, "messages", selectedUID, "chats"), {
-          text: message,
+        await addDoc(collection(db, "messages", selectedUser, "chats"), {
+          text: msgText,
           time: Date.now(),
           sender: "admin"
         });
@@ -192,39 +216,48 @@
       }
     }
 
+    // Event saat admin pilih user dari dropdown
+    userSelect.addEventListener("change", e => {
+      const userId = e.target.value;
+      listenToMessages(userId);
+    });
+
+    // Event klik tombol kirim
     sendBtn.addEventListener("click", sendMessage);
-    messageInput.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
+
+    // Kirim pesan dengan tekan Enter di input
+    messageInput.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         sendMessage();
       }
     });
 
-    function listenToMessages(uid) {
-      const q = query(
-        collection(db, "messages", uid, "chats"),
-        orderBy("time", "asc")
-      );
-      onSnapshot(q, (snapshot) => {
-        chatBox.innerHTML = "";
-        snapshot.forEach((doc) => {
-          const msg = doc.data();
-          const div = document.createElement("div");
-          div.className = "message " + (msg.sender === "admin" ? "from-admin" : "from-user");
-          div.textContent = msg.text;
-          chatBox.appendChild(div);
-        });
-        chatBox.scrollTop = chatBox.scrollHeight;
-      });
-    }
+    // Login admin dengan Google
+    loginBtn.addEventListener("click", async () => {
+      try {
+        const result = await signInWithPopup(auth, provider);
+        currentUser = result.user;
+        alert("Login berhasil sebagai: " + currentUser.email);
+        loginBtn.style.display = "none";
+        loadUserList();
+      } catch (error) {
+        alert("Login gagal: " + error.message);
+      }
+    });
 
-    onAuthStateChanged(auth, (user) => {
+    // Auto cek status login
+    onAuthStateChanged(auth, user => {
       if (user) {
         currentUser = user;
         loginBtn.style.display = "none";
-        populateUserList();
+        loadUserList();
       } else {
         loginBtn.style.display = "inline-block";
+        userSelect.disabled = true;
+        messageInput.disabled = true;
+        sendBtn.disabled = true;
+        chatBox.innerHTML = "";
       }
     });
   </script>
