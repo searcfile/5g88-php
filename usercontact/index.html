@@ -136,25 +136,25 @@
     });
 
     async function sendMessage() {
-      const message = messageInput.value.trim();
-      if (!message) return;
-      if (!auth.currentUser) {
-        alert("Silakan login terlebih dahulu.");
-        return;
-      }
+  const message = messageInput.value.trim();
+  if (!message) return;
+  if (!auth.currentUser) {
+    alert("Silakan login terlebih dahulu.");
+    return;
+  }
 
       try {
-        await addDoc(collection(db, "messages", currentUser.uid, "chats"), {
-          text: message,
-          time: Date.now(),
-          sender: "user"
-        });
-        messageInput.value = "";
-      } catch (error) {
-        alert("Gagal mengirim pesan: " + error.message);
-      }
-    }
-
+    await addDoc(collection(db, "messages", currentUser.uid, "chats"), {
+  text: message,
+  time: Date.now(),
+  sender: "user",
+});
+       messageInput.value = "";
+  } catch (error) {
+    console.error("Gagal mengirim pesan:", error);
+    alert("Gagal mengirim pesan: " + error.message);
+  }
+}
     sendBtn.addEventListener("click", sendMessage);
     messageInput.addEventListener("keypress", (e) => {
       if (e.key === "Enter") {
@@ -181,6 +181,7 @@
       });
     }
 
+     
     onAuthStateChanged(auth, (user) => {
       if (user) {
         currentUser = user;
