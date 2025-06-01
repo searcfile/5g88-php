@@ -41,89 +41,102 @@
   </style>
 </head>
 <body>
-  <div class="chat-box" id="chatBox">
-    <button id="login">Login Google</button>
-  </div>
+  <div class="chat-box" id="chatBox" style="height: 400px; overflow-y: auto; display: flex; flex-direction: column; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
+  <button id="login">Login Google</button>
+</div>
 
-  <div class="input-area">
-    <input type="text" id="message" placeholder="Ketik pesan...">
-    <button id="send">Kirim</button>
-  </div>
+<div class="input-area" style="display: flex; gap: 10px;">
+  <input type="text" id="message" placeholder="Ketik pesan..." style="flex: 1;">
+  <button id="send">Kirim</button>
+</div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    const firebaseConfig = {
-  apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
-  authDomain: "blurphp.firebaseapp.com",
-  projectId: "blurphp",
-  storageBucket: "blurphp.appspot.com",
-  messagingSenderId: "593904200464",
-  appId: "1:593904200464:web:cea7bc1360532c20d99395",
-  measurementId: "G-R494S2DPZ5"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
+    authDomain: "blurphp.firebaseapp.com",
+    projectId: "blurphp",
+    storageBucket: "blurphp.appspot.com",
+    messagingSenderId: "593904200464",
+    appId: "1:593904200464:web:cea7bc1360532c20d99395",
+    measurementId: "G-R494S2DPZ5"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth();
-    const provider = new GoogleAuthProvider();
-    let currentUser;
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth();
+  const provider = new GoogleAuthProvider();
+  let currentUser;
 
-    document.getElementById("login").addEventListener("click", async () => {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      currentUser = user;
-      alert("Login sebagai: " + user.displayName);
-      listenToMessages(user.uid);
-    });
+  const loginBtn = document.getElementById("login");
+  const chatBox = document.getElementById("chatBox");
 
-    document.getElementById("send").addEventListener("click", async () => {
-      const message = document.getElementById("message").value.trim();
-      if (!message) return;
-      const user = auth.currentUser;
-      if (user) {
-        await addDoc(collection(db, "messages", user.uid, "chats"), {
-          text: message,
-          time: Date.now(),
-          sender: "user"
-        });
-        document.getElementById("message").value = "";
-      } else {
-        alert("Silakan login dulu.");
-      }
-    });
+  loginBtn.addEventListener("click", async () => {
+    const result = await signInWithPopup(auth, provider);
+    currentUser = result.user;
+    alert("Login sebagai: " + currentUser.displayName);
+    loginBtn.style.display = "none";
+    listenToMessages(currentUser.uid);
+  });
 
-    function listenToMessages(uid) {
-      const q = query(collection(db, "messages", uid, "chats"), orderBy("time", "asc"));
-      onSnapshot(q, (snapshot) => {
-        const chatBox = document.getElementById("chatBox");
-        chatBox.innerHTML = "";
-        snapshot.forEach(doc => {
-          const msg = doc.data();
-          const div = document.createElement("div");
-          div.className = "message";
-          div.style.margin = "5px 0";
-          div.style.background = msg.sender === "admin" ? "gold" : "white";
-          div.style.color = msg.sender === "admin" ? "black" : "black";
-          div.style.padding = "8px";
-          div.style.borderRadius = "10px";
-          div.style.alignSelf = msg.sender === "admin" ? "flex-start" : "flex-end";
-          div.textContent = msg.text;
-          chatBox.appendChild(div);
-        });
-        chatBox.scrollTop = chatBox.scrollHeight;
+  document.getElementById("send").addEventListener("click", async () => {
+    const message = document.getElementById("message").value.trim();
+    if (!message) return;
+    const user = auth.currentUser;
+    if (user) {
+      await addDoc(collection(db, "messages", user.uid, "chats"), {
+        text: message,
+        time: Date.now(),
+        sender: "user"
       });
+      document.getElementById("message").value = "";
+    } else {
+      alert("Silakan login dulu.");
     }
+  });
 
-    // Auto login reload session
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        currentUser = user;
-        listenToMessages(user.uid);
-      }
+  function listenToMessages(uid) {
+    const q = query(collection(db, "messages", uid, "chats"), orderBy("time", "asc"));
+    onSnapshot(q, (snapshot) => {
+      chatBox.innerHTML = "";
+      snapshot.forEach(doc => {
+        const msg = doc.data();
+        const div = document.createElement("div");
+        div.className = "message";
+        div.style.margin = "5px 0";
+        div.style.padding = "8px";
+        div.style.borderRadius = "10px";
+        div.style.maxWidth = "80%";
+        div.style.wordBreak = "break-word";
+
+        if (msg.sender === "admin") {
+          div.style.background = "gold";
+          div.style.color = "black";
+          div.style.alignSelf = "flex-start";
+        } else {
+          div.style.background = "#f1f1f1";
+          div.style.color = "black";
+          div.style.alignSelf = "flex-end";
+        }
+
+        div.textContent = msg.text;
+        chatBox.appendChild(div);
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
     });
+  }
+
+  // Auto-login on reload
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      currentUser = user;
+      loginBtn.style.display = "none";
+      listenToMessages(user.uid);
+    }
+  });
   </script>
 </body>
 </html>
