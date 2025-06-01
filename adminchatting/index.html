@@ -10,6 +10,15 @@
       background: #f5f5f5;
     }
 
+    #login {
+      padding: 10px 20px;
+      background: gold;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
     #userSelect {
       padding: 10px;
       margin-bottom: 10px;
@@ -23,6 +32,8 @@
       height: 400px;
       overflow-y: auto;
       margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
     }
 
     .message {
@@ -72,12 +83,13 @@
 </head>
 <body>
   <h2>🛠️ Halaman Admin Chat</h2>
+  <button id="login">Login Admin (Gmail)</button>
 
   <select id="userSelect">
     <option value="">Pilih User</option>
   </select>
 
-  <div class="chat-box" id="chatBox" style="display: flex; flex-direction: column;"></div>
+  <div class="chat-box" id="chatBox"></div>
 
   <div class="input-area">
     <input type="text" id="message" placeholder="Tulis balasan...">
@@ -85,20 +97,21 @@
   </div>
 
   <script type="module">
-   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
       getFirestore,
       collection,
       addDoc,
+      getDocs,
       query,
       orderBy,
-      onSnapshot,
+      onSnapshot
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import {
       getAuth,
       signInWithPopup,
       GoogleAuthProvider,
-      onAuthStateChanged,
+      onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const firebaseConfig = {
@@ -108,16 +121,19 @@
       storageBucket: "blurphp.appspot.com",
       messagingSenderId: "593904200464",
       appId: "1:593904200464:web:cea7bc1360532c20d99395",
-      measurementId: "G-R494S2DPZ5",
+      measurementId: "G-R494S2DPZ5"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
+
     let currentUser = null;
+    let selectedUID = "";
 
     const loginBtn = document.getElementById("login");
+    const userSelect = document.getElementById("userSelect");
     const chatBox = document.getElementById("chatBox");
     const messageInput = document.getElementById("message");
     const sendBtn = document.getElementById("send");
@@ -126,42 +142,63 @@
       try {
         const result = await signInWithPopup(auth, provider);
         currentUser = result.user;
-        alert("Login sebagai: " + currentUser.displayName);
+        alert("Login sebagai: " + currentUser.email);
         loginBtn.style.display = "none";
-        listenToMessages(currentUser.uid);
+        populateUserList();
       } catch (error) {
         alert("Login gagal: " + error.message);
       }
     });
 
-    sendBtn.addEventListener("click", sendMessage);
+    async function populateUserList() {
+      const usersSnapshot = await getDocs(collection(db, "messages"));
+      usersSnapshot.forEach(doc => {
+        const option = document.createElement("option");
+        option.value = doc.id;
+        option.textContent = doc.id;
+        userSelect.appendChild(option);
+      });
+    }
 
-    messageInput.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        sendMessage();
+    userSelect.addEventListener("change", (e) => {
+      selectedUID = e.target.value;
+      if (selectedUID) {
+        listenToMessages(selectedUID);
+      } else {
+        chatBox.innerHTML = "";
       }
     });
 
     async function sendMessage() {
       const message = messageInput.value.trim();
       if (!message) return;
-      const user = auth.currentUser;
-      if (!user) {
-        alert("Silakan login dulu.");
+      if (!auth.currentUser) {
+        alert("Silakan login terlebih dahulu.");
+        return;
+      }
+      if (!selectedUID) {
+        alert("Pilih user terlebih dahulu.");
         return;
       }
       try {
-        await addDoc(collection(db, "messages", user.uid, "chats"), {
+        await addDoc(collection(db, "messages", selectedUID, "chats"), {
           text: message,
           time: Date.now(),
-          sender: "user",
+          sender: "admin"
         });
         messageInput.value = "";
       } catch (error) {
         alert("Gagal mengirim pesan: " + error.message);
       }
     }
+
+    sendBtn.addEventListener("click", sendMessage);
+    messageInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
 
     function listenToMessages(uid) {
       const q = query(
@@ -173,7 +210,7 @@
         snapshot.forEach((doc) => {
           const msg = doc.data();
           const div = document.createElement("div");
-          div.className = "message " + (msg.sender === "admin" ? "admin" : "user");
+          div.className = "message " + (msg.sender === "admin" ? "from-admin" : "from-user");
           div.textContent = msg.text;
           chatBox.appendChild(div);
         });
@@ -181,12 +218,11 @@
       });
     }
 
-    // Auto-login on page reload
     onAuthStateChanged(auth, (user) => {
       if (user) {
         currentUser = user;
         loginBtn.style.display = "none";
-        listenToMessages(user.uid);
+        populateUserList();
       } else {
         loginBtn.style.display = "inline-block";
       }
