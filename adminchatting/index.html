@@ -85,123 +85,112 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  query,
-  orderBy,
-  onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      query,
+      orderBy,
+      onSnapshot,
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import {
+      getAuth,
+      signInWithPopup,
+      GoogleAuthProvider,
+      onAuthStateChanged,
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-import {
-  getAuth,
-  signInWithPopup,
-  GoogleAuthProvider,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    const firebaseConfig = {
+      apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
+      authDomain: "blurphp.firebaseapp.com",
+      projectId: "blurphp",
+      storageBucket: "blurphp.appspot.com",
+      messagingSenderId: "593904200464",
+      appId: "1:593904200464:web:cea7bc1360532c20d99395",
+      measurementId: "G-R494S2DPZ5",
+    };
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
-  authDomain: "blurphp.firebaseapp.com",
-  projectId: "blurphp",
-  storageBucket: "blurphp.appspot.com",
-  messagingSenderId: "593904200464",
-  appId: "1:593904200464:web:cea7bc1360532c20d99395",
-  measurementId: "G-R494S2DPZ5"
-};
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth();
+    const provider = new GoogleAuthProvider();
+    let currentUser = null;
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+    const loginBtn = document.getElementById("login");
+    const chatBox = document.getElementById("chatBox");
+    const messageInput = document.getElementById("message");
+    const sendBtn = document.getElementById("send");
 
-const auth = getAuth();
-const provider = new GoogleAuthProvider();
-
-const userSelect = document.getElementById("userSelect");
-const chatBox = document.getElementById("chatBox");
-const messageInput = document.getElementById("message");
-const sendBtn = document.getElementById("send");
-
-let selectedUser = null;
-let unsubscribe = null;
-
-async function fetchUsers() {
-  const messagesRef = collection(db, "messages");
-  const usersSnapshot = await getDocs(messagesRef);
-  userSelect.innerHTML = '<option value="">Pilih User</option>'; // reset options
-  usersSnapshot.forEach(doc => {
-    const option = document.createElement("option");
-    option.value = doc.id;
-    option.textContent = doc.id;
-    userSelect.appendChild(option);
-  });
-}
-
-userSelect.addEventListener("change", () => {
-  selectedUser = userSelect.value;
-  chatBox.innerHTML = "";
-
-  if (unsubscribe) unsubscribe(); // stop listener lama
-
-  if (selectedUser) {
-    const q = query(
-      collection(db, "messages", selectedUser, "chats"),
-      orderBy("time", "asc")
-    );
-
-    unsubscribe = onSnapshot(q, (snapshot) => {
-      chatBox.innerHTML = "";
-      snapshot.forEach(doc => {
-        const msg = doc.data();
-        const msgDiv = document.createElement("div");
-        msgDiv.classList.add("message");
-        msgDiv.classList.add(msg.sender === "admin" ? "from-admin" : "from-user");
-        msgDiv.textContent = msg.text;
-        chatBox.appendChild(msgDiv);
-      });
-      chatBox.scrollTop = chatBox.scrollHeight;
+    loginBtn.addEventListener("click", async () => {
+      try {
+        const result = await signInWithPopup(auth, provider);
+        currentUser = result.user;
+        alert("Login sebagai: " + currentUser.displayName);
+        loginBtn.style.display = "none";
+        listenToMessages(currentUser.uid);
+      } catch (error) {
+        alert("Login gagal: " + error.message);
+      }
     });
-  }
-});
 
-sendBtn.addEventListener("click", async () => {
-  const msg = messageInput.value.trim();
-  if (!msg || !selectedUser) return;
+    sendBtn.addEventListener("click", sendMessage);
 
-  await addDoc(collection(db, "messages", selectedUser, "chats"), {
-    text: msg,
-    time: Date.now(),
-    sender: "admin"
-  });
+    messageInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
 
-  messageInput.value = "";
-});
+    async function sendMessage() {
+      const message = messageInput.value.trim();
+      if (!message) return;
+      const user = auth.currentUser;
+      if (!user) {
+        alert("Silakan login dulu.");
+        return;
+      }
+      try {
+        await addDoc(collection(db, "messages", user.uid, "chats"), {
+          text: message,
+          time: Date.now(),
+          sender: "user",
+        });
+        messageInput.value = "";
+      } catch (error) {
+        alert("Gagal mengirim pesan: " + error.message);
+      }
+    }
 
-// Fungsi login admin sebelum mulai aplikasi
-async function adminLogin() {
-  try {
-    await signInWithPopup(auth, provider);
-    console.log("Admin logged in");
-    startApp();
-  } catch (error) {
-    console.error("Login failed", error);
-  }
-}
+    function listenToMessages(uid) {
+      const q = query(
+        collection(db, "messages", uid, "chats"),
+        orderBy("time", "asc")
+      );
+      onSnapshot(q, (snapshot) => {
+        chatBox.innerHTML = "";
+        snapshot.forEach((doc) => {
+          const msg = doc.data();
+          const div = document.createElement("div");
+          div.className = "message " + (msg.sender === "admin" ? "admin" : "user");
+          div.textContent = msg.text;
+          chatBox.appendChild(div);
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+    }
 
-function startApp() {
-  fetchUsers();
-}
-
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    console.log("User logged in:", user.email);
-    startApp();
-  } else {
-    adminLogin();
-  }
-  });
+    // Auto-login on page reload
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+        loginBtn.style.display = "none";
+        listenToMessages(user.uid);
+      } else {
+        loginBtn.style.display = "inline-block";
+      }
+    });
   </script>
 </body>
 </html>
