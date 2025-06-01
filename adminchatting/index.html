@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel</title>
+  <style>
+    body {
+      background-color: #000;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+    }
+    .message-box {
+      background: #111;
+      border: 1px solid gold;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 10px;
+    }
+    .message-box.admin { border-left: 4px solid gold; }
+    .message-box.user { border-left: 4px solid white; }
+    .reply-box {
+      margin-top: 10px;
+    }
+    textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 8px;
+      border: 1px solid gold;
+      background: #111;
+      color: white;
+    }
+    button {
+      background: gold;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="color:gold">Admin Message Panel</h1>
+  <div id="messages"></div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      databaseURL: "YOUR_DATABASE_URL",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function sendReply(toUser, replyText) {
+      db.ref('messages/' + toUser).push({
+        sender: 'admin',
+        message: replyText,
+        timestamp: Date.now()
+      });
+    }
+
+    function loadMessages() {
+      db.ref('messages').on('value', snapshot => {
+        const data = snapshot.val();
+        const msgDiv = document.getElementById('messages');
+        msgDiv.innerHTML = '';
+        for (let user in data) {
+          const userMsgs = data[user];
+          for (let id in userMsgs) {
+            const msg = userMsgs[id];
+            const box = document.createElement('div');
+            box.className = 'message-box ' + msg.sender;
+            box.innerHTML = `<b>${msg.sender}:</b> ${msg.message}<br><small>${new Date(msg.timestamp).toLocaleString()}</small>`;
+            if (msg.sender === 'user') {
+              const replyBox = document.createElement('div');
+              replyBox.className = 'reply-box';
+              replyBox.innerHTML = `
+                <textarea placeholder="Reply to ${user}"></textarea>
+                <button onclick="sendReply('${user}', this.previousElementSibling.value)">Send</button>
+              `;
+              box.appendChild(replyBox);
+            }
+            msgDiv.appendChild(box);
+          }
+        }
+      });
+    }
+
+    loadMessages();
+  </script>
+</body>
+</html>
