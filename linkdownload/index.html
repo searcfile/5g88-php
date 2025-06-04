@@ -528,21 +528,30 @@
 console.log("Page Editor\nVersion Date: 01/04/2025\nCreate by   : M'cng\nPowered by  : 5G88\nOPERATOR\n(01/04/2025)\n• System 'Updated' ");
 function copyLink(event, element) {
   event.preventDefault();
-  const link = element.getAttribute('href');
+  const link = element.getAttribute('href'); // Ambil link dari atribut href
 
-
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(link).then(() => showCopiedNotification(element));
+  // Cek apakah Clipboard API bisa dipakai dan halaman aktif (hindari iframe error)
+  if (navigator.clipboard && window.isSecureContext && document.hasFocus()) {
+    navigator.clipboard.writeText(link)
+      .then(() => showCopiedNotification(element))
+      .catch(() => fallbackCopy(link, element)); // Jika gagal, pakai fallback
   } else {
-   
-    const tempInput = document.createElement("input");
-    tempInput.value = link;
-    document.body.appendChild(tempInput);
-    tempInput.select();
-    document.execCommand("copy");
-    document.body.removeChild(tempInput);
-    showCopiedNotification(element);
+    fallbackCopy(link, element); // Gunakan cara lama jika tidak didukung
   }
+}
+
+function fallbackCopy(link, element) {
+  const tempInput = document.createElement("input");
+  tempInput.value = link;
+  document.body.appendChild(tempInput);
+  tempInput.select();
+  try {
+    document.execCommand("copy");
+    showCopiedNotification(element);
+  } catch (err) {
+    alert("Gagal menyalin. Silakan salin manual.");
+  }
+  document.body.removeChild(tempInput);
 }
 
 function showCopiedNotification(element) {
@@ -560,15 +569,13 @@ function showCopiedNotification(element) {
 }
 
 function goToPage(input) {
+  if (!input) return;
   if (input.startsWith("http")) {
     window.location.href = input;
   } else {
     window.location.href = "https://" + input;
   }
 }
-     function goToPage(page) {
-     window.location.href = page;
-   }
  function createDrop() {
     const drop = document.createElement('div');
     drop.className = 'rain';
