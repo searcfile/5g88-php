@@ -166,6 +166,13 @@
         }
       });
     }
+    document.getElementById('msg').addEventListener('input', () => {
+  document.querySelector('.send-box button').disabled = !document.getElementById('msg').value.trim();
+ });
+
+    if (!chats) {
+  chatBox.innerHTML = '<p style="text-align:center; color:gray;">No messages yet.</p>';
+}
 
     function toggleTheme() {
       document.body.classList.toggle('dark');
