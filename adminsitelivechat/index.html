@@ -54,6 +54,18 @@
     .theirs {
       background-color: #e5e7eb;
     }
+    .time {
+      font-size: 0.75rem;
+      color: #666;
+      text-align: right;
+      margin-top: 0.2rem;
+    }
+    .date-separator {
+      text-align: center;
+      margin: 1rem 0;
+      font-weight: bold;
+      color: #888;
+    }
     .send-box {
       display: flex;
       gap: 0.5rem;
@@ -117,16 +129,43 @@
       document.getElementById('msg').value = '';
     }
 
+    function formatDate(date) {
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1);
+
+      if (date.toDateString() === today.toDateString()) return 'Today';
+      if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+
+      return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
     function listenToChat() {
       db.ref('chats/' + activeUserId).on('value', snapshot => {
         const chatBox = document.getElementById('chatBox');
         chatBox.innerHTML = '';
         const chats = snapshot.val();
         if (chats) {
-          Object.values(chats).forEach(c => {
+          const sorted = Object.values(chats).sort((a, b) => a.time - b.time);
+          let lastDate = '';
+          sorted.forEach(c => {
+            const date = new Date(c.time);
+            const dateStr = formatDate(date);
+            if (dateStr !== lastDate) {
+              const separator = document.createElement('div');
+              separator.className = 'date-separator';
+              separator.textContent = dateStr;
+              chatBox.appendChild(separator);
+              lastDate = dateStr;
+            }
             const div = document.createElement('div');
             div.className = 'message ' + (c.from === 'admin' ? 'mine' : 'theirs');
-            div.innerHTML = c.text;
+            div.innerHTML = `${c.text}<div class="time">${formatTime(c.time)}</div>`;
             chatBox.appendChild(div);
           });
           chatBox.scrollTop = chatBox.scrollHeight;
