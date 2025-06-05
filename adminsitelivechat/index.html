@@ -54,18 +54,6 @@
     .theirs {
       background-color: #e5e7eb;
     }
-    .time {
-      font-size: 0.75rem;
-      color: #666;
-      text-align: right;
-      margin-top: 0.2rem;
-    }
-    .date-separator {
-      text-align: center;
-      margin: 1rem 0;
-      font-weight: bold;
-      color: #888;
-    }
     .send-box {
       display: flex;
       gap: 0.5rem;
@@ -80,6 +68,12 @@
     .send-box input {
       flex: 1;
     }
+    select {
+      padding: 0.5rem;
+      margin-top: 1rem;
+      width: 80%;
+      font-size: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -89,7 +83,9 @@
   </header>
   <main>
     <div style="text-align:center; margin-top: 1rem;">
-      <input type="text" id="userId" placeholder="Enter User ID to chat" style="padding: 0.5rem; width: 80%;">
+      <select id="userId">
+        <option value="">Pilih User</option>
+      </select>
     </div>
     <div class="chat-box" id="chatBox"></div>
     <div class="send-box">
@@ -117,7 +113,7 @@
     let activeUserId = '';
 
     document.getElementById('userId').addEventListener('change', () => {
-      activeUserId = document.getElementById('userId').value.trim();
+      activeUserId = document.getElementById('userId').value;
       if (activeUserId) listenToChat();
     });
 
@@ -129,43 +125,16 @@
       document.getElementById('msg').value = '';
     }
 
-    function formatDate(date) {
-      const today = new Date();
-      const yesterday = new Date();
-      yesterday.setDate(today.getDate() - 1);
-
-      if (date.toDateString() === today.toDateString()) return 'Today';
-      if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
-
-      return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
-    }
-
-    function formatTime(timestamp) {
-      const date = new Date(timestamp);
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-
     function listenToChat() {
       db.ref('chats/' + activeUserId).on('value', snapshot => {
         const chatBox = document.getElementById('chatBox');
         chatBox.innerHTML = '';
         const chats = snapshot.val();
         if (chats) {
-          const sorted = Object.values(chats).sort((a, b) => a.time - b.time);
-          let lastDate = '';
-          sorted.forEach(c => {
-            const date = new Date(c.time);
-            const dateStr = formatDate(date);
-            if (dateStr !== lastDate) {
-              const separator = document.createElement('div');
-              separator.className = 'date-separator';
-              separator.textContent = dateStr;
-              chatBox.appendChild(separator);
-              lastDate = dateStr;
-            }
+          Object.values(chats).forEach(c => {
             const div = document.createElement('div');
             div.className = 'message ' + (c.from === 'admin' ? 'mine' : 'theirs');
-            div.innerHTML = `${c.text}<div class="time">${formatTime(c.time)}</div>`;
+            div.innerHTML = c.name ? `<b>${c.name}:</b> ${c.text}` : c.text;
             chatBox.appendChild(div);
           });
           chatBox.scrollTop = chatBox.scrollHeight;
@@ -176,6 +145,30 @@
     function toggleTheme() {
       document.body.classList.toggle('dark');
     }
+
+    function loadUserList() {
+      const userDropdown = document.getElementById('userId');
+      db.ref('chats').once('value', snapshot => {
+        const users = Object.keys(snapshot.val() || {});
+        users.forEach(uid => {
+          const chatEntries = Object.values(snapshot.val()[uid] || {});
+          const firstMsg = chatEntries.find(m => m.from === 'user');
+          if (firstMsg) {
+            const option = document.createElement('option');
+            option.value = uid;
+            option.textContent = `${firstMsg.name} (${firstMsg.email})`;
+
+            if (chatEntries.some(m => m.from === 'user' && !m.readByAdmin)) {
+              option.textContent += ' ❗';
+            }
+
+            userDropdown.appendChild(option);
+          }
+        });
+      });
+    }
+
+    window.onload = loadUserList;
   </script>
 </body>
 </html>
