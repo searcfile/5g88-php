@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Livechat</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+</head>
+  <style>
+<body>
+    :root {
+  --bg: #ffffff;
+  --text: #000000;
+  --accent: #facc15;
+}
+
+body.dark {
+  --bg: #1f2937;
+  --text: #f9fafb;
+  --accent: #3b82f6;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+  background-color: var(--accent);
+  color: var(--bg);
+}
+
+.chat-container {
+  padding: 1rem;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.message {
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background-color: #e5e7eb;
+}
+
+.message.mine {
+  background-color: var(--accent);
+  color: var(--bg);
+  text-align: right;
+}
+
+img.chat-image {
+  max-width: 200px;
+  border-radius: 0.5rem;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.25rem;
+}
+</style>
+  <header>
+    <h2>Admin Chat</h2>
+    <button onclick="switchTheme()">🎨 Theme</button>
+  </header>
+  <div style="padding: 1rem;">
+    <label>User ID:
+      <input id="userIdInput" placeholder="Masukkan ID user">
+    </label>
+  </div>
+  <div class="chat-container" id="chat"></div>
+  <div style="padding: 1rem;">
+    <textarea id="messageInput" placeholder="Tulis pesan..."></textarea>
+    <button onclick="sendAdminMessage()">Kirim</button>
+  </div>
+  <script src="script.js"></script>
+  <script>
+    let currentUserId = '';
+
+    document.getElementById('userIdInput').addEventListener('input', (e) => {
+      currentUserId = e.target.value;
+      listenMessages(currentUserId, renderChat);
+    });
+
+    function sendAdminMessage() {
+      const msg = document.getElementById('messageInput').value;
+      if (msg && currentUserId) {
+        sendMessage(currentUserId, 'admin', msg);
+        document.getElementById('messageInput').value = '';
+      }
+    }
+
+    function renderChat(messages) {
+      const chat = document.getElementById('chat');
+      chat.innerHTML = messages.map(msg => `
+        <div class="message ${msg.from === 'admin' ? 'mine' : ''}">
+          ${msg.text || ''}
+          ${msg.image ? `<br><img src="${msg.image}" class="chat-image">` : ''}
+        </div>
+      `).join('');
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+function switchTheme() {
+  document.body.classList.toggle('dark');
+}
+
+function sendMessage(userId, from, text, image = null) {
+  const data = {
+    from,
+    text,
+    image,
+    timestamp: Date.now()
+  };
+  db.ref('messages/' + userId).push(data);
+}
+
+function listenMessages(userId, renderFn) {
+  db.ref('messages/' + userId).on('value', snapshot => {
+    const messages = snapshot.val() || {};
+    renderFn(Object.values(messages));
+  });
+}
+  </script>
+</body>
+</html>
