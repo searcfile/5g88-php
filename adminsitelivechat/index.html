@@ -126,21 +126,29 @@
     }
 
     function listenToChat() {
-      db.ref('chats/' + activeUserId).on('value', snapshot => {
-        const chatBox = document.getElementById('chatBox');
-        chatBox.innerHTML = '';
-        const chats = snapshot.val();
-        if (chats) {
-          Object.values(chats).forEach(c => {
-            const div = document.createElement('div');
-            div.className = 'message ' + (c.from === 'admin' ? 'mine' : 'theirs');
-            div.innerHTML = c.name ? `<b>${c.name}:</b> ${c.text}` : c.text;
-            chatBox.appendChild(div);
-          });
-          chatBox.scrollTop = chatBox.scrollHeight;
+  const chatRef = db.ref('chats/' + activeUserId);
+  chatRef.off(); // Hentikan listener sebelumnya (jika ada)
+  
+  chatRef.on('value', snapshot => {
+    const chatBox = document.getElementById('chatBox');
+    chatBox.innerHTML = '';
+    const chats = snapshot.val();
+    if (chats) {
+      Object.entries(chats).forEach(([key, c]) => {
+        const div = document.createElement('div');
+        div.className = 'message ' + (c.from === 'admin' ? 'mine' : 'theirs');
+        div.innerHTML = c.name ? `<b>${c.name}:</b> ${c.text}` : c.text;
+        chatBox.appendChild(div);
+
+        // Tandai pesan dari user yang belum dibaca
+        if (c.from === 'user' && !c.readByAdmin) {
+          db.ref(`chats/${activeUserId}/${key}/readByAdmin`).set(true);
         }
       });
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
+  });
+}
 
     function toggleTheme() {
       document.body.classList.toggle('dark');
