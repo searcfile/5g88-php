@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LiveChat - User</title>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <style>
     :root {
       --bg-color: #ffffff;
@@ -130,157 +129,160 @@
      <div id="userEmail" style="position: fixed; top: 10px; right: 120px; color: white; z-index: 9999; font-weight: bold;font-size: 15px; display: flex; gap: 10px; justify-content: flex-end;"></div>
   </div>
   <!-- Firebase Scripts -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
-  
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
 
-  <script>
-    console.log("Firebase auth:", firebase.auth);
-if (typeof firebase.auth !== 'function') {
-  alert("Firebase Auth failed to load. Check CDN link or version mismatch.");
-}
+<script>
+  // Konversi email jadi ID aman
   function getUserIdFromEmail(email) {
-  return email.replace(/\./g, ',').replace(/@/g, '_at_');
-}
-
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
-  authDomain: "blurphp.firebaseapp.com",
-  databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "blurphp",
-  storageBucket: "blurphp.appspot.com",
-  messagingSenderId: "593904200464",
-  appId: "1:593904200464:web:cea7bc1360532c20d99395"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const storage = firebase.storage();
-
-// Autentikasi Firebase
-firebase.auth().onAuthStateChanged((user) => {
-  if (user) {
-    const userName = localStorage.getItem("username") || user.displayName;
-    const userEmail = localStorage.getItem("useremail") || user.email;
-    const userPhoto = localStorage.getItem("userphoto") || user.photoURL;
-
-    // Simpan ke localStorage jika belum tersimpan
-    localStorage.setItem("username", userName);
-    localStorage.setItem("useremail", userEmail);
-    localStorage.setItem("userphoto", userPhoto);
-
-    const userId = getUserIdFromEmail(userEmail);
-
-    // Tampilkan info pengguna
-    const userInfoDiv = document.getElementById("user-info");
-    userInfoDiv.innerHTML = `
-      <img src="${userPhoto}" style="width:30px;height:30px;border-radius:50%;margin-right:5px;vertical-align:middle;">
-      <span>${userName}</span> <span>(${userEmail})</span>
-    `;
-
-    // Dengarkan chat
-    listenToChat(userId);
-
-    // Aktifkan Enter untuk kirim pesan
-    document.getElementById('msg').addEventListener('keypress', function (e) {
-      if (e.key === 'Enter') {
-        sendMessage(userId);
-      }
-    });
-
-    // Aktifkan/disable tombol kirim
-    document.getElementById('msg').addEventListener('input', () => {
-      document.querySelector('.send-box button').disabled = !document.getElementById('msg').value.trim();
-    });
-
-  } else {
-    // Belum login
-    alert("Firebase auth required. Please login again.");
-    window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
-  }
-});
-
-function sendMessage(userId) {
-  const msg = document.getElementById('msg').value.trim();
-  const file = document.getElementById('fileInput').files[0];
-  if (!msg && !file) return;
-
-  const userName = localStorage.getItem("username");
-  const userEmail = localStorage.getItem("useremail");
-  const chatRef = db.ref('chats/' + userId);
-  const time = Date.now();
-
-  if (file) {
-    const fileRef = storage.ref('chat_images/' + userId + '/' + time + '_' + file.name);
-    fileRef.put(file).then(snapshot => {
-      snapshot.ref.getDownloadURL().then(url => {
-        chatRef.push({ from: 'user', name: userName, email: userEmail, image: url, time });
-      });
-    });
+    return email.replace(/\./g, ',').replace(/@/g, '_at_');
   }
 
-  if (msg) {
-    chatRef.push({ from: 'user', name: userName, email: userEmail, text: msg, time });
-    document.getElementById('msg').value = '';
+  // Konfigurasi Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
+    authDomain: "blurphp.firebaseapp.com",
+    databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "blurphp",
+    storageBucket: "blurphp.appspot.com",
+    messagingSenderId: "593904200464",
+    appId: "1:593904200464:web:cea7bc1360532c20d99395"
+  };
+
+  // Inisialisasi Firebase
+  firebase.initializeApp(firebaseConfig);
+
+  // Cek apakah firebase.auth() tersedia
+  if (typeof firebase.auth !== 'function') {
+    alert("❌ Firebase Auth failed to load. Please check your script tags and order.");
+    throw new Error("firebase.auth() not available");
   }
 
-  document.getElementById('fileInput').value = '';
-}
+  const db = firebase.database();
+  const storage = firebase.storage();
 
-function listenToChat(userId) {
-  const chatBox = document.getElementById('chatBox');
+  // Autentikasi Firebase
+  firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+      const userName = localStorage.getItem("username") || user.displayName;
+      const userEmail = localStorage.getItem("useremail") || user.email;
+      const userPhoto = localStorage.getItem("userphoto") || user.photoURL;
 
-  db.ref('chats/' + userId).on('value', snapshot => {
-    chatBox.innerHTML = '';
-    const chats = snapshot.val();
+      // Simpan jika belum ada
+      localStorage.setItem("username", userName);
+      localStorage.setItem("useremail", userEmail);
+      localStorage.setItem("userphoto", userPhoto);
 
-    if (chats) {
-      Object.values(chats).forEach(c => {
-        const div = document.createElement('div');
-        div.className = 'message ' + (c.from === 'user' ? 'mine' : 'theirs');
+      const userId = getUserIdFromEmail(userEmail);
 
-        const date = new Date(c.time);
-        const formattedTime = date.toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        });
+      // Tampilkan info pengguna
+      const userInfoDiv = document.getElementById("user-info");
+      userInfoDiv.innerHTML = `
+        <img src="${userPhoto}" style="width:30px;height:30px;border-radius:50%;margin-right:5px;vertical-align:middle;">
+        <span>${userName}</span> <span>(${userEmail})</span>
+      `;
 
-        if (c.image) {
-          div.innerHTML = `
-            <div class="bubble">
-              <img src="${c.image}" style="max-width:100%; border-radius: 10px;">
-              <div class="time">(${formattedTime})</div>
-            </div>
-          `;
-        } else {
-          div.innerHTML = `
-            <div class="bubble">
-              ${c.text}
-              <span class="time">(${formattedTime})</span>
-            </div>
-          `;
+      // Dengarkan chat
+      listenToChat(userId);
+
+      // Kirim dengan enter
+      const msgInput = document.getElementById('msg');
+      msgInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+          sendMessage(userId);
         }
-
-        chatBox.appendChild(div);
       });
-      chatBox.scrollTop = chatBox.scrollHeight;
+
+      msgInput.addEventListener('input', () => {
+        document.querySelector('.send-box button').disabled = !msgInput.value.trim();
+      });
+
     } else {
-      chatBox.innerHTML = '<p style="text-align:center; color:gray;">No messages yet.</p>';
+      alert("🚫 Not logged in. Redirecting...");
+      window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
     }
   });
-}
 
-// Logout
-function logout() {
-  firebase.auth().signOut().then(() => {
-    localStorage.removeItem("username");
-    localStorage.removeItem("useremail");
-    localStorage.removeItem("userphoto");
-    window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
-  });
-}
+  function sendMessage(userId) {
+    const msg = document.getElementById('msg').value.trim();
+    const file = document.getElementById('fileInput').files[0];
+    if (!msg && !file) return;
+
+    const userName = localStorage.getItem("username");
+    const userEmail = localStorage.getItem("useremail");
+    const chatRef = db.ref('chats/' + userId);
+    const time = Date.now();
+
+    if (file) {
+      const fileRef = storage.ref(`chat_images/${userId}/${time}_${file.name}`);
+      fileRef.put(file).then(snapshot => {
+        snapshot.ref.getDownloadURL().then(url => {
+          chatRef.push({ from: 'user', name: userName, email: userEmail, image: url, time });
+        });
+      });
+    }
+
+    if (msg) {
+      chatRef.push({ from: 'user', name: userName, email: userEmail, text: msg, time });
+      document.getElementById('msg').value = '';
+    }
+
+    document.getElementById('fileInput').value = '';
+  }
+
+  function listenToChat(userId) {
+    const chatBox = document.getElementById('chatBox');
+
+    db.ref('chats/' + userId).on('value', snapshot => {
+      chatBox.innerHTML = '';
+      const chats = snapshot.val();
+
+      if (chats) {
+        Object.values(chats).forEach(c => {
+          const div = document.createElement('div');
+          div.className = 'message ' + (c.from === 'user' ? 'mine' : 'theirs');
+
+          const date = new Date(c.time);
+          const formattedTime = date.toLocaleTimeString('en-US', {
+            hour: '2-digit', minute: '2-digit', hour12: true
+          });
+
+          if (c.image) {
+            div.innerHTML = `
+              <div class="bubble">
+                <img src="${c.image}" style="max-width:100%; border-radius: 10px;">
+                <div class="time">(${formattedTime})</div>
+              </div>
+            `;
+          } else {
+            div.innerHTML = `
+              <div class="bubble">
+                ${c.text}
+                <span class="time">(${formattedTime})</span>
+              </div>
+            `;
+          }
+
+          chatBox.appendChild(div);
+        });
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+      } else {
+        chatBox.innerHTML = '<p style="text-align:center; color:gray;">No messages yet.</p>';
+      }
+    });
+  }
+
+  function logout() {
+    firebase.auth().signOut().then(() => {
+      localStorage.removeItem("username");
+      localStorage.removeItem("useremail");
+      localStorage.removeItem("userphoto");
+      window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
+    });
+  }
   </script>
 </body>
 </html>
