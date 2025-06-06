@@ -172,19 +172,19 @@
         });
 
         if (c.image) {
-          div.innerHTML = `
+          div.innerHTML = 
             <div class="bubble">
               <img src="${c.image}" style="max-width:100%; border-radius: 10px;">
               <div class="time">(${formattedTime})</div>
             </div>
-          `;
+          ;
         } else {
-          div.innerHTML = `
+          div.innerHTML = 
             <div class="bubble">
               ${c.text}
               <span class="time">(${formattedTime})</span>
             </div>
-          `;
+          ;
         }
 
         chatBox.appendChild(div);
