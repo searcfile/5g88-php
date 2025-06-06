@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LiveChat - User</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <style>
     :root {
       --bg-color: #ffffff;
@@ -129,11 +130,16 @@
      <div id="userEmail" style="position: fixed; top: 10px; right: 120px; color: white; z-index: 9999; font-weight: bold;font-size: 15px; display: flex; gap: 10px; justify-content: flex-end;"></div>
   </div>
   <!-- Firebase Scripts -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
+  
 
   <script>
+    console.log("Firebase auth:", firebase.auth);
+if (typeof firebase.auth !== 'function') {
+  alert("Firebase Auth failed to load. Check CDN link or version mismatch.");
+}
   function getUserIdFromEmail(email) {
   return email.replace(/\./g, ',').replace(/@/g, '_at_');
 }
