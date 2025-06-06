@@ -125,7 +125,7 @@
   <button id="logoutBtn">Logout</button>
 
   <div style="position: fixed; top: 20px; right: 60px; z-index: 9999; display: flex; gap: 15px;">
-     <div id="userName" style="position: fixed; top: 10px; right: 300px; color: white; font-weight: bold; z-index: 9999; font-size: 15px; display: flex; gap: 10px; justify-content: flex-end;"></div>
+     <div id="user-info" style="position: fixed; top: 10px; right: 300px; color: white; font-weight: bold; z-index: 9999; font-size: 15px; display: flex; gap: 10px; justify-content: flex-end;"></div>
      <div id="userEmail" style="position: fixed; top: 10px; right: 120px; color: white; z-index: 9999; font-weight: bold;font-size: 15px; display: flex; gap: 10px; justify-content: flex-end;"></div>
   </div>
   <!-- Firebase Scripts -->
@@ -146,94 +146,122 @@
   const userId = userEmail.replace(/\./g, ',');
 
   // Firebase config
-  const firebaseConfig = {
-    apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
-    authDomain: "blurphp.firebaseapp.com",
-    databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "blurphp",
-    storageBucket: "blurphp.appspot.com",
-    messagingSenderId: "593904200464",
-    appId: "1:593904200464:web:cea7bc1360532c20d99395"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
+  authDomain: "blurphp.firebaseapp.com",
+  databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "blurphp",
+  storageBucket: "blurphp.appspot.com",
+  messagingSenderId: "593904200464",
+  appId: "1:593904200464:web:cea7bc1360532c20d99395"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const storage = firebase.storage();
 
-  // Init Firebase
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-  const storage = firebase.storage();
+// Fungsi kirim pesan
+function sendMessage() {
+  const msg = document.getElementById('msg').value.trim();
+  const file = document.getElementById('fileInput').files[0];
+  if (!msg && !file) return;
 
-  function sendMessage() {
-    const msg = document.getElementById('msg').value.trim();
-    const file = document.getElementById('fileInput').files[0];
+  const userName = localStorage.getItem("username");
+  const userEmail = localStorage.getItem("useremail");
+  const userId = userEmail.replace(/\./g, ',');
+  const chatRef = db.ref('chats/' + userId);
+  const time = Date.now();
 
-    if (!msg && !file) return;
-
-    const chatRef = db.ref('chats/' + userId);
-    const time = Date.now();
-
-    if (file) {
-      const fileRef = storage.ref('chat_images/' + userId + '/' + time + '_' + file.name);
-      fileRef.put(file).then(snapshot => {
-        snapshot.ref.getDownloadURL().then(url => {
-          chatRef.push({ from: 'user', name: userName, email: userEmail, image: url, time });
-        });
+  if (file) {
+    const fileRef = storage.ref('chat_images/' + userId + '/' + time + '_' + file.name);
+    fileRef.put(file).then(snapshot => {
+      snapshot.ref.getDownloadURL().then(url => {
+        chatRef.push({ from: 'user', name: userName, email: userEmail, image: url, time });
       });
-    }
-
-    if (msg) {
-      chatRef.push({ from: 'user', name: userName, email: userEmail, text: msg, time });
-      document.getElementById('msg').value = '';
-    }
-
-    document.getElementById('fileInput').value = '';
-  }
-
-  function listenToChat() {
-    const chatBox = document.getElementById('chatBox');
-    db.ref('chats/' + userId).on('value', snapshot => {
-      chatBox.innerHTML = '';
-      const chats = snapshot.val();
-
-      if (chats) {
-        Object.values(chats).forEach(c => {
-          const div = document.createElement('div');
-          div.className = 'message ' + (c.from === 'user' ? 'mine' : 'theirs');
-
-          const date = new Date(c.time);
-          const formattedTime = date.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          });
-
-          if (c.image) {
-            div.innerHTML = `
-              <div class="bubble">
-                <img src="${c.image}" style="max-width:100%; border-radius: 10px;">
-                <div class="time">(${formattedTime})</div>
-              </div>
-            `;
-          } else {
-            div.innerHTML = `
-              <div class="bubble">
-                ${c.text}
-                <span class="time">(${formattedTime})</span>
-              </div>
-            `;
-          }
-
-          chatBox.appendChild(div);
-        });
-        chatBox.scrollTop = chatBox.scrollHeight;
-      } else {
-        chatBox.innerHTML = '<p style="text-align:center; color:gray;">No messages yet.</p>';
-      }
     });
   }
 
-  function toggleTheme() {
-    document.body.classList.toggle('dark');
+  if (msg) {
+    chatRef.push({ from: 'user', name: userName, email: userEmail, text: msg, time });
+    document.getElementById('msg').value = '';
   }
 
+  document.getElementById('fileInput').value = '';
+}
+
+// Fungsi untuk menampilkan chat
+function listenToChat() {
+  const userEmail = localStorage.getItem("useremail");
+  const userId = userEmail.replace(/\./g, ',');
+  const chatBox = document.getElementById('chatBox');
+
+  db.ref('chats/' + userId).on('value', snapshot => {
+    chatBox.innerHTML = '';
+    const chats = snapshot.val();
+
+    if (chats) {
+      Object.values(chats).forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'message ' + (c.from === 'user' ? 'mine' : 'theirs');
+
+        const date = new Date(c.time);
+        const formattedTime = date.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+
+        if (c.image) {
+          div.innerHTML = `
+            <div class="bubble">
+              <img src="${c.image}" style="max-width:100%; border-radius: 10px;">
+              <div class="time">(${formattedTime})</div>
+            </div>
+          `;
+        } else {
+          div.innerHTML = `
+            <div class="bubble">
+              ${c.text}
+              <span class="time">(${formattedTime})</span>
+            </div>
+          `;
+        }
+
+        chatBox.appendChild(div);
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
+    } else {
+      chatBox.innerHTML = '<p style="text-align:center; color:gray;">No messages yet.</p>';
+    }
+  });
+}
+
+// Logout function
+function logout() {
+  localStorage.removeItem("username");
+  localStorage.removeItem("useremail");
+  localStorage.removeItem("userphoto");
+  window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
+}
+
+// Gabungkan semua ke dalam satu window.onload
+window.onload = function () {
+  const userName = localStorage.getItem("username");
+  const userEmail = localStorage.getItem("useremail");
+  const userPhoto = localStorage.getItem("userphoto");
+
+  if (!userName || !userEmail) {
+    alert("Please login first.");
+    window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
+    return;
+  }
+
+  // Tampilkan nama dan foto user di pojok kanan
+  const userInfoDiv = document.getElementById("user-info");
+  userInfoDiv.innerHTML = userPhoto
+    ? `<img src="${userPhoto}" style="width:30px;height:30px;border-radius:50%;margin-right:5px;vertical-align:middle;"> ${userName} (${userEmail})`
+    : `${userName} (${userEmail})`;
+
+  // Aktifkan tombol kirim
   document.getElementById('msg').addEventListener('keypress', function (e) {
     if (e.key === 'Enter') {
       sendMessage();
@@ -244,14 +272,9 @@
     document.querySelector('.send-box button').disabled = !document.getElementById('msg').value.trim();
   });
 
-  // Start
-  window.onload = listenToChat;
-
-  function logout() {
-    localStorage.removeItem("username");
-    localStorage.removeItem("useremail");
-    window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
-  }
+  // Mulai dengar chat
+  listenToChat();
+};
   </script>
 </body>
 </html>
