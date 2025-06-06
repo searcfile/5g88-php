@@ -96,7 +96,7 @@
 </div>
 
 <script>
-  // Firebase config (lengkap dengan databaseURL)
+ // Firebase config lengkap
   const firebaseConfig = {
     apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
     authDomain: "blurphp.firebaseapp.com",
@@ -107,10 +107,15 @@
     appId: "1:593904200464:web:cea7bc1360532c20d99395"
   };
 
+  // Inisialisasi Firebase
   firebase.initializeApp(firebaseConfig);
-   const db = firebase.database();
-   const storage = firebase.storage();
 
+  // Inisialisasi layanan Firebase
+  const auth = firebase.auth();
+  const db = firebase.database();
+  const storage = firebase.storage();
+
+  // Fungsi login Google
   function googleLogin() {
     const provider = new firebase.auth.GoogleAuthProvider();
 
