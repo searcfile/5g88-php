@@ -108,113 +108,113 @@
 
   <script>
     // Firebase Config
-    const firebaseConfig = {
-      apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
-      authDomain: "blurphp.firebaseapp.com",
-      databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "blurphp",
-      storageBucket: "blurphp.appspot.com",
-      messagingSenderId: "593904200464",
-      appId: "1:593904200464:web:cea7bc1360532c20d99395"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
+    authDomain: "blurphp.firebaseapp.com",
+    databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "blurphp",
+    storageBucket: "blurphp.appspot.com",
+    messagingSenderId: "593904200464",
+    appId: "1:593904200464:web:cea7bc1360532c20d99395"
+  };
 
-    // Init Firebase
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const storage = firebase.storage();
+  // Init Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const storage = firebase.storage();
 
-    const userName = localStorage.getItem("username") || "Unknown";
-    const userEmail = localStorage.getItem("useremail") || "unknown@email.com";
-    const userId = btoa(userEmail);
+  const userName = localStorage.getItem("username") || "Unknown";
+  const userEmail = localStorage.getItem("useremail") || "unknown@email.com";
+  const userId = btoa(userEmail);
 
-    function sendMessage() {
-      const msg = document.getElementById('msg').value.trim();
-      const file = document.getElementById('fileInput').files[0];
+  function sendMessage() {
+    const msg = document.getElementById('msg').value.trim();
+    const file = document.getElementById('fileInput').files[0];
 
-      if (!msg && !file) return;
+    if (!msg && !file) return;
 
-      const chatRef = db.ref('chats/' + userId);
-      const time = Date.now();
+    const chatRef = db.ref('chats/' + userId);
+    const time = Date.now();
 
-      if (file) {
-        const fileRef = storage.ref('chat_images/' + userId + '/' + time + '_' + file.name);
-        fileRef.put(file).then(snapshot => {
-          snapshot.ref.getDownloadURL().then(url => {
-            chatRef.push({ from: 'user', name: userName, email: userEmail, image: url, time });
-          });
+    if (file) {
+      const fileRef = storage.ref('chat_images/' + userId + '/' + time + '_' + file.name);
+      fileRef.put(file).then(snapshot => {
+        snapshot.ref.getDownloadURL().then(url => {
+          chatRef.push({ from: 'user', name: userName, email: userEmail, image: url, time });
         });
-      }
-
-      if (msg) {
-        chatRef.push({ from: 'user', name: userName, email: userEmail, text: msg, time });
-        document.getElementById('msg').value = '';
-      }
-
-      document.getElementById('fileInput').value = '';
+      });
     }
 
-    function listenToChat() {
-  const chatBox = document.getElementById('chatBox');
-  db.ref('chats/' + userId).on('value', snapshot => {
-    chatBox.innerHTML = '';
-    const chats = snapshot.val();
+    if (msg) {
+      chatRef.push({ from: 'user', name: userName, email: userEmail, text: msg, time });
+      document.getElementById('msg').value = '';
+    }
 
-    if (chats) {
-      Object.values(chats).forEach(c => {
-        const div = document.createElement('div');
-        div.className = 'message ' + (c.from === 'user' ? 'mine' : 'theirs');
+    document.getElementById('fileInput').value = '';
+  }
 
-        const date = new Date(c.time);
-        const formattedTime = date.toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
+  function listenToChat() {
+    const chatBox = document.getElementById('chatBox');
+    db.ref('chats/' + userId).on('value', snapshot => {
+      chatBox.innerHTML = '';
+      const chats = snapshot.val();
+
+      if (chats) {
+        Object.values(chats).forEach(c => {
+          const div = document.createElement('div');
+          div.className = 'message ' + (c.from === 'user' ? 'mine' : 'theirs');
+
+          const date = new Date(c.time);
+          const formattedTime = date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          });
+
+          if (c.image) {
+            div.innerHTML = `
+              <div class="bubble">
+                <img src="${c.image}" style="max-width:100%; border-radius: 10px;">
+                <div class="time">(${formattedTime})</div>
+              </div>
+            `;
+          } else {
+            div.innerHTML = `
+              <div class="bubble">
+                ${c.text}
+                <span class="time">(${formattedTime})</span>
+              </div>
+            `;
+          }
+
+          chatBox.appendChild(div);
         });
+        chatBox.scrollTop = chatBox.scrollHeight;
+      } else {
+        chatBox.innerHTML = '<p style="text-align:center; color:gray;">No messages yet.</p>';
+      }
+    });
+  }
 
-        if (c.image) {
-          div.innerHTML = 
-            <div class="bubble">
-              <img src="${c.image}" style="max-width:100%; border-radius: 10px;">
-              <div class="time">(${formattedTime})</div>
-            </div>
-          ;
-        } else {
-          div.innerHTML = 
-            <div class="bubble">
-              ${c.text}
-              <span class="time">(${formattedTime})</span>
-            </div>
-          ;
-        }
+  // Toggle dark theme
+  function toggleTheme() {
+    document.body.classList.toggle('dark');
+  }
 
-        chatBox.appendChild(div);
-      });
-      chatBox.scrollTop = chatBox.scrollHeight;
-    } else {
-      chatBox.innerHTML = '<p style="text-align:center; color:gray;">No messages yet.</p>';
+  // Enter = send
+  document.getElementById('msg').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+      sendMessage();
     }
   });
-}
 
-    // Toggle dark theme
-    function toggleTheme() {
-      document.body.classList.toggle('dark');
-    }
+  // Disable send button if input kosong
+  document.getElementById('msg').addEventListener('input', () => {
+    document.querySelector('.send-box button').disabled = !document.getElementById('msg').value.trim();
+  });
 
-    // Enter = send
-    document.getElementById('msg').addEventListener('keypress', function (e) {
-      if (e.key === 'Enter') {
-        sendMessage();
-      }
-    });
-
-    // Optional: Disable send button if input kosong
-    document.getElementById('msg').addEventListener('input', () => {
-      document.querySelector('.send-box button').disabled = !document.getElementById('msg').value.trim();
-    });
-
-    // Start listening when page loads
-    window.onload = listenToChat;
+  // Start listening when page loads
+  window.onload = listenToChat;
   </script>
 </body>
 </html>
