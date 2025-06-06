@@ -128,14 +128,13 @@
      <div id="user-info" style="position: fixed; top: 10px; right: 300px; color: white; font-weight: bold; z-index: 9999; font-size: 15px; display: flex; gap: 10px; justify-content: flex-end;"></div>
      <div id="userEmail" style="position: fixed; top: 10px; right: 120px; color: white; z-index: 9999; font-weight: bold;font-size: 15px; display: flex; gap: 10px; justify-content: flex-end;"></div>
   </div>
-  <!-- Firebase Scripts -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
 
 <script>
-  // Konversi email jadi ID aman
+  // Konversi email jadi ID aman untuk path Firebase
   function getUserIdFromEmail(email) {
     return email.replace(/\./g, ',').replace(/@/g, '_at_');
   }
@@ -153,85 +152,141 @@
 
   // Inisialisasi Firebase
   firebase.initializeApp(firebaseConfig);
-
-  // Cek apakah firebase.auth() tersedia
-  if (typeof firebase.auth !== 'function') {
-    alert("❌ Firebase Auth failed to load. Please check your script tags and order.");
-    throw new Error("firebase.auth() not available");
-  }
-
   const db = firebase.database();
   const storage = firebase.storage();
 
-  // Autentikasi Firebase
+  // Variabel global untuk userId
+  let currentUserId = null;
+
+  // Fungsi utama on auth state changed
   firebase.auth().onAuthStateChanged((user) => {
     if (user) {
-      const userName = localStorage.getItem("username") || user.displayName;
+      // Ambil data user dari localStorage atau user object Firebase
+      const userName = localStorage.getItem("username") || user.displayName || "User";
       const userEmail = localStorage.getItem("useremail") || user.email;
-      const userPhoto = localStorage.getItem("userphoto") || user.photoURL;
+      const userPhoto = localStorage.getItem("userphoto") || user.photoURL || "";
 
-      // Simpan jika belum ada
+      if (!userEmail) {
+        alert("🚫 User email not found. Please login again.");
+        logout();
+        return;
+      }
+
+      // Simpan data ke localStorage
       localStorage.setItem("username", userName);
       localStorage.setItem("useremail", userEmail);
       localStorage.setItem("userphoto", userPhoto);
 
-      const userId = getUserIdFromEmail(userEmail);
+      // Konversi email ke userId
+      currentUserId = getUserIdFromEmail(userEmail);
 
-      // Tampilkan info pengguna
+      // Tampilkan info user di UI
       const userInfoDiv = document.getElementById("user-info");
       userInfoDiv.innerHTML = `
-        <img src="${userPhoto}" style="width:30px;height:30px;border-radius:50%;margin-right:5px;vertical-align:middle;">
+        <img src="${userPhoto}" alt="User Photo" style="width:30px;height:30px;border-radius:50%;margin-right:5px;vertical-align:middle;">
         <span>${userName}</span> <span>(${userEmail})</span>
       `;
 
-      // Dengarkan chat
-      listenToChat(userId);
+      // Mulai listen chat realtime
+      listenToChat(currentUserId);
 
-      // Kirim dengan enter
+      // Setup event untuk kirim pesan via enter
       const msgInput = document.getElementById('msg');
       msgInput.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-          sendMessage(userId);
+        if (e.key === 'Enter' && !e.shiftKey) { // enter tanpa shift kirim
+          e.preventDefault();
+          sendMessage(currentUserId);
         }
       });
 
+      // Enable/disable tombol kirim sesuai inputan
+      const sendBtn = document.querySelector('.send-box button');
       msgInput.addEventListener('input', () => {
-        document.querySelector('.send-box button').disabled = !msgInput.value.trim();
+        sendBtn.disabled = !msgInput.value.trim() && !document.getElementById('fileInput').files.length;
       });
 
+      // Initial tombol disabled jika kosong
+      sendBtn.disabled = true;
+
+      // Kirim pesan jika tombol diklik
+      sendBtn.addEventListener('click', () => sendMessage(currentUserId));
+
     } else {
-      alert("🚫 Not logged in. Redirecting...");
+      alert("🚫 Not logged in. Redirecting to login page...");
       window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
     }
   });
 
-  function sendMessage(userId) {
-    const msg = document.getElementById('msg').value.trim();
-    const file = document.getElementById('fileInput').files[0];
-    if (!msg && !file) return;
+  // Fungsi untuk mengirim pesan
+  async function sendMessage(userId) {
+    if (!userId || userId === "undefined") {
+      alert("❌ Gagal mengirim pesan: userId tidak valid. Silakan login ulang.");
+      logout();
+      return;
+    }
 
-    const userName = localStorage.getItem("username");
-    const userEmail = localStorage.getItem("useremail");
+    const msgInput = document.getElementById('msg');
+    const msg = msgInput.value.trim();
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+
+    if (!msg && !file) {
+      // Tidak ada pesan atau file, tidak kirim
+      return;
+    }
+
+    const userName = localStorage.getItem("username") || "User";
+    const userEmail = localStorage.getItem("useremail") || "";
+
     const chatRef = db.ref('chats/' + userId);
     const time = Date.now();
 
+    // Kalau ada file, upload dulu
     if (file) {
-      const fileRef = storage.ref(`chat_images/${userId}/${time}_${file.name}`);
-      fileRef.put(file).then(snapshot => {
-        snapshot.ref.getDownloadURL().then(url => {
-          chatRef.push({ from: 'user', name: userName, email: userEmail, image: url, time });
+      try {
+        const fileRef = storage.ref(`chat_images/${userId}/${time}_${file.name}`);
+        const snapshot = await fileRef.put(file);
+        const url = await snapshot.ref.getDownloadURL();
+        await chatRef.push({
+          from: 'user',
+          name: userName,
+          email: userEmail,
+          image: url,
+          time
         });
-      });
+      } catch (error) {
+        console.error("Upload file gagal:", error);
+        alert("❌ Gagal mengupload file. Silakan coba lagi.");
+        return;
+      }
     }
 
+    // Kirim pesan text
     if (msg) {
-      chatRef.push({ from: 'user', name: userName, email: userEmail, text: msg, time });
-      document.getElementById('msg').value = '';
+      try {
+        await chatRef.push({
+          from: 'user',
+          name: userName,
+          email: userEmail,
+          text: msg,
+          time
+        });
+        msgInput.value = '';
+      } catch (error) {
+        console.error("Kirim pesan gagal:", error);
+        alert("❌ Gagal mengirim pesan. Silakan coba lagi.");
+        return;
+      }
     }
 
-    document.getElementById('fileInput').value = '';
+    // Reset file input
+    fileInput.value = '';
+
+    // Disable tombol kirim karena input kosong sekarang
+    document.querySelector('.send-box button').disabled = true;
   }
 
+  // Fungsi listen chat realtime
   function listenToChat(userId) {
     const chatBox = document.getElementById('chatBox');
 
@@ -252,7 +307,7 @@
           if (c.image) {
             div.innerHTML = `
               <div class="bubble">
-                <img src="${c.image}" style="max-width:100%; border-radius: 10px;">
+                <img src="${c.image}" alt="Chat Image" style="max-width:100%; border-radius: 10px;">
                 <div class="time">(${formattedTime})</div>
               </div>
             `;
@@ -275,6 +330,7 @@
     });
   }
 
+  // Fungsi logout
   function logout() {
     firebase.auth().signOut().then(() => {
       localStorage.removeItem("username");
