@@ -173,7 +173,12 @@
     if (!chats) {
   chatBox.innerHTML = '<p style="text-align:center; color:gray;">No messages yet.</p>';
 }
-
+    
+document.getElementById('msg').addEventListener('keypress', function (e) {
+  if (e.key === 'Enter') {
+    sendMessage();
+  }
+});
     function toggleTheme() {
       document.body.classList.toggle('dark');
     }
