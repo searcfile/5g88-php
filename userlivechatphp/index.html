@@ -138,17 +138,6 @@
   return email.replace(/\./g, ',').replace(/@/g, '_at_');
 }
 
-// Cek login
-const userName = localStorage.getItem("username");
-const userEmail = localStorage.getItem("useremail");
-
-if (!userName || !userEmail) {
-  alert("Please login first.");
-  window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
-}
-
-const userId = getUserIdFromEmail(userEmail);
-
 // Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
@@ -163,15 +152,56 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const storage = firebase.storage();
 
-// Fungsi kirim pesan
-function sendMessage() {
+// Autentikasi Firebase
+firebase.auth().onAuthStateChanged((user) => {
+  if (user) {
+    const userName = localStorage.getItem("username") || user.displayName;
+    const userEmail = localStorage.getItem("useremail") || user.email;
+    const userPhoto = localStorage.getItem("userphoto") || user.photoURL;
+
+    // Simpan ke localStorage jika belum tersimpan
+    localStorage.setItem("username", userName);
+    localStorage.setItem("useremail", userEmail);
+    localStorage.setItem("userphoto", userPhoto);
+
+    const userId = getUserIdFromEmail(userEmail);
+
+    // Tampilkan info pengguna
+    const userInfoDiv = document.getElementById("user-info");
+    userInfoDiv.innerHTML = `
+      <img src="${userPhoto}" style="width:30px;height:30px;border-radius:50%;margin-right:5px;vertical-align:middle;">
+      <span>${userName}</span> <span>(${userEmail})</span>
+    `;
+
+    // Dengarkan chat
+    listenToChat(userId);
+
+    // Aktifkan Enter untuk kirim pesan
+    document.getElementById('msg').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        sendMessage(userId);
+      }
+    });
+
+    // Aktifkan/disable tombol kirim
+    document.getElementById('msg').addEventListener('input', () => {
+      document.querySelector('.send-box button').disabled = !document.getElementById('msg').value.trim();
+    });
+
+  } else {
+    // Belum login
+    alert("Firebase auth required. Please login again.");
+    window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
+  }
+});
+
+function sendMessage(userId) {
   const msg = document.getElementById('msg').value.trim();
   const file = document.getElementById('fileInput').files[0];
   if (!msg && !file) return;
 
   const userName = localStorage.getItem("username");
   const userEmail = localStorage.getItem("useremail");
-  const userId = getUserIdFromEmail(userEmail);
   const chatRef = db.ref('chats/' + userId);
   const time = Date.now();
 
@@ -192,10 +222,7 @@ function sendMessage() {
   document.getElementById('fileInput').value = '';
 }
 
-// Fungsi untuk menampilkan chat
-function listenToChat() {
-  const userEmail = localStorage.getItem("useremail");
-  const userId = getUserIdFromEmail(userEmail);
+function listenToChat(userId) {
   const chatBox = document.getElementById('chatBox');
 
   db.ref('chats/' + userId).on('value', snapshot => {
@@ -239,47 +266,15 @@ function listenToChat() {
   });
 }
 
-// Logout function
+// Logout
 function logout() {
-  localStorage.removeItem("username");
-  localStorage.removeItem("useremail");
-  localStorage.removeItem("userphoto");
-  window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
-}
-
-// Gabungkan semua ke dalam satu window.onload
-window.onload = function () {
-  const userName = localStorage.getItem("username");
-  const userEmail = localStorage.getItem("useremail");
-  const userPhoto = localStorage.getItem("userphoto");
-
-  if (!userName || !userEmail || !userPhoto) {
-    alert("Login session expired. Please login again.");
+  firebase.auth().signOut().then(() => {
+    localStorage.removeItem("username");
+    localStorage.removeItem("useremail");
+    localStorage.removeItem("userphoto");
     window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
-  }
-
-  // Tampilkan nama dan foto user di pojok kanan
-  const userInfoDiv = document.getElementById("user-info");
-  userInfoDiv.innerHTML = `
-    <img src="${userPhoto}" style="width:30px;height:30px;border-radius:50%;margin-right:5px;vertical-align:middle;">
-    <span>${userName}</span> <span>(${userEmail})</span>
-  `;
-
-  // Aktifkan tombol kirim saat tekan Enter
-  document.getElementById('msg').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-      sendMessage();
-    }
   });
-
-  // Enable/disable tombol kirim sesuai inputan
-  document.getElementById('msg').addEventListener('input', () => {
-    document.querySelector('.send-box button').disabled = !document.getElementById('msg').value.trim();
-  });
-
-  // Mulai dengarkan chat
-  listenToChat();
-};
+}
   </script>
 </body>
 </html>
