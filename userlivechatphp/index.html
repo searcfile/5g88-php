@@ -82,10 +82,31 @@
     input[type="file"] {
       display: none;
     }
+    #logoutBtn {
+   background-color: gold;
+   color: black;
+   padding: 10px 16px;
+   border-radius: 5px;
+   border: none;
+   font-weight: bold;
+   cursor: pointer;
+   position: fixed;
+   right: 20px;
+   top: 20px;
+   z-index: 99999;
+   box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+   transition: all 0.3s ease;
+  }
+   #logoutBtn:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #000;
+    font-weight: bold;
+   }
   </style>
 </head>
 <body>
   <header>
+    
     <h1>User LiveChat</h1>
     <button onclick="toggleTheme()">Toggle Theme</button>
   </header>
@@ -100,14 +121,25 @@
       <button onclick="sendMessage()">Send</button>
     </div>
   </main>
-
+     <button id="logoutBtn">Logout</button>
   <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
 
   <script>
-    // Firebase Config
+    // Cek login
+  const userName = localStorage.getItem("username");
+  const userEmail = localStorage.getItem("useremail");
+
+  if (!userName || !userEmail) {
+    alert("Please login first.");
+    window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
+  }
+
+  const userId = btoa(userEmail); // encode email ke base64 untuk jadi ID unik
+
+  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
     authDomain: "blurphp.firebaseapp.com",
@@ -122,10 +154,6 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   const storage = firebase.storage();
-
-  const userName = localStorage.getItem("username") || "Unknown";
-  const userEmail = localStorage.getItem("useremail") || "unknown@email.com";
-  const userId = btoa(userEmail);
 
   function sendMessage() {
     const msg = document.getElementById('msg').value.trim();
@@ -196,25 +224,28 @@
     });
   }
 
-  // Toggle dark theme
   function toggleTheme() {
     document.body.classList.toggle('dark');
   }
 
-  // Enter = send
   document.getElementById('msg').addEventListener('keypress', function (e) {
     if (e.key === 'Enter') {
       sendMessage();
     }
   });
 
-  // Disable send button if input kosong
   document.getElementById('msg').addEventListener('input', () => {
     document.querySelector('.send-box button').disabled = !document.getElementById('msg').value.trim();
   });
 
-  // Start listening when page loads
+  // Start
   window.onload = listenToChat;
+
+  function logout() {
+    localStorage.removeItem("username");
+    localStorage.removeItem("useremail");
+    window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
+  }
   </script>
 </body>
 </html>
