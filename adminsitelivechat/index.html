@@ -105,8 +105,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <script>
-    // ✅ GANTI DENGAN KONFIGURASI FIREBASE ANDA
-    const firebaseConfig = {
+   // KONFIGURASI FIREBASE
+const firebaseConfig = {
   apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
   authDomain: "blurphp.firebaseapp.com",
   databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -117,105 +117,139 @@
   measurementId: "G-R494S2DPZ5"
 };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-    let activeUserId = '';
+let activeUserId = '';
 
-    // Toggle Dark Mode
-    function toggleTheme() {
-      document.body.classList.toggle('dark');
-    }
+// Toggle Dark Mode
+function toggleTheme() {
+  document.body.classList.toggle('dark');
+}
 
-    // Kirim Pesan
-    function sendMessage() {
-      const msgInput = document.getElementById('msg');
-      const msg = msgInput.value.trim();
-      if (!activeUserId || !msg) return;
-      const chatRef = db.ref('chats/' + activeUserId);
-      chatRef.push({ from: 'admin', text: msg, time: Date.now() });
-      msgInput.value = '';
-    }
+// Kirim Pesan Admin ke User Terpilih
+function sendMessage() {
+  const msgInput = document.getElementById('msg');
+  const msg = msgInput.value.trim();
+  if (!activeUserId || !msg) return alert("Pilih user dan tulis pesan dulu!");
 
-    // Tampilkan Chat
-    function listenToChat() {
-      const chatRef = db.ref('chats/' + activeUserId);
-      chatRef.off(); // Matikan listener lama
-      chatRef.on('value', snapshot => {
-        const chatBox = document.getElementById('chatBox');
-        chatBox.innerHTML = '';
-        const chats = snapshot.val();
-        if (chats) {
-          Object.entries(chats).forEach(([key, c]) => {
-            const div = document.createElement('div');
-            const date = new Date(c.time || Date.now());
-            const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            div.className = 'message ' + (c.from === 'admin' ? 'mine' : 'theirs');
-            div.innerHTML = c.name
-              ? `<b>${c.name}:</b> ${c.text} <small>(${timeStr})</small>`
-              : `${c.text} <small>(${timeStr})</small>`;
-            chatBox.appendChild(div);
+  const chatRef = db.ref('chats/' + activeUserId);
+  chatRef.push({ from: 'admin', text: msg, time: Date.now() });
+  msgInput.value = '';
+}
 
-            // Tandai sebagai dibaca
-            if (c.from === 'user' && !c.readByAdmin) {
-              db.ref(`chats/${activeUserId}/${key}/readByAdmin`).set(true);
-            }
-          });
-          chatBox.scrollTop = chatBox.scrollHeight;
+// Dengarkan Pesan dari User Terpilih
+function listenToChat() {
+  if (!activeUserId) return;
+
+  const chatRef = db.ref('chats/' + activeUserId);
+  chatRef.off(); // Matikan listener lama
+
+  chatRef.on('value', snapshot => {
+    const chatBox = document.getElementById('chatBox');
+    chatBox.innerHTML = '';
+    const chats = snapshot.val();
+
+    if (chats) {
+      Object.entries(chats).forEach(([key, c]) => {
+        const div = document.createElement('div');
+        const date = new Date(c.time || Date.now());
+        const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        // Beda class berdasarkan pengirim
+        div.className = 'message ' + (c.from === 'admin' ? 'mine' : 'theirs');
+
+        // Tampilkan nama kalau ada (misal nama user)
+        div.innerHTML = c.name
+          ? `<b>${c.name}:</b> ${c.text} <small>(${timeStr})</small>`
+          : `${c.text} <small>(${timeStr})</small>`;
+
+        chatBox.appendChild(div);
+
+        // Tandai pesan user sudah dibaca admin
+        if (c.from === 'user' && !c.readByAdmin) {
+          db.ref(`chats/${activeUserId}/${key}/readByAdmin`).set(true);
+          // Refresh tanda unread di dropdown
+          updateUserDropdownFlag(activeUserId);
         }
       });
+      chatBox.scrollTop = chatBox.scrollHeight;
+    } else {
+      chatBox.innerHTML = '<p style="text-align:center; color:gray;">Belum ada pesan.</p>';
     }
+  });
+}
 
-    // Saat User Dipilih
-    document.getElementById('userId').addEventListener('change', () => {
-      activeUserId = document.getElementById('userId').value;
-      if (activeUserId) listenToChat();
+// Load list user dari node chats
+function loadUserList() {
+  const userDropdown = document.getElementById('userId');
+  userDropdown.innerHTML = '<option value="">-- Pilih User --</option>';
+
+  db.ref('chats').once('value', snapshot => {
+    const users = Object.keys(snapshot.val() || {});
+    users.forEach(uid => {
+      addUserOption(uid);
     });
+  });
+}
 
-    // Muat List User Awal
-    function loadUserList() {
+// Tambah option user ke dropdown, dengan cek unread
+function addUserOption(uid) {
+  db.ref(`chats/${uid}`).once('value', snapshot => {
+    const chatEntries = Object.values(snapshot.val() || {});
+    const firstMsg = chatEntries.find(m => m.from === 'user');
+
+    if (firstMsg && !document.querySelector(`#userId option[value="${uid}"]`)) {
       const userDropdown = document.getElementById('userId');
-      db.ref('chats').once('value', snapshot => {
-        const users = Object.keys(snapshot.val() || {});
-        users.forEach(uid => {
-          const chatEntries = Object.values(snapshot.val()[uid] || {});
-          const firstMsg = chatEntries.find(m => m.from === 'user');
-          if (firstMsg && !document.querySelector(`#userId option[value="${uid}"]`)) {
-            const option = document.createElement('option');
-            option.value = uid;
-            option.textContent = `${firstMsg.name} (${firstMsg.email})`;
+      const option = document.createElement('option');
+      option.value = uid;
 
-            // Tambah tanda ❗ jika ada pesan belum dibaca
-            if (chatEntries.some(m => m.from === 'user' && !m.readByAdmin)) {
-              option.textContent += ' ❗';
-            }
+      const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
+      option.textContent = `${firstMsg.name} (${firstMsg.email})` + (hasUnread ? ' ❗' : '');
 
-            userDropdown.appendChild(option);
-          }
-        });
-      });
+      userDropdown.appendChild(option);
     }
+  });
+}
 
-    // Pantau User Baru
-    function watchNewUsers() {
-      db.ref('chats').on('child_added', snapshot => {
-        const uid = snapshot.key;
-        const chatEntries = Object.values(snapshot.val());
-        const firstMsg = chatEntries.find(m => m.from === 'user');
-        if (firstMsg && !document.querySelector(`#userId option[value="${uid}"]`)) {
-          const option = document.createElement('option');
-          option.value = uid;
-          option.textContent = `${firstMsg.name} (${firstMsg.email})`;
-          document.getElementById('userId').appendChild(option);
-        }
-      });
+// Update flag unread di dropdown untuk user tertentu
+function updateUserDropdownFlag(uid) {
+  const option = document.querySelector(`#userId option[value="${uid}"]`);
+  if (!option) return;
+
+  db.ref(`chats/${uid}`).once('value', snapshot => {
+    const chatEntries = Object.values(snapshot.val() || {});
+    const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
+    if (hasUnread) {
+      if (!option.textContent.includes('❗')) option.textContent += ' ❗';
+    } else {
+      option.textContent = option.textContent.replace(' ❗', '');
     }
+  });
+}
 
-    // Mulai saat halaman dimuat
-    window.onload = () => {
-      loadUserList();
-      watchNewUsers();
-    };
+// Pantau user baru yang chat ke admin, otomatis masuk dropdown
+function watchNewUsers() {
+  db.ref('chats').on('child_added', snapshot => {
+    addUserOption(snapshot.key);
+  });
+}
+
+// Event saat user dipilih di dropdown
+document.getElementById('userId').addEventListener('change', (e) => {
+  activeUserId = e.target.value;
+  if (activeUserId) {
+    listenToChat();
+  } else {
+    document.getElementById('chatBox').innerHTML = '<p style="text-align:center; color:gray;">Pilih user dulu untuk lihat chat.</p>';
+  }
+});
+
+// Inisialisasi halaman
+window.onload = () => {
+  loadUserList();
+  watchNewUsers();
+};
   </script>
 </body>
 </html>
