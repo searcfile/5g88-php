@@ -105,8 +105,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <script>
-  // KONFIGURASI FIREBASE
-const firebaseConfig = {
+ const firebaseConfig = {
   apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
   authDomain: "blurphp.firebaseapp.com",
   databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -120,42 +119,49 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let activeUserIdSanitized = ''; // key dropdown, sanitized version
-let activeUserIdEmail = '';     // email asli untuk path db
+let activeUserIdSanitized = '';
+let activeUserIdEmail = '';
 
-// Fungsi sanitize email jadi key aman (ganti '.' -> '_', '@' -> '-')
+// Utility
 function sanitizeUserId(email) {
   return email.replace(/\./g, '_').replace(/@/g, '-');
 }
-
-// Fungsi balik dari sanitized ke email asli
 function desanitizeUserId(sanitized) {
   return sanitized.replace(/_/g, '.').replace(/-/g, '@');
 }
 
-// Toggle Dark Mode
+// Theme Toggle
 function toggleTheme() {
   document.body.classList.toggle('dark');
 }
 
-// Kirim Pesan Admin ke User Terpilih
+// Kirim pesan
 function sendMessage() {
   const msgInput = document.getElementById('msg');
   const msg = msgInput.value.trim();
   if (!activeUserIdEmail || !msg) return alert("Pilih user dan tulis pesan dulu!");
 
-  // Gunakan email asli di path Firebase
-  const chatRef = db.ref('chats/' + activeUserIdEmail);
-  chatRef.push({ from: 'admin', text: msg, time: Date.now() });
+  db.ref('chats/' + activeUserIdEmail).push({
+    from: 'admin',
+    text: msg,
+    time: Date.now()
+  });
   msgInput.value = '';
 }
 
-// Dengarkan Pesan dari User Terpilih
+// Enter untuk kirim
+document.getElementById('msg').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+// Listener pesan
 function listenToChat() {
   if (!activeUserIdEmail) return;
-
   const chatRef = db.ref('chats/' + activeUserIdEmail);
-  chatRef.off(); // Matikan listener lama
+  chatRef.off(); // Matikan sebelumnya
 
   chatRef.on('value', snapshot => {
     const chatBox = document.getElementById('chatBox');
@@ -169,7 +175,6 @@ function listenToChat() {
         const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         div.className = 'message ' + (c.from === 'admin' ? 'mine' : 'theirs');
-
         div.innerHTML = c.name
           ? `<b>${c.name}:</b> ${c.text} <small>(${timeStr})</small>`
           : `${c.text} <small>(${timeStr})</small>`;
@@ -188,7 +193,7 @@ function listenToChat() {
   });
 }
 
-// Load list user dari node chats
+// Load daftar user
 function loadUserList() {
   const userDropdown = document.getElementById('userId');
   userDropdown.innerHTML = '<option value="">-- Pilih User --</option>';
@@ -201,26 +206,28 @@ function loadUserList() {
   });
 }
 
-// Tambah option user ke dropdown, dengan cek unread
+// Tambahkan user ke dropdown
 function addUserOption(email) {
   db.ref(`chats/${email}`).once('value', snapshot => {
     const chatEntries = Object.values(snapshot.val() || {});
     const firstMsg = chatEntries.find(m => m.from === 'user');
+    if (!firstMsg) return;
 
-    if (firstMsg && !document.querySelector(`#userId option[value="${sanitizeUserId(email)}"]`)) {
-      const userDropdown = document.getElementById('userId');
-      const option = document.createElement('option');
-      option.value = sanitizeUserId(email); // pakai sanitized email sebagai value
+    const sanitizedEmail = sanitizeUserId(email);
+    if (document.querySelector(`#userId option[value="${sanitizedEmail}"]`)) return;
 
-      const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
-      option.textContent = `${firstMsg.name} (${firstMsg.email})` + (hasUnread ? ' ❗' : '');
+    const userDropdown = document.getElementById('userId');
+    const option = document.createElement('option');
+    option.value = sanitizedEmail;
 
-      userDropdown.appendChild(option);
-    }
+    const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
+    option.textContent = `${firstMsg.name} (${firstMsg.email})${hasUnread ? ' ❗' : ''}`;
+
+    userDropdown.appendChild(option);
   });
 }
 
-// Update flag unread di dropdown untuk user tertentu
+// Update flag unread di dropdown
 function updateUserDropdownFlag(email) {
   const option = document.querySelector(`#userId option[value="${sanitizeUserId(email)}"]`);
   if (!option) return;
@@ -228,26 +235,22 @@ function updateUserDropdownFlag(email) {
   db.ref(`chats/${email}`).once('value', snapshot => {
     const chatEntries = Object.values(snapshot.val() || {});
     const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
-    if (hasUnread) {
-      if (!option.textContent.includes('❗')) option.textContent += ' ❗';
-    } else {
-      option.textContent = option.textContent.replace(' ❗', '');
-    }
+    option.textContent = option.textContent.replace(' ❗', '') + (hasUnread ? ' ❗' : '');
   });
 }
 
-// Pantau user baru yang chat ke admin, otomatis masuk dropdown
+// Pantau user baru
 function watchNewUsers() {
   db.ref('chats').on('child_added', snapshot => {
     addUserOption(snapshot.key);
   });
 }
 
-// Event saat user dipilih di dropdown
+// Saat pilih user
 document.getElementById('userId').addEventListener('change', (e) => {
   activeUserIdSanitized = e.target.value;
   if (activeUserIdSanitized) {
-    activeUserIdEmail = desanitizeUserId(activeUserIdSanitized); // decode ke email asli
+    activeUserIdEmail = desanitizeUserId(activeUserIdSanitized);
     listenToChat();
   } else {
     activeUserIdEmail = '';
@@ -255,7 +258,7 @@ document.getElementById('userId').addEventListener('change', (e) => {
   }
 });
 
-// Inisialisasi halaman
+// Inisialisasi
 window.onload = () => {
   loadUserList();
   watchNewUsers();
