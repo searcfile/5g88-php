@@ -249,17 +249,17 @@ window.onload = function () {
   const userEmail = localStorage.getItem("useremail");
   const userPhoto = localStorage.getItem("userphoto");
 
-  if (!userName || !userEmail) {
-    alert("Please login first.");
-    window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
-    return;
-  }
+ if (!userName || !userEmail || !userPhoto) {
+  alert("Login session expired. Please login again.");
+  window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
+}
 
   // Tampilkan nama dan foto user di pojok kanan
   const userInfoDiv = document.getElementById("user-info");
-  userInfoDiv.innerHTML = userPhoto
-    ? `<img src="${userPhoto}" style="width:30px;height:30px;border-radius:50%;margin-right:5px;vertical-align:middle;"> ${userName} (${userEmail})`
-    : `${userName} (${userEmail})`;
+  userInfoDiv.innerHTML = `
+  <img src="${userPhoto}" style="width:30px;height:30px;border-radius:50%;margin-right:5px;vertical-align:middle;">
+  <span>${userName}</span> <span>(${userEmail})</span>
+`;
 
   // Aktifkan tombol kirim
   document.getElementById('msg').addEventListener('keypress', function (e) {
