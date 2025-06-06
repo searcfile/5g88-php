@@ -121,6 +121,13 @@
       <button onclick="sendMessage()">Send</button>
     </div>
   </main>
+
+  <button id="logoutBtn">Logout</button>
+
+  <div style="position: fixed; top: 20px; right: 60px; z-index: 9999; display: flex; gap: 15px;">
+     <div id="userName" style="position: fixed; top: 10px; right: 300px; color: white; font-weight: bold; z-index: 9999; font-size: 15px; display: flex; gap: 10px; justify-content: flex-end;"></div>
+     <div id="userEmail" style="position: fixed; top: 10px; right: 120px; color: white; z-index: 9999; font-weight: bold;font-size: 15px; display: flex; gap: 10px; justify-content: flex-end;"></div>
+  </div>
   <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
