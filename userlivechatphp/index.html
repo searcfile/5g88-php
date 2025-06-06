@@ -134,18 +134,22 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
 
   <script>
-    // Cek login
-  const userName = localStorage.getItem("username");
-  const userEmail = localStorage.getItem("useremail");
+  function getUserIdFromEmail(email) {
+  return email.replace(/\./g, ',').replace(/@/g, '_at_');
+}
 
-  if (!userName || !userEmail) {
-    alert("Please login first.");
-    window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
-  }
+// Cek login
+const userName = localStorage.getItem("username");
+const userEmail = localStorage.getItem("useremail");
 
-  const userId = userEmail.replace(/\./g, ',');
+if (!userName || !userEmail) {
+  alert("Please login first.");
+  window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
+}
 
-  // Firebase config
+const userId = getUserIdFromEmail(userEmail);
+
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
   authDomain: "blurphp.firebaseapp.com",
@@ -167,7 +171,7 @@ function sendMessage() {
 
   const userName = localStorage.getItem("username");
   const userEmail = localStorage.getItem("useremail");
-  const userId = userEmail.replace(/\./g, ',');
+  const userId = getUserIdFromEmail(userEmail);
   const chatRef = db.ref('chats/' + userId);
   const time = Date.now();
 
@@ -191,7 +195,7 @@ function sendMessage() {
 // Fungsi untuk menampilkan chat
 function listenToChat() {
   const userEmail = localStorage.getItem("useremail");
-  const userId = userEmail.replace(/\./g, ',');
+  const userId = getUserIdFromEmail(userEmail);
   const chatBox = document.getElementById('chatBox');
 
   db.ref('chats/' + userId).on('value', snapshot => {
@@ -249,30 +253,31 @@ window.onload = function () {
   const userEmail = localStorage.getItem("useremail");
   const userPhoto = localStorage.getItem("userphoto");
 
- if (!userName || !userEmail || !userPhoto) {
-  alert("Login session expired. Please login again.");
-  window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
-}
+  if (!userName || !userEmail || !userPhoto) {
+    alert("Login session expired. Please login again.");
+    window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
+  }
 
   // Tampilkan nama dan foto user di pojok kanan
   const userInfoDiv = document.getElementById("user-info");
   userInfoDiv.innerHTML = `
-  <img src="${userPhoto}" style="width:30px;height:30px;border-radius:50%;margin-right:5px;vertical-align:middle;">
-  <span>${userName}</span> <span>(${userEmail})</span>
-`;
+    <img src="${userPhoto}" style="width:30px;height:30px;border-radius:50%;margin-right:5px;vertical-align:middle;">
+    <span>${userName}</span> <span>(${userEmail})</span>
+  `;
 
-  // Aktifkan tombol kirim
+  // Aktifkan tombol kirim saat tekan Enter
   document.getElementById('msg').addEventListener('keypress', function (e) {
     if (e.key === 'Enter') {
       sendMessage();
     }
   });
 
+  // Enable/disable tombol kirim sesuai inputan
   document.getElementById('msg').addEventListener('input', () => {
     document.querySelector('.send-box button').disabled = !document.getElementById('msg').value.trim();
   });
 
-  // Mulai dengar chat
+  // Mulai dengarkan chat
   listenToChat();
 };
   </script>
