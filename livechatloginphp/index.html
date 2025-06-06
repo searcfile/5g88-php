@@ -106,9 +106,9 @@
     appId: "1:593904200464:web:cea7bc1360532c20d99395"
   };
 
-  // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
+   const db = firebase.database();
+   const storage = firebase.storage();
 
   function googleLogin() {
     const provider = new firebase.auth.GoogleAuthProvider();
