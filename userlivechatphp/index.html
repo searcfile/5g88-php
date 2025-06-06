@@ -136,7 +136,7 @@
     window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
   }
 
-  const userId = btoa(userEmail); // encode email ke base64 untuk jadi ID unik
+  const userId = userEmail.replace(/\./g, ',');
 
   // Firebase config
   const firebaseConfig = {
