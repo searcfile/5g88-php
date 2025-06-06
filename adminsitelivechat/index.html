@@ -105,7 +105,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <script>
- const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
   authDomain: "blurphp.firebaseapp.com",
   databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -141,7 +141,8 @@ function sendMessage() {
   const msg = msgInput.value.trim();
   if (!activeUserIdEmail || !msg) return alert("Pilih user dan tulis pesan dulu!");
 
-  db.ref('chats/' + activeUserIdEmail).push({
+  // **PAKAI sanitized key untuk path**
+  db.ref('chats/' + sanitizeUserId(activeUserIdEmail)).push({
     from: 'admin',
     text: msg,
     time: Date.now()
@@ -160,8 +161,10 @@ document.getElementById('msg').addEventListener('keypress', (e) => {
 // Listener pesan
 function listenToChat() {
   if (!activeUserIdEmail) return;
-  const chatRef = db.ref('chats/' + activeUserIdEmail);
-  chatRef.off(); // Matikan sebelumnya
+
+  // **PAKAI sanitized key untuk path**
+  const chatRef = db.ref('chats/' + sanitizeUserId(activeUserIdEmail));
+  chatRef.off(); // Matikan listener sebelumnya
 
   chatRef.on('value', snapshot => {
     const chatBox = document.getElementById('chatBox');
@@ -182,7 +185,8 @@ function listenToChat() {
         chatBox.appendChild(div);
 
         if (c.from === 'user' && !c.readByAdmin) {
-          db.ref(`chats/${activeUserIdEmail}/${key}/readByAdmin`).set(true);
+          // **PAKAI sanitized key untuk path**
+          db.ref(`chats/${sanitizeUserId(activeUserIdEmail)}/${key}/readByAdmin`).set(true);
           updateUserDropdownFlag(activeUserIdEmail);
         }
       });
@@ -208,7 +212,8 @@ function loadUserList() {
 
 // Tambahkan user ke dropdown
 function addUserOption(email) {
-  db.ref(`chats/${email}`).once('value', snapshot => {
+  // **PAKAI sanitized key untuk path**
+  db.ref(`chats/${sanitizeUserId(email)}`).once('value', snapshot => {
     const chatEntries = Object.values(snapshot.val() || {});
     const firstMsg = chatEntries.find(m => m.from === 'user');
     if (!firstMsg) return;
@@ -232,7 +237,8 @@ function updateUserDropdownFlag(email) {
   const option = document.querySelector(`#userId option[value="${sanitizeUserId(email)}"]`);
   if (!option) return;
 
-  db.ref(`chats/${email}`).once('value', snapshot => {
+  // **PAKAI sanitized key untuk path**
+  db.ref(`chats/${sanitizeUserId(email)}`).once('value', snapshot => {
     const chatEntries = Object.values(snapshot.val() || {});
     const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
     option.textContent = option.textContent.replace(' ❗', '') + (hasUnread ? ' ❗' : '');
