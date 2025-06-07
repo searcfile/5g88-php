@@ -190,6 +190,10 @@
 
     <button id="logoutBtn">Logout</button>
 
+    <img id="headerUserPhoto" src="" alt="User Photo" style="width:30px;height:30px;border-radius:50%;vertical-align:middle;">
+<span id="headerUserName"></span>
+<small id="typingStatus">Online</small>
+
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -239,11 +243,7 @@
 
       currentUserEmail = userEmail;
 
-      document.getElementById("user-info").innerHTML = `
-        <img src="${userPhoto}" alt="User Photo" style="width:30px;height:30px;border-radius:50%;margin-right:5px;vertical-align:middle;">
-        <span>${userName}</span>
-      `;
-
+      
       // SET CHAT HEADER PROFILE
       const headerUserPhoto = document.getElementById('headerUserPhoto');
       const headerUserName = document.getElementById('headerUserName');
