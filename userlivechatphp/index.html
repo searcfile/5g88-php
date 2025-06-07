@@ -262,12 +262,18 @@
       let typingTimer;
       const typingDelay = 2000;
 
-      msgInput.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          sendMessage(currentUserEmail);
-        }
-      });
+      msgInput.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') {
+    if (e.shiftKey || e.ctrlKey) {
+      // Shift+Enter atau Ctrl+Enter bikin baris baru (newline)
+      return; // biarkan default behavior
+    } else {
+      // Enter doang, kirim pesan
+      e.preventDefault();
+      sendMessage(currentUserEmail);
+    }
+  }
+});
 
       msgInput.addEventListener('input', () => {
         sendBtn.disabled = !msgInput.value.trim() && !fileInput.files.length;
