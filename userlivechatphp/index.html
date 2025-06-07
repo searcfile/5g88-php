@@ -169,13 +169,15 @@
   <main>
     <!-- CHAT HEADER -->
     <div class="chat-header">
-      <div class="profile">
-        <img id="headerUserPhoto" src="" alt="User Photo" />
-        <span id="headerUserName">User</span>
-      </div>
-      <input type="text" id="searchChat" placeholder="Search messages..." />
-      <div id="typingStatus">Offline</div>
+  <div class="profile">
+    <img id="headerUserPhoto" src="" alt="User Photo" />
+    <div>
+      <span id="headerUserName">User</span><br>
+      <small id="typingStatus">Offline</small>
     </div>
+  </div>
+  <input type="text" id="searchChat" placeholder="Search messages..." />
+</div>
 
     <div class="chat-box" id="chatBox"></div>
 
@@ -189,10 +191,6 @@
     </div>
 
     <button id="logoutBtn">Logout</button>
-
-    <img id="headerUserPhoto" src="" alt="User Photo" style="width:30px;height:30px;border-radius:50%;vertical-align:middle;">
-<span id="headerUserName"></span>
-<small id="typingStatus">Online</small>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
