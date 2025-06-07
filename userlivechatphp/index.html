@@ -102,31 +102,82 @@
     color: #000;
     font-weight: bold;
    }
+    /* CHAT HEADER STYLE */
+    .chat-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      background: #222;
+      padding: 8px 12px;
+      color: gold;
+      font-weight: bold;
+      font-family: Arial, sans-serif;
+    }
+
+    .chat-header .profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 180px;
+    }
+
+    .chat-header .profile img {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      border: 2px solid gold;
+    }
+
+    #searchChat {
+      flex-grow: 1;
+      padding: 6px 10px;
+      border-radius: 5px;
+      border: none;
+      font-size: 14px;
+    }
+
+    #typingStatus {
+      min-width: 90px;
+      text-align: right;
+      font-style: italic;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
   <header>
-    
     <h1>User LiveChat</h1>
     <button onclick="toggleTheme()">Toggle Theme</button>
   </header>
   <main>
+    <!-- CHAT HEADER -->
+    <div class="chat-header">
+      <div class="profile">
+        <img id="headerUserPhoto" src="" alt="User Photo" />
+        <span id="headerUserName">User</span>
+      </div>
+      <input type="text" id="searchChat" placeholder="Search messages..." />
+      <div id="typingStatus">Offline</div>
+    </div>
+
     <div class="chat-box" id="chatBox"></div>
-<div class="send-box">
-  <input type="text" id="msg" placeholder="Type your message">
-  <label class="file-label">
-    Upload Image
-    <input type="file" id="fileInput" accept="image/*">
-  </label>
-  <button type="button" disabled>Send</button>
-</div>
 
-  <button id="logoutBtn">Logout</button>
+    <div class="send-box">
+      <input type="text" id="msg" placeholder="Type your message">
+      <label class="file-label">
+        Upload Image
+        <input type="file" id="fileInput" accept="image/*">
+      </label>
+      <button type="button" disabled>Send</button>
+    </div>
 
-  <div style="position: fixed; top: 20px; right: 60px; z-index: 9999; display: flex; gap: 15px;">
-     <div id="user-info" style="position: fixed; top: 10px; right: 300px; color: white; font-weight: bold; z-index: 9999; font-size: 15px; display: flex; gap: 10px; justify-content: flex-end;"></div>
-     <div id="userEmail" style="position: fixed; top: 10px; right: 120px; color: white; z-index: 9999; font-weight: bold;font-size: 15px; display: flex; gap: 10px; justify-content: flex-end;"></div>
-  </div>
+    <button id="logoutBtn">Logout</button>
+
+    <div style="position: fixed; top: 20px; right: 60px; z-index: 9999; display: flex; gap: 15px;">
+      <div id="user-info" style="position: fixed; top: 10px; right: 300px; color: white; font-weight: bold; z-index: 9999; font-size: 15px; display: flex; gap: 10px; justify-content: flex-end;"></div>
+      <div id="userEmail" style="position: fixed; top: 10px; right: 120px; color: white; z-index: 9999; font-weight: bold;font-size: 15px; display: flex; gap: 10px; justify-content: flex-end;"></div>
+    </div>
+
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -181,11 +232,25 @@
         <span>${userName}</span>
       `;
 
+      // SET CHAT HEADER PROFILE
+      const headerUserPhoto = document.getElementById('headerUserPhoto');
+      const headerUserName = document.getElementById('headerUserName');
+      const typingStatus = document.getElementById('typingStatus');
+      const searchInput = document.getElementById('searchChat');
+      const chatBox = document.getElementById('chatBox');
+
+      headerUserPhoto.src = userPhoto || 'https://i.pravatar.cc/40';
+      headerUserName.textContent = userName;
+      typingStatus.textContent = 'Online';
+
       listenToChat(currentUserEmail);
 
       const msgInput = document.getElementById('msg');
       const sendBtn = document.querySelector('.send-box button');
       const fileInput = document.getElementById('fileInput');
+
+      let typingTimer;
+      const typingDelay = 2000;
 
       msgInput.addEventListener('keypress', function (e) {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -196,6 +261,30 @@
 
       msgInput.addEventListener('input', () => {
         sendBtn.disabled = !msgInput.value.trim() && !fileInput.files.length;
+
+        if (msgInput.value.trim() !== '') {
+          typingStatus.textContent = 'Typing...';
+          clearTimeout(typingTimer);
+          typingTimer = setTimeout(() => {
+            typingStatus.textContent = 'Online';
+          }, typingDelay);
+        } else {
+          typingStatus.textContent = 'Online';
+        }
+      });
+
+      searchInput.addEventListener('input', () => {
+        const filter = searchInput.value.toLowerCase();
+        const messages = chatBox.querySelectorAll('.message');
+
+        messages.forEach(msg => {
+          const text = msg.textContent.toLowerCase();
+          if (text.includes(filter)) {
+            msg.style.display = '';
+          } else {
+            msg.style.display = 'none';
+          }
+        });
       });
 
       sendBtn.disabled = true;
@@ -278,39 +367,45 @@
 
           // Tentukan nama pengirim
           let senderLabel = "Unknown";
-          if (c.email === currentUserEmail) {
-            senderLabel = "Me";
-          } else if (c.name && c.name.toLowerCase().includes("admin")) {
-            senderLabel = "Admin";
-          } else {
-            senderLabel = c.name || "Unknown";
+          if (c.from === 'user') senderLabel = c.name || "You";
+          else senderLabel = c.name || "Admin";
+
+          if (c.text) {
+            div.innerHTML = `
+              <span class="msg-info">${senderLabel} <small>${formattedTime}</small></span>
+              <p>${c.text}</p>
+            `;
+          } else if (c.image) {
+            div.innerHTML = `
+              <span class="msg-info">${senderLabel} <small>${formattedTime}</small></span>
+              <img src="${c.image}" alt="Image" style="max-width: 100%; border-radius: 8px; margin-top: 5px;">
+            `;
           }
 
-          div.innerHTML = c.image ? `
-            <div class="bubble">
-              <strong>${senderLabel}</strong>:<br>
-              <img src="${c.image}" alt="Chat Image" style="max-width:100%; border-radius: 10px;">
-              <div class="time">(${formattedTime})</div>
-            </div>` : `
-            <div class="bubble">
-              <strong>${senderLabel}</strong>: ${c.text}
-              <div class="time">(${formattedTime})</div>
-            </div>`;
-
           chatBox.appendChild(div);
+          chatBox.scrollTop = chatBox.scrollHeight;
         });
-        chatBox.scrollTop = chatBox.scrollHeight;
-      } else {
-        chatBox.innerHTML = '<p style="text-align:center; color:gray;">No messages yet.</p>';
       }
     });
   }
 
   function logout() {
-    firebase.auth().signOut().then(() => {
-      localStorage.clear();
-      window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
-    });
+    firebase.auth().signOut()
+      .then(() => {
+        localStorage.clear();
+        window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
+      })
+      .catch((error) => {
+        console.error("Logout failed:", error);
+      });
+  }
+
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    logout();
+  });
+
+  function toggleTheme() {
+    document.body.classList.toggle('dark-theme');
   }
   </script>
 </body>
