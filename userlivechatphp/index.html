@@ -43,7 +43,7 @@
     .message {
       padding: 0.5rem;
       margin: 0.5rem 0;
-      border-radius: 5px;
+      border-radius: 10px;
       max-width: 80%;
       white-space: normal;
       word-wrap: break-word;
@@ -378,7 +378,7 @@
           } else if (c.image) {
             div.innerHTML = `
               <span class="msg-info">${senderLabel} <small>${formattedTime}</small></span>
-              <img src="${c.image}" alt="Image" style="max-width: 100%; border-radius: 8px; margin-top: 5px;">
+              <img src="${c.image}" alt="Image" style="max-width: 100%; border-radius: 8px; margin-top: 5px; font-weight:bold;">
             `;
           }
 
