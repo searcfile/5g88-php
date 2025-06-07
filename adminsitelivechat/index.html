@@ -123,12 +123,29 @@ const db = firebase.database();
 let activeUserIdSanitized = '';
 let activeUserIdEmail = '';
 
-// Sanitize email → Firebase-safe key
+// Update sanitize dan desanitize sesuai aturan baru
 function sanitizeUserId(email) {
-  return email.replace(/\./g, '_').replace(/@/g, '-');
+  return email.replace(/\./g, '_')
+              .replace(/@/g, '_at_')
+              .replace(/,/g, '_');
 }
+
 function desanitizeUserId(sanitized) {
-  return sanitized.replace(/_/g, '.').replace(/-/g, '@');
+  return sanitized.replace(/_/g, '.')  // note: ini akan ganti semua _ jadi . termasuk yang _at_ nanti jadi .at.
+                  .replace(/\.at\./g, '@'); // Karena _at_ jadi .at. jadinya kita butuh fix ini
+
+  // Alternatif lebih tepat:
+  // ganti _at_ dulu baru ganti _ ke .
+  // supaya _at_ benar jadi @, bukan .at.
+  // Jadi lebih tepat seperti ini:
+
+  // return sanitized.replace(/_at_/g, '@').replace(/_/g, '.');
+}
+
+// Karena kemungkinan bug, lebih aman ganti fungsi desanitize seperti ini:
+
+function desanitizeUserId(sanitized) {
+  return sanitized.replace(/_at_/g, '@').replace(/_/g, '.');
 }
 
 // Kirim pesan dari admin ke user
