@@ -210,6 +210,7 @@
     return 'chats/' + sanitizeEmail(email);
   }
 
+  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
     authDomain: "blurphp.firebaseapp.com",
@@ -220,6 +221,7 @@
     appId: "1:593904200464:web:cea7bc1360532c20d99395"
   };
 
+  // Inisialisasi Firebase
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   const storage = firebase.storage();
@@ -241,35 +243,29 @@
       localStorage.setItem("username", userName);
       localStorage.setItem("useremail", userEmail);
       localStorage.setItem("userphoto", userPhoto);
-
       currentUserEmail = userEmail;
 
+      // Tampilkan info user
       document.getElementById("user-info").innerHTML = `
         <img src="${userPhoto}" alt="User Photo" style="width:30px;height:30px;border-radius:50%;margin-right:5px;vertical-align:middle;">
         <span>${userName}</span>
       `;
 
-      // SET CHAT HEADER PROFILE
-      const headerUserPhoto = document.getElementById('headerUserPhoto');
-      const headerUserName = document.getElementById('headerUserName');
-      const typingStatus = document.getElementById('typingStatus');
-      const searchInput = document.getElementById('searchChat');
-      const chatBox = document.getElementById('chatBox');
+      // Header profile & input
+      document.getElementById('headerUserPhoto').src = userPhoto || 'https://i.pravatar.cc/40';
+      document.getElementById('headerUserName').textContent = userName;
+      document.getElementById('typingStatus').textContent = 'Online';
 
-      headerUserPhoto.src = userPhoto || 'https://i.pravatar.cc/40';
-      headerUserName.textContent = userName;
-      typingStatus.textContent = 'Online';
-
+      // Mulai mendengarkan pesan
       listenToChat(currentUserEmail);
 
       const msgInput = document.getElementById('msg');
       const sendBtn = document.querySelector('.send-box button');
       const fileInput = document.getElementById('fileInput');
-
       let typingTimer;
       const typingDelay = 2000;
 
-      msgInput.addEventListener('keypress', function (e) {
+      msgInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
           sendMessage(currentUserEmail);
@@ -280,32 +276,27 @@
         sendBtn.disabled = !msgInput.value.trim() && !fileInput.files.length;
 
         if (msgInput.value.trim() !== '') {
-          typingStatus.textContent = 'Typing...';
+          document.getElementById('typingStatus').textContent = 'Typing...';
           clearTimeout(typingTimer);
           typingTimer = setTimeout(() => {
-            typingStatus.textContent = 'Online';
+            document.getElementById('typingStatus').textContent = 'Online';
           }, typingDelay);
         } else {
-          typingStatus.textContent = 'Online';
+          document.getElementById('typingStatus').textContent = 'Online';
         }
-      });
-
-      searchInput.addEventListener('input', () => {
-        const filter = searchInput.value.toLowerCase();
-        const messages = chatBox.querySelectorAll('.message');
-
-        messages.forEach(msg => {
-          const text = msg.textContent.toLowerCase();
-          if (text.includes(filter)) {
-            msg.style.display = '';
-          } else {
-            msg.style.display = 'none';
-          }
-        });
       });
 
       sendBtn.disabled = true;
       sendBtn.addEventListener('click', () => sendMessage(currentUserEmail));
+
+      // Search chat filter
+      document.getElementById('searchChat').addEventListener('input', () => {
+        const filter = document.getElementById('searchChat').value.toLowerCase();
+        const messages = document.querySelectorAll('#chatBox .message');
+        messages.forEach(msg => {
+          msg.style.display = msg.textContent.toLowerCase().includes(filter) ? '' : 'none';
+        });
+      });
 
     } else {
       alert("🚫 Not logged in. Redirecting to login page...");
@@ -376,34 +367,30 @@
         Object.values(chats).forEach(c => {
           const div = document.createElement('div');
           div.className = 'message ' + (c.from === 'user' ? 'mine' : 'theirs');
-
           const date = new Date(c.time);
           const formattedTime = date.toLocaleTimeString('en-US', {
             hour: '2-digit', minute: '2-digit', hour12: true
           });
 
-          // Tentukan nama pengirim
-          let senderLabel = "Unknown";
-          if (c.from === 'user') senderLabel = c.name || "You";
-          else senderLabel = c.name || "Admin";
+          let senderLabel = c.from === 'user' ? (c.name || "You") : (c.name || "Admin");
 
           if (c.text) {
-  div.innerHTML = `
-    <div class="msg-header">
-      <span class="msg-info">${senderLabel}</span>
-      <small>${formattedTime}</small>
-    </div>
-    <p class="msg-text">${c.text}</p>
-  `;
-} else if (c.image) {
-  div.innerHTML = `
-    <div class="msg-header">
-      <span class="msg-info">${senderLabel}</span>
-      <small>${formattedTime}</small>
-    </div>
-    <img src="${c.image}" alt="Image" style="max-width: 100%; border-radius: 8px; margin-top: 4px;">
-  `;
-}
+            div.innerHTML = `
+              <div class="msg-header">
+                <span class="msg-info">${senderLabel}</span>
+                <small>${formattedTime}</small>
+              </div>
+              <p class="msg-text">${c.text}</p>
+            `;
+          } else if (c.image) {
+            div.innerHTML = `
+              <div class="msg-header">
+                <span class="msg-info">${senderLabel}</span>
+                <small>${formattedTime}</small>
+              </div>
+              <img src="${c.image}" alt="Image" style="max-width: 100%; border-radius: 8px; margin-top: 4px;">
+            `;
+          }
 
           chatBox.appendChild(div);
           chatBox.scrollTop = chatBox.scrollHeight;
@@ -413,20 +400,18 @@
   }
 
   function logout() {
-    firebase.auth().signOut()
-      .then(() => {
-        localStorage.clear();
-        window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
-      })
-      .catch((error) => {
-        console.error("Logout failed:", error);
-      });
+    firebase.auth().signOut().then(() => {
+      localStorage.clear();
+      window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
+    }).catch((error) => {
+      console.error("Logout failed:", error);
+    });
   }
 
-  document.getElementById("logoutBtn").addEventListener("click", () => {
-    logout();
-  });
+  // Logout button
+  document.getElementById("logoutBtn").addEventListener("click", logout);
 
+  // Optional theme switch
   function toggleTheme() {
     document.body.classList.toggle('dark-theme');
   }
