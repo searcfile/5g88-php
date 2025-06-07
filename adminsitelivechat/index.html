@@ -105,6 +105,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <script>
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
   authDomain: "blurphp.firebaseapp.com",
@@ -122,7 +123,7 @@ const db = firebase.database();
 let activeUserIdSanitized = '';
 let activeUserIdEmail = '';
 
-// Utility: sanitize email jadi key yang aman untuk path Firebase
+// Sanitize email → Firebase-safe key
 function sanitizeUserId(email) {
   return email.replace(/\./g, '_').replace(/@/g, '-');
 }
@@ -130,11 +131,15 @@ function desanitizeUserId(sanitized) {
   return sanitized.replace(/_/g, '.').replace(/-/g, '@');
 }
 
-// Kirim pesan dari admin ke user aktif
+// Kirim pesan dari admin ke user
 function sendMessage() {
   const msgInput = document.getElementById('msg');
   const msg = msgInput.value.trim();
-  if (!activeUserIdEmail || !msg) return alert("Pilih user dan tulis pesan dulu!");
+
+  if (!activeUserIdEmail || !msg) {
+    alert("Pilih user dan tulis pesan dulu!");
+    return;
+  }
 
   const sanitizedId = sanitizeUserId(activeUserIdEmail);
 
@@ -145,10 +150,11 @@ function sendMessage() {
     text: msg,
     time: Date.now()
   });
+
   msgInput.value = '';
 }
 
-// Enter untuk kirim pesan (tanpa Shift)
+// Kirim pesan dengan Enter
 document.getElementById('msg').addEventListener('keypress', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
@@ -156,46 +162,47 @@ document.getElementById('msg').addEventListener('keypress', (e) => {
   }
 });
 
-// Listen chat dari user aktif
+// Dengarkan percakapan dengan user aktif
 function listenToChat() {
   if (!activeUserIdEmail) return;
 
   const sanitizedId = sanitizeUserId(activeUserIdEmail);
   const chatRef = db.ref('chats/' + sanitizedId);
-  chatRef.off();
+  const chatBox = document.getElementById('chatBox');
+
+  chatRef.off(); // matikan listener lama
+  chatBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
 
   chatRef.on('value', snapshot => {
-    const chatBox = document.getElementById('chatBox');
     chatBox.innerHTML = '';
     const chats = snapshot.val();
 
     if (chats) {
-      Object.entries(chats).forEach(([key, c]) => {
+      Object.entries(chats).forEach(([key, msg]) => {
         const div = document.createElement('div');
-        const date = new Date(c.time || Date.now());
+        const date = new Date(msg.time || Date.now());
         const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-        div.className = 'message ' + (c.from === 'admin' ? 'mine' : 'theirs');
+        div.className = 'message ' + (msg.from === 'admin' ? 'mine' : 'theirs');
 
-        // Tampilkan nama jika ada, fallback ke email jika ada, else hanya text
         let header = '';
-        if (c.name) {
-          header = `<b>${c.name}</b>`;
-          if (c.email && c.email !== activeUserIdEmail) {
-            header += ` (${c.email})`;
+        if (msg.name) {
+          header = `<b>${msg.name}</b>`;
+          if (msg.email && msg.email !== activeUserIdEmail) {
+            header += ` (${msg.email})`;
           }
-        } else if (c.email) {
-          header = `<b>${c.email}</b>`;
+        } else if (msg.email) {
+          header = `<b>${msg.email}</b>`;
         }
 
         div.innerHTML = header
-          ? `${header}: ${c.text} <small>(${timeStr})</small>`
-          : `${c.text} <small>(${timeStr})</small>`;
+          ? `${header}: ${msg.text} <small>(${timeStr})</small>`
+          : `${msg.text} <small>(${timeStr})</small>`;
 
         chatBox.appendChild(div);
 
-        // Tandai pesan user sudah dibaca admin jika belum dibaca
-        if (c.from === 'user' && !c.readByAdmin) {
+        // Tandai pesan user sebagai dibaca
+        if (msg.from === 'user' && !msg.readByAdmin) {
           db.ref(`chats/${sanitizedId}/${key}/readByAdmin`).set(true);
           updateUserDropdownFlag(activeUserIdEmail);
         }
@@ -207,7 +214,7 @@ function listenToChat() {
   });
 }
 
-// Load daftar user dari root chats/
+// Muat daftar user dari Firebase
 function loadUserList() {
   const userDropdown = document.getElementById('userId');
   userDropdown.innerHTML = '<option value="">-- Pilih User --</option>';
@@ -220,20 +227,18 @@ function loadUserList() {
   });
 }
 
-// Tambahkan user ke dropdown (berdasarkan email asli)
+// Tambahkan user ke dropdown
 function addUserOption(email) {
   const sanitizedEmail = sanitizeUserId(email);
 
   db.ref(`chats/${sanitizedEmail}`).once('value', snapshot => {
-    const chatEntries = Object.values(snapshot.val() || {});
-    // Cari pesan pertama dari user untuk dapatkan nama/email user
+    const chatEntries = Object.values(snapshot.val() || []);
     const firstMsg = chatEntries.find(m => m.from === 'user');
     if (!firstMsg) return;
 
-    // Cegah duplikat option
+    const userDropdown = document.getElementById('userId');
     if (document.querySelector(`#userId option[value="${sanitizedEmail}"]`)) return;
 
-    const userDropdown = document.getElementById('userId');
     const option = document.createElement('option');
     option.value = sanitizedEmail;
 
@@ -244,7 +249,7 @@ function addUserOption(email) {
   });
 }
 
-// Update flag unread (❗) di dropdown user
+// Update ❗ tanda jika ada pesan belum dibaca
 function updateUserDropdownFlag(email) {
   const sanitizedEmail = sanitizeUserId(email);
   const option = document.querySelector(`#userId option[value="${sanitizedEmail}"]`);
@@ -254,12 +259,12 @@ function updateUserDropdownFlag(email) {
     const chatEntries = Object.values(snapshot.val() || []);
     const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
 
-    // Hapus tanda ❗ dulu lalu tambah jika perlu
-    option.textContent = option.textContent.replace(/ ❗/g, '') + (hasUnread ? ' ❗' : '');
+    const baseText = option.textContent.replace(/ ❗/g, '');
+    option.textContent = baseText + (hasUnread ? ' ❗' : '');
   });
 }
 
-// Pantau user baru (child_added di chats/)
+// Pantau user baru ditambahkan
 function watchNewUsers() {
   db.ref('chats').on('child_added', snapshot => {
     const sanitizedEmail = snapshot.key;
@@ -267,7 +272,7 @@ function watchNewUsers() {
   });
 }
 
-// Saat user dropdown berubah
+// Event saat user diganti
 document.getElementById('userId').addEventListener('change', (e) => {
   activeUserIdSanitized = e.target.value;
   if (activeUserIdSanitized) {
@@ -279,7 +284,7 @@ document.getElementById('userId').addEventListener('change', (e) => {
   }
 });
 
-// Inisialisasi saat halaman siap
+// Saat halaman siap
 window.onload = () => {
   loadUserList();
   watchNewUsers();
