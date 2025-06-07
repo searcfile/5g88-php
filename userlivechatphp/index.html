@@ -372,13 +372,12 @@
 
           if (c.text) {
             div.innerHTML = `
-              <span class="msg-info">${senderLabel} <small>${formattedTime}</small></span>
-              <p>${c.text}</p>
+              <span class="msg-info">${senderLabel} <small>${formattedTime}</small></span><p>${c.text}</p>
             `;
           } else if (c.image) {
             div.innerHTML = `
               <span class="msg-info">${senderLabel} <small>${formattedTime}</small></span>
-              <img src="${c.image}" alt="Image" style="max-width: 100%; border-radius: 8px; margin-top: 5px; font-weight:bold;">
+              <img src="${c.image}" alt="Image" style="max-width: 100%; border-radius: 8px; margin-top: 5px; font-weight: bold;">
             `;
           }
 
