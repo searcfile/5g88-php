@@ -142,6 +142,23 @@
       font-style: italic;
       font-size: 14px;
     }
+     .msg-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+  font-weight: bold;
+}
+
+.msg-header small {
+  font-size: 0.75rem;
+  color: gray;
+}
+
+.msg-text {
+  margin: 0;
+  padding: 0;
+}
   </style>
 </head>
 <body>
@@ -371,16 +388,22 @@
           else senderLabel = c.name || "Admin";
 
           if (c.text) {
-            div.innerHTML = `
-              <span class="msg-info">${senderLabel} <small>${formattedTime}</small></span>
-              <p>${c.text}</p>
-            `;
-          } else if (c.image) {
-            div.innerHTML = `
-              <span class="msg-info">${senderLabel} <small>${formattedTime}</small></span>
-              <img src="${c.image}" alt="Image" style="max-width: 100%; border-radius: 8px; margin-top: 5px; font-weight:bold;">
-            `;
-          }
+  div.innerHTML = `
+    <div class="msg-header">
+      <span class="msg-info">${senderLabel}</span>
+      <small>${formattedTime}</small>
+    </div>
+    <p class="msg-text">${c.text}</p>
+  `;
+} else if (c.image) {
+  div.innerHTML = `
+    <div class="msg-header">
+      <span class="msg-info">${senderLabel}</span>
+      <small>${formattedTime}</small>
+    </div>
+    <img src="${c.image}" alt="Image" style="max-width: 100%; border-radius: 8px; margin-top: 4px;">
+  `;
+}
 
           chatBox.appendChild(div);
           chatBox.scrollTop = chatBox.scrollHeight;
