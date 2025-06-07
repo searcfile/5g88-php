@@ -49,7 +49,7 @@
       padding: 0.5rem;
       margin: 0.5rem 0;
       border-radius: 10px;
-      max-width: 80%;
+      max-width: 70%;
       white-space: normal;
       word-wrap: break-word;
       overflow-wrap: break-word;
@@ -173,12 +173,24 @@
 
 .msg-header small {
   font-size: 0.75rem;
-  color: gray;
+  color: #0b6906;
 }
 
 .msg-text {
   margin: 0;
   padding: 0;
+}
+    .date-label {
+  text-align: center;
+  font-weight: bold;
+  color: #555;
+  margin: 20px 0 10px;
+  font-size: 0.85rem;
+  background: #eaeaea;
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 12px;
+  line-height: 1.2;
 }
   </style>
 </head>
@@ -384,53 +396,85 @@
     }
   }
 
-  function listenToChat(userEmail) {
-    const chatBox = document.getElementById('chatBox');
-    const chatRef = db.ref(getChatPath(userEmail));
+ function listenToChat(userEmail) {
+  const chatBox = document.getElementById('chatBox');
+  const chatRef = db.ref(getChatPath(userEmail));
 
-    chatRef.on('value', snapshot => {
-      chatBox.innerHTML = '';
-      const chats = snapshot.val();
+  chatRef.on('value', snapshot => {
+    chatBox.innerHTML = '';
+    const chats = snapshot.val();
 
-      if (chats) {
-        Object.values(chats).forEach(c => {
-          const div = document.createElement('div');
-          div.className = 'message ' + (c.from === 'user' ? 'mine' : 'theirs');
+    if (chats) {
+      const chatArray = Object.values(chats).sort((a, b) => a.time - b.time);
 
-          const date = new Date(c.time);
-          const formattedTime = date.toLocaleTimeString('en-US', {
-            hour: '2-digit', minute: '2-digit', hour12: true
-          });
+      let lastDateKey = '';
 
-          // Tentukan nama pengirim
-          let senderLabel = "Unknown";
-          if (c.from === 'user') senderLabel = c.name || "You";
-          else senderLabel = c.name || "Admin";
+      chatArray.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'message ' + (c.from === 'user' ? 'mine' : 'theirs');
 
-          if (c.text) {
-  div.innerHTML = `
-    <div class="msg-header">
-      <span class="msg-info">${senderLabel}</span>
-      <small>${formattedTime}</small>
-    </div>
-    <p class="msg-text">${c.text}</p>
-  `;
-} else if (c.image) {
-  div.innerHTML = `
-    <div class="msg-header">
-      <span class="msg-info">${senderLabel}</span>
-      <small>${formattedTime}</small>
-    </div>
-    <img src="${c.image}" alt="Image" style="max-width: 100%; border-radius: 8px; margin-top: 4px;">
-  `;
-}
-
-          chatBox.appendChild(div);
-          chatBox.scrollTop = chatBox.scrollHeight;
+        const msgDate = new Date(c.time);
+        const timeFormatted = msgDate.toLocaleTimeString('en-US', {
+          hour: '2-digit', minute: '2-digit', hour12: true
         });
-      }
-    });
-  }
+
+        const dateKey = msgDate.toDateString();
+
+        // Dapatkan nama hari & format tarikh
+        const today = new Date();
+        const yesterday = new Date();
+        yesterday.setDate(today.getDate() - 1);
+
+        let dayLabel = '';
+        if (dateKey === today.toDateString()) {
+          dayLabel = 'Today';
+        } else if (dateKey === yesterday.toDateString()) {
+          dayLabel = 'Yesterday';
+        } else {
+          dayLabel = msgDate.toLocaleDateString('en-GB', { weekday: 'long' }); // Contoh: Monday
+        }
+
+        const fullDateLabel = msgDate.toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric'
+        }); // Contoh: 12 Jun 2025
+
+        if (dateKey !== lastDateKey) {
+          const dateLabelDiv = document.createElement('div');
+          dateLabelDiv.className = 'date-label';
+          dateLabelDiv.innerHTML = `<div>${dayLabel}</div><div>${fullDateLabel}</div>`;
+          chatBox.appendChild(dateLabelDiv);
+          lastDateKey = dateKey;
+        }
+
+        const senderLabel = c.from === 'user' ? (c.name || 'You') : (c.name || 'Admin');
+
+        if (c.text) {
+          div.innerHTML = `
+            <div class="msg-header">
+              <span class="msg-info">${senderLabel}</span>
+              <small>${timeFormatted}</small>
+            </div>
+            <p class="msg-text">${c.text}</p>
+          `;
+        } else if (c.image) {
+          div.innerHTML = `
+            <div class="msg-header">
+              <span class="msg-info">${senderLabel}</span>
+              <small>${timeFormatted}</small>
+            </div>
+            <img src="${c.image}" alt="Image" style="max-width: 100%; border-radius: 8px; margin-top: 4px;">
+          `;
+        }
+
+        chatBox.appendChild(div);
+      });
+
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  });
+}
 
   function logout() {
     firebase.auth().signOut()
