@@ -134,8 +134,13 @@
 
 <script>
   // Konversi email jadi ID aman untuk path Firebase
-  function getUserIdFromEmail(email) {
-    return email.replace(/\./g, ',').replace(/@/g, '_at_');
+  function sanitizeEmail(email) {
+    return email.replace(/\./g, '_').replace(/@/g, '_at_').replace(/,/g, '_');
+  }
+
+  // Fungsi buat path chat berdasarkan email
+  function getChatPath(email) {
+    return 'chats/' + sanitizeEmail(email);
   }
 
   // Konfigurasi Firebase
@@ -154,13 +159,11 @@
   const db = firebase.database();
   const storage = firebase.storage();
 
-  // Variabel global untuk userId
-  let currentUserId = null;
+  let currentUserEmail = null;
 
-  // Fungsi utama on auth state changed
+  // Pantau status login
   firebase.auth().onAuthStateChanged((user) => {
     if (user) {
-      // Ambil data user dari localStorage atau user object Firebase
       const userName = localStorage.getItem("username") || user.displayName || "User";
       const userEmail = localStorage.getItem("useremail") || user.email;
       const userPhoto = localStorage.getItem("userphoto") || user.photoURL || "";
@@ -176,39 +179,32 @@
       localStorage.setItem("useremail", userEmail);
       localStorage.setItem("userphoto", userPhoto);
 
-      // Konversi email ke userId
-      currentUserId = getUserIdFromEmail(userEmail);
+      currentUserEmail = userEmail;
 
-      // Tampilkan info user di UI
-      const userInfoDiv = document.getElementById("user-info");
-      userInfoDiv.innerHTML = `
+      document.getElementById("user-info").innerHTML = `
         <img src="${userPhoto}" alt="User Photo" style="width:30px;height:30px;border-radius:50%;margin-right:5px;vertical-align:middle;">
         <span>${userName}</span> <span>(${userEmail})</span>
       `;
 
-      // Mulai listen chat realtime
-      listenToChat(currentUserId);
+      listenToChat(currentUserEmail);
 
-      // Setup event untuk kirim pesan via enter
       const msgInput = document.getElementById('msg');
+      const sendBtn = document.querySelector('.send-box button');
+      const fileInput = document.getElementById('fileInput');
+
       msgInput.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter' && !e.shiftKey) { // enter tanpa shift kirim
+        if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
-          sendMessage(currentUserId);
+          sendMessage(currentUserEmail);
         }
       });
 
-      // Enable/disable tombol kirim sesuai inputan
-      const sendBtn = document.querySelector('.send-box button');
       msgInput.addEventListener('input', () => {
-        sendBtn.disabled = !msgInput.value.trim() && !document.getElementById('fileInput').files.length;
+        sendBtn.disabled = !msgInput.value.trim() && !fileInput.files.length;
       });
 
-      // Initial tombol disabled jika kosong
       sendBtn.disabled = true;
-
-      // Kirim pesan jika tombol diklik
-      sendBtn.addEventListener('click', () => sendMessage(currentUserId));
+      sendBtn.addEventListener('click', () => sendMessage(currentUserEmail));
 
     } else {
       alert("🚫 Not logged in. Redirecting to login page...");
@@ -216,10 +212,9 @@
     }
   });
 
-  // Fungsi untuk mengirim pesan
-  async function sendMessage(userId) {
-    if (!userId || userId === "undefined") {
-      alert("❌ Gagal mengirim pesan: userId tidak valid. Silakan login ulang.");
+  async function sendMessage(userEmail) {
+    if (!userEmail) {
+      alert("❌ Gagal mengirim pesan: email tidak valid.");
       logout();
       return;
     }
@@ -229,21 +224,16 @@
     const fileInput = document.getElementById('fileInput');
     const file = fileInput.files[0];
 
-    if (!msg && !file) {
-      // Tidak ada pesan atau file, tidak kirim
-      return;
-    }
+    if (!msg && !file) return;
 
     const userName = localStorage.getItem("username") || "User";
-    const userEmail = localStorage.getItem("useremail") || "";
-
-    const chatRef = db.ref('chats/' + userId);
     const time = Date.now();
+    const chatRef = db.ref(getChatPath(userEmail));
 
-    // Kalau ada file, upload dulu
-    if (file) {
-      try {
-        const fileRef = storage.ref(`chat_images/${userId}/${time}_${file.name}`);
+    try {
+      // Upload file jika ada
+      if (file) {
+        const fileRef = storage.ref(`chat_images/${sanitizeEmail(userEmail)}/${time}_${file.name}`);
         const snapshot = await fileRef.put(file);
         const url = await snapshot.ref.getDownloadURL();
         await chatRef.push({
@@ -253,16 +243,10 @@
           image: url,
           time
         });
-      } catch (error) {
-        console.error("Upload file gagal:", error);
-        alert("❌ Gagal mengupload file. Silakan coba lagi.");
-        return;
       }
-    }
 
-    // Kirim pesan text
-    if (msg) {
-      try {
+      // Kirim teks jika ada
+      if (msg) {
         await chatRef.push({
           from: 'user',
           name: userName,
@@ -271,25 +255,21 @@
           time
         });
         msgInput.value = '';
-      } catch (error) {
-        console.error("Kirim pesan gagal:", error);
-        alert("❌ Gagal mengirim pesan. Silakan coba lagi.");
-        return;
       }
+
+      fileInput.value = '';
+      document.querySelector('.send-box button').disabled = true;
+    } catch (error) {
+      console.error("Error sending message:", error);
+      alert("❌ Gagal mengirim pesan.");
     }
-
-    // Reset file input
-    fileInput.value = '';
-
-    // Disable tombol kirim karena input kosong sekarang
-    document.querySelector('.send-box button').disabled = true;
   }
 
-  // Fungsi listen chat realtime
-  function listenToChat(userId) {
+  function listenToChat(userEmail) {
     const chatBox = document.getElementById('chatBox');
+    const chatRef = db.ref(getChatPath(userEmail));
 
-    db.ref('chats/' + userId).on('value', snapshot => {
+    chatRef.on('value', snapshot => {
       chatBox.innerHTML = '';
       const chats = snapshot.val();
 
@@ -303,25 +283,18 @@
             hour: '2-digit', minute: '2-digit', hour12: true
           });
 
-          if (c.image) {
-            div.innerHTML = `
-              <div class="bubble">
-                <img src="${c.image}" alt="Chat Image" style="max-width:100%; border-radius: 10px;">
-                <div class="time">(${formattedTime})</div>
-              </div>
-            `;
-          } else {
-            div.innerHTML = `
-              <div class="bubble">
-                ${c.text}
-                <span class="time">(${formattedTime})</span>
-              </div>
-            `;
-          }
+          div.innerHTML = c.image ? `
+            <div class="bubble">
+              <img src="${c.image}" alt="Chat Image" style="max-width:100%; border-radius: 10px;">
+              <div class="time">(${formattedTime})</div>
+            </div>` : `
+            <div class="bubble">
+              ${c.text}
+              <span class="time">(${formattedTime})</span>
+            </div>`;
 
           chatBox.appendChild(div);
         });
-
         chatBox.scrollTop = chatBox.scrollHeight;
       } else {
         chatBox.innerHTML = '<p style="text-align:center; color:gray;">No messages yet.</p>';
@@ -329,12 +302,9 @@
     });
   }
 
-  // Fungsi logout
   function logout() {
     firebase.auth().signOut().then(() => {
-      localStorage.removeItem("username");
-      localStorage.removeItem("useremail");
-      localStorage.removeItem("userphoto");
+      localStorage.clear();
       window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
     });
   }
