@@ -307,103 +307,125 @@
         sendBtn.disabled = true;
       } catch (error) {
         console.error("Error sending message:", error);
-        alert("❌ Gagal mengirim pesan.");
+        alert("❌ Gagal mengirim pesan, coba lagi.");
       }
     }
 
     sendBtn.addEventListener('click', () => sendMessage(currentUserEmail));
 
-    // Enter key to send message
-    msgInput.addEventListener('keypress', function (e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
+    // Listen for Enter key in text input to send
+    msgInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !sendBtn.disabled) {
         e.preventDefault();
         sendMessage(currentUserEmail);
       }
     });
 
-    // Listen for auth state changes
-    firebase.auth().onAuthStateChanged((user) => {
-      if (user) {
-        const userName = localStorage.getItem("username") || user.displayName || "User";
-        const userEmail = localStorage.getItem("useremail") || user.email;
-        const userPhoto = localStorage.getItem("userphoto") || user.photoURL || "";
-
-        if (!userEmail) {
-          alert("🚫 User email not found. Please login again.");
-          logout();
-          return;
-        }
-
-        localStorage.setItem("username", userName);
-        localStorage.setItem("useremail", userEmail);
-        localStorage.setItem("userphoto", userPhoto);
-
-        currentUserEmail = userEmail;
-
-        // Update UI user info
-        document.getElementById("user-info").innerHTML = `
-          <img src="${userPhoto}" alt="User Photo" />
-          <span>${userName}</span>
-        `;
-        document.getElementById("userEmail").textContent = userEmail;
-
-        listenToChat(currentUserEmail);
-        updateSendButton();
-      } else {
-        alert("🚫 Not logged in. Redirecting to login page...");
-        window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
-      }
-    });
-
-    // Listen chat messages realtime
-    function listenToChat(userEmail) {
-      const chatBox = document.getElementById('chatBox');
-      const chatRef = db.ref(getChatPath(userEmail));
-
-      chatRef.off(); // Remove previous listeners
-
-      chatRef.on('value', snapshot => {
-        chatBox.innerHTML = '';
-        const chats = snapshot.val();
-
-        if (chats) {
-          Object.values(chats).forEach(c => {
-            const div = document.createElement('div');
-            div.className = 'message ' + (c.from === 'user' ? 'mine' : 'theirs');
-
-            const date = new Date(c.time);
-            const formattedTime = date.toLocaleTimeString('en-US', {
-              hour: '2-digit', minute: '2-digit', hour12: true
-            });
-
-            let senderLabel = "Unknown";
-            if (c.email === currentUserEmail) {
-              senderLabel = "Me";
-            } else if (c.name && c.name.toLowerCase().includes("admin")) {
-              senderLabel = "Admin";
-            } else {
-              senderLabel = c.name || "Unknown";
-            }
-
-            div.innerHTML = c.image ? `
-              <div class="bubble">
-                <strong>${senderLabel}</strong>:<br>
-                <img src="${c.image}" alt="Chat Image" />
-                <div class="time">(${formattedTime})</div>
-              </div>` : `
-              <div class="bubble">
-                <strong>${senderLabel}</strong>: ${c.text}
-                <div class="time">(${formattedTime})</div>
-              </div>`;
-
-            chatBox.appendChild(div);
-          });
-          chatBox.scrollTop = chatBox.scrollHeight;
-        } else {
-          chatBox.innerHTML = '<p style="text-align:center; color:gray;">No messages yet.</p>';
-        }
-      });
+    // Format timestamp to local string
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      return date.toLocaleString();
     }
+
+    // Display messages in chat box
+    function displayMessages(messages, userEmail) {
+      const chatBox = document.getElementById('chatBox');
+      chatBox.innerHTML = '';
+      if (!messages) {
+        chatBox.textContent = 'No messages yet.';
+        return;
+      }
+      const entries = Object.entries(messages);
+      entries.sort((a, b) => a[1].time - b[1].time);
+
+      for (const [key, msg] of entries) {
+        const div = document.createElement('div');
+        div.classList.add('message');
+
+        if (msg.from === 'user' && msg.email === userEmail) {
+          div.classList.add('mine');
+        } else {
+          div.classList.add('theirs');
+        }
+
+        // Text message
+        if (msg.text) {
+          div.textContent = msg.text;
+        }
+
+        // Image message
+        if (msg.image) {
+          const img = document.createElement('img');
+          img.src = msg.image;
+          img.alt = 'Sent image';
+          img.loading = 'lazy';
+          div.appendChild(img);
+        }
+
+        // Time
+        const timeSpan = document.createElement('div');
+        timeSpan.className = 'time';
+        timeSpan.textContent = formatTime(msg.time);
+        div.appendChild(timeSpan);
+
+        chatBox.appendChild(div);
+      }
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Check login and initialize chat
+    async function initChat() {
+      // Check localStorage for email & username
+      let email = localStorage.getItem("email");
+      let username = localStorage.getItem("username");
+      let photoURL = localStorage.getItem("photo");
+
+      // If not found, check URL param 'email' for fallback
+      if (!email) {
+        const urlParams = new URLSearchParams(window.location.search);
+        email = urlParams.get("email");
+        if (email) {
+          localStorage.setItem("email", email);
+        }
+      }
+
+      if (!email) {
+        alert("❌ Anda harus login dulu.");
+        logout();
+        return;
+      }
+
+      currentUserEmail = email;
+
+      // Show user info top-right
+      const userInfo = document.getElementById("user-info");
+      const userEmailDiv = document.getElementById("userEmail");
+
+      userInfo.innerHTML = '';
+      if (photoURL) {
+        const img = document.createElement('img');
+        img.src = photoURL;
+        img.alt = "User Photo";
+        userInfo.appendChild(img);
+      }
+      userInfo.appendChild(document.createTextNode(username || "User"));
+
+      userEmailDiv.textContent = email;
+
+      // Listen for chat updates
+      const chatRef = db.ref(getChatPath(email));
+      chatRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        displayMessages(data, email);
+      });
+
+      // Enable send if input has value
+      updateSendButton();
+    }
+
+    window.onload = initChat;
+
   </script>
+
 </body>
 </html>
