@@ -69,9 +69,19 @@
       padding: 0.5rem;
       font-size: 1rem;
     }
-    .send-box input[id="msg"] {
+    .send-box input[type="text"] {
       flex: 1;
     }
+    #msg {
+  width: 50%;        /* Lebar penuh sesuai container */
+  min-height: 30px;   /* Tinggi minimal */
+  padding: 8px;
+  font-size: 16px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  resize: vertical;   /* Boleh resize vertikal */
+  box-sizing: border-box; /* supaya padding tidak membuat melebar */
+}
     .file-label {
       background: var(--primary-color);
       color: var(--bg-color);
