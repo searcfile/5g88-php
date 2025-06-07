@@ -138,12 +138,10 @@
     return email.replace(/\./g, '_').replace(/@/g, '_at_').replace(/,/g, '_');
   }
 
-  // Fungsi buat path chat berdasarkan email
   function getChatPath(email) {
     return 'chats/' + sanitizeEmail(email);
   }
 
-  // Konfigurasi Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
     authDomain: "blurphp.firebaseapp.com",
@@ -154,14 +152,12 @@
     appId: "1:593904200464:web:cea7bc1360532c20d99395"
   };
 
-  // Inisialisasi Firebase
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   const storage = firebase.storage();
 
   let currentUserEmail = null;
 
-  // Pantau status login
   firebase.auth().onAuthStateChanged((user) => {
     if (user) {
       const userName = localStorage.getItem("username") || user.displayName || "User";
@@ -174,7 +170,6 @@
         return;
       }
 
-      // Simpan data ke localStorage
       localStorage.setItem("username", userName);
       localStorage.setItem("useremail", userEmail);
       localStorage.setItem("userphoto", userPhoto);
@@ -183,7 +178,7 @@
 
       document.getElementById("user-info").innerHTML = `
         <img src="${userPhoto}" alt="User Photo" style="width:30px;height:30px;border-radius:50%;margin-right:5px;vertical-align:middle;">
-        <span>${userName}</span> <span>(${userEmail})</span>
+        <span>${userName}</span>
       `;
 
       listenToChat(currentUserEmail);
@@ -231,7 +226,6 @@
     const chatRef = db.ref(getChatPath(userEmail));
 
     try {
-      // Upload file jika ada
       if (file) {
         const fileRef = storage.ref(`chat_images/${sanitizeEmail(userEmail)}/${time}_${file.name}`);
         const snapshot = await fileRef.put(file);
@@ -245,7 +239,6 @@
         });
       }
 
-      // Kirim teks jika ada
       if (msg) {
         await chatRef.push({
           from: 'user',
@@ -283,14 +276,25 @@
             hour: '2-digit', minute: '2-digit', hour12: true
           });
 
+          // Tentukan nama pengirim
+          let senderLabel = "Unknown";
+          if (c.email === currentUserEmail) {
+            senderLabel = "Me";
+          } else if (c.name && c.name.toLowerCase().includes("admin")) {
+            senderLabel = "Admin";
+          } else {
+            senderLabel = c.name || "Unknown";
+          }
+
           div.innerHTML = c.image ? `
             <div class="bubble">
+              <strong>${senderLabel}</strong>:<br>
               <img src="${c.image}" alt="Chat Image" style="max-width:100%; border-radius: 10px;">
               <div class="time">(${formattedTime})</div>
             </div>` : `
             <div class="bubble">
-              ${c.text}
-              <span class="time">(${formattedTime})</span>
+              <strong>${senderLabel}</strong>: ${c.text}
+              <div class="time">(${formattedTime})</div>
             </div>`;
 
           chatBox.appendChild(div);
