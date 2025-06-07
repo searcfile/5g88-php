@@ -181,17 +181,19 @@
   padding: 0;
 }
     .date-label {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-  font-weight: bold;
-  color: #555;
-  margin: 0 auto;
-  font-size: 0.85rem;
-  background: #eaeaea;
-  padding: 2px 15px;
-  border-radius: 30px;
- 
+      text-align: center;
+      display: inline-block;
+    font-weight: bold;
+    color: #555;
+     margin: 15px auto;
+    font-size: 0.85rem;
+     background: #eaeaea;
+    padding: 2px 15px;
+     border-radius: 30px;
+    line-height: 1.2;
+}
+    .date-label .label-line {
+  display: block;
 }
   </style>
 </head>
@@ -442,10 +444,10 @@
         }); // Contoh: 12 Jun 2025
 
         if (dateKey !== lastDateKey) {
-          const dateLabelDiv = document.createElement('div');
-          dateLabelDiv.className = 'date-label';
-          dateLabelDiv.innerHTML = `<div>${dayLabel}</div><div>${fullDateLabel}</div>`;
-          chatBox.appendChild(dateLabelDiv);
+          const dateLabel = document.createElement('div');
+dateLabel.className = 'date-label';
+dateLabel.innerHTML = `<div class="label-line">${label}</div><div class="label-line">${formattedDate}</div>`;
+chatBox.appendChild(dateLabel);
           lastDateKey = dateKey;
         }
 
