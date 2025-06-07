@@ -107,14 +107,8 @@
    color: black;
    padding: 10px 16px;
    border-radius: 5px;
-   border: none;
    font-weight: bold;
    cursor: pointer;
-   position: fixed;
-   right: 20px;
-   top: 20px;
-   z-index: 99999;
-   box-shadow: 0 4px 6px rgba(0,0,0,0.2);
    transition: all 0.3s ease;
   }
    #logoutBtn:hover {
@@ -212,7 +206,7 @@
   </header>
   <main>
     <!-- CHAT HEADER -->
-    <div class="chat-header">
+   <div class="chat-header">
   <div class="profile">
     <img id="headerUserPhoto" src="" alt="User Photo" />
     <div>
@@ -221,6 +215,7 @@
     </div>
   </div>
   <input type="text" id="searchChat" placeholder="Search messages..." />
+  <button id="logoutBtn">Logout</button> <!-- Tambah di sini -->
 </div>
 
     <div class="chat-box" id="chatBox"></div>
@@ -233,8 +228,6 @@
       </label>
       <button type="button" disabled>Send</button>
     </div>
-
-    <button id="logoutBtn">Logout</button>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
