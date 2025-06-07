@@ -367,7 +367,8 @@
 
           if (c.text) {
             div.innerHTML = `
-              <span class="msg-info">${senderLabel} <small>${formattedTime}</small></span><p>${c.text}</p>
+              <span class="msg-info">${senderLabel} <small>${formattedTime}</small></span>
+              <p>${c.text}</p>
             `;
           } else if (c.image) {
             div.innerHTML = `
