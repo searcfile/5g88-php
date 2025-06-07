@@ -31,15 +31,42 @@
       color: var(--bg-color);
     }
     .chat-box {
-      max-width: 600px;
-      margin: 1rem auto;
-      padding: 1rem;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      height: 70vh;
-      overflow-y: scroll;
-      background: #fafafa;
-    }
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  background: #fff;
+  border-bottom: 1px solid #ccc;
+}
+    .chat-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+    .user-box.active {
+  background: #d2eaff;
+  font-weight: bold;
+}
+    .user-box:hover {
+  background: #eaeaea;
+}
+    .chat-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+    .user-list {
+  width: 250px;
+  background: #f7f7f7;
+  border-right: 1px solid #ccc;
+  overflow-y: auto;
+  padding: 10px;
+}
+    .user-box {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #ddd;
+  transition: background 0.3s;
+}
     .message {
       padding: 0.5rem;
       margin: 0.5rem 0;
@@ -58,18 +85,19 @@
       background-color: #e5e7eb;
     }
     .send-box {
-      display: flex;
-      gap: 0.5rem;
-      max-width: 600px;
-      margin: auto;
-      padding: 1rem;
-    }
+  display: flex;
+  padding: 10px;
+  border-top: 1px solid #ccc;
+}
     .send-box input, .send-box button {
       padding: 0.5rem;
       font-size: 1rem;
     }
     .send-box input {
-      flex: 1;
+  flex: 1;
+  padding: 8px;
+  margin-right: 10px;
+
     }
     select {
       padding: 0.5rem;
@@ -85,20 +113,18 @@
     <button onclick="toggleTheme()">Toggle Theme</button>
   </header>
 
-  <main>
-    <div style="text-align:center; margin-bottom: 1rem;">
-      <select id="userId">
-        <option value="">Pilih User</option>
-      </select>
-    </div>
+  <main class="chat-container">
+  <div class="user-list" id="userList"></div>
 
+  <div class="chat-panel">
     <div class="chat-box" id="chatBox"></div>
 
     <div class="send-box">
       <input type="text" id="msg" placeholder="Type your message">
       <button onclick="sendMessage()">Send</button>
     </div>
-  </main>
+  </div>
+</main>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -107,205 +133,161 @@
   <script>
 // Firebase config
 const firebaseConfig = {
-  apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
-  authDomain: "blurphp.firebaseapp.com",
-  databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "blurphp",
-  storageBucket: "blurphp.firebasedatabase.app",
-  messagingSenderId: "593904200464",
-  appId: "1:593904200464:web:cea7bc1360532c20d99395",
-  measurementId: "G-R494S2DPZ5"
-};
+      apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
+      authDomain: "blurphp.firebaseapp.com",
+      databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "blurphp",
+      storageBucket: "blurphp.appspot.com",
+      messagingSenderId: "593904200464",
+      appId: "1:593904200464:web:cea7bc1360532c20d99395",
+      measurementId: "G-R494S2DPZ5"
+    };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-let activeUserIdSanitized = '';
-let activeUserIdEmail = '';
+    let activeUserIdSanitized = '';
+    let activeUserIdEmail = '';
 
-// Update sanitize dan desanitize sesuai aturan baru
-function sanitizeUserId(email) {
-  return email.replace(/\./g, '_')
-              .replace(/@/g, '_at_')
-              .replace(/,/g, '_');
-}
+    function sanitizeUserId(email) {
+      return email.replace(/\./g, '_').replace(/@/g, '_at_').replace(/,/g, '_');
+    }
 
-function desanitizeUserId(sanitized) {
-  return sanitized.replace(/_/g, '.')  // note: ini akan ganti semua _ jadi . termasuk yang _at_ nanti jadi .at.
-                  .replace(/\.at\./g, '@'); // Karena _at_ jadi .at. jadinya kita butuh fix ini
+    function desanitizeUserId(sanitized) {
+      return sanitized.replace(/_at_/g, '@').replace(/_/g, '.');
+    }
 
-  // Alternatif lebih tepat:
-  // ganti _at_ dulu baru ganti _ ke .
-  // supaya _at_ benar jadi @, bukan .at.
-  // Jadi lebih tepat seperti ini:
+    function sendMessage() {
+      const msgInput = document.getElementById('msg');
+      const msg = msgInput.value.trim();
+      if (!activeUserIdEmail || !msg) return alert("Pilih user dan isi pesan.");
 
-  // return sanitized.replace(/_at_/g, '@').replace(/_/g, '.');
-}
+      const sanitizedId = sanitizeUserId(activeUserIdEmail);
+      db.ref('chats/' + sanitizedId).push({
+        from: 'admin',
+        name: 'Admin',
+        email: 'admin@domain.com',
+        text: msg,
+        time: Date.now()
+      });
+      msgInput.value = '';
+    }
 
-// Karena kemungkinan bug, lebih aman ganti fungsi desanitize seperti ini:
+    document.getElementById('msg').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
 
-function desanitizeUserId(sanitized) {
-  return sanitized.replace(/_at_/g, '@').replace(/_/g, '.');
-}
+    function listenToChat() {
+      if (!activeUserIdEmail) return;
+      const sanitizedId = sanitizeUserId(activeUserIdEmail);
+      const chatRef = db.ref('chats/' + sanitizedId);
+      const chatBox = document.getElementById('chatBox');
+      chatRef.off();
+      chatBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
 
-// Kirim pesan dari admin ke user
-function sendMessage() {
-  const msgInput = document.getElementById('msg');
-  const msg = msgInput.value.trim();
+      chatRef.on('value', snapshot => {
+        chatBox.innerHTML = '';
+        const chats = snapshot.val();
+        if (chats) {
+          Object.entries(chats).forEach(([key, msg]) => {
+            const div = document.createElement('div');
+            const date = new Date(msg.time || Date.now());
+            const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            div.className = 'message ' + (msg.from === 'admin' ? 'mine' : 'theirs');
 
-  if (!activeUserIdEmail || !msg) {
-    alert("Pilih user dan tulis pesan dulu!");
-    return;
-  }
+            let header = '';
+            if (msg.name) {
+              header = `<b>${msg.name}</b>`;
+              if (msg.email && msg.email !== activeUserIdEmail) {
+                header += ` (${msg.email})`;
+              }
+            } else if (msg.email) {
+              header = `<b>${msg.email}</b>`;
+            }
 
-  const sanitizedId = sanitizeUserId(activeUserIdEmail);
+            div.innerHTML = header
+              ? `${header}: ${msg.text} <small>(${timeStr})</small>`
+              : `${msg.text} <small>(${timeStr})</small>`;
+            chatBox.appendChild(div);
 
-  db.ref('chats/' + sanitizedId).push({
-    from: 'admin',
-    name: 'Admin',
-    email: 'admin@domain.com',
-    text: msg,
-    time: Date.now()
-  });
-
-  msgInput.value = '';
-}
-
-// Kirim pesan dengan Enter
-document.getElementById('msg').addEventListener('keypress', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
-});
-
-// Dengarkan percakapan dengan user aktif
-function listenToChat() {
-  if (!activeUserIdEmail) return;
-
-  const sanitizedId = sanitizeUserId(activeUserIdEmail);
-  const chatRef = db.ref('chats/' + sanitizedId);
-  const chatBox = document.getElementById('chatBox');
-
-  chatRef.off(); // matikan listener lama
-  chatBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
-
-  chatRef.on('value', snapshot => {
-    chatBox.innerHTML = '';
-    const chats = snapshot.val();
-
-    if (chats) {
-      Object.entries(chats).forEach(([key, msg]) => {
-        const div = document.createElement('div');
-        const date = new Date(msg.time || Date.now());
-        const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-        div.className = 'message ' + (msg.from === 'admin' ? 'mine' : 'theirs');
-
-        let header = '';
-        if (msg.name) {
-          header = `<b>${msg.name}</b>`;
-          if (msg.email && msg.email !== activeUserIdEmail) {
-            header += ` (${msg.email})`;
-          }
-        } else if (msg.email) {
-          header = `<b>${msg.email}</b>`;
-        }
-
-        div.innerHTML = header
-          ? `${header}: ${msg.text} <small>(${timeStr})</small>`
-          : `${msg.text} <small>(${timeStr})</small>`;
-
-        chatBox.appendChild(div);
-
-        // Tandai pesan user sebagai dibaca
-        if (msg.from === 'user' && !msg.readByAdmin) {
-          db.ref(`chats/${sanitizedId}/${key}/readByAdmin`).set(true);
-          updateUserDropdownFlag(activeUserIdEmail);
+            if (msg.from === 'user' && !msg.readByAdmin) {
+              db.ref(`chats/${sanitizedId}/${key}/readByAdmin`).set(true);
+              updateUserDropdownFlag(activeUserIdEmail);
+            }
+          });
+          chatBox.scrollTop = chatBox.scrollHeight;
+        } else {
+          chatBox.innerHTML = '<p style="text-align:center; color:gray;">Belum ada pesan.</p>';
         }
       });
-      chatBox.scrollTop = chatBox.scrollHeight;
-    } else {
-      chatBox.innerHTML = '<p style="text-align:center; color:gray;">Belum ada pesan.</p>';
     }
-  });
-}
 
-// Muat daftar user dari Firebase
-function loadUserList() {
-  const userDropdown = document.getElementById('userId');
-  userDropdown.innerHTML = '<option value="">-- Pilih User --</option>';
+    function loadUserList() {
+      const userDropdown = document.getElementById('userId');
+      userDropdown.innerHTML = '<option value="">-- Pilih User --</option>';
+      db.ref('chats').once('value', snapshot => {
+        const users = Object.keys(snapshot.val() || {});
+        users.forEach(sanitizedEmail => {
+          addUserOption(desanitizeUserId(sanitizedEmail));
+        });
+      });
+    }
 
-  db.ref('chats').once('value', snapshot => {
-    const users = Object.keys(snapshot.val() || {});
-    users.forEach(sanitizedEmail => {
-      addUserOption(desanitizeUserId(sanitizedEmail));
+    function addUserOption(email) {
+      const sanitizedEmail = sanitizeUserId(email);
+      db.ref(`chats/${sanitizedEmail}`).once('value', snapshot => {
+        const chatEntries = Object.values(snapshot.val() || []);
+        const firstMsg = chatEntries.find(m => m.from === 'user');
+        if (!firstMsg) return;
+
+        const userDropdown = document.getElementById('userId');
+        if (document.querySelector(`#userId option[value="${sanitizedEmail}"]`)) return;
+
+        const option = document.createElement('option');
+        option.value = sanitizedEmail;
+        const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
+        option.textContent = `${firstMsg.name || email} (${firstMsg.email || email})${hasUnread ? ' ❗' : ''}`;
+        userDropdown.appendChild(option);
+      });
+    }
+
+    function updateUserDropdownFlag(email) {
+      const sanitizedEmail = sanitizeUserId(email);
+      const option = document.querySelector(`#userId option[value="${sanitizedEmail}"]`);
+      if (!option) return;
+      db.ref(`chats/${sanitizedEmail}`).once('value', snapshot => {
+        const chatEntries = Object.values(snapshot.val() || []);
+        const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
+        const baseText = option.textContent.replace(/ ❗/g, '');
+        option.textContent = baseText + (hasUnread ? ' ❗' : '');
+      });
+    }
+
+    function watchNewUsers() {
+      db.ref('chats').on('child_added', snapshot => {
+        const sanitizedEmail = snapshot.key;
+        addUserOption(desanitizeUserId(sanitizedEmail));
+      });
+    }
+
+    document.getElementById('userId').addEventListener('change', (e) => {
+      activeUserIdSanitized = e.target.value;
+      if (activeUserIdSanitized) {
+        activeUserIdEmail = desanitizeUserId(activeUserIdSanitized);
+        listenToChat();
+      } else {
+        activeUserIdEmail = '';
+        document.getElementById('chatBox').innerHTML = '<p style="text-align:center; color:gray;">Pilih user dulu untuk lihat chat.</p>';
+      }
     });
-  });
-}
 
-// Tambahkan user ke dropdown
-function addUserOption(email) {
-  const sanitizedEmail = sanitizeUserId(email);
-
-  db.ref(`chats/${sanitizedEmail}`).once('value', snapshot => {
-    const chatEntries = Object.values(snapshot.val() || []);
-    const firstMsg = chatEntries.find(m => m.from === 'user');
-    if (!firstMsg) return;
-
-    const userDropdown = document.getElementById('userId');
-    if (document.querySelector(`#userId option[value="${sanitizedEmail}"]`)) return;
-
-    const option = document.createElement('option');
-    option.value = sanitizedEmail;
-
-    const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
-    option.textContent = `${firstMsg.name || email} (${firstMsg.email || email})${hasUnread ? ' ❗' : ''}`;
-
-    userDropdown.appendChild(option);
-  });
-}
-
-// Update ❗ tanda jika ada pesan belum dibaca
-function updateUserDropdownFlag(email) {
-  const sanitizedEmail = sanitizeUserId(email);
-  const option = document.querySelector(`#userId option[value="${sanitizedEmail}"]`);
-  if (!option) return;
-
-  db.ref(`chats/${sanitizedEmail}`).once('value', snapshot => {
-    const chatEntries = Object.values(snapshot.val() || []);
-    const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
-
-    const baseText = option.textContent.replace(/ ❗/g, '');
-    option.textContent = baseText + (hasUnread ? ' ❗' : '');
-  });
-}
-
-// Pantau user baru ditambahkan
-function watchNewUsers() {
-  db.ref('chats').on('child_added', snapshot => {
-    const sanitizedEmail = snapshot.key;
-    addUserOption(desanitizeUserId(sanitizedEmail));
-  });
-}
-
-// Event saat user diganti
-document.getElementById('userId').addEventListener('change', (e) => {
-  activeUserIdSanitized = e.target.value;
-  if (activeUserIdSanitized) {
-    activeUserIdEmail = desanitizeUserId(activeUserIdSanitized);
-    listenToChat();
-  } else {
-    activeUserIdEmail = '';
-    document.getElementById('chatBox').innerHTML = '<p style="text-align:center; color:gray;">Pilih user dulu untuk lihat chat.</p>';
-  }
-});
-
-// Saat halaman siap
-window.onload = () => {
-  loadUserList();
-  watchNewUsers();
-};
+    window.onload = () => {
+      loadUserList();
+      watchNewUsers();
+    };
   </script>
 </body>
 </html>
