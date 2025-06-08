@@ -300,18 +300,18 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
       userDiv.style.cursor = 'pointer';
       userDiv.style.padding = '4px 10px';
       userDiv.onclick = () => {
-       activeUserIdEmail = email;
-       activeUserIdSanitized = sanitized;
+        activeUserIdEmail = email;
+        activeUserIdSanitized = sanitized;
 
-  document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
-  userDiv.classList.add('active');
+        document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
+        userDiv.classList.add('active');
 
-  // Update header chat dengan nama user yang dipilih
-  const chatHeader = document.getElementById('chatHeader');
-  const displayName = userDiv.textContent.replace(' ❗', ''); // hapus tanda unread
-  chatHeader.textContent = `Chat dengan: ${displayName}`;
+        // Update header chat dengan nama user yang dipilih
+        const chatHeader = document.getElementById('chatHeader');
+        const displayName = userDiv.textContent.replace(' ❗', ''); // hapus tanda unread
+        chatHeader.textContent = `Chat dengan: ${displayName}`;
 
-  listenToChat();
+        listenToChat();
       };
 
       userListBox.appendChild(userDiv);
@@ -358,11 +358,11 @@ function watchNewUsers() {
     }
   });
 }
-    window.onload = () => {
+
+window.onload = () => {
   const chatHeader = document.getElementById('chatHeader');
   chatHeader.textContent = 'Pilih user untuk mulai chat';
 
-window.onload = () => {
   loadUserList();
   watchNewUsers();
 
