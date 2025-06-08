@@ -316,7 +316,9 @@ function updateUserListFlags() {
 
 // Deteksi user baru secara realtime
 function watchNewUsers() {
-  db.ref('chats').on('child_added', snapshot => {
+  const chatsRef = db.ref('chats');
+
+  chatsRef.on('child_added', snapshot => {
     const sanitizedEmail = snapshot.key;
     const email = desanitizeUserId(sanitizedEmail);
 
@@ -324,6 +326,10 @@ function watchNewUsers() {
       allUsersData.push(email);
       renderUserList([email]);
     }
+  });
+
+  chatsRef.on('child_changed', snapshot => {
+    updateUserListFlags(); // <- update tanda merah jika ada perubahan isi chat
   });
 }
 
