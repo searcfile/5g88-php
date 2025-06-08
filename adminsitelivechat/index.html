@@ -1,492 +1,377 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>LiveChat Admin</title>
-<style>
-  :root {
-    --bg-color: #29858f;
-    --text-color: #f1f1f1;
-    --primary-color: #facc15;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LiveChat - Admin</title>
+  <style>
+    :root {
+      --bg-color: #29858f;
+      --text-color: #f1f1f1;
+      --primary-color: #facc15;
+    }
+    body.dark {
+      --bg-color: #1f1f1f;
+      --text-color: #f5f5f5;
+      --primary-color: #3b82f6;
+    }
+    body {
+      background: var(--bg-color);
+      color: #000000;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: var(--primary-color);
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--bg-color);
+    }
+    .chat-box {
+      max-width: 600px;
+      margin: 1rem auto;
+      padding: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      height: 70vh;
+      overflow-y: scroll;
+      background: #000000;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .chat-box::-webkit-scrollbar {
+      display: none;
+    }
+    .message {
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      border-radius: 10px;
+      max-width: 70%;
+      white-space: normal;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    .mine {
+      background-image: linear-gradient(to bottom, #1d77ff33, #81acff, #c5ff4a);
+      color: #000000;
+      margin-left: auto;
+    }
+    .theirs {
+      background-image: linear-gradient(to bottom, #fdcb3c, #efe451, #98a1b1);
+    }
+    .send-box {
+      display: flex;
+      gap: 0.5rem;
+      max-width: 600px;
+      margin: auto;
+      padding: 0;
+    }
+    .send-box input, .send-box button {
+      padding: 0.5rem;
+      font-size: 1rem;
+    }
+    .send-box input {
+      flex: 1;
+    }
+    select {
+      padding: 0.5rem;
+      margin-top: 1rem;
+      width: 80%;
+      font-size: 1rem;
+    }
+    .user-item:hover {
+    background: #e0e0e0;
   }
-  body.dark {
-    --bg-color: #1f1f1f;
-    --text-color: #f5f5f5;
-    --primary-color: #3b82f6;
-    background: var(--bg-color);
-    color: var(--text-color);
-  }
-  body {
-    background: var(--bg-color);
-    color: #000;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0; padding: 0;
-    transition: background 0.3s, color 0.3s;
-  }
-  header {
-    background-color: var(--primary-color);
-    color: var(--bg-color);
-    padding: 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  main {
-    display: flex;
-    height: 85vh;
-  }
-  #userPanel {
-    width: 350px;
-    border-right: 1px solid #ccc;
-    padding: 1rem;
-    overflow-y: auto;
-    background: white;
+    .user-item.active {
+    background-color: gold;
     color: black;
-  }
-  #chatPanel {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 1rem;
-    background: white;
-    color: black;
-  }
-  #userSearch {
+    }
+    .user-item {
+      border: 1px solid #000; /* garis atas */
+      border-radius: 5px;
+      padding: 8px 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      background: white;
+     }
+     #msg {
     width: 100%;
-    padding: 0.5rem;
-    margin-bottom: 0.5rem;
+    min-height: 20px;
+    padding: 8px;
+    font-size: 16px;
     border-radius: 5px;
-    border: 2px solid var(--primary-color);
-    font-size: 1rem;
-  }
-  #filterButtons {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
-  #filterButtons button {
-    flex: 1;
-    padding: 0.4rem;
-    font-weight: bold;
-    cursor: pointer;
-    border: 2px solid var(--primary-color);
-    border-radius: 5px;
-    background: white;
-    color: black;
-    transition: background 0.3s;
-  }
-  #filterButtons button.active,
-  #filterButtons button:hover {
-    background: var(--primary-color);
-    color: var(--bg-color);
-  }
-  .userItem {
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    margin-bottom: 0.3rem;
-    border-radius: 5px;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .userItem.active {
-    background: var(--primary-color);
-    color: var(--bg-color);
-    font-weight: bold;
-  }
-  .unreadBadge {
-    background: red;
-    color: white;
-    padding: 2px 6px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: bold;
-  }
-  #chatHeader {
-    padding: 1rem;
-    border-bottom: 1px solid #ccc;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-  #chatHeader img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-  }
-  #chatUserName {
-    font-weight: bold;
-    font-size: 1.2rem;
-  }
-  #chatUserStatus {
-    font-size: 0.9rem;
-    color: gray;
-  }
-  #chatMessages {
-    flex-grow: 1;
-    overflow-y: auto;
-    padding: 1rem;
-    background: #f9f9f9;
-  }
-  .message {
-    max-width: 70%;
-    margin-bottom: 0.8rem;
-    padding: 0.6rem 1rem;
-    border-radius: 10px;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-  .message.admin {
-    background: linear-gradient(to bottom, #81acff, #c5ff4a);
-    margin-left: auto;
-    color: black;
-  }
-  .message.user {
-    background: linear-gradient(to bottom, #fdcb3c, #efe451);
-    color: black;
-    margin-right: auto;
-  }
-  .message.unread {
-    border: 2px solid red;
-  }
-  #messageSearch {
-    width: 100%;
-    margin: 0.5rem 0 1rem;
-    padding: 0.4rem 0.8rem;
-    border-radius: 5px;
-    border: 2px solid var(--primary-color);
-    font-size: 1rem;
-  }
-  #sendBox {
-    display: flex;
-    gap: 0.5rem;
-    padding-top: 0.5rem;
-  }
-  #sendBox textarea {
-    flex-grow: 1;
-    padding: 0.6rem;
-    font-size: 1rem;
-    border-radius: 5px;
-    border: 2px solid var(--primary-color);
+    border: 2px solid gold;
     resize: vertical;
-  }
-  #sendBox button {
-    background: var(--primary-color);
-    color: var(--bg-color);
-    border: none;
-    font-weight: bold;
-    font-size: 1.1rem;
-    padding: 0 1.2rem;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-</style>
+    box-sizing: border-box;
+}
+    #sendMessage {
+     border-radius: 5px;
+      border: 2px solid gold;
+    }
+  </style>
 </head>
 <body>
+  <header>
+    <h1>Admin LiveChat</h1>
+    <button onclick="toggleTheme()">Toggle Theme</button>
+  </header>
 
-<header>
-  <h1>LiveChat Admin</h1>
-  <button onclick="toggleTheme()">Toggle Theme</button>
-</header>
+  <main style="display: flex;">
+  <!-- Panel User -->
+  <div id="userList" style="width: 500px; border-right: 1px solid #ccc; padding: 1rem; overflow-y: auto;">
+    <h3>User List</h3>
 
-<main>
-  <section id="userPanel">
-    <input type="text" id="userSearch" placeholder="Search user..." />
-    <div id="filterButtons">
-      <button id="filterAll" class="active">All</button>
+    <input type="text" id="searchUser" placeholder="Cari user..." style="width: 100%; padding: 10px 5px; margin-bottom: 10px; border-radius: 5px;" />
+
+    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+      <button id="filterAll">All</button>
       <button id="filterUnread">Unread</button>
     </div>
-    <div id="userList"></div>
-  </section>
 
-  <section id="chatPanel">
-    <div id="chatHeader" style="display:none;">
-      <img id="chatUserPic" src="https://via.placeholder.com/40" alt="User Pic" />
+    <div id="userListBox"></div>
+  </div>
+
+  <!-- Panel Chat -->
+  <div style="flex: 0.5; display: flex; flex-direction: column; padding: 1rem;">
+    <!-- Chat Header yang kamu kasih -->
+    <div id="chatHeader" style="display:flex; align-items:center; padding: 10px; border-bottom: 1px solid #ccc; background: var(--primary-color); color: var(--bg-color);">
+      <img id="userProfilePic" src="default-profile.png" alt="User Profile" style="width:40px; height:40px; border-radius:50%; margin-right: 10px;" />
       <div>
-        <div id="chatUserName">User Name</div>
-        <div id="chatUserStatus">Offline</div>
+        <div id="userName" style="font-weight: bold; font-size: 1.1rem;">User Name</div>
+        <div id="userStatus" style="font-size: 0.8rem; color: #eee;">Offline</div>
       </div>
+      <input id="searchMessage" type="text" placeholder="Search messages..." style="margin-left:auto; padding:5px 10px; border-radius: 20px; border:none; width: 200px;" />
     </div>
 
-    <input type="text" id="messageSearch" placeholder="Search messages..." style="display:none;" />
+    <div class="chat-box" id="chatBox" style="height: 70vh; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; flex-grow: 1;"></div>
 
-    <div id="chatMessages" style="flex-grow:1; overflow-y:auto; background:#f9f9f9; border-radius:5px;"></div>
-
-    <div id="sendBox" style="display:none;">
-      <textarea id="messageInput" rows="2" placeholder="Type your message..."></textarea>
-      <button id="sendBtn">Send</button>
+    <div class="send-box" style="display: flex; gap: 10px;">
+      <textarea id="msg" placeholder="Type your message" rows="2" style="flex-grow: 1;"></textarea>
+      <button onclick="sendMessage()">Send</button>
     </div>
-  </section>
-</main>
+  </div>
+</main
 
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-<script>
-  // Firebase Config & Init
-  const firebaseConfig = {
-    apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
-    authDomain: "blurphp.firebaseapp.com",
-    databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "blurphp",
-    storageBucket: "blurphp.appspot.com",
-    messagingSenderId: "593904200464",
-    appId: "1:593904200464:web:cea7bc1360532c20d99395",
-    measurementId: "G-R494S2DPZ5"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
-  // Helpers
-  function sanitizeEmail(email) {
-    return email.replace(/[.@]/g, '_');
+  <script>
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
+  authDomain: "blurphp.firebaseapp.com",
+  databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "blurphp",
+  storageBucket: "blurphp.firebasedatabase.app",
+  messagingSenderId: "593904200464",
+  appId: "1:593904200464:web:cea7bc1360532c20d99395",
+  measurementId: "G-R494S2DPZ5"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let activeUserIdSanitized = '';
+let activeUserIdEmail = '';
+let allUsersData = [];  // simpan semua user
+
+function sanitizeUserId(email) {
+  return email.replace(/\./g, '_').replace(/@/g, '_at_').replace(/,/g, '_');
+}
+
+function desanitizeUserId(sanitized) {
+  return sanitized.replace(/_at_/g, '@').replace(/_/g, '.');
+}
+
+// Fungsi kirim pesan ke Firebase
+function sendMessage() {
+  const msgInput = document.getElementById('msg');
+  const msg = msgInput.value.trim();
+
+  if (!activeUserIdEmail || !msg) {
+    alert("Pilih user dan tulis pesan dulu!");
+    return;
   }
 
-  // State
-  let users = [];
-  let activeUserId = null;
-  let activeUserEmail = null;
-  let currentFilter = 'all';
-  let userSearchTerm = '';
-  let messageSearchTerm = '';
+  const sanitizedId = sanitizeUserId(activeUserIdEmail);
 
-  // DOM elements
-  const userListEl = document.getElementById('userList');
-  const userSearchEl = document.getElementById('userSearch');
-  const filterAllBtn = document.getElementById('filterAll');
-  const filterUnreadBtn = document.getElementById('filterUnread');
-  const chatPanel = document.getElementById('chatPanel');
-  const chatHeader = document.getElementById('chatHeader');
-  const chatUserName = document.getElementById('chatUserName');
-  const chatUserStatus = document.getElementById('chatUserStatus');
-  const chatUserPic = document.getElementById('chatUserPic');
-  const chatMessagesEl = document.getElementById('chatMessages');
-  const sendBox = document.getElementById('sendBox');
-  const messageInput = document.getElementById('messageInput');
-  const sendBtn = document.getElementById('sendBtn');
-  const messageSearchEl = document.getElementById('messageSearch');
+  db.ref('chats/' + sanitizedId).push({
+    from: 'admin',
+    name: 'Admin',
+    email: 'admin@domain.com',
+    text: msg,
+    time: Date.now()
+  });
 
-  // Toggle dark theme
-  function toggleTheme() {
-    document.body.classList.toggle('dark');
-  }
+  msgInput.value = '';
+}
 
-  // Render user list with filters & search
-  function renderUserList() {
-    userListEl.innerHTML = '';
-    let filtered = users;
+// Fungsi untuk listen chat realtime Firebase dan render di chatBox
+function listenToChat() {
+  if (!activeUserIdEmail) return;
 
-    // Filter unread if selected
-    if (currentFilter === 'unread') {
-      filtered = filtered.filter(u => u.unreadCount > 0);
+  const sanitizedId = sanitizeUserId(activeUserIdEmail);
+  const chatRef = db.ref('chats/' + sanitizedId);
+  const chatBox = document.getElementById('chatBox');
+
+  chatRef.off();
+  chatBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
+
+  chatRef.on('value', snapshot => {
+    chatBox.innerHTML = '';
+    const chats = snapshot.val();
+
+    if (chats) {
+      Object.entries(chats).forEach(([key, msg]) => {
+        const div = document.createElement('div');
+        const date = new Date(msg.time || Date.now());
+        const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        div.className = 'message ' + (msg.from === 'admin' ? 'mine' : 'theirs');
+
+        div.innerHTML = `
+  <div style="font-weight: bold;">${msg.name || msg.email || 'Unknown'} <small style="font-size: 0.75rem; color: #0b6906;">${timeStr}</small></div>
+  <div>${msg.text}</div>
+`;
+
+        chatBox.appendChild(div);
+
+        if (msg.from === 'user' && !msg.readByAdmin) {
+          db.ref(`chats/${sanitizedId}/${key}/readByAdmin`).set(true);
+          updateUserListFlags();
+        }
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
+    } else {
+      chatBox.innerHTML = '<p style="text-align:center; color:white;">Belum ada pesan.</p>';
     }
+  });
+}
 
-    // Search user by email or name (or any field you want)
-    if (userSearchTerm.trim() !== '') {
-      const lowerTerm = userSearchTerm.toLowerCase();
-      filtered = filtered.filter(u => 
-        (u.email && u.email.toLowerCase().includes(lowerTerm)) || 
-        (u.name && u.name.toLowerCase().includes(lowerTerm))
-      );
-    }
+// Render user list dengan filter dan search
+function renderUserList(users, filter = 'all', searchTerm = '') {
+  const userListBox = document.getElementById('userListBox');
+  userListBox.innerHTML = '';
 
-    if (filtered.length === 0) {
-      userListEl.innerHTML = '<p>No users found.</p>';
-      return;
-    }
+  users.forEach(email => {
+    const sanitized = sanitizeUserId(email);
 
-    filtered.forEach(user => {
-      const div = document.createElement('div');
-      div.classList.add('userItem');
-      if (activeUserId === user.id) div.classList.add('active');
-      div.innerHTML = `
-        <span>${user.name || user.email}</span>
-        ${user.unreadCount > 0 ? `<span class="unreadBadge">${user.unreadCount}</span>` : ''}
-      `;
-      div.onclick = () => {
-        setActiveUser(user.id, user.email, user.name);
+    db.ref(`chats/${sanitized}`).once('value', snapshot => {
+      const chatEntries = Object.values(snapshot.val() || []);
+      const firstMsg = chatEntries.find(m => m.from === 'user');
+      if (!firstMsg) return;
+
+      const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
+
+      if (filter === 'unread' && !hasUnread) return;
+
+      const label = `${firstMsg.name || email} (${firstMsg.email || email})`;
+      if (searchTerm && !label.toLowerCase().includes(searchTerm.toLowerCase())) return;
+
+      if (document.querySelector(`[data-sanitized="${sanitized}"]`)) return;
+
+      const userDiv = document.createElement('div');
+      userDiv.className = 'user-item';
+      userDiv.setAttribute('data-sanitized', sanitized);
+      userDiv.textContent = label + (hasUnread ? ' ❗' : '');
+      userDiv.style.cursor = 'pointer';
+      userDiv.style.padding = '4px 10px';
+      userDiv.onclick = () => {
+        activeUserIdEmail = email;
+        activeUserIdSanitized = sanitized;
+
+        document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
+        userDiv.classList.add('active');
+
+        listenToChat();
       };
-      userListEl.appendChild(div);
+
+      userListBox.appendChild(userDiv);
     });
-  }
+  });
+}
 
-  // Load all users from messages node
-  function loadUsers() {
-    db.ref('messages').on('value', snapshot => {
-      const msgsData = snapshot.val() || {};
-      const userMap = {};
+function loadUserList() {
+  const userListBox = document.getElementById('userListBox');
+  userListBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
 
-      // Accumulate unread counts per user and user info
-      for (const userId in msgsData) {
-        const chats = msgsData[userId];
-        let unreadCount = 0;
-        for (const msgId in chats) {
-          const msg = chats[msgId];
-          if (msg.to === 'admin' && !msg.read) {
-            unreadCount++;
-          }
-        }
-        // Fetch user info (email) from userId by desanitize
-        const email = userId.replace(/_/g, '.');
-        userMap[userId] = {
-          id: userId,
-          email: email,
-          name: email, // Placeholder, update if you have names stored somewhere else
-          unreadCount,
-        };
+  db.ref('chats').once('value', snapshot => {
+    const users = Object.keys(snapshot.val() || {}).map(desanitizeUserId);
+    allUsersData = users;
+    renderUserList(users);
+  });
+}
+
+function updateUserListFlags() {
+  const items = document.querySelectorAll('.user-item');
+  items.forEach(item => {
+    const sanitized = item.getAttribute('data-sanitized');
+    db.ref(`chats/${sanitized}`).once('value', snapshot => {
+      const chatEntries = Object.values(snapshot.val() || []);
+      const email = desanitizeUserId(sanitized);
+      const firstMsg = chatEntries.find(m => m.from === 'user');
+      const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
+
+      if (firstMsg) {
+        item.textContent = `${firstMsg.name || email} (${firstMsg.email || email})${hasUnread ? ' ❗' : ''}`;
       }
-      users = Object.values(userMap);
-      renderUserList();
     });
-  }
+  });
+}
 
-  // Set active user for chat
-  function setActiveUser(id, email, name) {
-    activeUserId = id;
-    activeUserEmail = email;
-    chatUserName.textContent = name || email;
-    chatHeader.style.display = 'flex';
-    sendBox.style.display = 'flex';
-    messageSearchEl.style.display = 'block';
-    chatMessagesEl.innerHTML = '<p>Loading chat...</p>';
-    messageInput.value = '';
-    renderUserList();
-    listenMessages();
-    listenUserStatus();
-  }
+function watchNewUsers() {
+  db.ref('chats').on('child_added', snapshot => {
+    const sanitizedEmail = snapshot.key;
+    const email = desanitizeUserId(sanitizedEmail);
 
-  // Listen messages for active user
-  let messagesListener = null;
-  function listenMessages() {
-    if (!activeUserId) return;
-    if (messagesListener) messagesListener.off();
-
-    messagesListener = db.ref(`messages/${activeUserId}`);
-    messagesListener.on('value', snapshot => {
-      const data = snapshot.val() || {};
-      let msgs = Object.values(data);
-
-      // Filter by message search if needed
-      if (messageSearchTerm.trim() !== '') {
-        const term = messageSearchTerm.toLowerCase();
-        msgs = msgs.filter(m => m.message.toLowerCase().includes(term));
-      }
-
-      renderMessages(msgs);
-      markMessagesRead();
-    });
-  }
-
-  // Render chat messages
-  function renderMessages(msgs) {
-    chatMessagesEl.innerHTML = '';
-    if (msgs.length === 0) {
-      chatMessagesEl.innerHTML = '<p>No messages.</p>';
-      return;
+    if (!allUsersData.includes(email)) {
+      allUsersData.push(email);
+      renderUserList([email]);
     }
-    msgs.sort((a,b) => a.time - b.time);
+  });
+}
 
-    msgs.forEach(msg => {
-      const div = document.createElement('div');
-      div.classList.add('message');
-      div.classList.add(msg.from === 'admin' ? 'admin' : 'user');
-      if (!msg.read && msg.to === 'admin') div.classList.add('unread');
-      div.textContent = msg.message;
-      chatMessagesEl.appendChild(div);
-    });
+window.onload = () => {
+  loadUserList();
+  watchNewUsers();
 
-    // Scroll to bottom
-    chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
-  }
+  const msgInput = document.getElementById('msg');
+  const chatBox = document.getElementById('chatBox');
 
-  // Mark unread messages as read when viewed
-  function markMessagesRead() {
-    if (!activeUserId) return;
-    const userMsgsRef = db.ref(`messages/${activeUserId}`);
-    userMsgsRef.once('value', snapshot => {
-      const data = snapshot.val() || {};
-      const updates = {};
-      for (const msgId in data) {
-        const msg = data[msgId];
-        if (!msg.read && msg.to === 'admin') {
-          updates[`${msgId}/read`] = true;
-        }
-      }
-      if (Object.keys(updates).length > 0) {
-        userMsgsRef.update(updates);
-      }
-    });
-  }
-
-  // Send message handler
-  sendBtn.onclick = () => {
-    const text = messageInput.value.trim();
-    if (!text || !activeUserId) return;
-
-    const newMsg = {
-      message: text,
-      from: 'admin',
-      to: 'user',
-      time: Date.now(),
-      read: false
-    };
-    db.ref(`messages/${activeUserId}`).push(newMsg);
-    messageInput.value = '';
-  };
-
-  // User search input event
-  userSearchEl.oninput = e => {
-    userSearchTerm = e.target.value;
-    renderUserList();
-  };
-
-  // Filter buttons
-  filterAllBtn.onclick = () => {
-    currentFilter = 'all';
-    filterAllBtn.classList.add('active');
-    filterUnreadBtn.classList.remove('active');
-    renderUserList();
-  };
-  filterUnreadBtn.onclick = () => {
-    currentFilter = 'unread';
-    filterUnreadBtn.classList.add('active');
-    filterAllBtn.classList.remove('active');
-    renderUserList();
-  };
-
-  // Message search input
-  messageSearchEl.oninput = e => {
-    messageSearchTerm = e.target.value;
-    listenMessages(); // re-fetch with search filter
-  };
-
-  // Listen user online/typing status
-  let statusListener = null;
-  function listenUserStatus() {
-    if (!activeUserId) return;
-    if (statusListener) statusListener.off();
-
-    statusListener = db.ref(`status/${activeUserId}`);
-    statusListener.on('value', snapshot => {
-      const status = snapshot.val();
-      if (!status) {
-        chatUserStatus.textContent = 'Offline';
+  if (msgInput) {
+    msgInput.addEventListener('keydown', function (e) {
+      if ((e.key === 'Enter') && (e.shiftKey || e.ctrlKey)) {
+        // Allow newline
         return;
       }
-      if (status.typing) {
-        chatUserStatus.textContent = 'Typing...';
-      } else if (status.online) {
-        chatUserStatus.textContent = 'Online';
-      } else {
-        chatUserStatus.textContent = 'Offline';
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendMessage();
       }
     });
   }
 
-  // Initial load
-  loadUsers();
-</script>
+  // Filter buttons & search input handlers
+  document.getElementById('filterAll').onclick = () => {
+    const searchTerm = document.getElementById('searchUser').value;
+    renderUserList(allUsersData, 'all', searchTerm);
+  };
 
+  document.getElementById('filterUnread').onclick = () => {
+    const searchTerm = document.getElementById('searchUser').value;
+    renderUserList(allUsersData, 'unread', searchTerm);
+  };
+
+  document.getElementById('searchUser').addEventListener('input', () => {
+    const searchTerm = document.getElementById('searchUser').value;
+    renderUserList(allUsersData, 'all', searchTerm);
+  });
+};
+  </script>
 </body>
 </html>
