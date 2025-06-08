@@ -77,6 +77,9 @@
       width: 80%;
       font-size: 1rem;
     }
+    .user-item:hover {
+    background: #e0e0e0;
+  }
   </style>
 </head>
 <body>
@@ -85,20 +88,21 @@
     <button onclick="toggleTheme()">Toggle Theme</button>
   </header>
 
-  <main>
-    <div style="text-align:center; margin-bottom: 1rem;">
-      <select id="userId">
-        <option value="">Pilih User</option>
-      </select>
-    </div>
+  <main style="display: flex;">
+  <div id="userList" style="width: 250px; border-right: 1px solid #ccc; padding: 1rem; overflow-y: auto; max-height: 80vh;">
+    <h3>User List</h3>
+    <div id="userListBox"></div>
+  </div>
 
+  <div style="flex: 1; padding: 1rem;">
     <div class="chat-box" id="chatBox"></div>
 
     <div class="send-box">
       <input type="text" id="msg" placeholder="Type your message">
       <button onclick="sendMessage()">Send</button>
     </div>
-  </main>
+  </div>
+</main>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -237,9 +241,8 @@ function loadUserList() {
   userDropdown.innerHTML = '<option value="">-- Pilih User --</option>';
 
   db.ref('chats').once('value', snapshot => {
-    const users = Object.keys(snapshot.val() || {});
-    users.forEach(sanitizedEmail => {
-      addUserOption(desanitizeUserId(sanitizedEmail));
+    const users = Object.keys(snapshot.val() || {}).map(desanitizeUserId);
+    renderUserList(users);
     });
   });
 }
@@ -269,15 +272,15 @@ function addUserOption(email) {
 // Update ❗ tanda jika ada pesan belum dibaca
 function updateUserDropdownFlag(email) {
   const sanitizedEmail = sanitizeUserId(email);
-  const option = document.querySelector(`#userId option[value="${sanitizedEmail}"]`);
-  if (!option) return;
-
-  db.ref(`chats/${sanitizedEmail}`).once('value', snapshot => {
-    const chatEntries = Object.values(snapshot.val() || []);
-    const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
-
-    const baseText = option.textContent.replace(/ ❗/g, '');
-    option.textContent = baseText + (hasUnread ? ' ❗' : '');
+  const items = document.querySelectorAll('.user-item');
+  items.forEach(item => {
+    if (item.getAttribute('data-sanitized') === sanitizedEmail) {
+      db.ref(`chats/${sanitizedEmail}`).once('value', snapshot => {
+        const chatEntries = Object.values(snapshot.val() || []);
+        const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
+        item.textContent = item.textContent.replace(/ ❗/g, '') + (hasUnread ? ' ❗' : '');
+      });
+    }
   });
 }
 
@@ -285,7 +288,8 @@ function updateUserDropdownFlag(email) {
 function watchNewUsers() {
   db.ref('chats').on('child_added', snapshot => {
     const sanitizedEmail = snapshot.key;
-    addUserOption(desanitizeUserId(sanitizedEmail));
+    const email = desanitizeUserId(sanitizedEmail);
+    renderUserList([email]); // render ulang 1 user
   });
 }
 
