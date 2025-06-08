@@ -43,15 +43,15 @@
     .message {
       padding: 0.5rem;
       margin: 0.5rem 0;
-      border-radius: 5px;
-      max-width: 80%;
+      border-radius: 10px;
+      max-width: 70%;
       white-space: normal;
       word-wrap: break-word;
       overflow-wrap: break-word;
     }
     .mine {
       background-image: linear-gradient(to bottom, #1d77ff33, #81acff, #c5ff4a);
-      color: var(--bg-color);
+      color: #000000;
       margin-left: auto;
     }
     .theirs {
@@ -207,7 +207,7 @@ function listenToChat() {
           : msg.email ? `<b>${msg.email}</b>` : '';
 
         div.innerHTML = `
-  <div style="font-weight: bold;">${msg.name || msg.email || 'Unknown'} <small style="font-weight: normal; color: gray;">${timeStr}</small></div>
+  <div style="font-weight: bold;">${msg.name || msg.email || 'Unknown'} <small style="font-weight: normal; color: #0b6906;">${timeStr}</small></div>
   <div>${msg.text}</div>
 `;
 
@@ -220,7 +220,7 @@ function listenToChat() {
       });
       chatBox.scrollTop = chatBox.scrollHeight;
     } else {
-      chatBox.innerHTML = '<p style="text-align:center; color:gray;">Belum ada pesan.</p>';
+      chatBox.innerHTML = '<p style="text-align:center; color:white;">Belum ada pesan.</p>';
     }
   });
 }
