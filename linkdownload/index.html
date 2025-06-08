@@ -71,7 +71,7 @@
     
     .copy-notif {
      position: absolute;
-     bottom: 100%; /* Tampil di atas tombol */
+     bottom: 100%;
      left: 50%;
      transform: translateX(-50%);
      background: black;
@@ -528,15 +528,15 @@
 console.log("Page Editor\nVersion Date: 01/04/2025\nCreate by   : M'cng\nPowered by  : 5G88\nOPERATOR\n(01/04/2025)\n• System 'Updated' ");
 function copyLink(event, element) {
   event.preventDefault();
-  const link = element.getAttribute('href'); // Ambil link dari atribut href
+  const link = element.getAttribute('href'); 
 
-  // Cek apakah Clipboard API bisa dipakai dan halaman aktif (hindari iframe error)
+
   if (navigator.clipboard && window.isSecureContext && document.hasFocus()) {
     navigator.clipboard.writeText(link)
       .then(() => showCopiedNotification(element))
-      .catch(() => fallbackCopy(link, element)); // Jika gagal, pakai fallback
+      .catch(() => fallbackCopy(link, element)); 
   } else {
-    fallbackCopy(link, element); // Gunakan cara lama jika tidak didukung
+    fallbackCopy(link, element);
   }
 }
 
