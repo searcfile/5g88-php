@@ -389,19 +389,18 @@ function updateUserFlag(sanitizedEmail) {
   if (!item) return;
 
   db.ref(`chats/${sanitizedEmail}`).once('value', snapshot => {
-    const chatEntries = Object.values(snapshot.val() || []);
-    const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
+    const chats = snapshot.val() || {};
+    const hasUnread = Object.values(chats).some(msg => msg.from === 'user' && !msg.readByAdmin);
 
-    if (hasUnread) {
-      if (!item.querySelector('.unread-flag')) {
-        const flag = document.createElement('span');
-        flag.className = 'unread-flag';
-        flag.textContent = '❗';
-        item.appendChild(flag);
-      }
-    } else {
-      const flag = item.querySelector('.unread-flag');
-      if (flag) flag.remove();
+    // Cari elemen unread-flag, jika ada hapus dulu
+    const flag = item.querySelector('.unread-flag');
+    if (hasUnread && !flag) {
+      const span = document.createElement('span');
+      span.className = 'unread-flag';
+      span.textContent = '❗';
+      item.appendChild(span);
+    } else if (!hasUnread && flag) {
+      flag.remove();
     }
   });
 }
@@ -463,21 +462,32 @@ document.getElementById('searchMessages').addEventListener('input', (e) => {
   console.log('Search keyword:', keyword);
 });
   // Filter tombol & pencarian user
-  document.getElementById('filterAll').onclick = () => {
-    const searchTerm = document.getElementById('searchUser').value;
-    renderUserList(allUsersData, 'all', searchTerm);
-  };
+  // Filter tombol
+document.getElementById('filterAll').addEventListener('click', () => {
+  renderUserList(allUsersData, 'all', document.getElementById('searchUser').value);
+});
 
-  document.getElementById('filterUnread').onclick = () => {
-    const searchTerm = document.getElementById('searchUser').value;
-    renderUserList(allUsersData, 'unread', searchTerm);
-  };
+document.getElementById('filterUnread').addEventListener('click', () => {
+  renderUserList(allUsersData, 'unread', document.getElementById('searchUser').value);
+});
 
-  document.getElementById('searchUser').addEventListener('input', () => {
-    const searchTerm = document.getElementById('searchUser').value;
-    renderUserList(allUsersData, 'all', searchTerm);
+// Search user input
+document.getElementById('searchUser').addEventListener('input', (e) => {
+  const filter = document.querySelector('#filterUnread').classList.contains('active') ? 'unread' : 'all';
+  renderUserList(allUsersData, filter, e.target.value);
+});
+
+// Awal load user list
+loadUserList();
+
+// Agar tombol filter aktif kelasnya
+const filterButtons = document.querySelectorAll('#filterAll, #filterUnread');
+filterButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    filterButtons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
   });
-};
+});
   </script>
 </body>
 </html>
