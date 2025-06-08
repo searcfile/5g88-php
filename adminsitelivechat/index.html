@@ -243,8 +243,7 @@ function loadUserList() {
   db.ref('chats').once('value', snapshot => {
     const users = Object.keys(snapshot.val() || {}).map(desanitizeUserId);
     renderUserList(users);
-    });
-  });
+  }); // ✅ kurung tutup ini cukup
 }
 
 // Tambahkan user ke dropdown
