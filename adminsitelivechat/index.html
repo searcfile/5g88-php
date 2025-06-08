@@ -127,18 +127,14 @@ const db = firebase.database();
 let activeUserIdSanitized = '';
 let activeUserIdEmail = '';
 
-// Sanitasi email
 function sanitizeUserId(email) {
-  return email.replace(/\./g, '_')
-              .replace(/@/g, '_at_')
-              .replace(/,/g, '_');
+  return email.replace(/\./g, '_').replace(/@/g, '_at_').replace(/,/g, '_');
 }
 
 function desanitizeUserId(sanitized) {
   return sanitized.replace(/_at_/g, '@').replace(/_/g, '.');
 }
 
-// Kirim pesan dari admin ke user
 function sendMessage() {
   const msgInput = document.getElementById('msg');
   const msg = msgInput.value.trim();
@@ -161,7 +157,6 @@ function sendMessage() {
   msgInput.value = '';
 }
 
-// Dengarkan percakapan dengan user aktif
 function listenToChat() {
   if (!activeUserIdEmail) return;
 
@@ -169,7 +164,7 @@ function listenToChat() {
   const chatRef = db.ref('chats/' + sanitizedId);
   const chatBox = document.getElementById('chatBox');
 
-  chatRef.off(); // matikan listener lama
+  chatRef.off();
   chatBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
 
   chatRef.on('value', snapshot => {
@@ -184,15 +179,9 @@ function listenToChat() {
 
         div.className = 'message ' + (msg.from === 'admin' ? 'mine' : 'theirs');
 
-        let header = '';
-        if (msg.name) {
-          header = `<b>${msg.name}</b>`;
-          if (msg.email && msg.email !== activeUserIdEmail) {
-            header += ` (${msg.email})`;
-          }
-        } else if (msg.email) {
-          header = `<b>${msg.email}</b>`;
-        }
+        let header = msg.name
+          ? `<b>${msg.name}</b>${msg.email && msg.email !== activeUserIdEmail ? ` (${msg.email})` : ''}`
+          : msg.email ? `<b>${msg.email}</b>` : '';
 
         div.innerHTML = header
           ? `${header}: ${msg.text} <small>(${timeStr})</small>`
@@ -200,10 +189,9 @@ function listenToChat() {
 
         chatBox.appendChild(div);
 
-        // Tandai pesan user sebagai dibaca
         if (msg.from === 'user' && !msg.readByAdmin) {
           db.ref(`chats/${sanitizedId}/${key}/readByAdmin`).set(true);
-          updateUserDropdownFlag(activeUserIdEmail);
+          updateUserListFlags();
         }
       });
       chatBox.scrollTop = chatBox.scrollHeight;
@@ -213,10 +201,9 @@ function listenToChat() {
   });
 }
 
-// Muat daftar user dari Firebase
 function loadUserList() {
-  const userDropdown = document.getElementById('userId');
-  userDropdown.innerHTML = '<option value="">-- Pilih User --</option>';
+  const userListBox = document.getElementById('userListBox');
+  userListBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
 
   db.ref('chats').once('value', snapshot => {
     const users = Object.keys(snapshot.val() || {}).map(desanitizeUserId);
@@ -224,44 +211,58 @@ function loadUserList() {
   });
 }
 
-// Tambahkan user ke dropdown
-function addUserOption(email) {
-  const sanitizedEmail = sanitizeUserId(email);
+function renderUserList(users) {
+  const userListBox = document.getElementById('userListBox');
+  users.forEach(email => {
+    const sanitized = sanitizeUserId(email);
+    if (document.querySelector(`[data-sanitized="${sanitized}"]`)) return;
 
-  db.ref(`chats/${sanitizedEmail}`).once('value', snapshot => {
-    const chatEntries = Object.values(snapshot.val() || []);
-    const firstMsg = chatEntries.find(m => m.from === 'user');
-    if (!firstMsg) return;
+    db.ref(`chats/${sanitized}`).once('value', snapshot => {
+      const chatEntries = Object.values(snapshot.val() || []);
+      const firstMsg = chatEntries.find(m => m.from === 'user');
+      if (!firstMsg) return;
 
-    const userDropdown = document.getElementById('userId');
-    if (document.querySelector(`#userId option[value="${sanitizedEmail}"]`)) return;
+      const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
 
-    const option = document.createElement('option');
-    option.value = sanitizedEmail;
+      const userDiv = document.createElement('div');
+      userDiv.className = 'user-item';
+      userDiv.setAttribute('data-sanitized', sanitized);
+      userDiv.textContent = `${firstMsg.name || email} (${firstMsg.email || email})${hasUnread ? ' ❗' : ''}`;
+      userDiv.style.cursor = 'pointer';
+      userDiv.style.padding = '4px 0';
+      userDiv.onclick = () => {
+        activeUserIdEmail = email;
+        activeUserIdSanitized = sanitized;
 
-    const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
-    option.textContent = `${firstMsg.name || email} (${firstMsg.email || email})${hasUnread ? ' ❗' : ''}`;
+        // Remove highlight from others
+        document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
+        userDiv.classList.add('active');
 
-    userDropdown.appendChild(option);
+        listenToChat();
+      };
+
+      userListBox.appendChild(userDiv);
+    });
   });
 }
 
-// Update ❗ jika ada pesan belum dibaca
-function updateUserDropdownFlag(email) {
-  const sanitizedEmail = sanitizeUserId(email);
+function updateUserListFlags() {
   const items = document.querySelectorAll('.user-item');
   items.forEach(item => {
-    if (item.getAttribute('data-sanitized') === sanitizedEmail) {
-      db.ref(`chats/${sanitizedEmail}`).once('value', snapshot => {
-        const chatEntries = Object.values(snapshot.val() || []);
-        const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
-        item.textContent = item.textContent.replace(/ ❗/g, '') + (hasUnread ? ' ❗' : '');
-      });
-    }
+    const sanitized = item.getAttribute('data-sanitized');
+    db.ref(`chats/${sanitized}`).once('value', snapshot => {
+      const chatEntries = Object.values(snapshot.val() || []);
+      const email = desanitizeUserId(sanitized);
+      const firstMsg = chatEntries.find(m => m.from === 'user');
+      const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
+
+      if (firstMsg) {
+        item.textContent = `${firstMsg.name || email} (${firstMsg.email || email})${hasUnread ? ' ❗' : ''}`;
+      }
+    });
   });
 }
 
-// Pantau user baru ditambahkan
 function watchNewUsers() {
   db.ref('chats').on('child_added', snapshot => {
     const sanitizedEmail = snapshot.key;
@@ -270,7 +271,6 @@ function watchNewUsers() {
   });
 }
 
-// Saat halaman siap
 window.onload = () => {
   loadUserList();
   watchNewUsers();
@@ -284,21 +284,8 @@ window.onload = () => {
       }
     });
   }
-
-  const userDropdown = document.getElementById('userId');
-  if (userDropdown) {
-    userDropdown.addEventListener('change', (e) => {
-      activeUserIdSanitized = e.target.value;
-      if (activeUserIdSanitized) {
-        activeUserIdEmail = desanitizeUserId(activeUserIdSanitized);
-        listenToChat();
-      } else {
-        activeUserIdEmail = '';
-        document.getElementById('chatBox').innerHTML = '<p style="text-align:center; color:gray;">Pilih user dulu untuk lihat chat.</p>';
-      }
-    });
-  }
 };
+  
   </script>
 </body>
 </html>
