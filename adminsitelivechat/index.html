@@ -206,9 +206,10 @@ function listenToChat() {
           ? `<b>${msg.name}</b>${msg.email && msg.email !== activeUserIdEmail ? ` (${msg.email})` : ''}`
           : msg.email ? `<b>${msg.email}</b>` : '';
 
-        div.innerHTML = header
-          ? `${header}: ${msg.text} <small>(${timeStr})</small>`
-          : `${msg.text} <small>(${timeStr})</small>`;
+        div.innerHTML = `
+  <div style="font-weight: bold;">${msg.name || msg.email || 'Unknown'} <small style="font-weight: normal; color: gray;">${timeStr}</small></div>
+  <div>${msg.text}</div>
+`;
 
         chatBox.appendChild(div);
 
