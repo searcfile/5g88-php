@@ -117,6 +117,78 @@
   margin-left: 5px;
   font-weight: bold;
 }
+    .chat-container {
+  width: 500px; /* sesuaikan dengan chat box kamu */
+  border: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  font-family: Arial, sans-serif;
+  background: #fff;
+}
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: 1px solid #ddd;
+  background-color: #f8f8f8;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.user-name {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #222;
+}
+
+.user-status {
+  font-size: 0.85rem;
+  margin-left: 8px;
+  font-style: italic;
+  color: gray;
+}
+
+/* warna status */
+.user-status.online {
+  color: green;
+}
+
+.user-status.offline {
+  color: red;
+}
+
+.user-status.typing {
+  color: orange;
+  font-weight: bold;
+}
+
+.search-msg input {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #bbb;
+  font-size: 0.9rem;
+  width: 180px;
+}
+  
+.chat-box {
+  flex-grow: 1;
+  padding: 15px;
+  overflow-y: auto;
+  background-color: #fafafa;
+  height: 400px; /* atau sesuaikan dengan kebutuhan */
+}
   </style>
 </head>
 <body>
@@ -138,6 +210,18 @@
     </div>
 
     <div id="userListBox"></div>
+  </div>
+    
+    <div class="chat-container">
+  <div class="chat-header">
+    <div class="user-info">
+      <img src="https://via.placeholder.com/40" alt="User Profile" class="user-avatar" />
+      <span class="user-name">Nama User</span>
+      <span class="user-status offline">Offline</span>
+    </div>
+    <div class="search-msg">
+      <input type="text" placeholder="Search messages..." id="searchMessages" />
+    </div>
   </div>
 
   <!-- Panel Chat -->
@@ -351,7 +435,25 @@ window.onload = () => {
       }
     });
   }
+  function updateChatHeader(user) {
+  const userNameEl = document.querySelector('.user-name');
+  const userAvatarEl = document.querySelector('.user-avatar');
+  const userStatusEl = document.querySelector('.user-status');
 
+  userNameEl.textContent = user.name;
+  userAvatarEl.src = user.avatar;
+  
+  // Update status class dan text
+  userStatusEl.className = 'user-status ' + user.status; // online/offline/typing
+  userStatusEl.textContent = user.status.charAt(0).toUpperCase() + user.status.slice(1);
+}
+
+// Contoh search messages (dummy)
+document.getElementById('searchMessages').addEventListener('input', (e) => {
+  const keyword = e.target.value.toLowerCase();
+  // logika filter pesan chatbox bisa kamu tambahkan di sini
+  console.log('Search keyword:', keyword);
+});
   // Filter tombol & pencarian user
   document.getElementById('filterAll').onclick = () => {
     const searchTerm = document.getElementById('searchUser').value;
