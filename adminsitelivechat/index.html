@@ -127,26 +127,12 @@ const db = firebase.database();
 let activeUserIdSanitized = '';
 let activeUserIdEmail = '';
 
-// Update sanitize dan desanitize sesuai aturan baru
+// Sanitasi email
 function sanitizeUserId(email) {
   return email.replace(/\./g, '_')
               .replace(/@/g, '_at_')
               .replace(/,/g, '_');
 }
-
-function desanitizeUserId(sanitized) {
-  return sanitized.replace(/_/g, '.')  // note: ini akan ganti semua _ jadi . termasuk yang _at_ nanti jadi .at.
-                  .replace(/\.at\./g, '@'); // Karena _at_ jadi .at. jadinya kita butuh fix ini
-
-  // Alternatif lebih tepat:
-  // ganti _at_ dulu baru ganti _ ke .
-  // supaya _at_ benar jadi @, bukan .at.
-  // Jadi lebih tepat seperti ini:
-
-  // return sanitized.replace(/_at_/g, '@').replace(/_/g, '.');
-}
-
-// Karena kemungkinan bug, lebih aman ganti fungsi desanitize seperti ini:
 
 function desanitizeUserId(sanitized) {
   return sanitized.replace(/_at_/g, '@').replace(/_/g, '.');
@@ -174,14 +160,6 @@ function sendMessage() {
 
   msgInput.value = '';
 }
-
-// Kirim pesan dengan Enter
-document.getElementById('msg').addEventListener('keypress', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
-});
 
 // Dengarkan percakapan dengan user aktif
 function listenToChat() {
@@ -243,7 +221,7 @@ function loadUserList() {
   db.ref('chats').once('value', snapshot => {
     const users = Object.keys(snapshot.val() || {}).map(desanitizeUserId);
     renderUserList(users);
-  }); // ✅ kurung tutup ini cukup
+  });
 }
 
 // Tambahkan user ke dropdown
@@ -268,7 +246,7 @@ function addUserOption(email) {
   });
 }
 
-// Update ❗ tanda jika ada pesan belum dibaca
+// Update ❗ jika ada pesan belum dibaca
 function updateUserDropdownFlag(email) {
   const sanitizedEmail = sanitizeUserId(email);
   const items = document.querySelectorAll('.user-item');
@@ -288,26 +266,38 @@ function watchNewUsers() {
   db.ref('chats').on('child_added', snapshot => {
     const sanitizedEmail = snapshot.key;
     const email = desanitizeUserId(sanitizedEmail);
-    renderUserList([email]); // render ulang 1 user
+    renderUserList([email]);
   });
 }
-
-// Event saat user diganti
-document.getElementById('userId').addEventListener('change', (e) => {
-  activeUserIdSanitized = e.target.value;
-  if (activeUserIdSanitized) {
-    activeUserIdEmail = desanitizeUserId(activeUserIdSanitized);
-    listenToChat();
-  } else {
-    activeUserIdEmail = '';
-    document.getElementById('chatBox').innerHTML = '<p style="text-align:center; color:gray;">Pilih user dulu untuk lihat chat.</p>';
-  }
-});
 
 // Saat halaman siap
 window.onload = () => {
   loadUserList();
   watchNewUsers();
+
+  const msgInput = document.getElementById('msg');
+  if (msgInput) {
+    msgInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  }
+
+  const userDropdown = document.getElementById('userId');
+  if (userDropdown) {
+    userDropdown.addEventListener('change', (e) => {
+      activeUserIdSanitized = e.target.value;
+      if (activeUserIdSanitized) {
+        activeUserIdEmail = desanitizeUserId(activeUserIdSanitized);
+        listenToChat();
+      } else {
+        activeUserIdEmail = '';
+        document.getElementById('chatBox').innerHTML = '<p style="text-align:center; color:gray;">Pilih user dulu untuk lihat chat.</p>';
+      }
+    });
+  }
 };
   </script>
 </body>
