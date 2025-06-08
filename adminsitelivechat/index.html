@@ -97,6 +97,16 @@
       display: flex;
       align-items: center;
      }
+     #msg {
+    width: 65%;
+    min-height: 20px;
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 2px solid gold;
+    resize: vertical;
+    box-sizing: border-box;
+}
   </style>
 </head>
 <body>
@@ -121,12 +131,11 @@
   </div>
 
   <!-- Panel Chat -->
-  <div style="flex: 1; padding: 1rem;">
+  <div style="flex: 0.5; padding: 1rem;">
     <div class="chat-box" id="chatBox" style="height: 70vh; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;"></div>
 
     <div class="send-box" style="display: flex; gap: 10px;">
-      <textarea id="msg" placeholder="Type your message"
-        style="flex: 1; padding: 10px; height: 60px; resize: none;"></textarea>
+      <textarea id="msg" placeholder="Type your message" rows="2"></textarea>
       <button onclick="sendMessage()">Send</button>
     </div>
   </div>
