@@ -207,7 +207,7 @@ function listenToChat() {
           : msg.email ? `<b>${msg.email}</b>` : '';
 
         div.innerHTML = `
-  <div style="font-weight: bold;">${msg.name || msg.email || 'Unknown'} <small style="font-weight: normal; color: #0b6906;">${timeStr}</small></div>
+  <div style="font-weight: bold;">${msg.name || msg.email || 'Unknown'} <small style="font-size: 0.75rem; color: #0b6906;">${timeStr}</small></div>
   <div>${msg.text}</div>
 `;
 
