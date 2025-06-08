@@ -112,38 +112,6 @@
      border-radius: 5px;
       border: 2px solid gold;
     }
-    .chat-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: black;
-  padding: 10px 15px;
-  border-bottom: 1px solid #444;
-}
-
-.chat-search {
-  padding: 6px 10px;
-  border-radius: 20px;
-  border: none;
-  outline: none;
-  width: 180px;
-}
-
-.user-info {
-  text-align: right;
-  color: white;
-}
-
-.user-name {
-  font-weight: bold;
-  color: gold;
-  font-size: 14px;
-}
-
-.user-status {
-  font-size: 12px;
-  color: limegreen;
-}
   </style>
 </head>
 <body>
@@ -168,29 +136,11 @@
   </div>
 
   <!-- Panel Chat -->
-  <div style="flex: 0.5; padding: 1rem; display: flex; flex-direction: column;">
-    <!-- Chat Box -->
-    <div class="chat-box" id="chatBox" style="height: 70vh; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; display: flex; flex-direction: column; overflow: hidden;">
+  <div style="flex: 0.5; padding: 1rem;">
+    <div class="chat-box" id="chatBox" style="height: 70vh; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;"></div>
 
-      <!-- ✅ Chat Header Inside ChatBox -->
-      <div class="chat-header" style="display: flex; justify-content: space-between; align-items: center; background: black; padding: 10px 15px; border-radius: 10px; margin-bottom: 10px;">
-        <!-- Search Messages -->
-        <input type="text" id="searchMessages" placeholder="Search messages..." style="padding: 6px 10px; border-radius: 20px; border: none; outline: none; width: 180px;">
-
-        <!-- User Info -->
-        <div class="user-info" style="text-align: right; color: white;">
-          <div class="user-name" id="userName" style="font-weight: bold; color: gold; font-size: 14px;">-</div>
-          <div class="user-status" id="userStatus" style="font-size: 12px; color: limegreen;">Offline</div>
-        </div>
-      </div>
-
-      <!-- ✅ Messages Area -->
-      <div id="messageContainer" style="flex: 1; overflow-y: auto;"></div>
-    </div>
-
-    <!-- Send Box -->
     <div class="send-box" style="display: flex; gap: 10px;">
-      <textarea id="msg" placeholder="Type your message" rows="2" style="flex: 1;"></textarea>
+      <textarea id="msg" placeholder="Type your message" rows="2"></textarea>
       <button onclick="sendMessage()">Send</button>
     </div>
   </div>
@@ -395,22 +345,7 @@ window.onload = () => {
       }
     });
   }
-  function setStatus(status) {
-    const el = document.getElementById("userStatus");
-    el.textContent = status;
-    el.style.color = status === "Typing..." ? "orange" : (status === "Online" ? "limegreen" : "gray");
-  }
-  function openChat(userId, userName, isOnline) {
-  // Ganti nama user di header
-  document.getElementById("userName").textContent = userName;
-  document.getElementById("userStatus").textContent = isOnline ? "Online" : "Offline";
-  document.getElementById("userStatus").style.color = isOnline ? "limegreen" : "gray";
 
-  // Masukkan pesan ke dalam #messageContainer SAJA
-  const messagesHTML = generateMessageHTML(userId);
-  document.getElementById("messageContainer").innerHTML = messagesHTML;
-}
-  
   // Filter buttons & search input handlers
   document.getElementById('filterAll').onclick = () => {
     const searchTerm = document.getElementById('searchUser').value;
