@@ -136,11 +136,19 @@
   </div>
 
   <!-- Panel Chat -->
-  <div style="flex: 0.5; padding: 1rem;">
+  <div style="flex: 1; padding: 1rem;">
+    <!-- Chat Header -->
+    <div style="margin-bottom: 10px;">
+      <strong id="chatUserName" style="font-size: 1.2rem;">Pilih user</strong>
+      <span id="chatUserStatus" style="margin-left: 10px; color: gray;"></span>
+    </div>
+
+    <!-- Chat Box -->
     <div class="chat-box" id="chatBox" style="height: 70vh; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;"></div>
 
+    <!-- Send Message -->
     <div class="send-box" style="display: flex; gap: 10px;">
-      <textarea id="msg" placeholder="Type your message" rows="2"></textarea>
+      <textarea id="msg" placeholder="Type your message" rows="2" style="flex: 1; padding: 5px;"></textarea>
       <button onclick="sendMessage()">Send</button>
     </div>
   </div>
@@ -166,42 +174,52 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// Variabel global user aktif
 let activeUserIdSanitized = '';
 let activeUserIdEmail = '';
-let allUsersData = [];  // simpan semua user
+let allUsersData = [];  // Menyimpan semua email user
 
+// Sanitasi user id (email) untuk dijadikan key Firebase (ganti . dan @ agar valid)
 function sanitizeUserId(email) {
   return email.replace(/\./g, '_').replace(/@/g, '_at_').replace(/,/g, '_');
 }
 
+// Kembalikan sanitized ke bentuk email asli
 function desanitizeUserId(sanitized) {
   return sanitized.replace(/_at_/g, '@').replace(/_/g, '.');
 }
 
-// Fungsi kirim pesan ke Firebase
+// Kirim pesan dari admin ke user tertentu
 function sendMessage() {
   const msgInput = document.getElementById('msg');
   const msg = msgInput.value.trim();
 
-  if (!activeUserIdEmail || !msg) {
-    alert("Pilih user dan tulis pesan dulu!");
+  if (!activeUserIdEmail) {
+    alert("Pilih user dulu!");
+    return;
+  }
+  if (!msg) {
+    alert("Tulis pesan dulu!");
     return;
   }
 
   const sanitizedId = sanitizeUserId(activeUserIdEmail);
 
+  // Push pesan ke path chats/{user}
   db.ref('chats/' + sanitizedId).push({
     from: 'admin',
     name: 'Admin',
     email: 'admin@domain.com',
     text: msg,
     time: Date.now()
+  }).then(() => {
+    msgInput.value = '';
+  }).catch(err => {
+    alert('Gagal kirim pesan: ' + err.message);
   });
-
-  msgInput.value = '';
 }
 
-// Fungsi untuk listen chat realtime Firebase dan render di chatBox
+// Listen pesan realtime dari user yang sedang aktif dan render ke chatBox
 function listenToChat() {
   if (!activeUserIdEmail) return;
 
@@ -209,7 +227,9 @@ function listenToChat() {
   const chatRef = db.ref('chats/' + sanitizedId);
   const chatBox = document.getElementById('chatBox');
 
+  // Hentikan listener sebelumnya kalau ada
   chatRef.off();
+
   chatBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
 
   chatRef.on('value', snapshot => {
@@ -217,7 +237,10 @@ function listenToChat() {
     const chats = snapshot.val();
 
     if (chats) {
-      Object.entries(chats).forEach(([key, msg]) => {
+      // Urutkan berdasarkan waktu ascending
+      const chatArray = Object.entries(chats).sort((a, b) => (a[1].time || 0) - (b[1].time || 0));
+
+      chatArray.forEach(([key, msg]) => {
         const div = document.createElement('div');
         const date = new Date(msg.time || Date.now());
         const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -225,12 +248,16 @@ function listenToChat() {
         div.className = 'message ' + (msg.from === 'admin' ? 'mine' : 'theirs');
 
         div.innerHTML = `
-  <div style="font-weight: bold;">${msg.name || msg.email || 'Unknown'} <small style="font-size: 0.75rem; color: #0b6906;">${timeStr}</small></div>
-  <div>${msg.text}</div>
-`;
+          <div style="font-weight: bold;">
+            ${msg.name || msg.email || 'Unknown'} 
+            <small style="font-size: 0.75rem; color: #0b6906;">${timeStr}</small>
+          </div>
+          <div>${msg.text}</div>
+        `;
 
         chatBox.appendChild(div);
 
+        // Tandai pesan dari user yang belum dibaca admin
         if (msg.from === 'user' && !msg.readByAdmin) {
           db.ref(`chats/${sanitizedId}/${key}/readByAdmin`).set(true);
           updateUserListFlags();
@@ -243,77 +270,104 @@ function listenToChat() {
   });
 }
 
-// Render user list dengan filter dan search
+// Render list user dengan opsi filter (all/unread) dan search term
 function renderUserList(users, filter = 'all', searchTerm = '') {
   const userListBox = document.getElementById('userListBox');
   userListBox.innerHTML = '';
 
+  if (!users.length) {
+    userListBox.innerHTML = '<p style="text-align:center; color:gray;">Tidak ada user.</p>';
+    return;
+  }
+
   users.forEach(email => {
     const sanitized = sanitizeUserId(email);
 
-    db.ref(`chats/${sanitized}`).once('value', snapshot => {
+    // Ambil chat user untuk cek pesan dan status unread
+    db.ref(`chats/${sanitized}`).once('value').then(snapshot => {
       const chatEntries = Object.values(snapshot.val() || []);
-      const firstMsg = chatEntries.find(m => m.from === 'user');
-      if (!firstMsg) return;
+      if (chatEntries.length === 0) return;
 
+      // Cari pesan pertama dari user untuk ambil nama/email
+      const firstUserMsg = chatEntries.find(m => m.from === 'user');
+      if (!firstUserMsg) return;
+
+      // Cek ada unread dari user atau tidak
       const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
 
+      // Jika filter unread, skip jika tidak ada unread
       if (filter === 'unread' && !hasUnread) return;
 
-      const label = `${firstMsg.name || email} (${firstMsg.email || email})`;
+      const label = `${firstUserMsg.name || email} (${firstUserMsg.email || email})`;
+
+      // Jika search term ada, filter label
       if (searchTerm && !label.toLowerCase().includes(searchTerm.toLowerCase())) return;
 
+      // Cegah render duplikat
       if (document.querySelector(`[data-sanitized="${sanitized}"]`)) return;
 
+      // Buat elemen user di list
       const userDiv = document.createElement('div');
       userDiv.className = 'user-item';
       userDiv.setAttribute('data-sanitized', sanitized);
       userDiv.textContent = label + (hasUnread ? ' ❗' : '');
       userDiv.style.cursor = 'pointer';
       userDiv.style.padding = '4px 10px';
+
       userDiv.onclick = () => {
+        // Set user aktif
         activeUserIdEmail = email;
         activeUserIdSanitized = sanitized;
 
+        // Highlight user yang dipilih
         document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
         userDiv.classList.add('active');
 
+        // Load chat user
         listenToChat();
       };
 
       userListBox.appendChild(userDiv);
-    });
+    }).catch(console.error);
   });
 }
 
+// Load semua user dari Firebase 'chats' root dan render list user
 function loadUserList() {
   const userListBox = document.getElementById('userListBox');
   userListBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
 
-  db.ref('chats').once('value', snapshot => {
-    const users = Object.keys(snapshot.val() || {}).map(desanitizeUserId);
+  db.ref('chats').once('value').then(snapshot => {
+    const chats = snapshot.val() || {};
+    const users = Object.keys(chats).map(desanitizeUserId);
     allUsersData = users;
     renderUserList(users);
+  }).catch(err => {
+    userListBox.innerHTML = '<p style="text-align:center; color:red;">Gagal memuat user.</p>';
+    console.error(err);
   });
 }
 
+// Update tanda unread pada user list secara realtime
 function updateUserListFlags() {
   const items = document.querySelectorAll('.user-item');
   items.forEach(item => {
     const sanitized = item.getAttribute('data-sanitized');
-    db.ref(`chats/${sanitized}`).once('value', snapshot => {
+
+    db.ref(`chats/${sanitized}`).once('value').then(snapshot => {
       const chatEntries = Object.values(snapshot.val() || []);
       const email = desanitizeUserId(sanitized);
-      const firstMsg = chatEntries.find(m => m.from === 'user');
+      const firstUserMsg = chatEntries.find(m => m.from === 'user');
       const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
 
-      if (firstMsg) {
-        item.textContent = `${firstMsg.name || email} (${firstMsg.email || email})${hasUnread ? ' ❗' : ''}`;
+      if (firstUserMsg) {
+        item.textContent = `${firstUserMsg.name || email} (${firstUserMsg.email || email})${hasUnread ? ' ❗' : ''}`;
       }
-    });
+    }).catch(console.error);
   });
 }
 
+// Listen user baru yang muncul realtime dan tambahkan ke list
 function watchNewUsers() {
   db.ref('chats').on('child_added', snapshot => {
     const sanitizedEmail = snapshot.key;
@@ -331,34 +385,35 @@ window.onload = () => {
   watchNewUsers();
 
   const msgInput = document.getElementById('msg');
-  const chatBox = document.getElementById('chatBox');
 
   if (msgInput) {
-    msgInput.addEventListener('keydown', function (e) {
-      if ((e.key === 'Enter') && (e.shiftKey || e.ctrlKey)) {
-        // Allow newline
-        return;
-      }
+    // Kirim pesan dengan enter (tanpa shift/ctrl), shift+enter untuk newline
+    msgInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
+        if (e.shiftKey || e.ctrlKey) {
+          // biarkan enter normal buat newline
+          return;
+        }
         e.preventDefault();
         sendMessage();
       }
     });
   }
 
-  // Filter buttons & search input handlers
+  // Filter button click handlers
   document.getElementById('filterAll').onclick = () => {
-    const searchTerm = document.getElementById('searchUser').value;
+    const searchTerm = document.getElementById('searchUser').value.trim();
     renderUserList(allUsersData, 'all', searchTerm);
   };
 
   document.getElementById('filterUnread').onclick = () => {
-    const searchTerm = document.getElementById('searchUser').value;
+    const searchTerm = document.getElementById('searchUser').value.trim();
     renderUserList(allUsersData, 'unread', searchTerm);
   };
 
-  document.getElementById('searchUser').addEventListener('input', () => {
-    const searchTerm = document.getElementById('searchUser').value;
+  // Search input handler realtime filter user list
+  document.getElementById('searchUser').addEventListener('input', e => {
+    const searchTerm = e.target.value.trim();
     renderUserList(allUsersData, 'all', searchTerm);
   });
 };
