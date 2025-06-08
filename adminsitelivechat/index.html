@@ -86,8 +86,8 @@
     color: black;
   }
     .user-item {
-  border-top: 1px solid #ccc;    /* garis atas */
-  border-bottom: 1px solid #ccc; /* garis bawah */
+  border: 1px solid #000; /* garis atas */
+      border-radius: 5px;
   padding: 8px 10px;
   cursor: pointer;
 }
@@ -253,7 +253,7 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
       userDiv.setAttribute('data-sanitized', sanitized);
       userDiv.textContent = label + (hasUnread ? ' ❗' : '');
       userDiv.style.cursor = 'pointer';
-      userDiv.style.padding = '4px 0';
+      userDiv.style.padding = '4px 10px';
       userDiv.onclick = () => {
         activeUserIdEmail = email;
         activeUserIdSanitized = sanitized;
