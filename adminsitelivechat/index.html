@@ -233,9 +233,9 @@ function listenToChat() {
 
         // Tandai pesan user sebagai sudah dibaca
         if (msg.from === 'user' && !msg.readByAdmin) {
-          db.ref(`chats/${sanitizedId}/${key}/readByAdmin`).set(true);
-          updateUserListFlags();
-        }
+  db.ref(`chats/${sanitizedId}/${key}/readByAdmin`).set(true);
+  updateUserFlag(activeUserIdSanitized);
+}
       });
       chatBox.scrollTop = chatBox.scrollHeight;
     } else {
@@ -297,20 +297,19 @@ function loadUserList() {
 }
 
 // Update tanda ❗ jika ada pesan belum dibaca
-function updateUserListFlags() {
-  const items = document.querySelectorAll('.user-item');
-  items.forEach(item => {
-    const sanitized = item.getAttribute('data-sanitized');
-    db.ref(`chats/${sanitized}`).once('value', snapshot => {
-      const chatEntries = Object.values(snapshot.val() || []);
-      const email = desanitizeUserId(sanitized);
-      const firstMsg = chatEntries.find(m => m.from === 'user');
-      const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
+function updateUserFlag(sanitizedEmail) {
+  const item = document.querySelector(`.user-item[data-sanitized="${sanitizedEmail}"]`);
+  if (!item) return;
 
-      if (firstMsg) {
-        item.innerHTML = `${firstMsg.name || email} (${firstMsg.email || email})${hasUnread ? ' <span class="unread-flag">❗</span>' : ''}`;
-      }
-    });
+  db.ref(`chats/${sanitizedEmail}`).once('value', snapshot => {
+    const chatEntries = Object.values(snapshot.val() || []);
+    const email = desanitizeUserId(sanitizedEmail);
+    const firstMsg = chatEntries.find(m => m.from === 'user');
+    const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
+
+    if (firstMsg) {
+      item.textContent = `${firstMsg.name || email} (${firstMsg.email || email})${hasUnread ? ' ❗' : ''}`;
+    }
   });
 }
 
@@ -318,6 +317,7 @@ function updateUserListFlags() {
 function watchNewUsers() {
   const chatsRef = db.ref('chats');
 
+  // Watch user baru
   chatsRef.on('child_added', snapshot => {
     const sanitizedEmail = snapshot.key;
     const email = desanitizeUserId(sanitizedEmail);
@@ -328,8 +328,11 @@ function watchNewUsers() {
     }
   });
 
+  // Watch perubahan chat user (termasuk pesan baru, status read)
   chatsRef.on('child_changed', snapshot => {
-    updateUserListFlags(); // <- update tanda merah jika ada perubahan isi chat
+    const sanitizedEmail = snapshot.key;
+    // update hanya user yang chat-nya berubah
+    updateUserFlag(sanitizedEmail);
   });
 }
 
