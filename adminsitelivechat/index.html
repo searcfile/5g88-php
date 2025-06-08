@@ -169,22 +169,26 @@
 
   <!-- Panel Chat -->
   <div style="flex: 0.5; padding: 1rem;">
-    <!-- ✅ Chat Header -->
-    <div class="chat-header" style="display: flex; justify-content: space-between; align-items: center; background: black; padding: 10px 15px; border-radius: 10px; margin-bottom: 10px;">
-      <!-- Search Messages -->
-      <input type="text" id="searchMessages" placeholder="Search messages..." style="padding: 6px 10px; border-radius: 20px; border: none; outline: none; width: 180px;">
+    <!-- Chat Box -->
+    <div class="chat-box" id="chatBox" style="height: 70vh; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; display: flex; flex-direction: column;">
 
-      <!-- User Info -->
-      <div class="user-info" style="text-align: right; color: white;">
-        <div class="user-name" style="font-weight: bold; color: gold; font-size: 14px;">5G 88</div>
-        <div class="user-status" id="userStatus" style="font-size: 12px; color: limegreen;">Online</div>
+      <!-- ✅ Chat Header Inside ChatBox -->
+      <div class="chat-header" style="display: flex; justify-content: space-between; align-items: center; background: black; padding: 10px 15px; border-radius: 10px; margin-bottom: 10px;">
+        <!-- Search Messages -->
+        <input type="text" id="searchMessages" placeholder="Search messages..." style="padding: 6px 10px; border-radius: 20px; border: none; outline: none; width: 180px;">
+
+        <!-- User Info -->
+        <div class="user-info" style="text-align: right; color: white;">
+          <div class="user-name" style="font-weight: bold; color: gold; font-size: 14px;">5G 88</div>
+          <div class="user-status" id="userStatus" style="font-size: 12px; color: limegreen;">Online</div>
+        </div>
       </div>
+
+      <!-- ✅ Messages Area -->
+      <div id="messageContainer" style="flex: 1;"></div>
     </div>
 
-    <!-- Chat Messages -->
-    <div class="chat-box" id="chatBox" style="height: 70vh; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;"></div>
-
-    <!-- Chat Input -->
+    <!-- Send Box -->
     <div class="send-box" style="display: flex; gap: 10px;">
       <textarea id="msg" placeholder="Type your message" rows="2"></textarea>
       <button onclick="sendMessage()">Send</button>
