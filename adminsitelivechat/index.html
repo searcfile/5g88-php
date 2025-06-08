@@ -188,6 +188,19 @@ function desanitizeUserId(sanitized) {
   return sanitized.replace(/_at_/g, '@').replace(/_/g, '.');
 }
 
+// Fungsi listen status user realtime dari Firebase
+function listenUserStatus(userSanitizedId) {
+  const statusRef = db.ref('status/' + userSanitizedId);
+  statusRef.on('value', snapshot => {
+    const status = snapshot.val() || {};
+    let statusText = 'Offline';
+    if (status.online) statusText = 'Online';
+    if (status.typing) statusText = 'Typing...';
+
+    document.getElementById('userStatus').textContent = statusText;
+  });
+}
+
 // Fungsi kirim pesan ke Firebase
 function sendMessage() {
   const msgInput = document.getElementById('msg');
@@ -235,9 +248,9 @@ function listenToChat() {
         div.className = 'message ' + (msg.from === 'admin' ? 'mine' : 'theirs');
 
         div.innerHTML = `
-  <div style="font-weight: bold;">${msg.name || msg.email || 'Unknown'} <small style="font-size: 0.75rem; color: #0b6906;">${timeStr}</small></div>
-  <div>${msg.text}</div>
-`;
+          <div style="font-weight: bold;">${msg.name || msg.email || 'Unknown'} <small style="font-size: 0.75rem; color: #0b6906;">${timeStr}</small></div>
+          <div>${msg.text}</div>
+        `;
 
         chatBox.appendChild(div);
 
@@ -281,6 +294,7 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
       userDiv.textContent = label + (hasUnread ? ' ❗' : '');
       userDiv.style.cursor = 'pointer';
       userDiv.style.padding = '4px 10px';
+
       userDiv.onclick = () => {
         activeUserIdEmail = email;
         activeUserIdSanitized = sanitized;
@@ -288,6 +302,14 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
         document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
         userDiv.classList.add('active');
 
+        // Update header info (nama, foto default bisa kamu ganti)
+        document.getElementById('userName').textContent = firstMsg.name || email;
+        document.getElementById('userProfilePic').src = firstMsg.photoURL || 'default-profile.png';
+
+        // Listen status realtime
+        listenUserStatus(activeUserIdSanitized);
+
+        // Listen chat
         listenToChat();
       };
 
@@ -370,6 +392,15 @@ window.onload = () => {
   document.getElementById('searchUser').addEventListener('input', () => {
     const searchTerm = document.getElementById('searchUser').value;
     renderUserList(allUsersData, 'all', searchTerm);
+  });
+
+  // Search chat messages by input
+  document.getElementById('searchMessage').addEventListener('input', (e) => {
+    const term = e.target.value.toLowerCase();
+    [...chatBox.children].forEach(msgDiv => {
+      const text = msgDiv.textContent.toLowerCase();
+      msgDiv.style.display = text.includes(term) ? '' : 'none';
+    });
   });
 };
   </script>
