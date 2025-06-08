@@ -109,23 +109,24 @@
   <!-- Panel User -->
   <div id="userList" style="width: 500px; border-right: 1px solid #ccc; padding: 1rem; overflow-y: auto; max-height: 80vh;">
     <h3>User List</h3>
-    
+
     <input type="text" id="searchUser" placeholder="Cari user..." style="width: 100%; padding: 10px 5px; margin-bottom: 10px; border-radius: 5px;" />
-    
+
     <div style="display: flex; gap: 10px; margin-bottom: 10px;">
       <button id="filterAll">All</button>
       <button id="filterUnread">Unread</button>
     </div>
-    
+
     <div id="userListBox"></div>
   </div>
 
   <!-- Panel Chat -->
-  <div style="flex: 0.5; padding: 1rem;">
+  <div style="flex: 1; padding: 1rem;">
     <div class="chat-box" id="chatBox" style="height: 70vh; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;"></div>
 
     <div class="send-box" style="display: flex; gap: 10px;">
-      <input type="text" id="msg" placeholder="Type your message" style="flex: 1; padding: 10px;">
+      <textarea id="msg" placeholder="Type your message"
+        style="flex: 1; padding: 10px; height: 60px; resize: none;"></textarea>
       <button onclick="sendMessage()">Send</button>
     </div>
   </div>
@@ -163,6 +164,7 @@ function desanitizeUserId(sanitized) {
   return sanitized.replace(/_at_/g, '@').replace(/_/g, '.');
 }
 
+// Fungsi kirim pesan ke Firebase
 function sendMessage() {
   const msgInput = document.getElementById('msg');
   const msg = msgInput.value.trim();
@@ -185,6 +187,7 @@ function sendMessage() {
   msgInput.value = '';
 }
 
+// Fungsi untuk listen chat realtime Firebase dan render di chatBox
 function listenToChat() {
   if (!activeUserIdEmail) return;
 
@@ -207,10 +210,6 @@ function listenToChat() {
 
         div.className = 'message ' + (msg.from === 'admin' ? 'mine' : 'theirs');
 
-        let header = msg.name
-          ? `<b>${msg.name}</b>${msg.email && msg.email !== activeUserIdEmail ? ` (${msg.email})` : ''}`
-          : msg.email ? `<b>${msg.email}</b>` : '';
-
         div.innerHTML = `
   <div style="font-weight: bold;">${msg.name || msg.email || 'Unknown'} <small style="font-size: 0.75rem; color: #0b6906;">${timeStr}</small></div>
   <div>${msg.text}</div>
@@ -230,7 +229,7 @@ function listenToChat() {
   });
 }
 
-// Fungsi render user list dengan filter dan search
+// Render user list dengan filter dan search
 function renderUserList(users, filter = 'all', searchTerm = '') {
   const userListBox = document.getElementById('userListBox');
   userListBox.innerHTML = '';
@@ -245,14 +244,11 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
 
       const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
 
-      // Filter berdasarkan pilihan
       if (filter === 'unread' && !hasUnread) return;
 
-      // Filter berdasarkan search term
       const label = `${firstMsg.name || email} (${firstMsg.email || email})`;
       if (searchTerm && !label.toLowerCase().includes(searchTerm.toLowerCase())) return;
 
-      // Cek user-item sudah ada atau belum (hindari duplikat)
       if (document.querySelector(`[data-sanitized="${sanitized}"]`)) return;
 
       const userDiv = document.createElement('div');
@@ -265,7 +261,6 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
         activeUserIdEmail = email;
         activeUserIdSanitized = sanitized;
 
-        // Remove highlight dari user lain
         document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
         userDiv.classList.add('active');
 
@@ -277,7 +272,6 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
   });
 }
 
-// Load semua user dan simpan ke allUsersData
 function loadUserList() {
   const userListBox = document.getElementById('userListBox');
   userListBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
@@ -289,7 +283,6 @@ function loadUserList() {
   });
 }
 
-// Update tanda pesan unread pada user list
 function updateUserListFlags() {
   const items = document.querySelectorAll('.user-item');
   items.forEach(item => {
@@ -307,13 +300,11 @@ function updateUserListFlags() {
   });
 }
 
-// Watch penambahan user baru realtime
 function watchNewUsers() {
   db.ref('chats').on('child_added', snapshot => {
     const sanitizedEmail = snapshot.key;
     const email = desanitizeUserId(sanitizedEmail);
 
-    // Masukkan ke allUsersData jika belum ada, lalu render ulang
     if (!allUsersData.includes(email)) {
       allUsersData.push(email);
       renderUserList([email]);
@@ -325,18 +316,23 @@ window.onload = () => {
   loadUserList();
   watchNewUsers();
 
-  // Event listener enter key untuk kirim pesan
   const msgInput = document.getElementById('msg');
+  const chatBox = document.getElementById('chatBox');
+
   if (msgInput) {
-    msgInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
+    msgInput.addEventListener('keydown', function (e) {
+      if ((e.key === 'Enter') && (e.shiftKey || e.ctrlKey)) {
+        // Allow newline
+        return;
+      }
+      if (e.key === 'Enter') {
         e.preventDefault();
         sendMessage();
       }
     });
   }
 
-  // Setup event filter dan search
+  // Filter buttons & search input handlers
   document.getElementById('filterAll').onclick = () => {
     const searchTerm = document.getElementById('searchUser').value;
     renderUserList(allUsersData, 'all', searchTerm);
