@@ -136,14 +136,42 @@
   </div>
 
   <!-- Panel Chat -->
-  <div style="flex: 0.5; padding: 1rem;">
-    <div class="chat-box" id="chatBox" style="height: 70vh; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;"></div>
-
-    <div class="send-box" style="display: flex; gap: 10px;">
-      <textarea id="msg" placeholder="Type your message" rows="2"></textarea>
-      <button onclick="sendMessage()">Send</button>
-    </div>
+ <div style="flex: 0.5; padding: 1rem; display: flex; flex-direction: column; max-width: 600px;">
+  <div id="chatHeader" style="
+    background: var(--primary-color);
+    color: var(--bg-color);
+    padding: 1rem;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    box-sizing: border-box;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-bottom: none;
+  ">
+    Pilih user untuk mulai chat
   </div>
+  <div class="chat-box" id="chatBox" style="
+    height: 65vh; 
+    overflow-y: auto; 
+    border: 1px solid #ccc; 
+    padding: 10px; 
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    background: #000;
+    color: #fff;
+    box-sizing: border-box;
+    ">
+  </div>
+
+  <div class="send-box" style="display: flex; gap: 10px; margin-top: 10px;">
+    <textarea id="msg" placeholder="Type your message" rows="2"></textarea>
+    <button onclick="sendMessage()" id="sendMessage">Send</button>
+  </div>
+</div>
 </main>
 
   <!-- Firebase SDK -->
@@ -272,13 +300,18 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
       userDiv.style.cursor = 'pointer';
       userDiv.style.padding = '4px 10px';
       userDiv.onclick = () => {
-        activeUserIdEmail = email;
-        activeUserIdSanitized = sanitized;
+       activeUserIdEmail = email;
+       activeUserIdSanitized = sanitized;
 
-        document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
-        userDiv.classList.add('active');
+  document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
+  userDiv.classList.add('active');
 
-        listenToChat();
+  // Update header chat dengan nama user yang dipilih
+  const chatHeader = document.getElementById('chatHeader');
+  const displayName = userDiv.textContent.replace(' ❗', ''); // hapus tanda unread
+  chatHeader.textContent = `Chat dengan: ${displayName}`;
+
+  listenToChat();
       };
 
       userListBox.appendChild(userDiv);
@@ -325,6 +358,9 @@ function watchNewUsers() {
     }
   });
 }
+    window.onload = () => {
+  const chatHeader = document.getElementById('chatHeader');
+  chatHeader.textContent = 'Pilih user untuk mulai chat';
 
 window.onload = () => {
   loadUserList();
