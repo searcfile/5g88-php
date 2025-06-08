@@ -137,10 +137,29 @@
 
   <!-- Panel Chat -->
   <div style="flex: 0.5; padding: 1rem;">
-    <div class="chat-box" id="chatBox" style="height: 70vh; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;"></div>
+    <!-- Chat Box -->
+    <div class="chat-box" id="chatBox" style="height: 70vh; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; position: relative;">
+      
+      <!-- Chat Header DI DALAM chatBox -->
+      <div id="chatHeader" style="
+        font-weight: bold;
+        font-size: 1.1rem;
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 1;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+      ">
+        Pilih user untuk mulai
+      </div>
 
+      <!-- Chat messages will go here -->
+    </div>
+
+    <!-- Kirim Pesan -->
     <div class="send-box" style="display: flex; gap: 10px;">
-      <textarea id="msg" placeholder="Type your message" rows="2"></textarea>
+      <textarea id="msg" placeholder="Type your message" rows="2" style="flex: 1;"></textarea>
       <button onclick="sendMessage()">Send</button>
     </div>
   </div>
@@ -168,8 +187,9 @@ const db = firebase.database();
 
 let activeUserIdSanitized = '';
 let activeUserIdEmail = '';
-let allUsersData = [];  // simpan semua user
+let allUsersData = [];
 
+// Sanitize & Desanitize
 function sanitizeUserId(email) {
   return email.replace(/\./g, '_').replace(/@/g, '_at_').replace(/,/g, '_');
 }
@@ -178,7 +198,7 @@ function desanitizeUserId(sanitized) {
   return sanitized.replace(/_at_/g, '@').replace(/_/g, '.');
 }
 
-// Fungsi kirim pesan ke Firebase
+// Kirim pesan
 function sendMessage() {
   const msgInput = document.getElementById('msg');
   const msg = msgInput.value.trim();
@@ -201,7 +221,7 @@ function sendMessage() {
   msgInput.value = '';
 }
 
-// Fungsi untuk listen chat realtime Firebase dan render di chatBox
+// Dengar chat realtime
 function listenToChat() {
   if (!activeUserIdEmail) return;
 
@@ -225,9 +245,11 @@ function listenToChat() {
         div.className = 'message ' + (msg.from === 'admin' ? 'mine' : 'theirs');
 
         div.innerHTML = `
-  <div style="font-weight: bold;">${msg.name || msg.email || 'Unknown'} <small style="font-size: 0.75rem; color: #0b6906;">${timeStr}</small></div>
-  <div>${msg.text}</div>
-`;
+          <div style="font-weight: bold;">${msg.name || msg.email || 'Unknown'} 
+            <small style="font-size: 0.75rem; color: #0b6906;">${timeStr}</small>
+          </div>
+          <div>${msg.text}</div>
+        `;
 
         chatBox.appendChild(div);
 
@@ -243,7 +265,7 @@ function listenToChat() {
   });
 }
 
-// Render user list dengan filter dan search
+// Render daftar user
 function renderUserList(users, filter = 'all', searchTerm = '') {
   const userListBox = document.getElementById('userListBox');
   userListBox.innerHTML = '';
@@ -257,7 +279,6 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
       if (!firstMsg) return;
 
       const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
-
       if (filter === 'unread' && !hasUnread) return;
 
       const label = `${firstMsg.name || email} (${firstMsg.email || email})`;
@@ -271,13 +292,12 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
       userDiv.textContent = label + (hasUnread ? ' ❗' : '');
       userDiv.style.cursor = 'pointer';
       userDiv.style.padding = '4px 10px';
+
       userDiv.onclick = () => {
         activeUserIdEmail = email;
         activeUserIdSanitized = sanitized;
-
         document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
         userDiv.classList.add('active');
-
         listenToChat();
       };
 
@@ -286,6 +306,7 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
   });
 }
 
+// Muat daftar user pertama kali
 function loadUserList() {
   const userListBox = document.getElementById('userListBox');
   userListBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
@@ -297,6 +318,7 @@ function loadUserList() {
   });
 }
 
+// Update ❗ flag jika ada pesan belum dibaca
 function updateUserListFlags() {
   const items = document.querySelectorAll('.user-item');
   items.forEach(item => {
@@ -314,6 +336,7 @@ function updateUserListFlags() {
   });
 }
 
+// Watch user baru yang muncul di database
 function watchNewUsers() {
   db.ref('chats').on('child_added', snapshot => {
     const sanitizedEmail = snapshot.key;
@@ -326,6 +349,7 @@ function watchNewUsers() {
   });
 }
 
+// Inisialisasi saat halaman dimuat
 window.onload = () => {
   loadUserList();
   watchNewUsers();
@@ -335,10 +359,7 @@ window.onload = () => {
 
   if (msgInput) {
     msgInput.addEventListener('keydown', function (e) {
-      if ((e.key === 'Enter') && (e.shiftKey || e.ctrlKey)) {
-        // Allow newline
-        return;
-      }
+      if ((e.key === 'Enter') && (e.shiftKey || e.ctrlKey)) return;
       if (e.key === 'Enter') {
         e.preventDefault();
         sendMessage();
@@ -346,7 +367,7 @@ window.onload = () => {
     });
   }
 
-  // Filter buttons & search input handlers
+  // Tombol filter dan pencarian
   document.getElementById('filterAll').onclick = () => {
     const searchTerm = document.getElementById('searchUser').value;
     renderUserList(allUsersData, 'all', searchTerm);
