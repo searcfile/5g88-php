@@ -118,12 +118,12 @@
   font-weight: bold;
 }
     .chat-container {
-  width: 500px; /* sesuaikan dengan chat box kamu */
+  width: 600px; /* sesuaikan dengan chat box kamu */
   border: 1px solid #ccc;
   display: flex;
   flex-direction: column;
   font-family: Arial, sans-serif;
-  background: #fff;
+  background: #230a1a;
 }
 
 .chat-header {
@@ -132,7 +132,7 @@
   align-items: center;
   padding: 10px 15px;
   border-bottom: 1px solid #ddd;
-  background-color: #f8f8f8;
+  background-color: #05cbe7;
 }
 
 .user-info {
@@ -186,7 +186,7 @@
   flex-grow: 1;
   padding: 15px;
   overflow-y: auto;
-  background-color: #fafafa;
+  background-color: #08302d;
   height: 400px; /* atau sesuaikan dengan kebutuhan */
 }
   </style>
@@ -240,6 +240,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <script>
+    function toggleTheme() {
+  document.body.classList.toggle('dark');
+}
 // Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
@@ -387,16 +390,21 @@ function updateUserFlag(sanitizedEmail) {
 
   db.ref(`chats/${sanitizedEmail}`).once('value', snapshot => {
     const chatEntries = Object.values(snapshot.val() || []);
-    const email = desanitizeUserId(sanitizedEmail);
-    const firstMsg = chatEntries.find(m => m.from === 'user');
     const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
 
-    if (firstMsg) {
-      item.textContent = `${firstMsg.name || email} (${firstMsg.email || email})${hasUnread ? ' ❗' : ''}`;
+    if (hasUnread) {
+      if (!item.querySelector('.unread-flag')) {
+        const flag = document.createElement('span');
+        flag.className = 'unread-flag';
+        flag.textContent = '❗';
+        item.appendChild(flag);
+      }
+    } else {
+      const flag = item.querySelector('.unread-flag');
+      if (flag) flag.remove();
     }
   });
 }
-
 // Deteksi user baru secara realtime
 function watchNewUsers() {
   const chatsRef = db.ref('chats');
