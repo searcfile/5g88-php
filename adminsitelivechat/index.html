@@ -120,7 +120,7 @@
 .date-label-inner {
   display: inline-block;
   background-color: lightgreen;
-  padding: 2px 30px; /* tambah padding vertikal biar agak tinggi */
+  padding: 2px 22px; /* tambah padding vertikal biar agak tinggi */
   border-radius: 30px;
   font-size: 14px;
   color: #333;
@@ -360,7 +360,9 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
       userDiv.onclick = () => {
         activeUserIdEmail = email;
         activeUserIdSanitized = sanitized;
-
+        
+        document.getElementById("chatUserName").textContent = firstMsg.name || email;
+        
         document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
         userDiv.classList.add('active');
 
