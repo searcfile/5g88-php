@@ -112,6 +112,29 @@
      border-radius: 5px;
       border: 2px solid gold;
     }
+      .date-label {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.date-label-inner {
+  display: inline-block;
+  background-color: lightgreen;
+  padding: 2px 30px;
+  border-radius: 20px;
+  font-size: 14px;
+  color: #333;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.date-label-inner .day-label {
+  font-weight: bold;
+}
+
+.date-label-inner .full-date-label {
+  font-size: 12px;
+  color: #555;
+}
   </style>
 </head>
 <body>
@@ -223,8 +246,50 @@ function listenToChat() {
     let latestTimestamp = 0;
 
     if (chats) {
-      Object.entries(chats).forEach(([key, msg]) => {
+      // Track label tanggal terakhir yang sudah tampil
+      let lastDateLabel = '';
+
+      // Urutkan chat berdasarkan waktu ascending (lama ke baru)
+      const chatEntries = Object.entries(chats).sort((a, b) => (a[1].time || 0) - (b[1].time || 0));
+
+      chatEntries.forEach(([key, msg]) => {
         const date = new Date(msg.time || Date.now());
+
+        // Hitung beda hari pesan dengan hari ini
+        const now = new Date();
+        const msgDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const diffDays = Math.floor((today - msgDate) / (1000 * 60 * 60 * 24));
+
+        let dateLabel = '';
+        if (diffDays === 0) dateLabel = 'Today';
+        else if (diffDays === 1) dateLabel = 'Yesterday';
+        else {
+          // Format tanggal lengkap bahasa Indonesia, contoh: "08 Juni 2025"
+          const options = { day: '2-digit', month: 'long', year: 'numeric' };
+          dateLabel = date.toLocaleDateString('id-ID', options);
+        }
+
+        // Jika tanggal berbeda dari sebelumnya, buat header baru dengan style CSS kamu
+        if (dateLabel !== lastDateLabel) {
+          lastDateLabel = dateLabel;
+
+          const dateDivider = document.createElement('div');
+          dateDivider.className = 'date-label';
+
+          const inner = document.createElement('div');
+          inner.className = 'date-label-inner';
+
+          if (dateLabel === 'Today' || dateLabel === 'Yesterday') {
+            inner.innerHTML = `<span class="day-label">${dateLabel}</span>`;
+          } else {
+            inner.innerHTML = `<span class="full-date-label">${dateLabel}</span>`;
+          }
+
+          dateDivider.appendChild(inner);
+          chatBox.appendChild(dateDivider);
+        }
+
         const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         const div = document.createElement('div');
@@ -243,10 +308,10 @@ function listenToChat() {
           updateUserListFlags();
 
           if (!lastMessageTimestamps[sanitizedId] || msg.time > lastMessageTimestamps[sanitizedId]) {
-    lastMessageTimestamps[sanitizedId] = msg.time;
-    playNotificationSound();
-  }
-}
+            lastMessageTimestamps[sanitizedId] = msg.time;
+            playNotificationSound();
+          }
+        }
         latestTimestamp = Math.max(latestTimestamp, msg.time);
       });
 
