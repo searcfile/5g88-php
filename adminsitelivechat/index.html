@@ -382,12 +382,12 @@ function loadUserList() {
   const userListBox = document.getElementById('userListBox');
   userListBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
 
-  db.ref('chats').once('value', snapshot => {
-    const users = Object.keys(snapshot.val() || {}).map(desanitizeUserId);
-    allUsersData = users;
-    document.getElementById('userListBox').innerHTML = '';
-    renderUserList(users);
-  });
+  db.ref('chats').on('value', snapshot => {
+  const users = Object.keys(snapshot.val() || {}).map(desanitizeUserId);
+  allUsersData = users;
+  document.getElementById('userListBox').innerHTML = '';
+  renderUserList(users);
+});
 }
 
 function updateUserListFlags() {
