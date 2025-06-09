@@ -246,31 +246,36 @@ function listenToChat() {
     let latestTimestamp = 0;
 
     if (chats) {
-      // Track label tanggal terakhir yang sudah tampil
       let lastDateLabel = '';
 
-      // Urutkan chat berdasarkan waktu ascending (lama ke baru)
+      // Urutkan chat berdasarkan waktu ascending
       const chatEntries = Object.entries(chats).sort((a, b) => (a[1].time || 0) - (b[1].time || 0));
 
       chatEntries.forEach(([key, msg]) => {
         const date = new Date(msg.time || Date.now());
 
-        // Hitung beda hari pesan dengan hari ini
-        const now = new Date();
-        const msgDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const diffDays = Math.floor((today - msgDate) / (1000 * 60 * 60 * 24));
+        // Buat objek tanggal pesan tanpa waktu (set jam, menit, detik ke 0)
+        const msgDateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
+        // Buat objek tanggal hari ini tanpa waktu
+        const now = new Date();
+        const todayDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        // Hitung selisih hari (integer)
+        const diffTime = todayDateOnly - msgDateOnly;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        // Tentukan label tanggal
         let dateLabel = '';
         if (diffDays === 0) dateLabel = 'Today';
         else if (diffDays === 1) dateLabel = 'Yesterday';
         else {
-          // Format tanggal lengkap bahasa Indonesia, contoh: "08 Juni 2025"
+          // Format tanggal lengkap dalam bahasa Indonesia, misal: "09 Juni 2025"
           const options = { day: '2-digit', month: 'long', year: 'numeric' };
           dateLabel = date.toLocaleDateString('id-ID', options);
         }
 
-        // Jika tanggal berbeda dari sebelumnya, buat header baru dengan style CSS kamu
+        // Jika label tanggal berbeda dari sebelumnya, tampilkan header tanggal
         if (dateLabel !== lastDateLabel) {
           lastDateLabel = dateLabel;
 
