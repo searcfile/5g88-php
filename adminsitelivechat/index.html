@@ -159,23 +159,14 @@
   </div>
 
   <!-- Panel Chat -->
-<div style="flex: 0.5; padding: 1rem; display: flex; flex-direction: column; height: 80vh;">
-  
-  <!-- Chat Header -->
-  <div id="chatHeader" style="border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 10px;">
-    <h3 id="chatUserName">Pilih user dulu</h3>
-    <input type="text" id="searchMessage" placeholder="Cari pesan..." style="width: 100%; padding: 5px; border-radius: 5px; border: 1px solid #ccc;" />
-  </div>
-  
-  <!-- Chat Box -->
-  <div class="chat-box" id="chatBox" style="flex-grow: 1; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;"></div>
+  <div style="flex: 0.5; padding: 1rem;">
+    <div class="chat-box" id="chatBox" style="height: 70vh; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;"></div>
 
-  <!-- Send Box -->
-  <div class="send-box" style="display: flex; gap: 10px;">
-    <textarea id="msg" placeholder="Type your message" rows="2"></textarea>
-    <button onclick="sendMessage()">Send</button>
+    <div class="send-box" style="display: flex; gap: 10px;">
+      <textarea id="msg" placeholder="Type your message" rows="2"></textarea>
+      <button onclick="sendMessage()">Send</button>
+    </div>
   </div>
-</div>
 </main>
 
   
@@ -256,30 +247,46 @@ function listenToChat() {
 
     if (chats) {
       let lastDateLabel = '';
+
+      // Urutkan chat berdasarkan waktu ascending
       const chatEntries = Object.entries(chats).sort((a, b) => (a[1].time || 0) - (b[1].time || 0));
 
       chatEntries.forEach(([key, msg]) => {
         const date = new Date(msg.time || Date.now());
+
+        // Tanggal pesan tanpa waktu (jam, menit, detik = 0)
         const msgDateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+        // Tanggal hari ini tanpa waktu
         const now = new Date();
         const todayDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        // Selisih hari
         const diffTime = todayDateOnly - msgDateOnly;
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
+        // Format tanggal lengkap bahasa Inggris (en-US)
         const optionsDate = { day: '2-digit', month: 'long', year: 'numeric' };
         const fullDateStr = date.toLocaleDateString('en-US', optionsDate);
+
+        // Format nama hari bahasa Inggris, misal: Saturday
         const optionsDayName = { weekday: 'long' };
         const dayName = date.toLocaleDateString('en-US', optionsDayName);
 
+        // Tentukan label hari berdasarkan selisih hari
         let dayLabel = '';
         if (diffDays === 0) dayLabel = 'Today';
         else if (diffDays === 1) dayLabel = 'Yesterday';
-        else dayLabel = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+        else dayLabel = dayName.charAt(0).toUpperCase() + dayName.slice(1); // Kapitalisasi hari
 
+        // Gabungkan label 2 baris: hari & tanggal lengkap, pisah dengan '|'
         const dateLabel = `${dayLabel}|${fullDateStr}`;
+
+        // Tampilkan header tanggal jika beda dengan sebelumnya
         if (dateLabel !== lastDateLabel) {
           lastDateLabel = dateLabel;
           const [dayLabelText, fullDateText] = dateLabel.split('|');
+
           const dateDivider = document.createElement('div');
           dateDivider.className = 'date-label';
           dateDivider.innerHTML = `
@@ -326,10 +333,11 @@ function listenToChat() {
 
 function renderUserList(users, filter = 'all', searchTerm = '') {
   const userListBox = document.getElementById('userListBox');
-  userListBox.innerHTML = '';
-
   users.forEach(email => {
     const sanitized = sanitizeUserId(email);
+
+    if (document.querySelector(`[data-sanitized="${sanitized}"]`)) return;
+
     db.ref(`chats/${sanitized}`).once('value', snapshot => {
       const chatEntries = Object.values(snapshot.val() || []);
       const firstMsg = chatEntries.find(m => m.from === 'user');
@@ -351,6 +359,7 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
       userDiv.onclick = () => {
         activeUserIdEmail = email;
         activeUserIdSanitized = sanitized;
+
         document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
         userDiv.classList.add('active');
         listenToChat();
@@ -393,6 +402,7 @@ function watchNewUsers() {
   db.ref('chats').on('child_added', snapshot => {
     const sanitizedEmail = snapshot.key;
     const email = desanitizeUserId(sanitizedEmail);
+
     if (!allUsersData.includes(email)) {
       allUsersData.push(email);
       renderUserList([email]);
