@@ -268,7 +268,7 @@ function formatDateLabel(dateStr) {
 
   if (diffTime === 0) {
     return {
-      day: "Today",
+      day: "today",
       full: date.toLocaleDateString("en-GB", {
         year: "numeric",
         month: "long",
@@ -286,7 +286,7 @@ function formatDateLabel(dateStr) {
     };
   } else {
     return {
-      day: capitalizeFirstLetter(date.toLocaleDateString("en-GB", { weekday: "long" })),
+      day: date.toLocaleDateString("en-GB", { weekday: "long" }).toLowerCase(),
       full: date.toLocaleDateString("en-GB", {
         year: "numeric",
         month: "long",
