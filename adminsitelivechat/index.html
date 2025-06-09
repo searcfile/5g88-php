@@ -253,6 +253,49 @@ function playNotificationSound() {
   }
 }
 
+function formatDateLabel(dateStr) {
+  const today = new Date();
+  const date = new Date(dateStr);
+
+  function resetTime(d) {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
+  const todayReset = resetTime(today);
+  const dateReset = resetTime(date);
+
+  const diffTime = todayReset - dateReset; // ms
+
+  if (diffTime === 0) {
+    return {
+      day: "today",
+      full: date.toLocaleDateString("en-GB", {
+        year: "numeric",
+        month: "long",
+        day: "2-digit",
+      }).toLowerCase(),
+    };
+  } else if (diffTime === 86400000) {
+    return {
+      day: "yesterday",
+      full: date.toLocaleDateString("en-GB", {
+        year: "numeric",
+        month: "long",
+        day: "2-digit",
+      }).toLowerCase(),
+    };
+  } else {
+    return {
+      day: date.toLocaleDateString("en-GB", { weekday: "long" }).toLowerCase(),
+      full: date.toLocaleDateString("en-GB", {
+        year: "numeric",
+        month: "long",
+        day: "2-digit",
+      }).toLowerCase(),
+    };
+  }
+}
+
 function renderChatMessages(messages) {
   const chatBox = document.getElementById("chatBox");
   chatBox.innerHTML = "";
@@ -261,10 +304,10 @@ function renderChatMessages(messages) {
 
   messages.forEach(msg => {
     const msgDate = new Date(msg.time);
-    const dayLabel = msgDate.toLocaleDateString(undefined, { weekday: 'long' });
-    const fullDateLabel = msgDate.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    // Pakai formatDateLabel di sini:
+    const dateLabels = formatDateLabel(msgDate);
 
-    const dateStr = dayLabel + ', ' + fullDateLabel;
+    const dateStr = dateLabels.day + ', ' + dateLabels.full;
 
     if (lastDate !== dateStr) {
       lastDate = dateStr;
@@ -272,12 +315,12 @@ function renderChatMessages(messages) {
       const dateLabelDiv = document.createElement("div");
       dateLabelDiv.className = "date-label";
 
-     dateLabelDiv.innerHTML = `
-  <div class="date-label-inner">
-    <span class="day-label">${dayLabel}</span>
-    <span class="full-date-label">${fullDateLabel}</span>
-  </div>
-`;
+      dateLabelDiv.innerHTML = `
+        <div class="date-label-inner">
+          <span class="day-label">${dateLabels.day}</span>
+          <span class="full-date-label">${dateLabels.full}</span>
+        </div>
+      `;
 
       chatBox.appendChild(dateLabelDiv);
     }
