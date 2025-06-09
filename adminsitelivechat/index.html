@@ -254,44 +254,51 @@ function listenToChat() {
       chatEntries.forEach(([key, msg]) => {
         const date = new Date(msg.time || Date.now());
 
-        // Buat objek tanggal pesan tanpa waktu (set jam, menit, detik ke 0)
+        // Tanggal pesan tanpa waktu (jam, menit, detik = 0)
         const msgDateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
-        // Buat objek tanggal hari ini tanpa waktu
+        // Tanggal hari ini tanpa waktu
         const now = new Date();
         const todayDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-        // Hitung selisih hari (integer)
+        // Selisih hari
         const diffTime = todayDateOnly - msgDateOnly;
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-        // Tentukan label tanggal
+        // Format tanggal lengkap bahasa Indonesia
+        const options = { day: '2-digit', month: 'long', year: 'numeric' };
+        const fullDateStr = date.toLocaleDateString('id-ID', options);
+
         let dateLabel = '';
-        if (diffDays === 0) dateLabel = 'Today';
-        else if (diffDays === 1) dateLabel = 'Yesterday';
-        else {
-          // Format tanggal lengkap dalam bahasa Indonesia, misal: "09 Juni 2025"
-          const options = { day: '2-digit', month: 'long', year: 'numeric' };
-          dateLabel = date.toLocaleDateString('id-ID', options);
+        let dateLabelHtml = '';
+
+        if (diffDays === 0) {
+          dateLabel = 'today';
+          dateLabelHtml = `
+            <div class="date-label-inner">
+              <div class="day-label">Today</div>
+              <div class="full-date-label">${fullDateStr}</div>
+            </div>`;
+        } else if (diffDays === 1) {
+          dateLabel = 'yesterday';
+          dateLabelHtml = `
+            <div class="date-label-inner">
+              <div class="day-label">Yesterday</div>
+            </div>`;
+        } else {
+          dateLabel = fullDateStr;
+          dateLabelHtml = `
+            <div class="date-label-inner">
+              <div class="full-date-label">${fullDateStr}</div>
+            </div>`;
         }
 
         // Jika label tanggal berbeda dari sebelumnya, tampilkan header tanggal
         if (dateLabel !== lastDateLabel) {
           lastDateLabel = dateLabel;
-
           const dateDivider = document.createElement('div');
           dateDivider.className = 'date-label';
-
-          const inner = document.createElement('div');
-          inner.className = 'date-label-inner';
-
-          if (dateLabel === 'Today' || dateLabel === 'Yesterday') {
-            inner.innerHTML = `<span class="day-label">${dateLabel}</span>`;
-          } else {
-            inner.innerHTML = `<span class="full-date-label">${dateLabel}</span>`;
-          }
-
-          dateDivider.appendChild(inner);
+          dateDivider.innerHTML = dateLabelHtml;
           chatBox.appendChild(dateDivider);
         }
 
