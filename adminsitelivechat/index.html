@@ -265,21 +265,22 @@ function listenToChat() {
         const diffTime = todayDateOnly - msgDateOnly;
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-        // Format tanggal lengkap bahasa Indonesia
-        const options = { day: '2-digit', month: 'long', year: 'numeric' };
-        dateLabel = date.toLocaleDateString('en-US', options);
+        // Format tanggal lengkap bahasa Inggris (en-US)
+        const optionsDate = { day: '2-digit', month: 'long', year: 'numeric' };
+        const fullDateStr = date.toLocaleDateString('en-US', optionsDate);
 
-        // Format nama hari, misal: Kamis
+        // Format nama hari bahasa Inggris, misal: Saturday
         const optionsDayName = { weekday: 'long' };
         const dayName = date.toLocaleDateString('en-US', optionsDayName);
 
+        // Tentukan label hari berdasarkan selisih hari
         let dayLabel = '';
         if (diffDays === 0) dayLabel = 'Today';
         else if (diffDays === 1) dayLabel = 'Yesterday';
         else dayLabel = dayName.charAt(0).toUpperCase() + dayName.slice(1); // Kapitalisasi hari
 
-        // Gabungkan label 2 baris: hari & tanggal lengkap
-        const dateLabel = `${dayLabel}|${fullDateStr}`; // Pisah pake pipe (|) supaya bisa dibandingkan
+        // Gabungkan label 2 baris: hari & tanggal lengkap, pisah dengan '|'
+        const dateLabel = `${dayLabel}|${fullDateStr}`;
 
         // Tampilkan header tanggal jika beda dengan sebelumnya
         if (dateLabel !== lastDateLabel) {
