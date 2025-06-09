@@ -146,7 +146,7 @@
   </div>
 </main>
 
- <audio id="notificationSound" src="https://notificationsounds.com/storage/sounds/file-sounds-1152-pristine.mp3" preload="auto"></audio>
+ <audio id="notificationSound" src="notif.mp3" preload="auto"></audio>
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -182,7 +182,7 @@ function desanitizeUserId(sanitized) {
 
 function playNotificationSound() {
   const audio = document.getElementById("notificationSound");
-  if (audio) audio.play().catch(() => {}); // Avoid uncaught if blocked by browser
+  if (audio) audio.play().catch(() => {});
 }
 
 function sendMessage() {
@@ -207,7 +207,7 @@ function listenToChat() {
   const chatRef = db.ref('chats/' + sanitizedId);
   const chatBox = document.getElementById('chatBox');
 
-  chatRef.off(); // Remove old listeners
+  chatRef.off();
   chatBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
 
   chatRef.on('value', snapshot => {
@@ -345,7 +345,7 @@ window.onload = () => {
     });
   }
 
-  // Button and search handlers
+  // Filter & Search Buttons
   document.getElementById('filterAll').onclick = () => {
     const searchTerm = document.getElementById('searchUser').value;
     renderUserList(allUsersData, 'all', searchTerm);
