@@ -147,10 +147,7 @@
 </main>
 
   
- <audio id="notificationSound" preload="auto">
-  <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg" />
-  Your browser does not support the audio element.
-</audio>
+ <audio id="notificationSound" preload="auto" src="https://cdn.freesound.org/previews/341/341695_6265649-lq.mp3"></audio>
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -186,7 +183,13 @@ function desanitizeUserId(sanitized) {
 
 function playNotificationSound() {
   const audio = document.getElementById("notificationSound");
-  if (audio) audio.play().catch(() => {});
+  if (audio) {
+    audio.volume = 1;
+    audio.muted = false;
+    audio.play()
+      .then(() => console.log("Notification sound played"))
+      .catch(err => console.warn("Play sound error:", err));
+  }
 }
 
 function sendMessage() {
@@ -240,10 +243,10 @@ function listenToChat() {
           updateUserListFlags();
 
           if (!lastMessageTimestamps[sanitizedId] || msg.time > lastMessageTimestamps[sanitizedId]) {
-            lastMessageTimestamps[sanitizedId] = msg.time;
-            playNotificationSound();
-          }
-        }
+    lastMessageTimestamps[sanitizedId] = msg.time;
+    playNotificationSound();
+  }
+}
         latestTimestamp = Math.max(latestTimestamp, msg.time);
       });
 
