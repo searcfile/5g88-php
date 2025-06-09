@@ -146,6 +146,7 @@
   </div>
 </main>
 
+ <audio id="notificationSound" src="https://notificationsounds.com/storage/sounds/file-sounds-1152-pristine.mp3" preload="auto"></audio>
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -168,7 +169,8 @@ const db = firebase.database();
 
 let activeUserIdSanitized = '';
 let activeUserIdEmail = '';
-let allUsersData = [];  // simpan semua user
+let allUsersData = [];
+let lastMessageTimestamps = {};
 
 function sanitizeUserId(email) {
   return email.replace(/\./g, '_').replace(/@/g, '_at_').replace(/,/g, '_');
@@ -178,18 +180,17 @@ function desanitizeUserId(sanitized) {
   return sanitized.replace(/_at_/g, '@').replace(/_/g, '.');
 }
 
-// Fungsi kirim pesan ke Firebase
+function playNotificationSound() {
+  const audio = document.getElementById("notificationSound");
+  if (audio) audio.play().catch(() => {}); // Avoid uncaught if blocked by browser
+}
+
 function sendMessage() {
   const msgInput = document.getElementById('msg');
   const msg = msgInput.value.trim();
-
-  if (!activeUserIdEmail || !msg) {
-    alert("Pilih user dan tulis pesan dulu!");
-    return;
-  }
+  if (!activeUserIdEmail || !msg) return alert("Pilih user dan tulis pesan dulu!");
 
   const sanitizedId = sanitizeUserId(activeUserIdEmail);
-
   db.ref('chats/' + sanitizedId).push({
     from: 'admin',
     name: 'Admin',
@@ -197,45 +198,52 @@ function sendMessage() {
     text: msg,
     time: Date.now()
   });
-
   msgInput.value = '';
 }
 
-// Fungsi untuk listen chat realtime Firebase dan render di chatBox
 function listenToChat() {
   if (!activeUserIdEmail) return;
-
   const sanitizedId = sanitizeUserId(activeUserIdEmail);
   const chatRef = db.ref('chats/' + sanitizedId);
   const chatBox = document.getElementById('chatBox');
 
-  chatRef.off();
+  chatRef.off(); // Remove old listeners
   chatBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
 
   chatRef.on('value', snapshot => {
     chatBox.innerHTML = '';
     const chats = snapshot.val();
+    let latestTimestamp = 0;
 
     if (chats) {
       Object.entries(chats).forEach(([key, msg]) => {
-        const div = document.createElement('div');
         const date = new Date(msg.time || Date.now());
         const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+        const div = document.createElement('div');
         div.className = 'message ' + (msg.from === 'admin' ? 'mine' : 'theirs');
-
         div.innerHTML = `
-  <div style="font-weight: bold;">${msg.name || msg.email || 'Unknown'} <small style="font-size: 0.75rem; color: #0b6906;">${timeStr}</small></div>
-  <div>${msg.text}</div>
-`;
-
+          <div style="font-weight: bold;">
+            ${msg.name || msg.email || 'Unknown'}
+            <small style="font-size: 0.75rem; color: #0b6906;">${timeStr}</small>
+          </div>
+          <div>${msg.text}</div>
+        `;
         chatBox.appendChild(div);
 
         if (msg.from === 'user' && !msg.readByAdmin) {
           db.ref(`chats/${sanitizedId}/${key}/readByAdmin`).set(true);
           updateUserListFlags();
+
+          if (!lastMessageTimestamps[sanitizedId] || msg.time > lastMessageTimestamps[sanitizedId]) {
+            lastMessageTimestamps[sanitizedId] = msg.time;
+            playNotificationSound();
+          }
         }
+        latestTimestamp = Math.max(latestTimestamp, msg.time);
       });
+
+      lastMessageTimestamps[sanitizedId] = latestTimestamp;
       chatBox.scrollTop = chatBox.scrollHeight;
     } else {
       chatBox.innerHTML = '<p style="text-align:center; color:white;">Belum ada pesan.</p>';
@@ -243,13 +251,12 @@ function listenToChat() {
   });
 }
 
-// Render user list dengan filter dan search
 function renderUserList(users, filter = 'all', searchTerm = '') {
   const userListBox = document.getElementById('userListBox');
-  userListBox.innerHTML = '';
-
   users.forEach(email => {
     const sanitized = sanitizeUserId(email);
+
+    if (document.querySelector(`[data-sanitized="${sanitized}"]`)) return;
 
     db.ref(`chats/${sanitized}`).once('value', snapshot => {
       const chatEntries = Object.values(snapshot.val() || []);
@@ -257,13 +264,10 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
       if (!firstMsg) return;
 
       const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
-
       if (filter === 'unread' && !hasUnread) return;
 
       const label = `${firstMsg.name || email} (${firstMsg.email || email})`;
       if (searchTerm && !label.toLowerCase().includes(searchTerm.toLowerCase())) return;
-
-      if (document.querySelector(`[data-sanitized="${sanitized}"]`)) return;
 
       const userDiv = document.createElement('div');
       userDiv.className = 'user-item';
@@ -271,13 +275,13 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
       userDiv.textContent = label + (hasUnread ? ' ❗' : '');
       userDiv.style.cursor = 'pointer';
       userDiv.style.padding = '4px 10px';
+
       userDiv.onclick = () => {
         activeUserIdEmail = email;
         activeUserIdSanitized = sanitized;
 
         document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
         userDiv.classList.add('active');
-
         listenToChat();
       };
 
@@ -293,6 +297,7 @@ function loadUserList() {
   db.ref('chats').once('value', snapshot => {
     const users = Object.keys(snapshot.val() || {}).map(desanitizeUserId);
     allUsersData = users;
+    document.getElementById('userListBox').innerHTML = '';
     renderUserList(users);
   });
 }
@@ -306,7 +311,6 @@ function updateUserListFlags() {
       const email = desanitizeUserId(sanitized);
       const firstMsg = chatEntries.find(m => m.from === 'user');
       const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
-
       if (firstMsg) {
         item.textContent = `${firstMsg.name || email} (${firstMsg.email || email})${hasUnread ? ' ❗' : ''}`;
       }
@@ -331,14 +335,9 @@ window.onload = () => {
   watchNewUsers();
 
   const msgInput = document.getElementById('msg');
-  const chatBox = document.getElementById('chatBox');
-
   if (msgInput) {
     msgInput.addEventListener('keydown', function (e) {
-      if ((e.key === 'Enter') && (e.shiftKey || e.ctrlKey)) {
-        // Allow newline
-        return;
-      }
+      if ((e.key === 'Enter') && (e.shiftKey || e.ctrlKey)) return;
       if (e.key === 'Enter') {
         e.preventDefault();
         sendMessage();
@@ -346,7 +345,7 @@ window.onload = () => {
     });
   }
 
-  // Filter buttons & search input handlers
+  // Button and search handlers
   document.getElementById('filterAll').onclick = () => {
     const searchTerm = document.getElementById('searchUser').value;
     renderUserList(allUsersData, 'all', searchTerm);
