@@ -266,12 +266,12 @@ function listenToChat() {
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
         // Format tanggal lengkap bahasa Indonesia
-        const optionsFullDate = { day: '2-digit', month: 'long', year: 'numeric' };
-        const fullDateStr = date.toLocaleDateString('id-ID', optionsFullDate);
+        const options = { day: '2-digit', month: 'long', year: 'numeric' };
+        dateLabel = date.toLocaleDateString('en-US', options);
 
         // Format nama hari, misal: Kamis
         const optionsDayName = { weekday: 'long' };
-        const dayName = date.toLocaleDateString('id-ID', optionsDayName);
+        const dayName = date.toLocaleDateString('en-US', optionsDayName);
 
         let dayLabel = '';
         if (diffDays === 0) dayLabel = 'Today';
