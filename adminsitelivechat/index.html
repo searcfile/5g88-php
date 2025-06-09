@@ -266,39 +266,34 @@ function listenToChat() {
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
         // Format tanggal lengkap bahasa Indonesia
-        const options = { day: '2-digit', month: 'long', year: 'numeric' };
-        const fullDateStr = date.toLocaleDateString('id-ID', options);
+        const optionsFullDate = { day: '2-digit', month: 'long', year: 'numeric' };
+        const fullDateStr = date.toLocaleDateString('id-ID', optionsFullDate);
 
-        let dateLabel = '';
-        let dateLabelHtml = '';
+        // Format nama hari, misal: Kamis
+        const optionsDayName = { weekday: 'long' };
+        const dayName = date.toLocaleDateString('id-ID', optionsDayName);
 
-        if (diffDays === 0) {
-          dateLabel = 'today';
-          dateLabelHtml = `
-            <div class="date-label-inner">
-              <div class="day-label">Today</div>
-              <div class="full-date-label">${fullDateStr}</div>
-            </div>`;
-        } else if (diffDays === 1) {
-          dateLabel = 'yesterday';
-          dateLabelHtml = `
-            <div class="date-label-inner">
-              <div class="day-label">Yesterday</div>
-            </div>`;
-        } else {
-          dateLabel = fullDateStr;
-          dateLabelHtml = `
-            <div class="date-label-inner">
-              <div class="full-date-label">${fullDateStr}</div>
-            </div>`;
-        }
+        let dayLabel = '';
+        if (diffDays === 0) dayLabel = 'Today';
+        else if (diffDays === 1) dayLabel = 'Yesterday';
+        else dayLabel = dayName.charAt(0).toUpperCase() + dayName.slice(1); // Kapitalisasi hari
 
-        // Jika label tanggal berbeda dari sebelumnya, tampilkan header tanggal
+        // Gabungkan label 2 baris: hari & tanggal lengkap
+        const dateLabel = `${dayLabel}|${fullDateStr}`; // Pisah pake pipe (|) supaya bisa dibandingkan
+
+        // Tampilkan header tanggal jika beda dengan sebelumnya
         if (dateLabel !== lastDateLabel) {
           lastDateLabel = dateLabel;
+          const [dayLabelText, fullDateText] = dateLabel.split('|');
+
           const dateDivider = document.createElement('div');
           dateDivider.className = 'date-label';
-          dateDivider.innerHTML = dateLabelHtml;
+          dateDivider.innerHTML = `
+            <div class="date-label-inner">
+              <div class="day-label">${dayLabelText}</div>
+              <div class="full-date-label">${fullDateText}</div>
+            </div>
+          `;
           chatBox.appendChild(dateDivider);
         }
 
