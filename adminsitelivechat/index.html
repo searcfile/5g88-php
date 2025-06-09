@@ -202,10 +202,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <script>
-    function desanitizeUserId(id) {
-  return id.replace(/,/g, '.').replace(/%/g, '@');
-}
-// Firebase config
+  // Firebase config & init
 const firebaseConfig = {
   apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
   authDomain: "blurphp.firebaseapp.com",
@@ -216,7 +213,6 @@ const firebaseConfig = {
   appId: "1:593904200464:web:cea7bc1360532c20d99395",
   measurementId: "G-R494S2DPZ5"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -224,7 +220,10 @@ let activeUserIdSanitized = '';
 let activeUserIdEmail = '';
 let allUsersData = [];
 let lastMessageTimestamps = {};
+let selectedUserId = null;
+let allMessages = [];
 
+// User ID sanitize/desanitize helpers
 function sanitizeUserId(email) {
   return email.replace(/\./g, '_').replace(/@/g, '_at_').replace(/,/g, '_');
 }
@@ -233,138 +232,81 @@ function desanitizeUserId(sanitized) {
   return sanitized.replace(/_at_/g, '@').replace(/_/g, '.');
 }
 
+// Play notification sound
 function playNotificationSound() {
   const audio = document.getElementById("notificationSound");
   if (audio) {
     audio.volume = 1;
     audio.muted = false;
-    audio.play()
-      .then(() => console.log("Notification sound played"))
-      .catch(err => console.warn("Play sound error:", err));
+    audio.play().catch(err => console.warn("Play sound error:", err));
   }
 }
 
-function sendMessage() {
-  const msgInput = document.getElementById('msg');
-  const msg = msgInput.value.trim();
-  if (!activeUserIdEmail || !msg) return alert("Pilih user dan tulis pesan dulu!");
-
-  const sanitizedId = sanitizeUserId(activeUserIdEmail);
-  db.ref('chats/' + sanitizedId).push({
-    from: 'admin',
-    name: 'Admin',
-    email: 'admin@domain.com',
-    text: msg,
-    time: Date.now()
+// Render chat messages to chatBox
+function renderChatMessages(messages) {
+  const chatBox = document.getElementById("chatBox");
+  chatBox.innerHTML = "";
+  messages.forEach(msg => {
+    const div = document.createElement("div");
+    div.className = 'message ' + (msg.from === 'admin' ? 'mine' : 'theirs');
+    const timeStr = new Date(msg.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    div.innerHTML = `
+      <div style="font-weight:bold;">
+        ${msg.from === 'admin' ? 'Admin' : msg.name || msg.email || 'User'}
+        <small style="font-size:0.75rem; color:#0b6906;">${timeStr}</small>
+      </div>
+      <div>${msg.text}</div>
+    `;
+    chatBox.appendChild(div);
   });
-  msgInput.value = '';
+  chatBox.scrollTop = chatBox.scrollHeight;
 }
 
+// Listen to chat updates for active user
 function listenToChat() {
-  if (!activeUserIdEmail) return;
-  const sanitizedId = sanitizeUserId(activeUserIdEmail);
-  const chatRef = db.ref('chats/' + sanitizedId);
+  if (!activeUserIdSanitized) return;
+  const chatRef = db.ref('chats/' + activeUserIdSanitized);
   const chatBox = document.getElementById('chatBox');
 
   chatRef.off();
   chatBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
 
   chatRef.on('value', snapshot => {
-    chatBox.innerHTML = '';
     const chats = snapshot.val();
-    let latestTimestamp = 0;
-
-    if (chats) {
-      let lastDateLabel = '';
-
-      // Urutkan chat berdasarkan waktu ascending
-      const chatEntries = Object.entries(chats).sort((a, b) => (a[1].time || 0) - (b[1].time || 0));
-
-      chatEntries.forEach(([key, msg]) => {
-        const date = new Date(msg.time || Date.now());
-
-        // Tanggal pesan tanpa waktu (jam, menit, detik = 0)
-        const msgDateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
-        // Tanggal hari ini tanpa waktu
-        const now = new Date();
-        const todayDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-        // Selisih hari
-        const diffTime = todayDateOnly - msgDateOnly;
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-        // Format tanggal lengkap bahasa Inggris (en-US)
-        const optionsDate = { day: '2-digit', month: 'long', year: 'numeric' };
-        const fullDateStr = date.toLocaleDateString('en-US', optionsDate);
-
-        // Format nama hari bahasa Inggris, misal: Saturday
-        const optionsDayName = { weekday: 'long' };
-        const dayName = date.toLocaleDateString('en-US', optionsDayName);
-
-        // Tentukan label hari berdasarkan selisih hari
-        let dayLabel = '';
-        if (diffDays === 0) dayLabel = 'Today';
-        else if (diffDays === 1) dayLabel = 'Yesterday';
-        else dayLabel = dayName.charAt(0).toUpperCase() + dayName.slice(1); // Kapitalisasi hari
-
-        // Gabungkan label 2 baris: hari & tanggal lengkap, pisah dengan '|'
-        const dateLabel = `${dayLabel}|${fullDateStr}`;
-
-        // Tampilkan header tanggal jika beda dengan sebelumnya
-        if (dateLabel !== lastDateLabel) {
-          lastDateLabel = dateLabel;
-          const [dayLabelText, fullDateText] = dateLabel.split('|');
-
-          const dateDivider = document.createElement('div');
-          dateDivider.className = 'date-label';
-          dateDivider.innerHTML = `
-            <div class="date-label-inner">
-              <div class="day-label">${dayLabelText}</div>
-              <div class="full-date-label">${fullDateText}</div>
-            </div>
-          `;
-          chatBox.appendChild(dateDivider);
-        }
-
-        const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-        const div = document.createElement('div');
-        div.className = 'message ' + (msg.from === 'admin' ? 'mine' : 'theirs');
-        div.innerHTML = `
-          <div style="font-weight: bold;">
-            ${msg.name || msg.email || 'Unknown'}
-            <small style="font-size: 0.75rem; color: #0b6906;">${timeStr}</small>
-          </div>
-          <div>${msg.text}</div>
-        `;
-        chatBox.appendChild(div);
-
-        if (msg.from === 'user' && !msg.readByAdmin) {
-          db.ref(`chats/${sanitizedId}/${key}/readByAdmin`).set(true);
-          updateUserListFlags();
-
-          if (!lastMessageTimestamps[sanitizedId] || msg.time > lastMessageTimestamps[sanitizedId]) {
-            lastMessageTimestamps[sanitizedId] = msg.time;
-            playNotificationSound();
-          }
-        }
-        latestTimestamp = Math.max(latestTimestamp, msg.time);
-      });
-
-      lastMessageTimestamps[sanitizedId] = latestTimestamp;
-      chatBox.scrollTop = chatBox.scrollHeight;
-    } else {
+    if (!chats) {
       chatBox.innerHTML = '<p style="text-align:center; color:white;">Belum ada pesan.</p>';
+      allMessages = [];
+      return;
     }
+
+    // Sort chats by time ascending
+    const chatEntries = Object.entries(chats).sort((a,b) => (a[1].time || 0) - (b[1].time || 0));
+    allMessages = chatEntries.map(([key, msg]) => {
+      // Mark message read if from user and unread
+      if (msg.from === 'user' && !msg.readByAdmin) {
+        db.ref(`chats/${activeUserIdSanitized}/${key}/readByAdmin`).set(true);
+        updateUserListFlags();
+        if (!lastMessageTimestamps[activeUserIdSanitized] || msg.time > lastMessageTimestamps[activeUserIdSanitized]) {
+          lastMessageTimestamps[activeUserIdSanitized] = msg.time;
+          playNotificationSound();
+        }
+      }
+      return msg;
+    });
+
+    renderChatMessages(allMessages);
   });
 }
 
+// Render user list with optional filter & search
 function renderUserList(users, filter = 'all', searchTerm = '') {
   const userListBox = document.getElementById('userListBox');
+  userListBox.innerHTML = ''; // Clear first
+
   users.forEach(email => {
     const sanitized = sanitizeUserId(email);
 
+    // Prevent duplicate user items
     if (document.querySelector(`[data-sanitized="${sanitized}"]`)) return;
 
     db.ref(`chats/${sanitized}`).once('value', snapshot => {
@@ -391,7 +333,12 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
 
         document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
         userDiv.classList.add('active');
+
+        selectedUserId = sanitized;
         listenToChat();
+
+        // Clear search message input when switching user
+        document.getElementById("searchMessage").value = '';
       };
 
       userListBox.appendChild(userDiv);
@@ -399,18 +346,31 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
   });
 }
 
+// Load user list initially and watch new users
 function loadUserList() {
   const userListBox = document.getElementById('userListBox');
   userListBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
 
-  db.ref('chats').on('value', snapshot => {
-  const users = Object.keys(snapshot.val() || {}).map(desanitizeUserId);
-  allUsersData = users;
-  document.getElementById('userListBox').innerHTML = '';
-  renderUserList(users);
-});
+  db.ref('chats').once('value', snapshot => {
+    const users = Object.keys(snapshot.val() || {}).map(desanitizeUserId);
+    allUsersData = users;
+    userListBox.innerHTML = '';
+    renderUserList(users);
+  });
 }
 
+function watchNewUsers() {
+  db.ref('chats').on('child_added', snapshot => {
+    const sanitizedEmail = snapshot.key;
+    const email = desanitizeUserId(sanitizedEmail);
+    if (!allUsersData.includes(email)) {
+      allUsersData.push(email);
+      renderUserList([email]);
+    }
+  });
+}
+
+// Update unread flags on user list periodically
 function updateUserListFlags() {
   const items = document.querySelectorAll('.user-item');
   items.forEach(item => {
@@ -429,110 +389,97 @@ function updateUserListFlags() {
   });
 }
 setInterval(updateUserListFlags, 5000);
-    
-function watchNewUsers() {
-  db.ref('chats').on('child_added', snapshot => {
-    const sanitizedEmail = snapshot.key;
-    const email = desanitizeUserId(sanitizedEmail);
 
-    if (!allUsersData.includes(email)) {
-      allUsersData.push(email);
-      renderUserList([email]);
+// Filter chat messages by query
+function filterMessages(query) {
+  if (!query) {
+    renderChatMessages(allMessages);
+    return;
+  }
+  const filtered = allMessages.filter(m => m.text.toLowerCase().includes(query.toLowerCase()));
+  renderChatMessages(filtered);
+}
+
+// Send message function (single, consistent)
+function sendMessage() {
+  const msgInput = document.getElementById('msg');
+  const msg = msgInput.value.trim();
+  if (!selectedUserId || !msg) return alert("Pilih user dan tulis pesan dulu!");
+
+  const now = Date.now();
+
+  const newMsg = {
+    from: 'admin',
+    name: 'Admin',
+    email: 'admin@domain.com',
+    text: msg,
+    time: now,
+    readByAdmin: true
+  };
+
+  db.ref(`chats/${selectedUserId}`).push(newMsg, err => {
+    if (!err) {
+      msgInput.value = '';
+      allMessages.push(newMsg);
+      renderChatMessages(allMessages);
+    } else {
+      alert('Gagal mengirim pesan');
     }
   });
 }
 
+// --- Init on window load ---
 window.onload = () => {
   loadUserList();
   watchNewUsers();
 
+  // Send message on Enter key (without Shift or Ctrl)
   const msgInput = document.getElementById('msg');
   if (msgInput) {
-    msgInput.addEventListener('keydown', function (e) {
-      if ((e.key === 'Enter') && (e.shiftKey || e.ctrlKey)) return;
-      if (e.key === 'Enter') {
+    msgInput.addEventListener('keydown', e => {
+      if ((e.key === 'Enter') && !(e.shiftKey || e.ctrlKey)) {
         e.preventDefault();
         sendMessage();
       }
     });
   }
-let selectedUserId = null;
-let allMessages = [];
 
-function renderChatMessages(messages) {
-  const chatBox = document.getElementById("chatBox");
-  chatBox.innerHTML = "";
-  messages.forEach(msg => {
-    const div = document.createElement("div");
-    div.textContent = `${msg.from === "admin" ? "Admin" : msg.name || "User"}: ${msg.text}`;
-    chatBox.appendChild(div);
-  });
-}
-
-function filterMessages(query) {
-  const filtered = allMessages.filter(m => m.text.toLowerCase().includes(query.toLowerCase()));
-  renderChatMessages(filtered);
-}
-
-document.getElementById("searchMessage").addEventListener("input", (e) => {
-  filterMessages(e.target.value);
-});
-
-document.getElementById("userListBox").addEventListener("click", (e) => {
-  const item = e.target.closest(".user-item");
-  if (!item) return;
-
-  selectedUserId = item.getAttribute("data-sanitized");
-  const email = desanitizeUserId(selectedUserId);
-
-  db.ref(`chats/${selectedUserId}`).once("value", snapshot => {
-    const chatData = Object.values(snapshot.val() || []);
-    allMessages = chatData;
-
-    const firstUserMsg = chatData.find(m => m.from === "user");
-    const displayName = (firstUserMsg && (firstUserMsg.name || firstUserMsg.email)) || email;
-
-    document.getElementById("chatUserName").textContent = displayName;
-    renderChatMessages(chatData);
-  });
-});
-
-function sendMessage() {
-  const text = document.getElementById("msg").value.trim();
-  if (!text || !selectedUserId) return;
-
-  const now = new Date().toISOString();
-  const newMsg = {
-    from: "admin",
-    text: text,
-    time: now,
-    readByAdmin: true
-  };
-
-  db.ref(`chats/${selectedUserId}`).push(newMsg, (err) => {
-    if (!err) {
-      document.getElementById("msg").value = "";
-      allMessages.push(newMsg);
-      renderChatMessages(allMessages);
-    }
-  });
-}
-  // Filter & Search Buttons
+  // Filter all users
   document.getElementById('filterAll').onclick = () => {
     document.getElementById('userListBox').innerHTML = '';
     renderUserList(allUsersData, 'all', document.getElementById('searchUser').value);
   };
 
+  // Filter unread users
   document.getElementById('filterUnread').onclick = () => {
     document.getElementById('userListBox').innerHTML = '';
     renderUserList(allUsersData, 'unread', document.getElementById('searchUser').value);
   };
 
-  document.getElementById('searchUser').addEventListener('input', () => {
-    const searchTerm = document.getElementById('searchUser').value;
-    document.getElementById('userListBox').innerHTML = '';
-    renderUserList(allUsersData, 'all', searchTerm);
-  });
+  // Search users input
+  const searchUserInput = document.getElementById('searchUser');
+  if (searchUserInput) {
+    searchUserInput.addEventListener('input', e => {
+      const filterType = document.querySelector('input[name="filter"]:checked')?.value || 'all';
+      document.getElementById('userListBox').innerHTML = '';
+      renderUserList(allUsersData, filterType, e.target.value);
+    });
+  }
+
+  // Search messages input
+  const searchMessageInput = document.getElementById('searchMessage');
+  if (searchMessageInput) {
+    searchMessageInput.addEventListener('input', e => {
+      filterMessages(e.target.value);
+    });
+  }
+
+  // Send button
+  const sendBtn = document.getElementById('sendBtn');
+  if (sendBtn) {
+    sendBtn.onclick = sendMessage;
+  }
+};
   </script>
 </body>
 </html>
