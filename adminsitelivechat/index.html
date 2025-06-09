@@ -168,13 +168,31 @@
   </div>
 
  <div style="flex: 0.5; padding: 1rem;">
-    <div class="chat-box" id="chatBox" style="height: 70vh; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;"></div>
-
-    <div class="send-box" style="display: flex; gap: 10px;">
-      <textarea id="msg" placeholder="Type your message" rows="2"></textarea>
-      <button onclick="sendMessage()">Send</button>
-    </div>
+  <!-- Header Chat -->
+  <div id="chatHeader" style="border: 1px solid #ccc; padding: 10px; background: #f5f5f5; margin-bottom: 10px;">
+    <strong id="chatUserName">Select a user</strong>
+    <input
+      type="text"
+      id="searchMessage"
+      placeholder="Search messages..."
+      style="float: right; padding: 5px; border-radius: 4px; width: 50%;"
+    />
+    <div style="clear: both;"></div>
   </div>
+
+  <!-- Chat Box -->
+  <div
+    class="chat-box"
+    id="chatBox"
+    style="height: 60vh; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;"
+  ></div>
+
+  <!-- Send Box -->
+  <div class="send-box" style="display: flex; gap: 10px;">
+    <textarea id="msg" placeholder="Type your message" rows="2" style="flex: 1;"></textarea>
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</div>
 </main>
 
   
@@ -184,6 +202,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <script>
+    function desanitizeUserId(id) {
+  return id.replace(/,/g, '.').replace(/%/g, '@');
+}
 // Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
@@ -396,16 +417,19 @@ function updateUserListFlags() {
     const sanitized = item.getAttribute('data-sanitized');
     db.ref(`chats/${sanitized}`).once('value', snapshot => {
       const chatEntries = Object.values(snapshot.val() || []);
+      const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
       const email = desanitizeUserId(sanitized);
       const firstMsg = chatEntries.find(m => m.from === 'user');
-      const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
-      if (firstMsg) {
-        item.textContent = `${firstMsg.name || email} (${firstMsg.email || email})${hasUnread ? ' ❗' : ''}`;
-      }
+      if (!firstMsg) return;
+
+      const labelBase = `${firstMsg.name || email} (${firstMsg.email || email})`;
+      item.textContent = labelBase + (hasUnread ? ' ❗' : '');
+      item.style.fontWeight = hasUnread ? 'bold' : 'normal';
     });
   });
 }
-
+setInterval(updateUserListFlags, 5000);
+    
 function watchNewUsers() {
   db.ref('chats').on('child_added', snapshot => {
     const sanitizedEmail = snapshot.key;
@@ -432,23 +456,83 @@ window.onload = () => {
       }
     });
   }
+let selectedUserId = null;
+let allMessages = [];
 
+function renderChatMessages(messages) {
+  const chatBox = document.getElementById("chatBox");
+  chatBox.innerHTML = "";
+  messages.forEach(msg => {
+    const div = document.createElement("div");
+    div.textContent = `${msg.from === "admin" ? "Admin" : msg.name || "User"}: ${msg.text}`;
+    chatBox.appendChild(div);
+  });
+}
+
+function filterMessages(query) {
+  const filtered = allMessages.filter(m => m.text.toLowerCase().includes(query.toLowerCase()));
+  renderChatMessages(filtered);
+}
+
+document.getElementById("searchMessage").addEventListener("input", (e) => {
+  filterMessages(e.target.value);
+});
+
+document.getElementById("userListBox").addEventListener("click", (e) => {
+  const item = e.target.closest(".user-item");
+  if (!item) return;
+
+  selectedUserId = item.getAttribute("data-sanitized");
+  const email = desanitizeUserId(selectedUserId);
+
+  db.ref(`chats/${selectedUserId}`).once("value", snapshot => {
+    const chatData = Object.values(snapshot.val() || []);
+    allMessages = chatData;
+
+    const firstUserMsg = chatData.find(m => m.from === "user");
+    const displayName = (firstUserMsg && (firstUserMsg.name || firstUserMsg.email)) || email;
+
+    document.getElementById("chatUserName").textContent = displayName;
+    renderChatMessages(chatData);
+  });
+});
+
+function sendMessage() {
+  const text = document.getElementById("msg").value.trim();
+  if (!text || !selectedUserId) return;
+
+  const now = new Date().toISOString();
+  const newMsg = {
+    from: "admin",
+    text: text,
+    time: now,
+    readByAdmin: true
+  };
+
+  db.ref(`chats/${selectedUserId}`).push(newMsg, (err) => {
+    if (!err) {
+      document.getElementById("msg").value = "";
+      allMessages.push(newMsg);
+      renderChatMessages(allMessages);
+    }
+  });
+}
   // Filter & Search Buttons
   document.getElementById('filterAll').onclick = () => {
-    const searchTerm = document.getElementById('searchUser').value;
-    renderUserList(allUsersData, 'all', searchTerm);
+    document.getElementById('userListBox').innerHTML = '';
+    renderUserList(allUsersData, 'all', document.getElementById('searchUser').value);
   };
 
   document.getElementById('filterUnread').onclick = () => {
-    const searchTerm = document.getElementById('searchUser').value;
-    renderUserList(allUsersData, 'unread', searchTerm);
+    document.getElementById('userListBox').innerHTML = '';
+    renderUserList(allUsersData, 'unread', document.getElementById('searchUser').value);
   };
 
   document.getElementById('searchUser').addEventListener('input', () => {
     const searchTerm = document.getElementById('searchUser').value;
+    document.getElementById('userListBox').innerHTML = '';
     renderUserList(allUsersData, 'all', searchTerm);
   });
-};
   </script>
 </body>
 </html>
