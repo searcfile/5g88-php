@@ -414,76 +414,103 @@
     if (chats) {
       const chatArray = Object.values(chats).sort((a, b) => a.time - b.time);
 
-      let lastDateKey = '';
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Pisahkan chat berdasarkan hari
+      const pastChats = [];
+      const todayChats = [];
 
       chatArray.forEach(c => {
-        const div = document.createElement('div');
-        div.className = 'message ' + (c.from === 'user' ? 'mine' : 'theirs');
-
         const msgDate = new Date(c.time);
-        const timeFormatted = msgDate.toLocaleTimeString('en-US', {
-          hour: '2-digit', minute: '2-digit', hour12: true
-        });
+        const msgDateOnly = new Date(msgDate);
+        msgDateOnly.setHours(0, 0, 0, 0);
 
-        const dateKey = msgDate.toDateString();
-
-        // Dapatkan nama hari & format tarikh
-        const today = new Date();
-        const yesterday = new Date();
-        yesterday.setDate(today.getDate() - 1);
-
-        let dayLabel = '';
-        if (dateKey === today.toDateString()) {
-          dayLabel = 'Today';
-        } else if (dateKey === yesterday.toDateString()) {
-          dayLabel = 'Yesterday';
+        if (msgDateOnly.getTime() === today.getTime()) {
+          todayChats.push(c);
         } else {
-          dayLabel = msgDate.toLocaleDateString('en-GB', { weekday: 'long' }); // Contoh: Monday
+          pastChats.push(c);
         }
-
-        const fullDateLabel = msgDate.toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric'
-        }); // Contoh: 12 Jun 2025
-
-        if (dateKey !== lastDateKey) {
-  const dateLabelDiv = document.createElement('div');
-  dateLabelDiv.className = 'date-label';
-  dateLabelDiv.innerHTML = `
-    <div class="date-label-inner">
-      <div class="day-label">${dayLabel}</div>
-      <div class="full-date-label">${fullDateLabel}</div>
-    </div>
-  `;
-  chatBox.insertBefore(dateLabelDiv, chatBox.firstChild);
-  lastDateKey = dateKey;
-}
-
-
-        const senderLabel = c.from === 'user' ? (c.name || 'You') : (c.name || 'Admin');
-
-        if (c.text) {
-          div.innerHTML = `
-            <div class="msg-header">
-              <span class="msg-info">${senderLabel}</span>
-              <small>${timeFormatted}</small>
-            </div>
-            <p class="msg-text">${c.text}</p>
-          `;
-        } else if (c.image) {
-          div.innerHTML = `
-            <div class="msg-header">
-              <span class="msg-info">${senderLabel}</span>
-              <small>${timeFormatted}</small>
-            </div>
-            <img src="${c.image}" alt="Image" style="max-width: 100%; border-radius: 8px; margin-top: 4px;">
-          `;
-        }
-
-        chatBox.appendChild(div);
       });
 
+      // Fungsi untuk render chat per kelompok dengan label tanggal
+      function renderChats(chatGroup, isTodayGroup) {
+        let lastDateKey = '';
+        chatGroup.forEach(c => {
+          const div = document.createElement('div');
+          div.className = 'message ' + (c.from === 'user' ? 'mine' : 'theirs');
+
+          const msgDate = new Date(c.time);
+          const timeFormatted = msgDate.toLocaleTimeString('en-US', {
+            hour: '2-digit', minute: '2-digit', hour12: true
+          });
+
+          const dateKey = msgDate.toDateString();
+
+          // Label hari
+          const yesterday = new Date(today);
+          yesterday.setDate(yesterday.getDate() - 1);
+
+          let dayLabel = '';
+          if (dateKey === today.toDateString()) {
+            dayLabel = 'Today';
+          } else if (dateKey === yesterday.toDateString()) {
+            dayLabel = 'Yesterday';
+          } else {
+            dayLabel = msgDate.toLocaleDateString('en-GB', { weekday: 'long' });
+          }
+
+          const fullDateLabel = msgDate.toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+          });
+
+          // Tampilkan label tanggal hanya sekali per tanggal
+          if (dateKey !== lastDateKey) {
+            const dateLabelDiv = document.createElement('div');
+            dateLabelDiv.className = 'date-label';
+            dateLabelDiv.innerHTML = `
+              <div class="date-label-inner">
+                <div class="day-label">${dayLabel}</div>
+                <div class="full-date-label">${fullDateLabel}</div>
+              </div>
+            `;
+            chatBox.appendChild(dateLabelDiv);
+            lastDateKey = dateKey;
+          }
+
+          const senderLabel = c.from === 'user' ? (c.name || 'You') : (c.name || 'Admin');
+
+          if (c.text) {
+            div.innerHTML = `
+              <div class="msg-header">
+                <span class="msg-info">${senderLabel}</span>
+                <small>${timeFormatted}</small>
+              </div>
+              <p class="msg-text">${c.text}</p>
+            `;
+          } else if (c.image) {
+            div.innerHTML = `
+              <div class="msg-header">
+                <span class="msg-info">${senderLabel}</span>
+                <small>${timeFormatted}</small>
+              </div>
+              <img src="${c.image}" alt="Image" style="max-width: 100%; border-radius: 8px; margin-top: 4px;">
+            `;
+          }
+
+          chatBox.appendChild(div);
+        });
+      }
+
+      // Render dulu chat dari tanggal sebelum hari ini
+      renderChats(pastChats, false);
+
+      // Render chat hari ini di bawah
+      renderChats(todayChats, true);
+
+      // Scroll ke bawah supaya chat hari ini terlihat
       chatBox.scrollTop = chatBox.scrollHeight;
     }
   });
