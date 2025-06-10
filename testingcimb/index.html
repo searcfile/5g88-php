@@ -286,7 +286,7 @@
   </style>
 </head>
 <body>
-  <div class="wrapper">
+   <div class="wrapper">
     <div class="scale-wrapper">
       <div class="container">
         <div class="header">DuitNow / Transfer Money Acknowledgement</div>
@@ -329,22 +329,24 @@
     </div>
 
     <div class="top-inputs">
-  <div class="input-row">
-    <div class="input-label">Date & Time</div>
-    <div class="input-wrapper">
-      <input type="text" id="input-date" placeholder="Date & Time" />
-      <button id="btn-date">Now</button>
+      <div class="input-row">
+        <div class="input-label">Date & Time</div>
+        <div class="input-wrapper">
+          <input type="text" id="input-date" placeholder="Date & Time" />
+          <button id="btn-date" onclick="setNow()">Now</button>
+        </div>
+      </div>
+
+      <div class="input-row">
+        <div class="input-label">Amount</div>
+        <div class="input-wrapper">
+          <input type="text" id="input-amount" placeholder="Fill Amount" />
+          <button class="btn-update" onclick="updateDisplay()">Create</button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="input-row">
-    <div class="input-label">Amount</div>
-    <div class="input-wrapper">
-      <input type="text" id="input-amount" placeholder="Fill Amount" />
-      <button class="btn-update" onclick="updateDisplay()">Create</button>
-    </div>
-  </div>
-</div>
   
 <script>
 console.log("Page Editor\nVersion Date: 01/04/2025\nCreate by   : M'cng\nPowered by  : 5G88\nOPERATOR\n(01/04/2025)\n• System 'Updated' ");
