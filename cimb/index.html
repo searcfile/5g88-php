@@ -55,7 +55,7 @@
       font-size: 14px;
     }
     .success-text {
-      color: rgb(125, 182, 128);
+      color: rgb(125, 182, 128); /* hijau lembut macam CIMB */
       font-weight: 700;
     }
     .details {
@@ -184,7 +184,7 @@
      color: white;
     }
     .top-inputs button:active {
-     background-color: rgba(236, 29, 35, 0.3);
+     background-color: rgba(236, 29, 35, 0.3); /* merah lebih transparan */
      opacity: 0.8;
     }
     .form-section {
@@ -254,36 +254,36 @@
     width: 100%;
     }
   }
-   .scale-wrapper {
-  transform: scale(2.2);
-  transform-origin: top center;
-  display: flex;
-  justify-content: center;
-}
+    .scale-wrapper {
+    transform: scale(2.5);
+    transform-origin: top center;
+  }
+
+   
   </style>
 </head>
 <body>
- <div class="top-inputs">
-  <div style="display: flex; align-items: flex-start; gap: 8px;">
-    <button id="btn-date">Now</button>
-    <div style="display: flex; flex-direction: column;">
-      <input type="text" id="input-date" placeholder="Date & Time" />
-      <div class="input-label">Date & Time</div>
+ <div class="scale-wrapper">
+  <div class="top-inputs">
+    <div style="display: flex; align-items: flex-start; gap: 8px;">
+      <button id="btn-date">Now</button>
+      <div style="display: flex; flex-direction: column;">
+        <input type="text" id="input-date" placeholder="Date & Time" />
+        <div class="input-label">Date & Time</div>
+      </div>
+      <div style="display: flex; flex-direction: column;">
+        <input type="text" id="input-amount" placeholder="Fill Amount" />
+        <div class="input-label">Amount</div>
+      </div>
+      <button class="btn-update" onclick="updateDisplay()">Create</button>
     </div>
-    <div style="display: flex; flex-direction: column;">
-      <input type="text" id="input-amount" placeholder="Fill Amount" />
-      <div class="input-label">Amount</div>
-    </div>
-    <button class="btn-update" onclick="updateDisplay()">Create</button>
   </div>
-</div>
 
-<div class="scale-wrapper">
   <div class="container">
     <div class="header">DuitNow / Transfer Money Acknowledgement</div>
 
     <div class="status-bar">
-      <div class="left">
+      <div class="left" style="display: flex; align-items: center;">
         <div class="check-icon">✔</div>
         <span><strong class="success-text">Successful</strong> Ref <span id="ref-number">000000000</span></span>
       </div>
@@ -310,17 +310,15 @@
         <div class="charges">
           Bank charges 
           <span class="currency">MYR</span>
-          <span class="charge-amount">0.</span><span class="charge-sen"> 00</span>
+          <span class="charge-amount">0.</span><span class="charge-sen">00</span>
         </div>
       </div>
     </div>
 
-    <div class="footer">
-      More transfer details →
-    </div>
+    <div class="footer">More transfer details →</div>
   </div>
 </div>
-  
+
 <script>
 console.log("Page Editor\nVersion Date: 01/04/2025\nCreate by   : M'cng\nPowered by  : 5G88\nOPERATOR\n(01/04/2025)\n• System 'Updated' ");
     function getFormattedDateTime() {
