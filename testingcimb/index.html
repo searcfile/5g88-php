@@ -171,18 +171,12 @@
                 document.getElementById("ss").value = nSec;
                 document.getElementById("inDate").value = `${nDay} ${nMonth} ${nYear} ${nHour}:${nMin}:${nSec}`;
             }
-            .scale-wrapper {
-            transform: scale(2.5); /* Ganti sesuai ukuran (1 = 100%, 1.5 = 150%, dst) */
-            transform-origin: top left;
-            width: fit-content;
-            margin: 0 auto; /* Agar tetap tengah jika perlu */
-            position: relative;
-            }
+        
         </script>
     </head>
     <body>
-      <div class="scale-wrapper">
-        <div style="position:absolute;left:50%;margin-left:-297px;margin-top:70px;width:595px;height:500px;border-style:outset;overflow:hidden">
+    
+        <div style="position:absolute;left:50%;top:70px;transform:scale(1.5);transform-origin:top left;margin-left:-446.25px;width:595px;height:500px;border-style:outset;overflow:hidden">
             <div style="position:absolute;left:0px;top:0px">
                 <img src="https://raw.githubusercontent.com/paradisefb/main/main/resources/Images/universal/background1.jpg" width=595 height=842>
             </div>
