@@ -148,8 +148,6 @@
      flex-wrap: wrap;
      padding: 12px 16px;
      font-size: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
     }
     .input-group {
      display: flex;
@@ -164,7 +162,7 @@
       width: 300px;
     }
     .input-group input {
-     width: 155px;
+     width: 200px;
      padding: 6px 8px;
      font-size: 13px;
      border: 1px solid #ec1d23;
@@ -267,19 +265,22 @@
 </head>
 <body>
  <div class="top-inputs">
-  <div style="display: flex; align-items: flex-start; gap: 8px;">
-    <button id="btn-date">Now</button>
-    <div style="display: flex; flex-direction: column;">
-      <input type="text" id="input-date" placeholder="Date & Time" />
-      <div class="input-label">Date & Time</div>
+    <div style="display: flex; align-items: flex-start; gap: 8px;">
+      <button id="btn-date">Now</button>
+
+      <div class="input-group">
+        <input type="text" id="input-date" placeholder="Date & Time" />
+        <div class="input-label">Date & Time</div>
+      </div>
+
+      <div class="input-group">
+        <input type="text" id="input-amount" placeholder="Fill Amount" />
+        <div class="input-label">Amount</div>
+      </div>
+
+      <button class="btn-update" onclick="updateDisplay()">Create</button>
     </div>
-    <div style="display: flex; flex-direction: column;">
-      <input type="text" id="input-amount" placeholder="Fill Amount" />
-      <div class="input-label">Amount</div>
-    </div>
-    <button class="btn-update" onclick="updateDisplay()">Create</button>
   </div>
-</div>
 
 <div class="scale-wrapper">
   <div class="container">
