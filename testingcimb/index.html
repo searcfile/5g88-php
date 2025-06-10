@@ -140,14 +140,15 @@
      border-top: 1px solid #ccc;
     }
     .top-inputs {
-     max-width: 700px;
-     margin: 10px auto 0 auto;
+      right: -250px;
+     width: 220px;
      display: flex;
-     justify-content: flex-end;
-     gap: 8px;
+     flex-direction: column;
+     gap: 16px;
      flex-wrap: wrap;
      padding: 12px 16px;
      font-size: 10px;
+      position: absolute;
     }
     .input-group {
      display: flex;
@@ -264,7 +265,7 @@
   </style>
 </head>
 <body>
-  <div class="wrapper">
+   <div class="wrapper">
     <div class="scale-wrapper">
       <div class="container">
         <div class="header">DuitNow / Transfer Money Acknowledgement</div>
@@ -297,7 +298,7 @@
             <div class="charges">
               Bank charges 
               <span class="currency">MYR</span>
-              <span class="charge-amount">0.</span><span class="charge-sen"> 00</span>
+              <span class="charge-amount">0.</span><span class="charge-sen">00</span>
             </div>
           </div>
         </div>
@@ -306,6 +307,7 @@
       </div>
     </div>
 
+    <!-- Input Panel -->
     <div class="top-inputs">
       <div class="input-row">
         <div class="input-group">
@@ -324,6 +326,7 @@
       </div>
     </div>
   </div>
+
   
 <script>
 console.log("Page Editor\nVersion Date: 01/04/2025\nCreate by   : M'cng\nPowered by  : 5G88\nOPERATOR\n(01/04/2025)\n• System 'Updated' ");
