@@ -140,27 +140,49 @@
      border-top: 1px solid #ccc;
     }
     .top-inputs {
-     max-width: 700px;
-     margin: 10px auto 0 auto;
-     display: flex;
-     justify-content: flex-end;
-     gap: 8px;
-     flex-wrap: wrap;
-     padding: 12px 16px;
-     font-size: 10px;
-    }
+  margin-top: 20px;
+  padding: 0 15px;
+  max-width: 500px;
+  width: 100%;
+  box-sizing: border-box;
+}
+    .input-row {
+  margin-bottom: 15px;
+}
+
     .input-group {
      display: flex;
      flex-direction: column;
      align-items: center;
     }
     .input-label {
-     font-size: 15px;
-     color: #ec1d23;
-     margin-top: 4px;
-     text-align: center;
-      width: 300px;
-    }
+  font-size: 14px;
+  color: #444;
+  margin-bottom: 5px;
+}
+    .input-wrapper {
+  display: flex;
+  gap: 10px;
+}
+    .input-wrapper input {
+  flex: 1;
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.input-wrapper button {
+  padding: 10px 16px;
+  font-size: 1rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
     .input-group input {
      width: 200px;
      padding: 6px 8px;
@@ -307,23 +329,22 @@
     </div>
 
     <div class="top-inputs">
-      <div class="input-row">
-        <div class="input-group">
-          <input type="text" id="input-date" placeholder="Date & Time" />
-          <div class="input-label">Date & Time</div>
-        </div>
-        <button id="btn-date">Now</button>
-      </div>
-
-      <div class="input-row">
-        <div class="input-group">
-          <input type="text" id="input-amount" placeholder="Fill Amount" />
-          <div class="input-label">Amount</div>
-        </div>
-        <button class="btn-update" onclick="updateDisplay()">Create</button>
-      </div>
+  <div class="input-row">
+    <div class="input-label">Date & Time</div>
+    <div class="input-wrapper">
+      <input type="text" id="input-date" placeholder="Date & Time" />
+      <button id="btn-date">Now</button>
     </div>
   </div>
+
+  <div class="input-row">
+    <div class="input-label">Amount</div>
+    <div class="input-wrapper">
+      <input type="text" id="input-amount" placeholder="Fill Amount" />
+      <button class="btn-update" onclick="updateDisplay()">Create</button>
+    </div>
+  </div>
+</div>
   
 <script>
 console.log("Page Editor\nVersion Date: 01/04/2025\nCreate by   : M'cng\nPowered by  : 5G88\nOPERATOR\n(01/04/2025)\n• System 'Updated' ");
