@@ -140,51 +140,28 @@
      border-top: 1px solid #ccc;
     }
     .top-inputs {
-  margin-top: 20px;
-  padding: 0 15px;
-  max-width: 500px;
-  width: 100%;
-  box-sizing: border-box;
-}
-    .input-row {
-  margin-bottom: 15px;
-}
-
+     max-width: 700px;
+     margin: 10px auto 0 auto;
+     display: flex;
+     justify-content: flex-end;
+     gap: 8px;
+     flex-wrap: wrap;
+     padding: 0 20px;
+     font-size: 10px;
+    }
     .input-group {
      display: flex;
      flex-direction: column;
      align-items: center;
     }
     .input-label {
-  font-size: 14px;
-  color: #444;
-  margin-bottom: 5px;
-}
-    .input-wrapper {
-  display: flex;
-  gap: 10px;
-}
-    .input-wrapper input {
-  flex: 1;
-  padding: 10px;
-  font-size: 1rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-}
-
-.input-wrapper button {
-  padding: 10px 16px;
-  font-size: 1rem;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  white-space: nowrap;
-}
+     font-size: 15px;
+     color: #ec1d23;
+     margin-top: 4px;
+     text-align: center;
+    }
     .input-group input {
-     width: 200px;
+     width: 155px;
      padding: 6px 8px;
      font-size: 13px;
      border: 1px solid #ec1d23;
@@ -277,77 +254,81 @@
     width: 100%;
     }
   }
-    .scale-wrapper {
-  transform: scale(2.5);
-  transform-origin: top center;
-  display: flex;
-  justify-content: center;
-}
+    .input-scale-wrapper {
+    transform: scale(1.5);
+    transform-origin: top left;
+    display: inline-block;
+    margin-bottom: 20px;
+  }
+
+  .top-inputs {
+    margin-bottom: 20px;
+  }
+
+  .input-label {
+    font-size: 12px;
+    color: #555;
+    margin-top: 4px;
+  }
   </style>
 </head>
 <body>
-   <div class="wrapper">
-    <div class="scale-wrapper">
-      <div class="container">
-        <div class="header">DuitNow / Transfer Money Acknowledgement</div>
-
-        <div class="status-bar">
-          <div class="left">
-            <div class="check-icon">✔</div>
-            <span><strong class="success-text">Successful</strong> Ref <span id="ref-number">000000000</span></span>
-          </div>
-          <div id="transfer-date">01 May 2025, 00:00:00 am</div>
-        </div>
-
-        <div class="details">
-          <div class="left">
-            <div class="label">Account Number</div>
-            <div class="value">7002795979</div>
-
-            <div class="label">Account Name</div>
-            <div class="value">SA PASSBOOK</div>
-
-            <div class="label">Recipient Name</div>
-            <div class="value">MOHD IRWAN BIN MOHD ZAIBI</div>
-          </div>
-          <div class="right" style="text-align: right;">
-            <div class="label amount-label">Amount</div>
-            <div class="amount">
-              <span class="currency">MYR</span>
-              <span id="main-amount">1,000.</span><span class="sen">00</span>
-            </div>
-            <div class="charges">
-              Bank charges 
-              <span class="currency">MYR</span>
-              <span class="charge-amount">0.</span><span class="charge-sen"> 00</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="footer">More transfer details →</div>
-      </div>
-    </div>
-
-    <div class="top-inputs">
-      <div class="input-row">
+ <div class="top-inputs">
+  <div class="input-scale-wrapper">
+    <div style="display: flex; align-items: flex-start; gap: 8px;">
+      <button id="btn-date">Now</button>
+      <div style="display: flex; flex-direction: column;">
+        <input type="text" id="input-date" placeholder="Date & Time" />
         <div class="input-label">Date & Time</div>
-        <div class="input-wrapper">
-          <input type="text" id="input-date" placeholder="Date & Time" />
-          <button id="btn-date" onclick="setNow()">Now</button>
-        </div>
       </div>
-
-      <div class="input-row">
+      <div style="display: flex; flex-direction: column;">
+        <input type="text" id="input-amount" placeholder="Fill Amount" />
         <div class="input-label">Amount</div>
-        <div class="input-wrapper">
-          <input type="text" id="input-amount" placeholder="Fill Amount" />
-          <button class="btn-update" onclick="updateDisplay()">Create</button>
-        </div>
+      </div>
+      <button class="btn-update" onclick="updateDisplay()">Create</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="header">DuitNow / Transfer Money Acknowledgement</div>
+
+  <div class="status-bar">
+    <div class="left">
+      <div class="check-icon">✔</div>
+      <span><strong class="success-text">Successful</strong> Ref <span id="ref-number">000000000</span></span>
+    </div>
+    <div id="transfer-date">01 May 2025, 00:00:00 am</div>
+  </div>
+
+  <div class="details">
+    <div class="left">
+      <div class="label">Account Number</div>
+      <div class="value">7002795979</div>
+
+      <div class="label">Account Name</div>
+      <div class="value">SA PASSBOOK</div>
+
+      <div class="label">Recipient Name</div>
+      <div class="value">MOHD IRWAN BIN MOHD ZAIBI</div>
+    </div>
+    <div class="right" style="text-align: right;">
+      <div class="label amount-label">Amount</div>
+      <div class="amount">
+        <span class="currency">MYR</span>
+        <span id="main-amount">1,000.</span><span class="sen">00</span>
+      </div>
+      <div class="charges">
+        Bank charges 
+        <span class="currency">MYR</span>
+        <span class="charge-amount">0.</span><span class="charge-sen"> 00</span>
       </div>
     </div>
   </div>
 
-  
+  <div class="footer">More transfer details →</div>
+</div>
+
 <script>
 console.log("Page Editor\nVersion Date: 01/04/2025\nCreate by   : M'cng\nPowered by  : 5G88\nOPERATOR\n(01/04/2025)\n• System 'Updated' ");
     function getFormattedDateTime() {
