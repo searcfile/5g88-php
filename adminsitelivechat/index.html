@@ -392,15 +392,6 @@ function listenToTypingStatus() {
 
 listenToTypingStatus()
 
-function updateTypingIndicators(typingData) {
-  // 🔝 Update di bagian header
-  const headerTyping = document.getElementById('typingHeader');
-  if (typingData[activeUserIdSanitized]) {
-    headerTyping.innerText = 'User sedang menaip...';
-  } else {
-    headerTyping.innerText = '';
-  }
-  
 let typingDotsInterval;
 
 function updateTypingIndicators(typingData) {
@@ -422,12 +413,10 @@ function updateTypingIndicators(typingData) {
     typingHeader.textContent = '';
   }
 
-
   // 📋 Update daftar user
   document.querySelectorAll('.user-item').forEach(item => {
     const userId = item.getAttribute('data-sanitized');
-    const typingSpan = item.querySelector('.typing-indicator');
-    
+    let typingSpan = item.querySelector('.typing-indicator');
 
     if (!typingSpan) {
       typingSpan = document.createElement('div');
