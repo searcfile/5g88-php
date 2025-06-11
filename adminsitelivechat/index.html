@@ -469,6 +469,12 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
       userDiv.style.cursor = 'pointer';
       userDiv.style.padding = '4px 10px';
 
+      const typingIndicator = document.createElement('div');
+typingIndicator.className = 'typing-indicator';
+typingIndicator.style.fontSize = '12px';
+typingIndicator.style.color = 'orange';
+userDiv.appendChild(typingIndicator);
+      
       userDiv.onclick = () => {
         activeUserIdEmail = email;
         activeUserIdSanitized = sanitized;
