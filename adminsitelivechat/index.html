@@ -407,8 +407,7 @@ function updateTypingIndicators(typingData) {
   const isTyping = typingData && typingData[activeUserIdSanitized];
   const typingHeader = document.getElementById('typingHeader');
 
-  // Header (di atas kotak chat)
-  clearInterval(typingDotsInterval); // reset animasi lama
+  clearInterval(typingDotsInterval);
 
   if (isTyping) {
     let dots = '';
@@ -426,8 +425,9 @@ function updateTypingIndicators(typingData) {
 
   // 📋 Update daftar user
   document.querySelectorAll('.user-item').forEach(item => {
-    const userId = item.dataset.sanitized;
-    let typingSpan = item.querySelector('.typing-indicator');
+    const userId = item.getAttribute('data-sanitized');
+    const typingSpan = item.querySelector('.typing-indicator');
+    
 
     if (!typingSpan) {
       typingSpan = document.createElement('div');
@@ -441,58 +441,40 @@ function updateTypingIndicators(typingData) {
   });
 }
 // Render user list with optional filter & search
-function renderUserList(users, filter = 'all', searchTerm = '') {
-  const userListBox = document.getElementById('userListBox');
-  userListBox.innerHTML = ''; // Clear first
-
-  users.forEach(email => {
+function renderUserList(users) {
+  userList.innerHTML = '';
+  users.forEach(({ name, email }) => {
+    const userDiv = document.createElement('div');
+    userDiv.className = 'user-item';
+    userDiv.setAttribute('data-email', email);
     const sanitized = sanitizeUserId(email);
+    userDiv.setAttribute('data-sanitized', sanitized);
+    const label = name + (email === currentUserEmail ? ' (You)' : '');
+    userDiv.textContent = label;
+    userDiv.style.cursor = 'pointer';
+    userDiv.style.padding = '4px 10px';
 
-    // Prevent duplicate user items
-    if (document.querySelector(`[data-sanitized="${sanitized}"]`)) return;
+    // Tambahkan indikator mengetik
+    const typingIndicator = document.createElement('div');
+    typingIndicator.className = 'typing-indicator';
+    typingIndicator.style.fontSize = '12px';
+    typingIndicator.style.color = 'orange';
+    typingIndicator.textContent = ''; // kosong awal
+    userDiv.appendChild(typingIndicator);
 
-    db.ref(`chats/${sanitized}`).once('value', snapshot => {
-      const chatEntries = Object.values(snapshot.val() || []);
-      const firstMsg = chatEntries.find(m => m.from === 'user');
-      if (!firstMsg) return;
-
-      const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
-      if (filter === 'unread' && !hasUnread) return;
-
-      const label = `${firstMsg.name || email} (${firstMsg.email || email})`;
-      if (searchTerm && !label.toLowerCase().includes(searchTerm.toLowerCase())) return;
-
-      const userDiv = document.createElement('div');
-      userDiv.className = 'user-item';
-      userDiv.setAttribute('data-sanitized', sanitized);
-      userDiv.textContent = label + (hasUnread ? ' ❗' : '');
-      userDiv.style.cursor = 'pointer';
-      userDiv.style.padding = '4px 10px';
-
-      const typingIndicator = document.createElement('div');
-typingIndicator.className = 'typing-indicator';
-typingIndicator.style.fontSize = '12px';
-typingIndicator.style.color = 'orange';
-userDiv.appendChild(typingIndicator);
-      
-      userDiv.onclick = () => {
-        activeUserIdEmail = email;
-        activeUserIdSanitized = sanitized;
-        
-        document.getElementById("chatUserName").textContent = firstMsg.name || email;
-        
-        document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
-        userDiv.classList.add('active');
-
-        selectedUserId = sanitized;
-        listenToChat();
-
-        // Clear search message input when switching user
-        document.getElementById("searchMessage").value = '';
-      };
-
-      userListBox.appendChild(userDiv);
+    userDiv.addEventListener('click', () => {
+      activeUserId = email;
+      activeUserIdSanitized = sanitizeUserId(activeUserId);
+      unreadCounts[activeUserIdSanitized] = 0;
+      renderUserList(users);
+      loadMessages(activeUserIdSanitized);
     });
+
+    if (unreadCounts[sanitized]) {
+      userDiv.textContent += ' ❗';
+    }
+
+    userList.appendChild(userDiv);
   });
 }
 
