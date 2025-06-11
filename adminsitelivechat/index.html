@@ -407,7 +407,8 @@ function updateTypingIndicators(typingData) {
   const isTyping = typingData && typingData[activeUserIdSanitized];
   const typingHeader = document.getElementById('typingHeader');
 
-  clearInterval(typingDotsInterval); // reset sebelum animasi baru
+  // Header (di atas kotak chat)
+  clearInterval(typingDotsInterval); // reset animasi lama
 
   if (isTyping) {
     let dots = '';
@@ -421,13 +422,13 @@ function updateTypingIndicators(typingData) {
   } else {
     typingHeader.textContent = '';
   }
-}
+
 
   // 📋 Update daftar user
   document.querySelectorAll('.user-item').forEach(item => {
-    const userId = item.dataset.userid;
+    const userId = item.dataset.sanitized;
     let typingSpan = item.querySelector('.typing-indicator');
-    
+
     if (!typingSpan) {
       typingSpan = document.createElement('div');
       typingSpan.className = 'typing-indicator';
