@@ -153,11 +153,7 @@
   max-width: 400px;
   padding: 1rem;
 }
-.typing-indicator {
-  font-size: 13px;
-  color: #555;
-  font-style: italic;
-}
+
   </style>
 </head>
 <body>
@@ -184,19 +180,16 @@
  <div style="flex: 0.5; padding: 1rem;">
   <!-- Header Chat -->
   <div id="chatHeader"
-     style="border: 1px solid #ccc; padding: 10px; background: #facc15; margin-bottom: 0; max-width: 600px; margin-left: auto; margin-right: auto; border-radius: 5px; text-align: center; position: relative;">
-  
-  <strong id="chatUserName">Select a user</strong>
-
-  <div id="typingHeader" class="typing-indicator" style="font-size: 13px; color: #555; font-style: italic; height: 18px;"></div>
-
-  <input
-    type="text"
-    id="searchMessage"
-    placeholder="Search messages..."
-    style="margin-top: 10px; padding: 5px; border-radius: 4px; width: 80%; max-width: 300px;"
-  />
-</div>
+     style="border: 1px solid #ccc; padding: 10px; background: #facc15; margin-bottom: 0; max-width: 600px; margin-left: auto; margin-right: auto;border-radius: 5px;">
+    <strong id="chatUserName">Select a user</strong>
+    <input
+      type="text"
+      id="searchMessage"
+      placeholder="Search messages..."
+      style="float: right; padding: 5px; border-radius: 4px; width: 50%;"
+    />
+    <div style="clear: both;"></div>
+  </div>
 
   <!-- Chat Box -->
   <div
@@ -383,87 +376,53 @@ function listenToChat() {
   });
 }
 
-function listenToTypingStatus() {
-  db.ref('typingStatus').on('value', snapshot => {
-    const typingData = snapshot.val() || {};
-    updateTypingIndicators(typingData); // ini sudah benar
-  });
-}
-
-listenToTypingStatus()
-
-let typingDotsInterval;
-
-function updateTypingIndicators(typingData) {
-  const isTyping = typingData && typingData[activeUserIdSanitized];
-  const typingHeader = document.getElementById('typingHeader');
-
-  clearInterval(typingDotsInterval);
-
-  if (isTyping) {
-    let dots = '';
-    typingHeader.innerHTML = `User sedang menaip<span id="dots"></span>`;
-    const dotsEl = document.getElementById('dots');
-
-    typingDotsInterval = setInterval(() => {
-      dots = dots.length < 3 ? dots + '.' : '';
-      dotsEl.textContent = dots;
-    }, 500);
-  } else {
-    typingHeader.textContent = '';
-  }
-
-  // 📋 Update daftar user
-  document.querySelectorAll('.user-item').forEach(item => {
-    const userId = item.getAttribute('data-sanitized');
-    let typingSpan = item.querySelector('.typing-indicator');
-
-    if (!typingSpan) {
-      typingSpan = document.createElement('div');
-      typingSpan.className = 'typing-indicator';
-      typingSpan.style.fontSize = '12px';
-      typingSpan.style.color = 'orange';
-      item.appendChild(typingSpan);
-    }
-
-    typingSpan.textContent = typingData[userId] ? 'Sedang menaip...' : '';
-  });
-}
 // Render user list with optional filter & search
-function renderUserList(users) {
-  userList.innerHTML = '';
-  users.forEach(({ name, email }) => {
-    const userDiv = document.createElement('div');
-    userDiv.className = 'user-item';
-    userDiv.setAttribute('data-email', email);
+function renderUserList(users, filter = 'all', searchTerm = '') {
+  const userListBox = document.getElementById('userListBox');
+  userListBox.innerHTML = ''; // Clear first
+
+  users.forEach(email => {
     const sanitized = sanitizeUserId(email);
-    userDiv.setAttribute('data-sanitized', sanitized);
-    const label = name + (email === currentUserEmail ? ' (You)' : '');
-    userDiv.textContent = label;
-    userDiv.style.cursor = 'pointer';
-    userDiv.style.padding = '4px 10px';
 
-    // Tambahkan indikator mengetik
-    const typingIndicator = document.createElement('div');
-    typingIndicator.className = 'typing-indicator';
-    typingIndicator.style.fontSize = '12px';
-    typingIndicator.style.color = 'orange';
-    typingIndicator.textContent = ''; // kosong awal
-    userDiv.appendChild(typingIndicator);
+    // Prevent duplicate user items
+    if (document.querySelector(`[data-sanitized="${sanitized}"]`)) return;
 
-    userDiv.addEventListener('click', () => {
-      activeUserId = email;
-      activeUserIdSanitized = sanitizeUserId(activeUserId);
-      unreadCounts[activeUserIdSanitized] = 0;
-      renderUserList(users);
-      loadMessages(activeUserIdSanitized);
+    db.ref(`chats/${sanitized}`).once('value', snapshot => {
+      const chatEntries = Object.values(snapshot.val() || []);
+      const firstMsg = chatEntries.find(m => m.from === 'user');
+      if (!firstMsg) return;
+
+      const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
+      if (filter === 'unread' && !hasUnread) return;
+
+      const label = `${firstMsg.name || email} (${firstMsg.email || email})`;
+      if (searchTerm && !label.toLowerCase().includes(searchTerm.toLowerCase())) return;
+
+      const userDiv = document.createElement('div');
+      userDiv.className = 'user-item';
+      userDiv.setAttribute('data-sanitized', sanitized);
+      userDiv.textContent = label + (hasUnread ? ' ❗' : '');
+      userDiv.style.cursor = 'pointer';
+      userDiv.style.padding = '4px 10px';
+
+      userDiv.onclick = () => {
+        activeUserIdEmail = email;
+        activeUserIdSanitized = sanitized;
+        
+        document.getElementById("chatUserName").textContent = firstMsg.name || email;
+        
+        document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
+        userDiv.classList.add('active');
+
+        selectedUserId = sanitized;
+        listenToChat();
+
+        // Clear search message input when switching user
+        document.getElementById("searchMessage").value = '';
+      };
+
+      userListBox.appendChild(userDiv);
     });
-
-    if (unreadCounts[sanitized]) {
-      userDiv.textContent += ' ❗';
-    }
-
-    userList.appendChild(userDiv);
   });
 }
 
@@ -598,7 +557,7 @@ window.onload = () => {
   if (sendBtn) {
     sendBtn.onclick = sendMessage;
   }
-  };
+};
   </script>
 </body>
 </html>
