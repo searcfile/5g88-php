@@ -181,15 +181,18 @@
   <!-- Header Chat -->
   <div id="chatHeader"
      style="border: 1px solid #ccc; padding: 10px; background: #facc15; margin-bottom: 0; max-width: 600px; margin-left: auto; margin-right: auto;border-radius: 5px;">
-    <strong id="chatUserName">Select a user</strong>
-    <input
-      type="text"
-      id="searchMessage"
-      placeholder="Search messages..."
-      style="float: right; padding: 5px; border-radius: 4px; width: 50%;"
-    />
-    <div style="clear: both;"></div>
-  </div>
+  
+  <strong id="chatUserName">Select a user</strong>
+  <div id="typingHeader" style="font-size: 12px; color: orange; margin-top: 2px;"></div>
+  
+  <input
+    type="text"
+    id="searchMessage"
+    placeholder="Search messages..."
+    style="float: right; padding: 5px; border-radius: 4px; width: 50%;"
+  />
+  <div style="clear: both;"></div>
+</div>
 
   <!-- Chat Box -->
   <div
@@ -376,6 +379,40 @@ function listenToChat() {
   });
 }
 
+function listenToTypingStatus() {
+  db.ref('typingStatus').on('value', snapshot => {
+    const typingData = snapshot.val() || {};
+    updateTypingIndicators(typingData);
+  });
+}
+
+listenToTypingStatus()
+
+function updateTypingIndicators(typingData) {
+  // 🔝 Update di bagian header
+  const headerTyping = document.getElementById('typingHeader');
+  if (typingData[activeUserIdSanitized]) {
+    headerTyping.innerText = 'User sedang menaip...';
+  } else {
+    headerTyping.innerText = '';
+  }
+
+  // 📋 Update daftar user
+  document.querySelectorAll('.user-item').forEach(item => {
+    const userId = item.dataset.userid;
+    let typingSpan = item.querySelector('.typing-indicator');
+    
+    if (!typingSpan) {
+      typingSpan = document.createElement('div');
+      typingSpan.className = 'typing-indicator';
+      typingSpan.style.fontSize = '12px';
+      typingSpan.style.color = 'orange';
+      item.appendChild(typingSpan);
+    }
+
+    typingSpan.textContent = typingData[userId] ? 'Sedang menaip...' : '';
+  });
+}
 // Render user list with optional filter & search
 function renderUserList(users, filter = 'all', searchTerm = '') {
   const userListBox = document.getElementById('userListBox');
