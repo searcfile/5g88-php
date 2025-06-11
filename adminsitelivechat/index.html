@@ -184,18 +184,18 @@
  <div style="flex: 0.5; padding: 1rem;">
   <!-- Header Chat -->
   <div id="chatHeader"
-     style="border: 1px solid #ccc; padding: 10px; background: #facc15; margin-bottom: 0; max-width: 600px; margin-left: auto; margin-right: auto;border-radius: 5px;">
+     style="border: 1px solid #ccc; padding: 10px; background: #facc15; margin-bottom: 0; max-width: 600px; margin-left: auto; margin-right: auto; border-radius: 5px; text-align: center; position: relative;">
   
   <strong id="chatUserName">Select a user</strong>
-  <div id="typingHeader" style="font-size: 12px; color: orange; margin-top: 2px;"></div>
-  
+
+  <div id="typingHeader" class="typing-indicator" style="font-size: 13px; color: #555; font-style: italic; height: 18px;"></div>
+
   <input
     type="text"
     id="searchMessage"
     placeholder="Search messages..."
-    style="float: right; padding: 5px; border-radius: 4px; width: 50%;"
+    style="margin-top: 10px; padding: 5px; border-radius: 4px; width: 80%; max-width: 300px;"
   />
-  <div style="clear: both;"></div>
 </div>
 
   <!-- Chat Box -->
@@ -407,11 +407,11 @@ function updateTypingIndicators(typingData) {
   const isTyping = typingData && typingData[activeUserIdSanitized];
   const typingHeader = document.getElementById('typingHeader');
 
-  clearInterval(typingDotsInterval); // reset dulu
+  clearInterval(typingDotsInterval); // reset sebelum animasi baru
 
   if (isTyping) {
     let dots = '';
-    typingHeader.innerHTML = `<span class="typing-indicator">User sedang menaip<span id="dots"></span></span>`;
+    typingHeader.innerHTML = `User sedang menaip<span id="dots"></span>`;
     const dotsEl = document.getElementById('dots');
 
     typingDotsInterval = setInterval(() => {
@@ -421,6 +421,7 @@ function updateTypingIndicators(typingData) {
   } else {
     typingHeader.textContent = '';
   }
+}
 
   // 📋 Update daftar user
   document.querySelectorAll('.user-item').forEach(item => {
