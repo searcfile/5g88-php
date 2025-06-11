@@ -153,7 +153,11 @@
   max-width: 400px;
   padding: 1rem;
 }
-
+.typing-indicator {
+  font-size: 13px;
+  color: #555;
+  font-style: italic;
+}
   </style>
 </head>
 <body>
@@ -382,7 +386,7 @@ function listenToChat() {
 function listenToTypingStatus() {
   db.ref('typingStatus').on('value', snapshot => {
     const typingData = snapshot.val() || {};
-    updateTypingIndicators(typingData);
+    updateTypingIndicators(typingData); // ini sudah benar
   });
 }
 
@@ -395,6 +399,27 @@ function updateTypingIndicators(typingData) {
     headerTyping.innerText = 'User sedang menaip...';
   } else {
     headerTyping.innerText = '';
+  }
+  
+let typingDotsInterval;
+
+function updateTypingIndicators(typingData) {
+  const isTyping = typingData && typingData[activeUserIdSanitized];
+  const typingHeader = document.getElementById('typingHeader');
+
+  clearInterval(typingDotsInterval); // reset dulu
+
+  if (isTyping) {
+    let dots = '';
+    typingHeader.innerHTML = `<span class="typing-indicator">User sedang menaip<span id="dots"></span></span>`;
+    const dotsEl = document.getElementById('dots');
+
+    typingDotsInterval = setInterval(() => {
+      dots = dots.length < 3 ? dots + '.' : '';
+      dotsEl.textContent = dots;
+    }, 500);
+  } else {
+    typingHeader.textContent = '';
   }
 
   // 📋 Update daftar user
