@@ -480,7 +480,6 @@ function filterMessages(query) {
   renderChatMessages(filtered);
 }
 
-// Send message function (single, consistent)
 function sendMessage() {
   const msgInput = document.getElementById('msg');
   const msg = msgInput.value.trim();
@@ -499,9 +498,8 @@ function sendMessage() {
 
   db.ref(`chats/${selectedUserId}`).push(newMsg, err => {
     if (!err) {
-      msgInput.value = '';
-      allMessages.push(newMsg);
-      renderChatMessages(allMessages);
+      msgInput.value = ''; // Kosongkan input saja
+      // JANGAN renderChatMessages di sini
     } else {
       alert('Gagal mengirim pesan');
     }
