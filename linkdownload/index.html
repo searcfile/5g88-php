@@ -15,10 +15,17 @@
     }
     .header {
       width: 100%
-      height: 30px;
+      height: 90px;
       background: gold;
       color: #000;
-      font-size: 30px
+      font-size: 22px
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      position: fixed;
+      top: 0;
+      margin-bottom: 10px;
     }
     .container, .container2, .container3, .container4, .container5, .container6 {
       position: relative;
@@ -364,12 +371,7 @@
 </div>
 
 <script>
-  document.addEventListener("contextmenu", e => e.preventDefault());
-  document.onkeydown = function (e) {
-    if (e.key === "F12" || (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key.toUpperCase()))) {
-      return false;
-    }
-  };
+  
 console.log("Page Editor\nVersion Date: 01/04/2025\nCreate by   : M'cng\nPowered by  : 5G88\nOPERATOR\n(01/04/2025)\n• System 'Updated' ");
 function copyLink(event, element) {
   event.preventDefault();
