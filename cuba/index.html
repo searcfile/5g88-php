@@ -2,435 +2,144 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>5G88 | Admin</title>
+  <title>Amount Receipt</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', sans-serif;
-    }
     body {
-      background-color: #000;
-      color: #fff;
-      overflow-x: hidden;
+      width: 1000px;
+      height: 800px;
+      margin: 0 auto;
+      background-color: #f2f2f2;
+      font-family: Arial, sans-serif;
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      justify-content: flex-start;
+      align-items: center;
     }
 
-    .sidebar-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.5);
-      display: none;
-      z-index: 999;
-    }
-    .sidebar {
-      position: fixed;
-      top: 0;
-      left: -260px;
-      width: 260px;
-      height: 100vh;
-      background: #111;
-      padding: 20px;
-      transition: 0.3s;
-      z-index: 1000;
-    }
-    .sidebar.active {
-      left: 0;
-    }
-    .sidebar-overlay.active {
-      display: block;
-    }
-    .sidebar h2 {
-      color: gold;
-      margin-bottom: 20px;
-    }
-    .sidebar a {
-      display: block;
-      margin: 10px 0;
-      color: gold;
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: bold;
-      border-radius: 5px;
-      transition: background 0.2s;
-      padding: 4px 8px;
-      gap: 5px;
-      white-space: nowrap;
-    }
-    .sidebar a:hover {
-      background: gold;
-      color: #111;
-    }
-    .close-btn {
-      background: gold;
-      color: #111;
-      border: none;
-      padding: 2px 6px;
-      font-size: 12px;
-      cursor: pointer;
-      border-radius: 5px;
-      margin-bottom: 20px;
-      border-bottom: 2px solid gold;
-    }
     .header {
-      position: relative;
       width: 100%;
-      height: 55px;
-      background: #111;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      background-color: #e8e8e8;
+      color: black;
+      text-align: center;
+      padding: 20px 0;
+      font-size: 24px;
+      font-weight: 500;
     }
-    .header img {
-      position: absolute;
-      max-height: 40px;
-      top: 5px;
+
+    .content {
+      margin-top: 50px;
+      text-align: center;
     }
-    .container {
-      transition: margin-left 0.3s ease;
-      padding: 0;
-    }
-    .container.shrink {
-      margin-left: 260px;
-    }
-    .menu-icon {
-      position: absolute;
-      top: 5px;
-      left: 10px;
-      font-size: 28px;
-      color: gold;
-      cursor: pointer;
-      z-index: 1100;
-    }
-    .menu-img {
-      width: 20px;
-      height: 20px;
-      vertical-align: middle;
-      margin-right: 8px;
-      border-radius: 4px;
-    }
-    @media (max-width: 600px) {
-      .container.shrink {
-        margin-left: 0;
-      }
-    }
-    html, body {
-      height: 100%;
-}
-    #pageFrame {
-  width: 100%;
-  height: calc(100vh - 95px); 
-  border: none;
-    }
-     .tab-bar {
-      position: relative;
-      width: 100%;
-      height: 40px;
-      background: transparent;
-      display: flex;
-      align-items: center;
-      gap: 0;
-      z-index: 1001;
-      justify-content: flex-start;
-      white-space: nowrap; 
-   }
-  .tab {
-   background: gold;
-   color: #111;
-   padding: 5px 12px;
-   border-radius: 8px;
-   font-weight: bold;
-   display: flex;
-   align-items: center;
-   gap: 2px;
-   cursor: default;
-   transition: background-color 0.2s ease;
-   white-space: nowrap; 
-   }
-  .tab .close-tab {
-   background: #111;
-   color: gold;
-   border: none;
-   font-size: 14px;
-   border-radius: 50%;
-   cursor: pointer;
-   width: 20px;
-   height: 20px;
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   }
-  .tab:hover {
-   background-color: #111 !important;
-   color: #ffffff !important;
-   font-weight: bold !important;
-    border: 2px solid white !important;
-   }
-    .active-tab {
-      background-color: #111 !important;
-      color: #ffffff !important;
+
+    .amount-title {
+      font-size: 32px;
       font-weight: bold;
-      border: 2px solid white !important;
-     }
-  .floating-logo {
-   position: fixed;
-   top: 5px;
-   left: 50%;
-   transform: translateX(-50%);
-   height: 40px;
-   z-index: 1103; 
-   }
-  .floating-logo.shrink {
-   transform: translateX(calc(-50% + 130px));
-   }
-  .header.shrink {
-   margin-left: 260px;
-   transition: margin-left 0.3s;
-   }
-  .tab-bar.shrink {
-   margin-left: 260px;
-   transition: margin-left 0.3s;
-   }
-  
+      margin: 20px 0 10px;
+    }
+
+    .amount-value {
+      font-size: 48px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .bank-charge {
+      font-size: 18px;
+    }
+
+    .input-section {
+      margin-top: 50px;
+      text-align: center;
+    }
+
+    .input-section input {
+      padding: 10px;
+      margin: 10px;
+      font-size: 16px;
+      width: 250px;
+    }
+
+    .buttons {
+      margin-top: 30px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 10px;
+      cursor: pointer;
+    }
+
+    .output {
+      display: none;
+      margin-top: 40px;
+      width: 100%;
+    }
   </style>
 </head>
 <body>
-  <img src="https://i.imgur.com/QrxyBjc.png" class="floating-logo" alt="Logo 5G88" />
-  <div class="sidebar-overlay" id="overlay"></div>
+  <div class="header" id="dateOutput">01 May 2025, 00:00:00 am</div>
 
-  <div class="sidebar" id="sidebar">
-  <button class="close-btn" onclick="closeSidebar()">✖ Close</button>
-  <h2>Menu list</h2>
-
-  <a href="#" onclick="addTab('ADMIN LIVECHAT', 'https://searcfile.github.io/5g88-php/adminsitelivechat/')">
-    <img src="https://i.imgur.com/WDjH3BZ.png" alt="icon" class="menu-img">ADMIN LIVECHAT
-  </a>
-    
-  <a href="#" onclick="addTab('DETAIL LOGIN', 'https://searcfile.github.io/5G88-editor/admindatabase/')">
-    <img src="https://i.imgur.com/WDjH3BZ.png" alt="icon" class="menu-img">DETAIL LOGIN
-  </a>
-</div>
-
-  <div class="header">
-    <div class="menu-icon" id="menuIcon">☰</div>
+  <div class="content" id="receiptContent">
+    <div class="amount-title">Amount</div>
+    <div class="amount-value" id="amountOutput">MYR 1,000.00</div>
+    <div class="bank-charge">Bank charges MYR 0.00</div>
   </div>
-   <div id="tabBar" class="tab-bar"></div>
-  
-  <div class="container" id="mainContainer">
-  <iframe id="pageFrame" src="" style="width: 100%; height: calc(100vh - 95px); border: none;"></iframe>
-</iframe>
-</div>
 
-    <script>
-  const tabBar = document.getElementById("tabBar");
-  const menuIcon = document.getElementById("menuIcon");
-  const sidebar = document.getElementById("sidebar");
-  const overlay = document.getElementById("overlay");
-  const container = document.getElementById("mainContainer");
-  const pageFrame = document.getElementById("pageFrame");
+  <div class="input-section">
+    <input type="datetime-local" id="dateInput" />
+    <input type="number" step="0.01" id="amountInput" placeholder="Enter amount (e.g. 1000)" />
+    <div class="buttons">
+      <button onclick="updateReceipt()">Update</button>
+      <button onclick="copyToClipboard()">Copy</button>
+    </div>
+  </div>
 
-  tabBar.style.display = "flex";
-  tabBar.style.alignItems = "center";
-  tabBar.style.padding = "10px 20px";
-  tabBar.style.background = "#111";
+  <textarea id="copyArea" style="opacity:0; position:absolute; left:-9999px;"></textarea>
 
-  menuIcon.addEventListener("click", openSidebar);
-  overlay.addEventListener("click", closeSidebar);
-
-  function openSidebar() {
-    sidebar.classList.add("active");
-    overlay.classList.add("active");
-    container.classList.add("shrink");
-    document.querySelector(".floating-logo").classList.add("shrink");
-    document.querySelector('.header').classList.add('shrink');
-    document.getElementById("tabBar").classList.add('shrink');
-  }
-
-  function closeSidebar() {
-    sidebar.classList.remove("active");
-    overlay.classList.remove("active");
-    container.classList.remove("shrink");
-    document.querySelector(".floating-logo").classList.remove("shrink");
-    document.querySelector('.header').classList.remove('shrink');
-    document.getElementById("tabBar").classList.remove('shrink');
-  }
-
-  function saveTabs(tabs) {
-    localStorage.setItem("openTabs", JSON.stringify(tabs));
-  }
-
-  function getTabs() {
-    return JSON.parse(localStorage.getItem("openTabs")) || [];
-  }
-
-  function addTab(label, url) {
-    const existingTabs = getTabs();
-    const exists = existingTabs.some(tab => tab.label === label);
-    if (!exists) {
-      existingTabs.push({ label, url });
-      saveTabs(existingTabs);
+  <script>
+    function formatDate(dateStr) {
+      const d = new Date(dateStr);
+      const day = d.getDate().toString().padStart(2, '0');
+      const month = d.toLocaleString('en-US', { month: 'short' });
+      const year = d.getFullYear();
+      const hour = d.getHours().toString().padStart(2, '0');
+      const minute = d.getMinutes().toString().padStart(2, '0');
+      const second = d.getSeconds().toString().padStart(2, '0');
+      const ampm = d.getHours() >= 12 ? 'pm' : 'am';
+      return `${day} ${month} ${year}, ${hour}:${minute}:${second} ${ampm}`;
     }
-    renderTabs();
-    loadPage(url);
-  }
 
-  function closeTab(label) {
-    let tabs = getTabs().filter(tab => tab.label !== label);
-    saveTabs(tabs);
-    renderTabs();
-    if (tabs.length > 0) {
-      loadPage(tabs[tabs.length - 1].url);
-    } else {
-      pageFrame.src = "";
+    function formatMYR(amount) {
+      return 'MYR ' + Number(amount).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
-  }
 
-  function renderTabs() {
-    tabBar.innerHTML = "";
-    const tabs = getTabs();
-
-    tabs.forEach((tab, index) => {
-      const tabElement = document.createElement("div");
-      tabElement.className = "tab";
-      tabElement.draggable = true;
-      tabElement.dataset.index = index;
-      tabElement.style.background = "#222";
-      tabElement.style.color = "gold";
-      tabElement.style.padding = "2px 3px";
-      tabElement.style.marginRight = "0px";
-      tabElement.style.borderRadius = "5px";
-      tabElement.style.border = "1px solid gold";
-      tabElement.style.display = "inline-flex";
-      tabElement.style.alignItems = "center";
-      tabElement.style.fontSize = "14px";
-      tabElement.style.userSelect = "none";
-      tabElement.style.cursor = "pointer";
-
-      tabElement.addEventListener("dragstart", function (e) {
-        e.dataTransfer.setData("text/plain", index);
-        tabElement.style.opacity = "0.5";
-      });
-
-      tabElement.addEventListener("dragend", function () {
-        tabElement.style.opacity = "1";
-      });
-
-      tabElement.addEventListener("dragover", function (e) {
-        e.preventDefault();
-      });
-
-      tabElement.addEventListener("drop", function (e) {
-        e.preventDefault();
-        const fromIndex = parseInt(e.dataTransfer.getData("text/plain"));
-        const toIndex = index;
-
-        if (fromIndex !== toIndex) {
-          const updatedTabs = getTabs();
-          const [movedTab] = updatedTabs.splice(fromIndex, 1);
-          updatedTabs.splice(toIndex, 0, movedTab);
-          saveTabs(updatedTabs);
-          renderTabs();
-        }
-      });
-
-      tabElement.onclick = () => loadPage(tab.url);
-
-      if (tab.url === pageFrame.src) {
-        tabElement.classList.add("active-tab");
+    function updateReceipt() {
+      const dateInput = document.getElementById('dateInput').value;
+      const amountInput = document.getElementById('amountInput').value;
+      if (!dateInput || !amountInput) {
+        alert("Please enter both date and amount.");
+        return;
       }
 
-      const title = document.createElement("span");
-      title.textContent = tab.label;
-      title.style.pointerEvents = "none";
+      const formattedDate = formatDate(dateInput);
+      const formattedAmount = formatMYR(amountInput);
 
-      const closeBtn = document.createElement("button");
-      closeBtn.className = "close-tab";
-      closeBtn.style.display = "flex";
-      closeBtn.style.justifyContent = "center";
-      closeBtn.style.alignItems = "center";
-      closeBtn.textContent = "×";
-      closeBtn.style.marginLeft = "4px";
-      closeBtn.style.cursor = "pointer";
-      closeBtn.style.background = "none";
-      closeBtn.style.border = "none";
-      closeBtn.style.color = "red";
-      closeBtn.style.fontSize = "14px";
-      closeBtn.style.transition = "all 0.2s ease";
-      closeBtn.style.padding = "0";
-      closeBtn.style.pointerEvents = "auto";
-
-      closeBtn.onmouseover = () => {
-        closeBtn.style.color = "#ff1a1a";
-        closeBtn.style.transform = "scale(1.2)";
-      };
-      closeBtn.onmouseout = () => {
-        closeBtn.style.color = "red";
-        closeBtn.style.transform = "scale(1)";
-      };
-
-      closeBtn.onclick = (e) => {
-        e.stopPropagation();
-        closeTab(tab.label);
-      };
-
-      tabElement.appendChild(title);
-      tabElement.appendChild(closeBtn);
-      tabBar.appendChild(tabElement);
-    });
-  }
-
-  function loadPage(url) {
-  pageFrame.src = url;
-  localStorage.setItem("activeTabUrl", url);
-  closeSidebar();
-  document.querySelectorAll(".tab").forEach(tab => {
-    tab.classList.remove("active-tab");
-  });
-  const tabs = getTabs();
-  const tabElements = document.querySelectorAll(".tab");
-  tabs.forEach((tab, index) => {
-    if (tab.url === url) {
-      if (tabElements[index]) {
-        tabElements[index].classList.add("active-tab");
-      }
+      document.getElementById('dateOutput').textContent = formattedDate;
+      document.getElementById('amountOutput').textContent = formattedAmount;
     }
-  });
-}
 
-  window.onload = () => {
-  renderTabs();
-  const tabs = getTabs();
-  const activeUrl = localStorage.getItem("activeTabUrl");
-  const match = tabs.find(tab => tab.url === activeUrl);
+    function copyToClipboard() {
+      const dateText = document.getElementById('dateOutput').textContent;
+      const amountText = document.getElementById('amountOutput').textContent;
+      const textToCopy = `${dateText}\n${amountText}\nBank charges MYR 0.00`;
 
-  if (match) {
-    loadPage(match.url);
-  } else if (tabs.length > 0) {
-    loadPage(tabs[tabs.length - 1].url);
-  }
-};
-
-  function formatTimestamp(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    const hh = String(date.getHours()).padStart(2, '0');
-    const mm = String(date.getMinutes()).padStart(2, '0');
-    const ss = String(date.getSeconds()).padStart(2, '0');
-    return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
-  }
-
-  function cleanUrl() {
-    const cleanUrl = window.location.origin + window.location.pathname;
-    window.history.replaceState({}, document.title, cleanUrl);
-  }
+      const copyArea = document.getElementById('copyArea');
+      copyArea.value = textToCopy;
+      copyArea.select();
+      document.execCommand('copy');
+      alert('Copied to clipboard:\n\n' + textToCopy);
+    }
   </script>
 </body>
 </html>
