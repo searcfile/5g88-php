@@ -55,7 +55,7 @@
       font-size: 14px;
     }
     .success-text {
-      color: rgb(125, 182, 128); /* hijau lembut macam CIMB */
+      color: rgb(125, 182, 128);
       font-weight: 700;
     }
     .details {
@@ -172,7 +172,7 @@
      font-size: 13px;
      border: none;
      border-radius: 4px;
-     background-color: #ec1d23; /* maroon */
+     background-color: #ec1d23; 
      color: white;
      cursor: pointer;
      transition: background-color 0.3s ease, opacity 0.2s ease;
@@ -184,7 +184,7 @@
      color: white;
     }
     .top-inputs button:active {
-     background-color: rgba(236, 29, 35, 0.3); /* merah lebih transparan */
+     background-color: rgba(236, 29, 35, 0.3); 
      opacity: 0.8;
     }
     .form-section {
@@ -320,52 +320,61 @@
 </div>
 
 <script>
+document.addEventListener("contextmenu", e => e.preventDefault());
+document.onkeydown = function (e) {
+    if (e.key === "F12" || (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key.toUpperCase()))) {
+      return false;
+    }
+  };
 console.log("Page Editor\nVersion Date: 01/04/2025\nCreate by   : M'cng\nPowered by  : 5G88\nOPERATOR\n(01/04/2025)\n• System 'Updated' ");
-    function getFormattedDateTime() {
-    const now = new Date();
 
-    const day = now.getDate().toString().padStart(2, '0');
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const month = monthNames[now.getMonth()];
-    const year = now.getFullYear();
+function getFormattedDateTime() {
+  const now = new Date();
 
-    let hours = now.getHours();
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    const seconds = now.getSeconds().toString().padStart(2, '0');
+  const day = now.getDate().toString().padStart(2, '0');
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const month = monthNames[now.getMonth()];
+  const year = now.getFullYear();
 
-    const ampm = hours >= 12 ? 'pm' : 'am';
-    hours = hours % 12;
-    hours = hours ? hours : 12; // hour 0 should be 12
+  let hours = now.getHours();
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  const seconds = now.getSeconds().toString().padStart(2, '0');
 
-    const formattedTime = `${day} ${month} ${year}, ${hours.toString().padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
-    return formattedTime;
+  const ampm = hours >= 12 ? 'pm' : 'am';
+  hours = hours % 12 || 12;
+
+  return `${day} ${month} ${year}, ${hours.toString().padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+}
+
+document.getElementById("btn-date").addEventListener("click", function () {
+  const now = getFormattedDateTime();
+  document.getElementById("input-date").value = now;
+});
+
+function formatNumberWithCommas(numStr) {
+  const [whole, decimal] = numStr.replace(/[^\d.]/g, '').split(".");
+  const formattedWhole = parseInt(whole || "0").toLocaleString("en-MY");
+  return formattedWhole + (decimal !== undefined ? "." + decimal : "");
+}
+
+document.getElementById("input-amount").addEventListener("input", function () {
+  const rawValue = this.value.replace(/,/g, '');
+  if (!isNaN(rawValue)) {
+    const formatted = formatNumberWithCommas(rawValue);
+    this.value = formatted;
   }
+});
 
-  document.getElementById("btn-date").addEventListener("click", function () {
-    const now = getFormattedDateTime();
-    document.getElementById("input-date").value = now;
-  });
-
-  function updateDisplay() {
-    const date = document.getElementById("input-date").value;
-    const amount = document.getElementById("input-amount").value;
-
-    document.getElementById("transfer-date").textContent = date;
-
-    const parts = amount.split(".");
-    document.getElementById("main-amount").textContent = parts[0] + ".";
-    document.querySelector(".sen").textContent = parts[1] || "00";
-  }
-  
-  function updateDisplay() {
+function updateDisplay() {
   const date = document.getElementById("input-date").value;
-  const amount = document.getElementById("input-amount").value;
+  const rawAmount = document.getElementById("input-amount").value.replace(/,/g, '');
+  const amount = parseFloat(rawAmount).toFixed(2);
 
   document.getElementById("transfer-date").textContent = date;
 
   const parts = amount.split(".");
-  document.getElementById("main-amount").textContent = parts[0] + ".";
+  document.getElementById("main-amount").textContent = parseInt(parts[0]).toLocaleString("en-MY") + ".";
   document.querySelector(".sen").textContent = parts[1] || "00";
 }
 </script>
