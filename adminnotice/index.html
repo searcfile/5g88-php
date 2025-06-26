@@ -106,12 +106,10 @@
         return;
       }
 
-       const data = {
-        message: pesan,
-        timestamp: Date.now(),
-        secret: "RAHSIAKU123" // Ini harus cocok dengan rules Firebase
+      const data = {
+        message: message,
+        timestamp: getTimestamp()
       };
-
 
       db.ref("notifikasi/pesanTerbaru").set(data)
         .then(() => {
