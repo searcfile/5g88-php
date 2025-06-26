@@ -51,14 +51,12 @@
 </head>
 <body>
 
-  <h2>🛠️ Kirim Pesan Notifikasi</h2>
-  <textarea id="messageInput" placeholder="Tulis pesan notifikasi..."></textarea>
-  <button onclick="kirimPesan()">Hantar Pesan</button>
-
-  <div class="status" id="statusMsg"></div>
+  <h2>Kirim Pesan ke Notifikasi</h2>
+  <textarea id="pesan" placeholder="Tulis pesan di sini..."></textarea><br>
+  <button onclick="kirimPesan()">Kirim Pesan</button>
 
   <script>
-    // Firebase config
+    // ✅ Config Firebase kamu
     const firebaseConfig = {
       apiKey: "AIzaSyBTeofEXBlzZmELtVAVZ-dctZmOGvf0Y34",
       authDomain: "notice-83ae5.firebaseapp.com",
@@ -66,60 +64,36 @@
       projectId: "notice-83ae5",
       storageBucket: "notice-83ae5.appspot.com",
       messagingSenderId: "268106877488",
-      appId: "1:268106877488:web:798beadfe45104297e7bf5",
-      measurementId: "G-8EY4MCZKK2"
+      appId: "1:268106877488:web:798beadfe45104297e7bf5"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Admin email whitelist
-    const allowedAdmins = [
-      "admin1@gmail.com",
-      "5g88.official@gmail.com",
-      "admin@example.com"
-    ];
-    localStorage.setItem("gmailLogin", JSON.stringify({
-    name: "Admin",
-    email: "5g88.official@gmail.com"
-  }));
-    // Periksa login
-    const loginData = JSON.parse(localStorage.getItem("gmailLogin") || "{}");
-    const email = loginData?.email || "";
+    // ✅ Senarai admin yang diizinkan
+    const allowedAdmins = ["5g88.offical@gmail.com", "admin1@gmail.com"];
 
-    if (!allowedAdmins.includes(email.toLowerCase())) {
-      document.body.innerHTML = "<h2 style='color:red;text-align:center;'>🚫 Akses Ditolak</h2>";
-      throw new Error("Unauthorized access");
-    }
-
-    function getTimestamp() {
-      const now = new Date();
-      return now.toISOString().replace(/[-:.]/g, "").slice(0, 15); // contoh: 20250626T120000
-    }
+    // ✅ Ambil email dari URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const adminEmail = urlParams.get("admin");
 
     function kirimPesan() {
-      const message = document.getElementById("messageInput").value.trim();
-      const status = document.getElementById("statusMsg");
-
-      if (!message) {
-        status.style.color = "red";
-        status.textContent = "❌ Sila isi pesan.";
+      if (!adminEmail || !allowedAdmins.includes(adminEmail.toLowerCase())) {
+        alert("❌ Anda tidak memiliki izin untuk mengirim pesan.");
         return;
       }
 
+      const teks = document.getElementById("pesan").value.trim();
+      if (!teks) return alert("❗ Masukkan isi pesan terlebih dahulu.");
+
       const data = {
-        message: message,
-        timestamp: getTimestamp()
+        message: teks,
+        timestamp: Date.now()
       };
 
       db.ref("notifikasi/pesanTerbaru").set(data)
-        .then(() => {
-          status.style.color = "lightgreen";
-          status.textContent = "✅ Pesan berjaya dihantar!";
-        })
-        .catch((error) => {
-          status.style.color = "red";
-          status.textContent = "❌ Gagal hantar pesan: " + error.message;
-        });
+        .then(() => alert("✅ Pesan berhasil dikirim."))
+        .catch(err => alert("❌ Gagal kirim pesan: " + err.message));
     }
   </script>
 
