@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Kirim Pesan Notice</title>
+  <title>Admin Send Notice</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <style>
@@ -24,7 +24,7 @@
       padding: 10px;
       font-size: 16px;
       border-radius: 6px;
-      border: 1px solid gold;
+      border: 1px solid #1668dc;
       background-color: #222;
       color: white;
       resize: vertical;
@@ -33,8 +33,8 @@
       margin-top: 15px;
       padding: 10px 20px;
       font-size: 16px;
-      background-color: gold;
-      color: black;
+      background-color: #1668dc;
+      color: #fff;
       border: none;
       border-radius: 6px;
       cursor: pointer;
@@ -51,9 +51,9 @@
 </head>
 <body>
 
-  <h2>Kirim Pesan ke Notifikasi</h2>
-  <textarea id="pesan" placeholder="Tulis pesan di sini..."></textarea><br>
-  <button onclick="kirimPesan()">Kirim Pesan</button>
+  <h2>Fly NOTICE</h2>
+  <textarea id="pesan" placeholder="Type You Notice HERE..."></textarea><br>
+  <button onclick="kirimPesan()">FLY NOTICE!</button>
 
   <script>
     // ✅ Config Firebase kamu
@@ -92,7 +92,7 @@
       };
 
       db.ref("notifikasi/pesanTerbaru").set(data)
-        .then(() => alert("✅ Pesan berhasil dikirim."))
+        .then(() => alert("✅ Successfuly."))
         .catch(err => alert("❌ Gagal kirim pesan: " + err.message));
     }
   </script>
