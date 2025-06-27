@@ -82,61 +82,45 @@
   </div>
 
   <script>
-     const firebaseConfig = {
-    apiKey: "AIzaSyBTeofEXBlzZmELtVAVZ-dctZmOGvf0Y34",
-    authDomain: "notice-83ae5.firebaseapp.com",
-    databaseURL: "https://notice-83ae5-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "notice-83ae5",
-    storageBucket: "notice-83ae5.appspot.com",
-    messagingSenderId: "268106877488",
-    appId: "1:268106877488:web:798beadfe45104297e7bf5"
+   const firebaseConfig = {
+  apiKey: "AIzaSyBTeofEXBlzZmELtVAVZ-dctZmOGvf0Y34",
+  authDomain: "notice-83ae5.firebaseapp.com",
+  databaseURL: "https://notice-83ae5-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "notice-83ae5",
+  storageBucket: "notice-83ae5.appspot.com",
+  messagingSenderId: "268106877488",
+  appId: "1:268106877488:web:798beadfe45104297e7bf5"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const encodedAllowedEmail = "NWc4OC5vZmZpY2FsQGdtYWlsLmNvbQ==";
+const allowedAdmin = atob(encodedAllowedEmail);
+const urlParams = new URLSearchParams(window.location.search);
+const adminEmail = atob(urlParams.get("admin") || "");
+
+function kirimPesan() {
+  if (!adminEmail || adminEmail.toLowerCase() !== allowedAdmin.toLowerCase()) {
+    return;
+  }
+
+  const teks = document.getElementById("pesan").value.trim();
+  if (!teks) return;
+
+  const data = {
+    message: teks,
+    timestamp: Date.now()
   };
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-
-  const encodedAllowedEmail = "NWc4OC5vZmZpY2FsQGdtYWlsLmNvbQ==";
-  const allowedAdmin = atob(encodedAllowedEmail); // => "5g88.official@gmail.com"
-  const urlParams = new URLSearchParams(window.location.search);
-  const adminEmail = atob(urlParams.get("admin") || "");
-
-  console.log("✅ Decoded admin from URL:", adminEmail);
-  console.log("✅ Allowed admin email:", allowedAdmin);
-
-  function kirimPesan() {
-    if (!adminEmail) {
-      alert("❌ Tidak ada parameter 'admin' di URL atau gagal decode.");
-      return;
-    }
-
-    if (adminEmail.toLowerCase() !== allowedAdmin.toLowerCase()) {
-      alert(`❌ Akses ditolak.\nEmail dari URL: ${adminEmail}\nDiizinkan: ${allowedAdmin}`);
-      return;
-    }
-
-    const teks = document.getElementById("pesan").value.trim();
-    if (!teks) {
-      alert("❗ Masukkan isi pesan terlebih dahulu.");
-      return;
-    }
-
-    const data = {
-      message: teks,
-      timestamp: Date.now()
-    };
-
-    console.log("🚀 Mengirim ke Firebase:", data);
-
-    db.ref("notifikasi/pesanTerbaru").set(data)
-      .then(() => {
-        alert("✅ Successfully sent.");
-        document.getElementById("pesan").value = "";
-      })
-      .catch(err => {
-        console.error("❌ Firebase Error:", err);
-        alert("❌ Gagal kirim pesan: " + err.message);
-      });
-  }
+  db.ref("notifikasi/pesanTerbaru").set(data)
+    .then(() => {
+      document.getElementById("pesan").value = "";
+    })
+    .catch(() => {
+      // Error disembunyikan
+    });
+}
   </script>
 
 </body>
