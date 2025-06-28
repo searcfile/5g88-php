@@ -38,7 +38,7 @@
 
     textarea {
       width: 100%;
-      height: 100px;
+      height: 700px;
       padding: 10px;
       font-size: 16px;
       border-radius: 6px;
@@ -77,7 +77,7 @@
   </div>
 
   <div class="container">
-    <textarea id="pesan" placeholder="Type Your Notice HERE..."></textarea><br>
+    <textarea id="pesan" placeholder="Type Your Notice HERE..." onkeydown="handleKeyPress(event)"></textarea><br>
     <button onclick="kirimPesan()">FLY NOTICE!</button>
   </div>
 
@@ -120,6 +120,20 @@ function kirimPesan() {
     .catch(() => {
       // Error disembunyikan
     });
+}
+    function handleKeyPress(event) {
+  if (event.key === "Enter" && !event.ctrlKey) {
+    event.preventDefault();
+    kirimPesan();
+  } else if (event.key === "Enter" && event.ctrlKey) {
+    const textarea = document.getElementById("pesan");
+    const cursorPos = textarea.selectionStart;
+    const textBefore = textarea.value.substring(0, cursorPos);
+    const textAfter = textarea.value.substring(cursorPos);
+    textarea.value = textBefore + "\n" + textAfter;
+    textarea.selectionStart = textarea.selectionEnd = cursorPos + 1;
+    event.preventDefault();
+  }
 }
   </script>
 
