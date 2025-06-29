@@ -251,7 +251,7 @@ button:active {
        db.ref("notifikasi/list/" + id).set({
         text: newText,
         title: newTitle,
-        timestamp: Date.now() // tambahkan waktu saat edit juga
+        timestamp: Date.now()
       });
     };
 
@@ -279,10 +279,10 @@ function createNotice() {
   const row = document.createElement('div');
   row.className = 'notice-row';
 
-  // 🔶 Input judul baru
+  
   const judulInput = document.createElement('input');
   judulInput.type = 'text';
-  judulInput.placeholder = 'Judul pesan ini untuk apa...';
+  judulInput.placeholder = 'tittle';
   judulInput.style.width = '100%';
   judulInput.style.padding = '6px';
   judulInput.style.marginBottom = '5px';
