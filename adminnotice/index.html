@@ -56,15 +56,21 @@
 
     .notice-row {
       display: flex;
-      align-items: flex-start;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 6px;
+      margin-bottom: 15px;
+    }
+
+    .notice-row input.title {
+      padding: 6px;
+      font-size: 14px;
+      border: none;
+      border-radius: 4px;
+      background-color: #222;
+      color: gold;
     }
 
     .notice-row textarea {
-      flex: 1;
-      min-width: 200px;
       padding: 8px;
       font-size: 14px;
       border: none;
@@ -73,7 +79,11 @@
       color: gold;
       resize: vertical;
       min-height: 40px;
-      word-break: break-word;
+    }
+
+    .notice-row .actions {
+      display: flex;
+      gap: 6px;
     }
 
     .notice-row button {
@@ -125,170 +135,170 @@
 </head>
 <body>
 
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <h3>Instant Messages</h3>
-    </div>
-    <button class="btn-create" onclick="createNotice()">+ Create</button>
-    <div id="noticeList" class="notice-scroll"></div>
+<div class="sidebar">
+  <div class="sidebar-header">
+    <h3>Instant Messages</h3>
   </div>
+  <button class="btn-create" onclick="createNotice()">+ Create</button>
+  <div id="noticeList" class="notice-scroll"></div>
+</div>
 
-  <div class="main">
-    <h2>FLY NOTICE</h2>
-    <textarea id="pesan" placeholder="Type Your Notice HERE..." onkeydown="handleKeyPress(event)"></textarea><br>
-    <button onclick="kirimPesan()">FLY NOTICE!</button>
-  </div>
+<div class="main">
+  <h2>FLY NOTICE</h2>
+  <textarea id="pesan" placeholder="Type Your Notice HERE..." onkeydown="handleKeyPress(event)"></textarea><br>
+  <button onclick="kirimPesan()">FLY NOTICE!</button>
+</div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
-  <script>
-    let noticeData = [];
-    let isCreating = false;
-    const noticeList = document.getElementById('noticeList');
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBTeofEXBlzZmELtVAVZ-dctZmOGvf0Y34",
+    authDomain: "notice-83ae5.firebaseapp.com",
+    databaseURL: "https://notice-83ae5-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "notice-83ae5",
+    storageBucket: "notice-83ae5.appspot.com",
+    messagingSenderId: "268106877488",
+    appId: "1:268106877488:web:798beadfe45104297e7bf5"
+  };
 
-    function renderNotices() {
-      noticeList.innerHTML = '';
-      noticeData.forEach((text, index) => {
-        const row = document.createElement('div');
-        row.className = 'notice-row';
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.disabled = true;
+  const noticeList = document.getElementById('noticeList');
+  const encodedAllowedEmail = "NWc4OC5vZmZpY2FsQGdtYWlsLmNvbQ==";
+  const allowedAdmin = atob(encodedAllowedEmail);
+  const urlParams = new URLSearchParams(window.location.search);
+  const adminEmail = atob(urlParams.get("admin") || "");
 
-        const sendBtn = document.createElement('button');
-        sendBtn.className = 'btn-send';
-        sendBtn.textContent = 'Send';
-        sendBtn.onclick = () => {
-          document.getElementById("pesan").value = text;
-          kirimPesan();
-        };
+  let isCreating = false;
 
-        const editBtn = document.createElement('button');
-        editBtn.className = 'btn-edit';
-        editBtn.textContent = 'Edit';
-        editBtn.onclick = () => {
-          textarea.disabled = false;
-          editBtn.style.display = 'none';
-          saveBtn.style.display = 'inline-block';
-        };
-
-        const saveBtn = document.createElement('button');
-        saveBtn.className = 'btn-save';
-        saveBtn.textContent = 'Save';
-        saveBtn.style.display = 'none';
-        saveBtn.onclick = () => {
-          const newText = textarea.value.trim();
-          if (!newText) return;
-          textarea.disabled = true;
-          noticeData[index] = newText;
-          renderNotices();
-        };
-
-        const delBtn = document.createElement('button');
-        delBtn.className = 'btn-delete';
-        delBtn.textContent = 'Delete';
-        delBtn.onclick = () => {
-          noticeData.splice(index, 1);
-          renderNotices();
-        };
-
-        row.appendChild(textarea);
-        row.appendChild(sendBtn);
-        row.appendChild(editBtn);
-        row.appendChild(saveBtn);
-        row.appendChild(delBtn);
-
-        noticeList.appendChild(row);
-      });
-    }
-
-    function createNotice() {
-      if (isCreating) return;
-      isCreating = true;
-
+  function renderNotices(snapshot) {
+    const data = snapshot.val() || {};
+    noticeList.innerHTML = '';
+    Object.entries(data).reverse().forEach(([id, item]) => {
       const row = document.createElement('div');
       row.className = 'notice-row';
 
+      const titleInput = document.createElement('input');
+      titleInput.className = 'title';
+      titleInput.value = item.title || '';
+      titleInput.disabled = true;
+
       const textarea = document.createElement('textarea');
-      textarea.placeholder = 'Type new message...';
+      textarea.value = item.content || '';
+      textarea.disabled = true;
+
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+
+      const sendBtn = document.createElement('button');
+      sendBtn.className = 'btn-send';
+      sendBtn.textContent = 'Send';
+      sendBtn.onclick = () => {
+        document.getElementById("pesan").value = textarea.value;
+        kirimPesan();
+      };
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'btn-edit';
+      editBtn.textContent = 'Edit';
+      editBtn.onclick = () => {
+        titleInput.disabled = false;
+        textarea.disabled = false;
+        editBtn.style.display = 'none';
+        saveBtn.style.display = 'inline-block';
+      };
 
       const saveBtn = document.createElement('button');
       saveBtn.className = 'btn-save';
       saveBtn.textContent = 'Save';
+      saveBtn.style.display = 'none';
       saveBtn.onclick = () => {
-        const newText = textarea.value.trim();
-        if (!newText) return;
-        noticeData.unshift(newText);
-        isCreating = false;
-        renderNotices();
+        const newTitle = titleInput.value.trim();
+        const newContent = textarea.value.trim();
+        if (!newContent) return;
+        db.ref(`notifikasi/templates/${id}`).set({ title: newTitle, content: newContent, timestamp: Date.now() });
       };
 
-      const cancelBtn = document.createElement('button');
-      cancelBtn.className = 'btn-delete';
-      cancelBtn.textContent = 'Cancel';
-      cancelBtn.onclick = () => {
-        isCreating = false;
-        row.remove();
-      };
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn-delete';
+      delBtn.textContent = 'Delete';
+      delBtn.onclick = () => db.ref(`notifikasi/templates/${id}`).remove();
 
-      row.appendChild(textarea);
-      row.appendChild(saveBtn);
-      row.appendChild(cancelBtn);
-      noticeList.prepend(row);
-    }
+      actions.append(sendBtn, editBtn, saveBtn, delBtn);
+      row.append(titleInput, textarea, actions);
+      noticeList.appendChild(row);
+    });
+  }
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBTeofEXBlzZmELtVAVZ-dctZmOGvf0Y34",
-      authDomain: "notice-83ae5.firebaseapp.com",
-      databaseURL: "https://notice-83ae5-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "notice-83ae5",
-      storageBucket: "notice-83ae5.appspot.com",
-      messagingSenderId: "268106877488",
-      appId: "1:268106877488:web:798beadfe45104297e7bf5"
+  function createNotice() {
+    if (isCreating) return;
+    isCreating = true;
+
+    const row = document.createElement('div');
+    row.className = 'notice-row';
+
+    const titleInput = document.createElement('input');
+    titleInput.className = 'title';
+    titleInput.placeholder = 'Enter title...';
+
+    const textarea = document.createElement('textarea');
+    textarea.placeholder = 'Type new message...';
+
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'btn-save';
+    saveBtn.textContent = 'Save';
+    saveBtn.onclick = () => {
+      const title = titleInput.value.trim();
+      const content = textarea.value.trim();
+      if (!content) return;
+      const id = db.ref().child('notifikasi/templates').push().key;
+      db.ref(`notifikasi/templates/${id}`).set({ title, content, timestamp: Date.now() });
+      isCreating = false;
     };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn-delete';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.onclick = () => {
+      isCreating = false;
+      row.remove();
+    };
 
-    const encodedAllowedEmail = "NWc4OC5vZmZpY2FsQGdtYWlsLmNvbQ==";
-    const allowedAdmin = atob(encodedAllowedEmail);
-    const urlParams = new URLSearchParams(window.location.search);
-    const adminEmail = atob(urlParams.get("admin") || "");
+    actions.append(saveBtn, cancelBtn);
+    row.append(titleInput, textarea, actions);
+    noticeList.prepend(row);
+  }
 
-    function kirimPesan() {
-      if (!adminEmail || adminEmail.toLowerCase() !== allowedAdmin.toLowerCase()) return;
+  function kirimPesan() {
+    if (!adminEmail || adminEmail.toLowerCase() !== allowedAdmin.toLowerCase()) return;
+    const teks = document.getElementById("pesan").value.trim();
+    if (!teks) return;
+    db.ref("notifikasi/pesanTerbaru").set({ message: teks, timestamp: Date.now() });
+    document.getElementById("pesan").value = "";
+  }
 
-      const teks = document.getElementById("pesan").value.trim();
-      if (!teks) return;
-
-      const data = {
-        message: teks,
-        timestamp: Date.now()
-      };
-
-      db.ref("notifikasi/pesanTerbaru").set(data).then(() => {
-        document.getElementById("pesan").value = "";
-      });
+  function handleKeyPress(event) {
+    if (event.key === "Enter" && !event.ctrlKey) {
+      event.preventDefault();
+      kirimPesan();
+    } else if (event.key === "Enter" && event.ctrlKey) {
+      const textarea = document.getElementById("pesan");
+      const cursorPos = textarea.selectionStart;
+      const textBefore = textarea.value.substring(0, cursorPos);
+      const textAfter = textarea.value.substring(cursorPos);
+      textarea.value = textBefore + "\n" + textAfter;
+      textarea.selectionStart = textarea.selectionEnd = cursorPos + 1;
+      event.preventDefault();
     }
+  }
 
-    function handleKeyPress(event) {
-      if (event.key === "Enter" && !event.ctrlKey) {
-        event.preventDefault();
-        kirimPesan();
-      } else if (event.key === "Enter" && event.ctrlKey) {
-        const textarea = document.getElementById("pesan");
-        const cursorPos = textarea.selectionStart;
-        const textBefore = textarea.value.substring(0, cursorPos);
-        const textAfter = textarea.value.substring(cursorPos);
-        textarea.value = textBefore + "\n" + textAfter;
-        textarea.selectionStart = textarea.selectionEnd = cursorPos + 1;
-        event.preventDefault();
-      }
-    }
-
-    renderNotices();
-  </script>
+  db.ref("notifikasi/templates").on("value", renderNotices);
+</script>
 </body>
 </html>
