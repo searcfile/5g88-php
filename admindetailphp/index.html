@@ -2,268 +2,441 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Admin Notice Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>5G88 | Admin</title>
   <style>
-    body {
+    * {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: gold;
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
     }
-
-    .sidebar {
-      width: 100%;
-      max-width: 600px;
-      background-color: #1a1a1a;
-      padding: 15px;
-      overflow-y: auto;
-      border-right: 2px solid #333;
-    }
-
-    .sidebar h3 {
-      margin-top: 0;
+    body {
+      background-color: #000;
       color: #fff;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
     }
 
-    .notice-row {
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      z-index: 999;
+    }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -260px;
+      width: 260px;
+      height: 100vh;
+      background: #111;
+      padding: 20px;
+      transition: 0.3s;
+      z-index: 1000;
+    }
+    .sidebar.active {
+      left: 0;
+    }
+    .sidebar-overlay.active {
+      display: block;
+    }
+    .sidebar h2 {
+      color: gold;
+      margin-bottom: 20px;
+    }
+    .sidebar a {
+      display: block;
+      margin: 10px 0;
+      color: gold;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: bold;
+      border-radius: 5px;
+      transition: background 0.2s;
+      padding: 4px 8px;
+      gap: 5px;
+      white-space: nowrap;
+    }
+    .sidebar a:hover {
+      background: gold;
+      color: #111;
+    }
+    .close-btn {
+      background: gold;
+      color: #111;
+      border: none;
+      padding: 2px 6px;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid gold;
+    }
+    .header {
+      position: relative;
+      width: 100%;
+      height: 55px;
+      background: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .header img {
+      position: absolute;
+      max-height: 40px;
+      top: 5px;
+    }
+    .container {
+      transition: margin-left 0.3s ease;
+      padding: 0;
+    }
+    .container.shrink {
+      margin-left: 260px;
+    }
+    .menu-icon {
+      position: absolute;
+      top: 5px;
+      left: 10px;
+      font-size: 28px;
+      color: gold;
+      cursor: pointer;
+      z-index: 1100;
+    }
+    .menu-img {
+      width: 20px;
+      height: 20px;
+      vertical-align: middle;
+      margin-right: 8px;
+      border-radius: 4px;
+    }
+    @media (max-width: 600px) {
+      .container.shrink {
+        margin-left: 0;
+      }
+    }
+    html, body {
+      height: 100%;
+}
+    #pageFrame {
+  width: 100%;
+  height: calc(100vh - 95px); 
+  border: none;
+    }
+     .tab-bar {
+      position: relative;
+      width: 100%;
+      height: 40px;
+      background: transparent;
       display: flex;
       align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .notice-row input[type="text"] {
-      flex: 1;
-      padding: 8px;
-      font-size: 14px;
-      border: none;
-      border-radius: 4px;
-      background-color: #111;
-      color: gold;
-      margin-right: 6px;
-    }
-
-    .notice-row button {
-      margin-right: 4px;
-      padding: 6px 10px;
-      font-size: 13px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      color: white;
-    }
-
-    .btn-send { background-color: #1668dc; }
-    .btn-edit { background-color: #999; }
-    .btn-save { background-color: green; }
-    .btn-delete { background-color: red; }
-    .btn-create {
-      background-color: gold;
-      color: black;
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
+      gap: 0;
+      z-index: 1001;
+      justify-content: flex-start;
+      white-space: nowrap; 
+   }
+  .tab {
+   background: gold;
+   color: #111;
+   padding: 5px 12px;
+   border-radius: 8px;
+   font-weight: bold;
+   display: flex;
+   align-items: center;
+   gap: 2px;
+   cursor: default;
+   transition: background-color 0.2s ease;
+   white-space: nowrap; 
+   }
+  .tab .close-tab {
+   background: #111;
+   color: gold;
+   border: none;
+   font-size: 14px;
+   border-radius: 50%;
+   cursor: pointer;
+   width: 20px;
+   height: 20px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   }
+  .tab.active-tab-bar {
+   background: gold;
+   color: #000;
+   font-weight: bold;
+   }
+  .tab:hover {
+   background-color: #111 !important;
+   color: #ffffff !important;
+   font-weight: bold !important;
+    border: 2px solid white !important;
+   }
+    .active-tab {
+      background-color: #111 !important;
+      color: #ffffff !important;
       font-weight: bold;
-    }
-
-    .main {
-      flex-grow: 1;
-      padding: 20px;
-    }
-
-    .main textarea {
-      width: 100%;
-      height: 700px;
-      background-color: #222;
-      color: white;
-      font-size: 16px;
-      border-radius: 6px;
-      padding: 10px;
-      border: 1px solid #1668dc;
-    }
-
-    .main button {
-      margin-top: 15px;
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #1668dc;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .main h2 {
-      color: white;
-    }
+      border: 2px solid white !important;
+     }
+  .floating-logo {
+   position: fixed;
+   top: 5px;
+   left: 50%;
+   transform: translateX(-50%);
+   height: 40px;
+   z-index: 1103; 
+   }
+  .floating-logo.shrink {
+   transform: translateX(calc(-50% + 130px));
+   }
+  .header.shrink {
+   margin-left: 260px;
+   transition: margin-left 0.3s;
+   }
+  .tab-bar.shrink {
+   margin-left: 260px;
+   transition: margin-left 0.3s;
+   }
+  
   </style>
 </head>
 <body>
+  <img src="https://i.imgur.com/QrxyBjc.png" class="floating-logo" alt="Logo 5G88" />
+  <div class="sidebar-overlay" id="overlay"></div>
 
-  <div class="sidebar">
-    <h3>Instant Messages</h3>
-    <div id="noticeList"></div>
-    <button class="btn-create" onclick="createNotice()">+ Create New</button>
+  <div class="sidebar" id="sidebar">
+  <button class="close-btn" onclick="closeSidebar()">✖ Close</button>
+  <h2>Menu list</h2>
+
+  <a href="#" onclick="addTab('ADMIN LIVECHAT', 'https://searcfile.github.io/5g88-php/adminsitelivechat/')">
+    <img src="https://i.imgur.com/WDjH3BZ.png" alt="icon" class="menu-img">ADMIN LIVECHAT
+  </a>
+    
+  <a href="#" onclick="addTab('DETAIL LOGIN', 'https://searcfile.github.io/5G88-editor/admindatabase/')">
+    <img src="https://i.imgur.com/WDjH3BZ.png" alt="icon" class="menu-img">DETAIL LOGIN
+  </a>
+
+     <a href="#" onclick="addTab('FLY NOTICE', 'https://searcfile.github.io/5g88-php/adminnotice/?admin=NWc4OC5vZmZpY2FsQGdtYWlsLmNvbQ==')">
+    <img src="https://i.imgur.com/WDjH3BZ.png" alt="icon" class="menu-img">FLY NOTICE
+  </a>
+</div> 
+  
+  <div class="header">
+    <div class="menu-icon" id="menuIcon">☰</div>
   </div>
+   <div id="tabBar" class="tab-bar"></div>
+  
+  <div class="container" id="mainContainer">
+  <iframe id="pageFrame" src="" style="width: 100%; height: calc(100vh - 95px); border: none;"></iframe>
+</iframe>
+</div>
 
-  <div class="main">
-    <h2>FLY NOTICE</h2>
-    <textarea id="pesan" placeholder="Type Your Notice HERE..." onkeydown="handleKeyPress(event)"></textarea><br>
-    <button onclick="kirimPesan()">FLY NOTICE!</button>
-  </div>
+    <script>
+  const tabBar = document.getElementById("tabBar");
+  const menuIcon = document.getElementById("menuIcon");
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("overlay");
+  const container = document.getElementById("mainContainer");
+  const pageFrame = document.getElementById("pageFrame");
 
-  <script>
-    let noticeData = []; // penyimpanan pesan instan
-    let isCreating = false;
+  tabBar.style.display = "flex";
+  tabBar.style.alignItems = "center";
+  tabBar.style.padding = "10px 20px";
+  tabBar.style.background = "#111";
 
-    const noticeList = document.getElementById('noticeList');
+  menuIcon.addEventListener("click", openSidebar);
+  overlay.addEventListener("click", closeSidebar);
 
-    function renderNotices() {
-      noticeList.innerHTML = '';
-      noticeData.forEach((text, index) => {
-        const row = document.createElement('div');
-        row.className = 'notice-row';
+  function openSidebar() {
+    sidebar.classList.add("active");
+    overlay.classList.add("active");
+    container.classList.add("shrink");
+    document.querySelector(".floating-logo").classList.add("shrink");
+    document.querySelector('.header').classList.add('shrink');
+    document.getElementById("tabBar").classList.add('shrink');
+  }
 
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.value = text;
-        input.disabled = true;
+  function closeSidebar() {
+    sidebar.classList.remove("active");
+    overlay.classList.remove("active");
+    container.classList.remove("shrink");
+    document.querySelector(".floating-logo").classList.remove("shrink");
+    document.querySelector('.header').classList.remove('shrink');
+    document.getElementById("tabBar").classList.remove('shrink');
+  }
 
-        const sendBtn = document.createElement('button');
-        sendBtn.className = 'btn-send';
-        sendBtn.textContent = 'Send';
-        sendBtn.onclick = () => {
-          document.getElementById("pesan").value = text;
-          kirimPesan();
-        };
+  function saveTabs(tabs) {
+    localStorage.setItem("openTabs", JSON.stringify(tabs));
+  }
 
-        const editBtn = document.createElement('button');
-        editBtn.className = 'btn-edit';
-        editBtn.textContent = 'Edit';
-        editBtn.onclick = () => {
-          input.disabled = false;
-          editBtn.style.display = 'none';
-          saveBtn.style.display = 'inline-block';
-        };
+  function getTabs() {
+    return JSON.parse(localStorage.getItem("openTabs")) || [];
+  }
 
-        const saveBtn = document.createElement('button');
-        saveBtn.className = 'btn-save';
-        saveBtn.textContent = 'Save';
-        saveBtn.style.display = 'none';
-        saveBtn.onclick = () => {
-          const newText = input.value.trim();
-          if (!newText) return;
-          input.disabled = true;
-          noticeData[index] = newText;
-          renderNotices();
-        };
+  function addTab(label, url) {
+    const existingTabs = getTabs();
+    const exists = existingTabs.some(tab => tab.label === label);
+    if (!exists) {
+      existingTabs.push({ label, url });
+      saveTabs(existingTabs);
+    }
+    renderTabs();
+    loadPage(url);
+  }
 
-        const delBtn = document.createElement('button');
-        delBtn.className = 'btn-delete';
-        delBtn.textContent = 'Delete';
-        delBtn.onclick = () => {
-          noticeData.splice(index, 1);
-          renderNotices();
-        };
+  function closeTab(label) {
+    let tabs = getTabs().filter(tab => tab.label !== label);
+    saveTabs(tabs);
+    renderTabs();
+    if (tabs.length > 0) {
+      loadPage(tabs[tabs.length - 1].url);
+    } else {
+      pageFrame.src = "";
+    }
+  }
 
-        row.appendChild(input);
-        row.appendChild(sendBtn);
-        row.appendChild(editBtn);
-        row.appendChild(saveBtn);
-        row.appendChild(delBtn);
+  function renderTabs() {
+    tabBar.innerHTML = "";
+    const tabs = getTabs();
 
-        noticeList.appendChild(row);
+    tabs.forEach((tab, index) => {
+      const tabElement = document.createElement("div");
+      tabElement.className = "tab";
+      tabElement.draggable = true;
+      tabElement.dataset.index = index;
+      tabElement.style.background = "#222";
+      tabElement.style.color = "gold";
+      tabElement.style.padding = "2px 3px";
+      tabElement.style.marginRight = "0px";
+      tabElement.style.borderRadius = "5px";
+      tabElement.style.border = "1px solid gold";
+      tabElement.style.display = "inline-flex";
+      tabElement.style.alignItems = "center";
+      tabElement.style.fontSize = "14px";
+      tabElement.style.userSelect = "none";
+      tabElement.style.cursor = "pointer";
+
+      tabElement.addEventListener("dragstart", function (e) {
+        e.dataTransfer.setData("text/plain", index);
+        tabElement.style.opacity = "0.5";
       });
-    }
 
-    function createNotice() {
-      if (isCreating) return;
-
-      isCreating = true;
-      const row = document.createElement('div');
-      row.className = 'notice-row';
-
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.placeholder = 'Type new message...';
-
-      const saveBtn = document.createElement('button');
-      saveBtn.className = 'btn-save';
-      saveBtn.textContent = 'Save';
-      saveBtn.onclick = () => {
-        const newText = input.value.trim();
-        if (!newText) return;
-        noticeData.unshift(newText);
-        isCreating = false;
-        renderNotices();
-      };
-
-      const cancelBtn = document.createElement('button');
-      cancelBtn.className = 'btn-delete';
-      cancelBtn.textContent = 'Cancel';
-      cancelBtn.onclick = () => {
-        isCreating = false;
-        row.remove();
-      };
-
-      row.appendChild(input);
-      row.appendChild(saveBtn);
-      row.appendChild(cancelBtn);
-      noticeList.prepend(row);
-    }
-
-    // Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyBTeofEXBlzZmELtVAVZ-dctZmOGvf0Y34",
-      authDomain: "notice-83ae5.firebaseapp.com",
-      databaseURL: "https://notice-83ae5-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "notice-83ae5",
-      storageBucket: "notice-83ae5.appspot.com",
-      messagingSenderId: "268106877488",
-      appId: "1:268106877488:web:798beadfe45104297e7bf5"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    const encodedAllowedEmail = "NWc4OC5vZmZpY2FsQGdtYWlsLmNvbQ==";
-    const allowedAdmin = atob(encodedAllowedEmail);
-    const urlParams = new URLSearchParams(window.location.search);
-    const adminEmail = atob(urlParams.get("admin") || "");
-
-    function kirimPesan() {
-      if (!adminEmail || adminEmail.toLowerCase() !== allowedAdmin.toLowerCase()) return;
-
-      const teks = document.getElementById("pesan").value.trim();
-      if (!teks) return;
-
-      const data = {
-        message: teks,
-        timestamp: Date.now()
-      };
-
-      db.ref("notifikasi/pesanTerbaru").set(data).then(() => {
-        document.getElementById("pesan").value = "";
+      tabElement.addEventListener("dragend", function () {
+        tabElement.style.opacity = "1";
       });
-    }
 
-    function handleKeyPress(event) {
-      if (event.key === "Enter" && !event.ctrlKey) {
-        event.preventDefault();
-        kirimPesan();
-      } else if (event.key === "Enter" && event.ctrlKey) {
-        const textarea = document.getElementById("pesan");
-        const cursorPos = textarea.selectionStart;
-        const textBefore = textarea.value.substring(0, cursorPos);
-        const textAfter = textarea.value.substring(cursorPos);
-        textarea.value = textBefore + "\n" + textAfter;
-        textarea.selectionStart = textarea.selectionEnd = cursorPos + 1;
-        event.preventDefault();
+      tabElement.addEventListener("dragover", function (e) {
+        e.preventDefault();
+      });
+
+      tabElement.addEventListener("drop", function (e) {
+        e.preventDefault();
+        const fromIndex = parseInt(e.dataTransfer.getData("text/plain"));
+        const toIndex = index;
+
+        if (fromIndex !== toIndex) {
+          const updatedTabs = getTabs();
+          const [movedTab] = updatedTabs.splice(fromIndex, 1);
+          updatedTabs.splice(toIndex, 0, movedTab);
+          saveTabs(updatedTabs);
+          renderTabs();
+        }
+      });
+
+      tabElement.onclick = () => loadPage(tab.url);
+
+      if (tab.url === pageFrame.src) {
+        tabElement.classList.add("active-tab");
+      }
+
+      const title = document.createElement("span");
+      title.textContent = tab.label;
+      title.style.pointerEvents = "none";
+
+      const closeBtn = document.createElement("button");
+      closeBtn.className = "close-tab";
+      closeBtn.textContent = "×";
+      closeBtn.style.marginLeft = "4px";
+      closeBtn.style.cursor = "pointer";
+      closeBtn.style.background = "none";
+      closeBtn.style.border = "none";
+      closeBtn.style.color = "red";
+      closeBtn.style.fontSize = "14px";
+      closeBtn.style.transition = "all 0.2s ease";
+      closeBtn.style.padding = "0";
+      closeBtn.style.pointerEvents = "auto";
+
+      closeBtn.onmouseover = () => {
+        closeBtn.style.color = "#ff1a1a";
+        closeBtn.style.transform = "scale(1.2)";
+      };
+      closeBtn.onmouseout = () => {
+        closeBtn.style.color = "red";
+        closeBtn.style.transform = "scale(1)";
+      };
+
+      closeBtn.onclick = (e) => {
+        e.stopPropagation();
+        closeTab(tab.label);
+      };
+
+      tabElement.appendChild(title);
+      tabElement.appendChild(closeBtn);
+      tabBar.appendChild(tabElement);
+    });
+  }
+
+  function loadPage(url) {
+  pageFrame.src = url;
+  localStorage.setItem("activeTabUrl", url);
+  closeSidebar();
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.classList.remove("active-tab");
+  });
+  const tabs = getTabs();
+  const tabElements = document.querySelectorAll(".tab");
+  tabs.forEach((tab, index) => {
+    if (tab.url === url) {
+      if (tabElements[index]) {
+        tabElements[index].classList.add("active-tab");
       }
     }
+  });
+}
 
-    renderNotices();
+  window.onload = () => {
+  renderTabs();
+  const tabs = getTabs();
+  const activeUrl = localStorage.getItem("activeTabUrl");
+  const match = tabs.find(tab => tab.url === activeUrl);
+
+  if (match) {
+    loadPage(match.url);
+  } else if (tabs.length > 0) {
+    loadPage(tabs[tabs.length - 1].url);
+  }
+};
+
+  function formatTimestamp(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const hh = String(date.getHours()).padStart(2, '0');
+    const mm = String(date.getMinutes()).padStart(2, '0');
+    const ss = String(date.getSeconds()).padStart(2, '0');
+    return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
+  }
+
+  function cleanUrl() {
+    const cleanUrl = window.location.origin + window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+  }
   </script>
 </body>
 </html>
