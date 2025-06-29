@@ -166,92 +166,123 @@
   const noticeList = document.getElementById('noticeList');
 
   function renderNotices() {
-    noticeList.innerHTML = '';
-    noticeData.forEach(({ id, text }) => {
-      const row = document.createElement('div');
-      row.className = 'notice-row';
-
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.disabled = true;
-
-      const sendBtn = document.createElement('button');
-      sendBtn.className = 'btn-send';
-      sendBtn.textContent = 'Send';
-      sendBtn.onclick = () => {
-        document.getElementById("pesan").value = text;
-        kirimPesan();
-      };
-
-      const editBtn = document.createElement('button');
-      editBtn.className = 'btn-edit';
-      editBtn.textContent = 'Edit';
-      editBtn.onclick = () => {
-        textarea.disabled = false;
-        editBtn.style.display = 'none';
-        saveBtn.style.display = 'inline-block';
-      };
-
-      const saveBtn = document.createElement('button');
-      saveBtn.className = 'btn-save';
-      saveBtn.textContent = 'Save';
-      saveBtn.style.display = 'none';
-      saveBtn.onclick = () => {
-        const newText = textarea.value.trim();
-        if (!newText) return;
-        db.ref("notifikasi/list/" + id).set({ text: newText });
-      };
-
-      const delBtn = document.createElement('button');
-      delBtn.className = 'btn-delete';
-      delBtn.textContent = 'Delete';
-      delBtn.onclick = () => {
-        db.ref("notifikasi/list/" + id).remove();
-      };
-
-      row.appendChild(textarea);
-      row.appendChild(sendBtn);
-      row.appendChild(editBtn);
-      row.appendChild(saveBtn);
-      row.appendChild(delBtn);
-      noticeList.appendChild(row);
-    });
-  }
-
-  function createNotice() {
-    if (isCreating) return;
-    isCreating = true;
-
+  noticeList.innerHTML = '';
+  noticeData.forEach(({ id, text, title }) => {
     const row = document.createElement('div');
     row.className = 'notice-row';
 
+    // 🔶 Input judul di atas pesan
+    const judulInput = document.createElement('input');
+    judulInput.type = 'text';
+    judulInput.value = title || '';
+    judulInput.disabled = true;
+    judulInput.placeholder = 'Judul pesan ini untuk apa...';
+    judulInput.style.width = '100%';
+    judulInput.style.padding = '6px';
+    judulInput.style.marginBottom = '5px';
+    judulInput.style.borderRadius = '4px';
+    judulInput.style.border = '1px solid #444';
+    judulInput.style.backgroundColor = '#111';
+    judulInput.style.color = 'gold';
+
     const textarea = document.createElement('textarea');
-    textarea.placeholder = 'Type new message...';
+    textarea.value = text;
+    textarea.disabled = true;
+
+    const sendBtn = document.createElement('button');
+    sendBtn.className = 'btn-send';
+    sendBtn.textContent = 'Send';
+    sendBtn.onclick = () => {
+      document.getElementById("pesan").value = text;
+      kirimPesan();
+    };
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-edit';
+    editBtn.textContent = 'Edit';
+    editBtn.onclick = () => {
+      textarea.disabled = false;
+      judulInput.disabled = false;
+      editBtn.style.display = 'none';
+      saveBtn.style.display = 'inline-block';
+    };
 
     const saveBtn = document.createElement('button');
     saveBtn.className = 'btn-save';
     saveBtn.textContent = 'Save';
+    saveBtn.style.display = 'none';
     saveBtn.onclick = () => {
       const newText = textarea.value.trim();
+      const newTitle = judulInput.value.trim();
       if (!newText) return;
-      const newId = db.ref().child("notifikasi/list").push().key;
-      db.ref("notifikasi/list/" + newId).set({ text: newText });
-      isCreating = false;
+      db.ref("notifikasi/list/" + id).set({ text: newText, title: newTitle });
     };
 
-    const cancelBtn = document.createElement('button');
-    cancelBtn.className = 'btn-delete';
-    cancelBtn.textContent = 'Cancel';
-    cancelBtn.onclick = () => {
-      isCreating = false;
-      row.remove();
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn-delete';
+    delBtn.textContent = 'Delete';
+    delBtn.onclick = () => {
+      db.ref("notifikasi/list/" + id).remove();
     };
 
+    row.appendChild(judulInput);
     row.appendChild(textarea);
+    row.appendChild(sendBtn);
+    row.appendChild(editBtn);
     row.appendChild(saveBtn);
-    row.appendChild(cancelBtn);
-    noticeList.prepend(row);
-  }
+    row.appendChild(delBtn);
+    noticeList.appendChild(row);
+  });
+}
+
+function createNotice() {
+  if (isCreating) return;
+  isCreating = true;
+
+  const row = document.createElement('div');
+  row.className = 'notice-row';
+
+  // 🔶 Input judul baru
+  const judulInput = document.createElement('input');
+  judulInput.type = 'text';
+  judulInput.placeholder = 'Judul pesan ini untuk apa...';
+  judulInput.style.width = '100%';
+  judulInput.style.padding = '6px';
+  judulInput.style.marginBottom = '5px';
+  judulInput.style.borderRadius = '4px';
+  judulInput.style.border = '1px solid #444';
+  judulInput.style.backgroundColor = '#111';
+  judulInput.style.color = 'gold';
+
+  const textarea = document.createElement('textarea');
+  textarea.placeholder = 'Type new message...';
+
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'btn-save';
+  saveBtn.textContent = 'Save';
+  saveBtn.onclick = () => {
+    const newText = textarea.value.trim();
+    const newTitle = judulInput.value.trim();
+    if (!newText) return;
+    const newId = db.ref().child("notifikasi/list").push().key;
+    db.ref("notifikasi/list/" + newId).set({ text: newText, title: newTitle });
+    isCreating = false;
+  };
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn-delete';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.onclick = () => {
+    isCreating = false;
+    row.remove();
+  };
+
+  row.appendChild(judulInput);
+  row.appendChild(textarea);
+  row.appendChild(saveBtn);
+  row.appendChild(cancelBtn);
+  noticeList.prepend(row);
+}
 
   function kirimPesan() {
     if (!adminEmail || adminEmail.toLowerCase() !== allowedAdmin.toLowerCase()) return;
