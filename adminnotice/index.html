@@ -239,56 +239,154 @@
       noticeList.prepend(row);
     }
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBTeofEXBlzZmELtVAVZ-dctZmOGvf0Y34",
-      authDomain: "notice-83ae5.firebaseapp.com",
-      databaseURL: "https://notice-83ae5-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "notice-83ae5",
-      storageBucket: "notice-83ae5.appspot.com",
-      messagingSenderId: "268106877488",
-      appId: "1:268106877488:web:798beadfe45104297e7bf5"
-    };
+   const firebaseConfig = {
+    apiKey: "AIzaSyBTeofEXBlzZmELtVAVZ-dctZmOGvf0Y34",
+    authDomain: "notice-83ae5.firebaseapp.com",
+    databaseURL: "https://notice-83ae5-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "notice-83ae5",
+    storageBucket: "notice-83ae5.appspot.com",
+    messagingSenderId: "268106877488",
+    appId: "1:268106877488:web:798beadfe45104297e7bf5"
+  };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-    const encodedAllowedEmail = "NWc4OC5vZmZpY2FsQGdtYWlsLmNvbQ==";
-    const allowedAdmin = atob(encodedAllowedEmail);
-    const urlParams = new URLSearchParams(window.location.search);
-    const adminEmail = atob(urlParams.get("admin") || "");
+  let isCreating = false;
+  let noticeData = [];
+  const noticeList = document.getElementById('noticeList');
 
-    function kirimPesan() {
-      if (!adminEmail || adminEmail.toLowerCase() !== allowedAdmin.toLowerCase()) return;
+  const encodedAllowedEmail = "NWc4OC5vZmZpY2FsQGdtYWlsLmNvbQ==";
+  const allowedAdmin = atob(encodedAllowedEmail);
+  const urlParams = new URLSearchParams(window.location.search);
+  const adminEmail = atob(urlParams.get("admin") || "");
 
-      const teks = document.getElementById("pesan").value.trim();
-      if (!teks) return;
+  function renderNotices() {
+    noticeList.innerHTML = '';
+    noticeData.forEach(({ id, text }) => {
+      const row = document.createElement('div');
+      row.className = 'notice-row';
 
-      const data = {
-        message: teks,
-        timestamp: Date.now()
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.disabled = true;
+
+      const sendBtn = document.createElement('button');
+      sendBtn.className = 'btn-send';
+      sendBtn.textContent = 'Send';
+      sendBtn.onclick = () => {
+        document.getElementById("pesan").value = text;
+        kirimPesan();
       };
 
-      db.ref("notifikasi/pesanTerbaru").set(data).then(() => {
-        document.getElementById("pesan").value = "";
-      });
-    }
+      const editBtn = document.createElement('button');
+      editBtn.className = 'btn-edit';
+      editBtn.textContent = 'Edit';
+      editBtn.onclick = () => {
+        textarea.disabled = false;
+        editBtn.style.display = 'none';
+        saveBtn.style.display = 'inline-block';
+      };
 
-    function handleKeyPress(event) {
-      if (event.key === "Enter" && !event.ctrlKey) {
-        event.preventDefault();
-        kirimPesan();
-      } else if (event.key === "Enter" && event.ctrlKey) {
-        const textarea = document.getElementById("pesan");
-        const cursorPos = textarea.selectionStart;
-        const textBefore = textarea.value.substring(0, cursorPos);
-        const textAfter = textarea.value.substring(cursorPos);
-        textarea.value = textBefore + "\n" + textAfter;
-        textarea.selectionStart = textarea.selectionEnd = cursorPos + 1;
-        event.preventDefault();
-      }
-    }
+      const saveBtn = document.createElement('button');
+      saveBtn.className = 'btn-save';
+      saveBtn.textContent = 'Save';
+      saveBtn.style.display = 'none';
+      saveBtn.onclick = () => {
+        const newText = textarea.value.trim();
+        if (!newText) return;
+        db.ref("notifikasi/list/" + id).set({ text: newText });
+      };
 
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn-delete';
+      delBtn.textContent = 'Delete';
+      delBtn.onclick = () => {
+        db.ref("notifikasi/list/" + id).remove();
+      };
+
+      row.appendChild(textarea);
+      row.appendChild(sendBtn);
+      row.appendChild(editBtn);
+      row.appendChild(saveBtn);
+      row.appendChild(delBtn);
+      noticeList.appendChild(row);
+    });
+  }
+
+  function createNotice() {
+    if (isCreating) return;
+    isCreating = true;
+
+    const row = document.createElement('div');
+    row.className = 'notice-row';
+
+    const textarea = document.createElement('textarea');
+    textarea.placeholder = 'Type new message...';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'btn-save';
+    saveBtn.textContent = 'Save';
+    saveBtn.onclick = () => {
+      const newText = textarea.value.trim();
+      if (!newText) return;
+      const newId = db.ref().child("notifikasi/list").push().key;
+      db.ref("notifikasi/list/" + newId).set({ text: newText });
+      isCreating = false;
+    };
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn-delete';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.onclick = () => {
+      isCreating = false;
+      row.remove();
+    };
+
+    row.appendChild(textarea);
+    row.appendChild(saveBtn);
+    row.appendChild(cancelBtn);
+    noticeList.prepend(row);
+  }
+
+  function kirimPesan() {
+    if (!adminEmail || adminEmail.toLowerCase() !== allowedAdmin.toLowerCase()) return;
+
+    const teks = document.getElementById("pesan").value.trim();
+    if (!teks) return;
+
+    const data = {
+      message: teks,
+      timestamp: Date.now()
+    };
+
+    db.ref("notifikasi/pesanTerbaru").set(data).then(() => {
+      document.getElementById("pesan").value = "";
+    });
+  }
+
+  function handleKeyPress(event) {
+    if (event.key === "Enter" && !event.ctrlKey) {
+      event.preventDefault();
+      kirimPesan();
+    } else if (event.key === "Enter" && event.ctrlKey) {
+      const textarea = document.getElementById("pesan");
+      const cursorPos = textarea.selectionStart;
+      const textBefore = textarea.value.substring(0, cursorPos);
+      const textAfter = textarea.value.substring(cursorPos);
+      textarea.value = textBefore + "\n" + textAfter;
+      textarea.selectionStart = textarea.selectionEnd = cursorPos + 1;
+      event.preventDefault();
+    }
+  }
+
+  // Load data dari Firebase saat halaman dimuat
+  db.ref("notifikasi/list").on("value", (snapshot) => {
+    const raw = snapshot.val() || {};
+    noticeData = Object.entries(raw).map(([id, val]) => ({ id, ...val }));
     renderNotices();
+  });
+</script>
   </script>
 </body>
 </html>
