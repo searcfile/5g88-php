@@ -1,141 +1,240 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Admin Send Notice</title>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <meta charset="UTF-8" />
+  <title>Admin Notice Panel</title>
   <style>
     body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: gold;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 300px;
+      background-color: #1a1a1a;
+      padding: 15px;
+      overflow-y: auto;
+      border-right: 2px solid #333;
+    }
+
+    .sidebar h3 {
+      margin-top: 0;
+      color: #fff;
+    }
+
+    .notice-box {
+      background-color: #222;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      border: 1px solid #444;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .notice-box textarea {
       background-color: #111;
       color: gold;
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
+      border: none;
+      resize: vertical;
+      min-height: 60px;
+      padding: 8px;
+      font-size: 14px;
+      border-radius: 4px;
+      margin-bottom: 6px;
     }
 
-    .header {
-      height: 90px;
-      width: 100%;
-      background-color: #1668dc;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .header h2 {
-      margin: 0;
-      font-size: 30px;
-      font-weight: bold;
+    .notice-box button {
+      margin: 2px 0;
+      padding: 6px 10px;
+      font-size: 13px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
       color: white;
     }
 
-    .container {
-      padding: 20px;
-      max-width: 600px;
-      margin: auto;
+    .btn-send {
+      background-color: #1668dc;
     }
 
-    textarea {
+    .btn-edit {
+      background-color: #999;
+    }
+
+    .btn-save {
+      background-color: green;
+    }
+
+    .btn-create {
+      background-color: gold;
+      color: black;
+      width: 100%;
+      padding: 8px;
+      margin-top: 10px;
+    }
+
+    .main {
+      flex-grow: 1;
+      padding: 20px;
+    }
+
+    .main textarea {
       width: 100%;
       height: 700px;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 6px;
-      border: 1px solid #1668dc;
       background-color: #222;
       color: white;
-      resize: vertical;
+      font-size: 16px;
+      border-radius: 6px;
+      padding: 10px;
+      border: 1px solid #1668dc;
     }
 
-    button {
+    .main button {
       margin-top: 15px;
       padding: 10px 20px;
       font-size: 16px;
       background-color: #1668dc;
-      color: #fff;
+      color: white;
       border: none;
       border-radius: 6px;
       cursor: pointer;
     }
 
-    button:hover {
-      background-color: rgba(255, 255, 255, 0.2);
-    }
-
-    .status {
-      margin-top: 15px;
-      font-weight: bold;
-      color: lightgreen;
+    .main h2 {
+      color: white;
     }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <h2>FLY NOTICE</h2>
+  <div class="sidebar">
+    <h3>Instant Notices</h3>
+    <div id="noticeList"></div>
+    <button class="btn-create" onclick="createNotice()">+ Create New</button>
   </div>
 
-  <div class="container">
+  <div class="main">
+    <h2>FLY NOTICE</h2>
     <textarea id="pesan" placeholder="Type Your Notice HERE..." onkeydown="handleKeyPress(event)"></textarea><br>
     <button onclick="kirimPesan()">FLY NOTICE!</button>
   </div>
 
   <script>
-   const firebaseConfig = {
-  apiKey: "AIzaSyBTeofEXBlzZmELtVAVZ-dctZmOGvf0Y34",
-  authDomain: "notice-83ae5.firebaseapp.com",
-  databaseURL: "https://notice-83ae5-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "notice-83ae5",
-  storageBucket: "notice-83ae5.appspot.com",
-  messagingSenderId: "268106877488",
-  appId: "1:268106877488:web:798beadfe45104297e7bf5"
-};
+    let noticeData = [
+      "Server maintenance at midnight.",
+      "Don't forget to claim daily bonus!",
+    ];
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+    const noticeList = document.getElementById('noticeList');
 
-const encodedAllowedEmail = "NWc4OC5vZmZpY2FsQGdtYWlsLmNvbQ==";
-const allowedAdmin = atob(encodedAllowedEmail);
-const urlParams = new URLSearchParams(window.location.search);
-const adminEmail = atob(urlParams.get("admin") || "");
+    function renderNotices() {
+      noticeList.innerHTML = '';
+      noticeData.forEach((text, index) => {
+        const box = document.createElement('div');
+        box.className = 'notice-box';
 
-function kirimPesan() {
-  if (!adminEmail || adminEmail.toLowerCase() !== allowedAdmin.toLowerCase()) {
-    return;
-  }
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.disabled = true;
 
-  const teks = document.getElementById("pesan").value.trim();
-  if (!teks) return;
+        const sendBtn = document.createElement('button');
+        sendBtn.className = 'btn-send';
+        sendBtn.textContent = 'Send';
+        sendBtn.onclick = () => {
+          document.getElementById("pesan").value = text;
+          kirimPesan();
+        };
 
-  const data = {
-    message: teks,
-    timestamp: Date.now()
-  };
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn-edit';
+        editBtn.textContent = 'Edit';
+        editBtn.onclick = () => {
+          textarea.disabled = false;
+          editBtn.style.display = 'none';
+          saveBtn.style.display = 'inline-block';
+        };
 
-  db.ref("notifikasi/pesanTerbaru").set(data)
-    .then(() => {
-      document.getElementById("pesan").value = "";
-    })
-    .catch(() => {
-      // Error disembunyikan
-    });
-}
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'btn-save';
+        saveBtn.textContent = 'Save';
+        saveBtn.style.display = 'none';
+        saveBtn.onclick = () => {
+          textarea.disabled = true;
+          noticeData[index] = textarea.value;
+          renderNotices(); // re-render untuk refresh UI
+        };
+
+        box.appendChild(textarea);
+        box.appendChild(sendBtn);
+        box.appendChild(editBtn);
+        box.appendChild(saveBtn);
+
+        noticeList.appendChild(box);
+      });
+    }
+
+    function createNotice() {
+      noticeData.unshift("New Notice...");
+      renderNotices();
+    }
+
+    // Firebase related
+    const firebaseConfig = {
+      apiKey: "AIzaSyBTeofEXBlzZmELtVAVZ-dctZmOGvf0Y34",
+      authDomain: "notice-83ae5.firebaseapp.com",
+      databaseURL: "https://notice-83ae5-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "notice-83ae5",
+      storageBucket: "notice-83ae5.appspot.com",
+      messagingSenderId: "268106877488",
+      appId: "1:268106877488:web:798beadfe45104297e7bf5"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const encodedAllowedEmail = "NWc4OC5vZmZpY2FsQGdtYWlsLmNvbQ==";
+    const allowedAdmin = atob(encodedAllowedEmail);
+    const urlParams = new URLSearchParams(window.location.search);
+    const adminEmail = atob(urlParams.get("admin") || "");
+
+    function kirimPesan() {
+      if (!adminEmail || adminEmail.toLowerCase() !== allowedAdmin.toLowerCase()) return;
+
+      const teks = document.getElementById("pesan").value.trim();
+      if (!teks) return;
+
+      const data = {
+        message: teks,
+        timestamp: Date.now()
+      };
+
+      db.ref("notifikasi/pesanTerbaru").set(data).then(() => {
+        document.getElementById("pesan").value = "";
+      });
+    }
+
     function handleKeyPress(event) {
-  if (event.key === "Enter" && !event.ctrlKey) {
-    event.preventDefault();
-    kirimPesan();
-  } else if (event.key === "Enter" && event.ctrlKey) {
-    const textarea = document.getElementById("pesan");
-    const cursorPos = textarea.selectionStart;
-    const textBefore = textarea.value.substring(0, cursorPos);
-    const textAfter = textarea.value.substring(cursorPos);
-    textarea.value = textBefore + "\n" + textAfter;
-    textarea.selectionStart = textarea.selectionEnd = cursorPos + 1;
-    event.preventDefault();
-  }
-}
-  </script>
+      if (event.key === "Enter" && !event.ctrlKey) {
+        event.preventDefault();
+        kirimPesan();
+      } else if (event.key === "Enter" && event.ctrlKey) {
+        const textarea = document.getElementById("pesan");
+        const cursorPos = textarea.selectionStart;
+        const textBefore = textarea.value.substring(0, cursorPos);
+        const textAfter = textarea.value.substring(cursorPos);
+        textarea.value = textBefore + "\n" + textAfter;
+        textarea.selectionStart = textarea.selectionEnd = cursorPos + 1;
+        event.preventDefault();
+      }
+    }
 
+    renderNotices();
+  </script>
 </body>
 </html>
