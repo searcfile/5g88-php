@@ -252,14 +252,14 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  let isCreating = false;
-  let noticeData = [];
-  const noticeList = document.getElementById('noticeList');
-
   const encodedAllowedEmail = "NWc4OC5vZmZpY2FsQGdtYWlsLmNvbQ==";
   const allowedAdmin = atob(encodedAllowedEmail);
   const urlParams = new URLSearchParams(window.location.search);
   const adminEmail = atob(urlParams.get("admin") || "");
+
+  let isCreating = false;
+  let noticeData = [];
+  const noticeList = document.getElementById('noticeList');
 
   function renderNotices() {
     noticeList.innerHTML = '';
