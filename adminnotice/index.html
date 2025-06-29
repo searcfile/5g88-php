@@ -167,7 +167,8 @@
 
   function renderNotices() {
   noticeList.innerHTML = '';
-  noticeData.forEach(({ id, text, title }) => {
+  const sorted = [...noticeData].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+  sorted.forEach(({ id, text, title }) => {
     const row = document.createElement('div');
     row.className = 'notice-row';
 
@@ -215,7 +216,11 @@
       const newText = textarea.value.trim();
       const newTitle = judulInput.value.trim();
       if (!newText) return;
-      db.ref("notifikasi/list/" + id).set({ text: newText, title: newTitle });
+       db.ref("notifikasi/list/" + id).set({
+        text: newText,
+        title: newTitle,
+        timestamp: Date.now() // tambahkan waktu saat edit juga
+      });
     };
 
     const delBtn = document.createElement('button');
@@ -265,7 +270,11 @@ function createNotice() {
     const newTitle = judulInput.value.trim();
     if (!newText) return;
     const newId = db.ref().child("notifikasi/list").push().key;
-    db.ref("notifikasi/list/" + newId).set({ text: newText, title: newTitle });
+    db.ref("notifikasi/list/" + newId).set({
+    text: newText,
+    title: newTitle,
+    timestamp: Date.now()
+    });
     isCreating = false;
   };
 
