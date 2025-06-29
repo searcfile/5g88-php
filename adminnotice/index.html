@@ -189,6 +189,7 @@
     const textarea = document.createElement('textarea');
     textarea.value = text;
     textarea.disabled = true;
+    textarea.style.resize = 'none';
 
     const sendBtn = document.createElement('button');
     sendBtn.className = 'btn-send';
@@ -261,6 +262,7 @@ function createNotice() {
 
   const textarea = document.createElement('textarea');
   textarea.placeholder = 'Type new message...';
+  textarea.style.resize = 'none';
 
   const saveBtn = document.createElement('button');
   saveBtn.className = 'btn-save';
