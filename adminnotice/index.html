@@ -124,6 +124,18 @@
       background: #1668dc;
       font-size: 30px;
     }
+   .main-header {
+  width: 100%;
+  text-align: center;
+  font-size: 30px;
+  font-weight: bold;
+  background-color: #1668dc;
+  color: gold;
+  padding: 15px;
+  border-bottom: 1px solid #444;
+  margin-bottom: 20px;
+  border-radius: 6px 6px 0 0;
+}
   </style>
 </head>
 <body>
@@ -137,10 +149,10 @@
   </div>
 
   <div class="main">
-    <h2>FLY NOTICE</h2>
-    <textarea id="pesan" placeholder="Type Your Notice HERE..." onkeydown="handleKeyPress(event)"></textarea><br>
-    <button onclick="kirimPesan()">FLY NOTICE!</button>
-  </div>
+  <div class="main-header">FLY NOTICE</div>
+  <textarea id="pesan" placeholder="Type Your Notice HERE..." onkeydown="handleKeyPress(event)"></textarea><br>
+  <button onclick="kirimPesan()">FLY NOTICE!</button>
+</div>
 
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
