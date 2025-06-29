@@ -18,55 +18,75 @@
       width: 100%;
       max-width: 600px;
       background-color: #1a1a1a;
-      padding: 15px;
-      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
       border-right: 2px solid #333;
     }
 
-    .sidebar h3 {
-      margin-top: 0;
-      color: #fff;
+    .sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      border-bottom: 1px solid #333;
+    }
+
+    .sidebar-header h3 {
+      margin: 0;
+      font-size: 20px;
+      color: white;
+    }
+
+    .btn-create {
+      background-color: gold;
+      color: black;
+      padding: 8px 12px;
+      font-size: 13px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .notice-scroll {
+      padding: 15px;
+      overflow-y: auto;
+      flex-grow: 1;
     }
 
     .notice-row {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 6px;
     }
 
     .notice-row input[type="text"] {
       flex: 1;
+      min-width: 200px;
       padding: 8px;
       font-size: 14px;
       border: none;
       border-radius: 4px;
       background-color: #111;
       color: gold;
-      margin-right: 6px;
+      word-break: break-word;
     }
 
     .notice-row button {
-      margin-right: 4px;
       padding: 6px 10px;
       font-size: 13px;
       border: none;
       border-radius: 4px;
       cursor: pointer;
       color: white;
+      white-space: nowrap;
     }
 
     .btn-send { background-color: #1668dc; }
     .btn-edit { background-color: #999; }
     .btn-save { background-color: green; }
     .btn-delete { background-color: red; }
-    .btn-create {
-      background-color: gold;
-      color: black;
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      font-weight: bold;
-    }
 
     .main {
       flex-grow: 1;
@@ -103,9 +123,11 @@
 <body>
 
   <div class="sidebar">
-    <h3>Instant Messages</h3>
-    <div id="noticeList"></div>
-    <button class="btn-create" onclick="createNotice()">+ Create New</button>
+    <div class="sidebar-header">
+      <h3>Instant Messages</h3>
+      <button class="btn-create" onclick="createNotice()">+ Create</button>
+    </div>
+    <div id="noticeList" class="notice-scroll"></div>
   </div>
 
   <div class="main">
