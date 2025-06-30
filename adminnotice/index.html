@@ -515,7 +515,6 @@ function renderNotices() {
     daySelect.appendChild(option);
   }
 
-  // Saat dropdown dipilih → update waktu otomatis
   daySelect.addEventListener("change", () => {
     const days = parseInt(daySelect.value);
     const future = new Date();
@@ -554,16 +553,21 @@ function renderNotices() {
       text: newText,
       title: newTitle,
       timestamp: Date.now()
+    }).then(() => {
+      // Simpan setting waktu ke localStorage
+      localStorage.setItem(`autoSend_${newId}`, JSON.stringify({
+        time: timeInput.value,
+        enabled: toggle.classList.contains("active"),
+        selectedDay: daySelect.value
+      }));
+
+      // ✅ Hapus form input
+      row.remove();
+      isCreating = false;
+
+      // 🔁 Refresh tampilan list
+      renderNotices();
     });
-
-    // Simpan setting waktu ke localStorage
-    localStorage.setItem(`autoSend_${newId}`, JSON.stringify({
-      time: timeInput.value,
-      enabled: toggle.classList.contains("active"),
-      selectedDay: daySelect.value
-    }));
-
-    isCreating = false;
   };
 
   const cancelBtn = document.createElement('button');
