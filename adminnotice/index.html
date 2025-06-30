@@ -152,11 +152,32 @@ button:active {
   color: white;
   font-size: 30px;
 }
-  #kirimPesan,#clearPesan:hover {
-   background-color: rgb(0 60 180 / 15%);
+  .btn-fly, .btn-clear {
+  padding: 10px 20px;
+  font-size: 16px;
   color: white;
-  transition: background-color 0.2s ease;
-  box-shadow: 0 2px 6px rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-fly {
+  background-color: #1668dc;
+}
+
+.btn-fly:hover {
+  background-color: rgb(0 60 180 / 15%);
+  box-shadow: 0 2px 8px rgba(22, 104, 220, 0.5);
+}
+
+.btn-clear {
+  background-color: red;
+}
+
+.btn-clear:hover {
+  background-color: rgb(0 60 180 / 15%);
+  box-shadow: 0 2px 8px rgba(255, 0, 0, 0.4);
 }
   </style>
 </head>
@@ -178,8 +199,8 @@ button:active {
   <div class="main-body">
     <textarea id="pesan" placeholder="Type Your Notice HERE..." onkeydown="handleKeyPress(event)"></textarea><br>
  <div style="display: flex; gap: 10px; margin-top: 15px;">
-  <button onclick="kirimPesan()">FLY NOTICE!</button>
-  <button onclick="clearPesan()" style="background-color: red;">🗑️ CLEAR TEXT</button>
+  <button class="btn-fly" onclick="kirimPesan()">FLY NOTICE!</button>
+  <button class="btn-clear" onclick="clearPesan()">🗑️ CLEAR TEXT</button>
 </div>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
