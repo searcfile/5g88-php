@@ -171,10 +171,10 @@ button:active {
 
   <div class="main-body">
     <textarea id="pesan" placeholder="Type Your Notice HERE..." onkeydown="handleKeyPress(event)"></textarea><br>
-    <button onclick="kirimPesan()">FLY NOTICE!</button>
-  </div>
+ <div style="display: flex; gap: 10px; margin-top: 15px;">
+  <button onclick="kirimPesan()">FLY NOTICE!</button>
+  <button onclick="clearPesan()" style="background-color: darkred;">🗑️ CLEAR TEXT</button>
 </div>
-
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
@@ -384,6 +384,10 @@ button:active {
     noticeData = Object.entries(raw).map(([id, val]) => ({ id, ...val }));
     renderNotices();
   });
+function clearPesan() {
+  pesanTextarea.value = "";
+  localStorage.removeItem("lastNoticeMessage");
+}
 </script>
   </script>
 </body>
