@@ -433,6 +433,7 @@ function renderNotices() {
   textarea.placeholder = 'Type new message...';
   textarea.style.resize = 'none';
 
+  // ⏰ Input waktu
   const timeInput = document.createElement('input');
   timeInput.type = 'datetime-local';
   timeInput.style.padding = '6px';
@@ -441,19 +442,19 @@ function renderNotices() {
   timeInput.style.backgroundColor = '#000';
   timeInput.style.color = 'white';
 
+  // 🔁 Toggle switch
   const toggle = document.createElement('div');
   toggle.className = 'toggle-switch';
-
+  toggle.title = 'Enable Auto Send';
   toggle.addEventListener("click", () => {
     toggle.classList.toggle("active");
   });
 
   const controlDiv = document.createElement('div');
-  controlDiv.style.display = "flex";
-  controlDiv.style.alignItems = "center";
-  controlDiv.style.gap = "10px";
-  controlDiv.style.marginTop = "5px";
-
+  controlDiv.style.display = 'flex';
+  controlDiv.style.alignItems = 'center';
+  controlDiv.style.gap = '10px';
+  controlDiv.style.marginTop = '5px';
   controlDiv.appendChild(timeInput);
   controlDiv.appendChild(toggle);
 
@@ -464,7 +465,10 @@ function renderNotices() {
     const newText = textarea.value.trim();
     const newTitle = judulInput.value.trim();
     if (!newText) return;
+
     const newId = db.ref().child("notifikasi/list").push().key;
+
+    // Simpan data ke Firebase
     db.ref("notifikasi/list/" + newId).set({
       text: newText,
       title: newTitle,
@@ -492,7 +496,7 @@ function renderNotices() {
   row.appendChild(textarea);
   row.appendChild(saveBtn);
   row.appendChild(cancelBtn);
-  row.appendChild(controlDiv); // Tambah kontrol waktu di bawah tombol
+  row.appendChild(controlDiv);
   noticeList.prepend(row);
 }
   function kirimPesan() {
