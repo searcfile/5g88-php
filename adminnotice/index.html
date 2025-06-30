@@ -503,7 +503,6 @@ function startCountdown(targetTime, el) {
   textarea.placeholder = 'Type new message...';
   textarea.style.resize = 'none';
 
-  // ⏰ Input waktu
   const timeInput = document.createElement('input');
   timeInput.type = 'datetime-local';
   timeInput.style.padding = '6px';
@@ -512,22 +511,20 @@ function startCountdown(targetTime, el) {
   timeInput.style.backgroundColor = '#000';
   timeInput.style.color = 'white';
 
-  // ⏳ Countdown Text
   const countdownText = document.createElement('div');
   countdownText.style.color = 'gray';
   countdownText.style.fontSize = '14px';
   countdownText.style.fontWeight = 'bold';
   countdownText.textContent = '00:00:00';
 
-  // 🔁 Toggle switch
   const toggle = document.createElement('div');
   toggle.className = 'toggle-switch';
   toggle.title = 'Enable Auto Send';
+  toggle.style.cursor = 'pointer';
   toggle.addEventListener("click", () => {
     toggle.classList.toggle("active");
   });
 
-  // 📅 Dropdown 1-31 hari
   const daySelect = document.createElement('select');
   daySelect.style.padding = '6px';
   daySelect.style.borderRadius = '4px';
@@ -547,36 +544,54 @@ function startCountdown(targetTime, el) {
     daySelect.appendChild(option);
   }
 
+  // ⏱️ Countdown handler
+  function startCountdownInCreate(targetTime) {
+    clearInterval(countdownText._timer);
+    function update() {
+      const now = Date.now();
+      const diff = targetTime - now;
+      if (diff <= 0) {
+        countdownText.textContent = "00:00:00";
+        countdownText.style.color = "gray";
+        clearInterval(countdownText._timer);
+        return;
+      }
+      const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
+      const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+      const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+      countdownText.textContent = `${h}:${m}:${s}`;
+      countdownText.style.color = diff < 300000 ? "red" : "lime";
+    }
+    update();
+    countdownText._timer = setInterval(update, 1000);
+  }
+
   daySelect.addEventListener("change", () => {
     const days = parseInt(daySelect.value);
     const future = new Date();
     future.setDate(future.getDate() + days);
     future.setSeconds(0);
     future.setMilliseconds(0);
-
     const formatted = future.toISOString().slice(0, 16);
     timeInput.value = formatted;
-    startCountdown(future.getTime(), countdownText);
+    startCountdownInCreate(future.getTime());
   });
 
   timeInput.addEventListener("change", () => {
-    const targetTime = new Date(timeInput.value).getTime();
-    startCountdown(targetTime, countdownText);
+    const t = new Date(timeInput.value).getTime();
+    startCountdownInCreate(t);
   });
 
-  // 🔧 Control wrapper
   const controlDiv = document.createElement('div');
   controlDiv.style.display = 'flex';
   controlDiv.style.alignItems = 'center';
   controlDiv.style.gap = '10px';
   controlDiv.style.marginTop = '5px';
-
   controlDiv.appendChild(timeInput);
   controlDiv.appendChild(daySelect);
   controlDiv.appendChild(toggle);
   controlDiv.appendChild(countdownText);
 
-  // ✅ Tombol Save
   const saveBtn = document.createElement('button');
   saveBtn.className = 'btn-save';
   saveBtn.textContent = 'Save';
@@ -587,24 +602,23 @@ function startCountdown(targetTime, el) {
 
     const newId = db.ref().child("notifikasi/list").push().key;
 
-    // Simpan ke Firebase
     db.ref("notifikasi/list/" + newId).set({
       text: newText,
       title: newTitle,
       timestamp: Date.now()
     }).then(() => {
-      // Simpan setting waktu ke localStorage
-      localStorage.setItem(`autoSend_${newId}`, JSON.stringify({
-        time: timeInput.value,
-        enabled: toggle.classList.contains("active"),
-        selectedDay: daySelect.value
-      }));
+      // Hanya simpan autoSend jika waktu valid
+      if (timeInput.value) {
+        localStorage.setItem(`autoSend_${newId}`, JSON.stringify({
+          time: timeInput.value,
+          enabled: toggle.classList.contains("active"),
+          selectedDay: daySelect.value
+        }));
+      }
 
-      // ✅ Hapus form input
+      clearInterval(countdownText._timer);
       row.remove();
       isCreating = false;
-
-      // 🔁 Refresh tampilan list
       renderNotices();
     });
   };
@@ -613,8 +627,9 @@ function startCountdown(targetTime, el) {
   cancelBtn.className = 'btn-delete';
   cancelBtn.textContent = 'Cancel';
   cancelBtn.onclick = () => {
-    isCreating = false;
+    clearInterval(countdownText._timer);
     row.remove();
+    isCreating = false;
   };
 
   row.appendChild(judulInput);
