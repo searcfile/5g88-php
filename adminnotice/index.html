@@ -102,7 +102,7 @@
    background-color: rgb(0 60 180 / 15%);
   color: white;
   transition: background-color 0.2s ease;
-      box-shadow: 0 2px 6px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 6px rgba(255, 255, 255, 0.2);
 }
 button:active {
     color: rgba(255, 255, 255, 0.6);
@@ -152,6 +152,12 @@ button:active {
   color: white;
   font-size: 30px;
 }
+  #kirimPesan,#clearPesan:hover {
+   background-color: rgb(0 60 180 / 15%);
+  color: white;
+  transition: background-color 0.2s ease;
+  box-shadow: 0 2px 6px rgba(255, 255, 255, 0.2);
+}
   </style>
 </head>
 <body>
@@ -173,7 +179,7 @@ button:active {
     <textarea id="pesan" placeholder="Type Your Notice HERE..." onkeydown="handleKeyPress(event)"></textarea><br>
  <div style="display: flex; gap: 10px; margin-top: 15px;">
   <button onclick="kirimPesan()">FLY NOTICE!</button>
-  <button onclick="clearPesan()" style="background-color: darkred;">🗑️ CLEAR TEXT</button>
+  <button onclick="clearPesan()" style="background-color: red;">🗑️ CLEAR TEXT</button>
 </div>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -235,7 +241,7 @@ button:active {
       sendBtn.textContent = 'Send';
       sendBtn.onclick = () => {
         pesanTextarea.value = text;
-        localStorage.setItem("lastNoticeMessage", text); // simpan ke localStorage juga
+        localStorage.setItem("lastNoticeMessage", text);
         kirimPesan();
       };
 
@@ -365,7 +371,7 @@ button:active {
     }
   }
 
-  // Ambil pesan dari localStorage saat halaman dimuat
+  
   window.addEventListener("DOMContentLoaded", function () {
     const saved = localStorage.getItem("lastNoticeMessage");
     if (saved) {
@@ -373,12 +379,11 @@ button:active {
     }
   });
 
-  // Simpan ke localStorage saat pengguna mengetik
   pesanTextarea.addEventListener("input", function () {
     localStorage.setItem("lastNoticeMessage", pesanTextarea.value);
   });
 
-  // Auto-load data list
+
   db.ref("notifikasi/list").on("value", (snapshot) => {
     const raw = snapshot.val() || {};
     noticeData = Object.entries(raw).map(([id, val]) => ({ id, ...val }));
