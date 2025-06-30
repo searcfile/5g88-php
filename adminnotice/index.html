@@ -326,14 +326,12 @@ function renderNotices() {
       localStorage.removeItem(`autoSend_${id}`);
     };
 
-    // 🔧 Kontrol
     const controlDiv = document.createElement('div');
     controlDiv.style.display = "flex";
     controlDiv.style.alignItems = "center";
     controlDiv.style.gap = "10px";
     controlDiv.style.marginTop = "5px";
 
-    // ⏰ Waktu kirim
     const timeInput = document.createElement('input');
     timeInput.type = 'datetime-local';
     timeInput.style.padding = '6px';
@@ -342,13 +340,17 @@ function renderNotices() {
     timeInput.style.backgroundColor = '#000';
     timeInput.style.color = 'white';
 
-    // 🔁 Toggle switch
+    const countdownText = document.createElement('div');
+    countdownText.style.color = 'lime';
+    countdownText.style.fontSize = '14px';
+    countdownText.style.fontWeight = 'bold';
+    countdownText.textContent = '00:00:00';
+
     const toggle = document.createElement('div');
     toggle.className = 'toggle-switch';
     toggle.title = 'Enable Auto Send';
     toggle.style.marginLeft = 'auto';
 
-    // 📅 Dropdown hari
     const daySelect = document.createElement('select');
     daySelect.style.padding = '6px';
     daySelect.style.borderRadius = '4px';
@@ -357,10 +359,7 @@ function renderNotices() {
     daySelect.style.color = 'white';
 
     const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
+    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
     for (let i = 1; i <= daysInMonth; i++) {
       const option = document.createElement('option');
       option.value = i;
@@ -368,15 +367,16 @@ function renderNotices() {
       daySelect.appendChild(option);
     }
 
-    // 🔄 Ambil data dari localStorage
     const savedAuto = JSON.parse(localStorage.getItem(`autoSend_${id}`)) || {};
-    if (savedAuto.time) timeInput.value = savedAuto.time;
+    if (savedAuto.time) {
+      timeInput.value = savedAuto.time;
+      startCountdown(new Date(savedAuto.time).getTime(), countdownText);
+    }
     if (savedAuto.enabled) toggle.classList.add("active");
     if (savedAuto.selectedDay) daySelect.value = savedAuto.selectedDay;
 
     const isToggleOn = () => toggle.classList.contains("active");
 
-    // Saat dropdown berubah → update waktu dan simpan
     daySelect.addEventListener("change", () => {
       const days = parseInt(daySelect.value);
       const future = new Date();
@@ -385,6 +385,7 @@ function renderNotices() {
       future.setMilliseconds(0);
       const formatted = future.toISOString().slice(0, 16);
       timeInput.value = formatted;
+      startCountdown(future.getTime(), countdownText);
 
       localStorage.setItem(`autoSend_${id}`, JSON.stringify({
         time: formatted,
@@ -393,8 +394,9 @@ function renderNotices() {
       }));
     });
 
-    // Saat waktu manual diubah
     timeInput.addEventListener("change", () => {
+      const manualTime = new Date(timeInput.value).getTime();
+      startCountdown(manualTime, countdownText);
       localStorage.setItem(`autoSend_${id}`, JSON.stringify({
         time: timeInput.value,
         enabled: isToggleOn(),
@@ -402,7 +404,6 @@ function renderNotices() {
       }));
     });
 
-    // Toggle on/off
     toggle.addEventListener("click", () => {
       toggle.classList.toggle("active");
       localStorage.setItem(`autoSend_${id}`, JSON.stringify({
@@ -412,8 +413,9 @@ function renderNotices() {
       }));
     });
 
-    // 🔂 Timer auto-send
-    setInterval(() => {
+    // ⏱️ Countdown auto-send
+    if (row._interval) clearInterval(row._interval);
+    row._interval = setInterval(() => {
       const target = new Date(timeInput.value).getTime();
       const now = Date.now();
       if (
@@ -443,6 +445,7 @@ function renderNotices() {
     controlDiv.appendChild(timeInput);
     controlDiv.appendChild(daySelect);
     controlDiv.appendChild(toggle);
+    controlDiv.appendChild(countdownText);
 
     row.appendChild(judulInput);
     row.appendChild(textarea);
@@ -454,6 +457,28 @@ function renderNotices() {
     noticeList.appendChild(row);
   });
 }
+
+function startCountdown(targetTime, el) {
+  clearInterval(el._timer);
+  function update() {
+    const now = Date.now();
+    const diff = targetTime - now;
+    if (diff <= 0) {
+      el.textContent = "00:00:00";
+      el.style.color = "gray";
+      clearInterval(el._timer);
+      return;
+    }
+    const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
+    const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+    const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+    el.textContent = `${h}:${m}:${s}`;
+    el.style.color = diff < 300000 ? "red" : "lime"; // merah jika < 5 menit
+  }
+  update();
+  el._timer = setInterval(update, 1000);
+}
+
   function createNotice() {
   if (isCreating) return;
   isCreating = true;
@@ -463,7 +488,7 @@ function renderNotices() {
 
   const judulInput = document.createElement('input');
   judulInput.type = 'text';
-  judulInput.placeholder = 'Tittle Message...';
+  judulInput.placeholder = 'Title Message...';
   judulInput.style.cssText = `
     width: 100%;
     padding: 6px;
@@ -486,6 +511,13 @@ function renderNotices() {
   timeInput.style.border = '1px solid #555';
   timeInput.style.backgroundColor = '#000';
   timeInput.style.color = 'white';
+
+  // ⏳ Countdown Text
+  const countdownText = document.createElement('div');
+  countdownText.style.color = 'gray';
+  countdownText.style.fontSize = '14px';
+  countdownText.style.fontWeight = 'bold';
+  countdownText.textContent = '00:00:00';
 
   // 🔁 Toggle switch
   const toggle = document.createElement('div');
@@ -524,6 +556,12 @@ function renderNotices() {
 
     const formatted = future.toISOString().slice(0, 16);
     timeInput.value = formatted;
+    startCountdown(future.getTime(), countdownText);
+  });
+
+  timeInput.addEventListener("change", () => {
+    const targetTime = new Date(timeInput.value).getTime();
+    startCountdown(targetTime, countdownText);
   });
 
   // 🔧 Control wrapper
@@ -536,6 +574,7 @@ function renderNotices() {
   controlDiv.appendChild(timeInput);
   controlDiv.appendChild(daySelect);
   controlDiv.appendChild(toggle);
+  controlDiv.appendChild(countdownText);
 
   // ✅ Tombol Save
   const saveBtn = document.createElement('button');
@@ -637,6 +676,5 @@ function clearPesan() {
   localStorage.removeItem("lastNoticeMessage");
 }
 </script>
-  </script>
 </body>
 </html>
