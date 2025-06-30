@@ -503,7 +503,6 @@ function renderNotices() {
   daySelect.style.backgroundColor = '#000';
   daySelect.style.color = 'white';
 
-  // Hitung hari dalam bulan ini
   const today = new Date();
   const year = today.getFullYear();
   const month = today.getMonth();
@@ -516,6 +515,7 @@ function renderNotices() {
     daySelect.appendChild(option);
   }
 
+  // Saat dropdown dipilih → update waktu otomatis
   daySelect.addEventListener("change", () => {
     const days = parseInt(daySelect.value);
     const future = new Date();
@@ -523,7 +523,6 @@ function renderNotices() {
     future.setSeconds(0);
     future.setMilliseconds(0);
 
-    // Format ke YYYY-MM-DDTHH:mm
     const formatted = future.toISOString().slice(0, 16);
     timeInput.value = formatted;
   });
@@ -536,8 +535,8 @@ function renderNotices() {
   controlDiv.style.marginTop = '5px';
 
   controlDiv.appendChild(timeInput);
-  controlDiv.appendChild(toggle);
   controlDiv.appendChild(daySelect);
+  controlDiv.appendChild(toggle);
 
   // ✅ Tombol Save
   const saveBtn = document.createElement('button');
@@ -560,7 +559,8 @@ function renderNotices() {
     // Simpan setting waktu ke localStorage
     localStorage.setItem(`autoSend_${newId}`, JSON.stringify({
       time: timeInput.value,
-      enabled: toggle.classList.contains("active")
+      enabled: toggle.classList.contains("active"),
+      selectedDay: daySelect.value
     }));
 
     isCreating = false;
