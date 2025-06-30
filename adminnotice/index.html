@@ -346,8 +346,6 @@ button:active {
     };
 
     db.ref("notifikasi/pesanTerbaru").set(data).then(() => {
-      pesanTextarea.value = "";
-      localStorage.removeItem("lastNoticeMessage"); // hapus dari localStorage setelah kirim
     });
   }
 
