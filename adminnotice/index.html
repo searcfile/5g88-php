@@ -368,14 +368,18 @@ function renderNotices() {
     }
 
     const savedAuto = JSON.parse(localStorage.getItem(`autoSend_${id}`)) || {};
-    if (savedAuto.time) {
-      timeInput.value = savedAuto.time;
-      startCountdown(new Date(savedAuto.time).getTime(), countdownText);
-    }
+    if (savedAuto.time) timeInput.value = savedAuto.time;
     if (savedAuto.enabled) toggle.classList.add("active");
     if (savedAuto.selectedDay) daySelect.value = savedAuto.selectedDay;
 
     const isToggleOn = () => toggle.classList.contains("active");
+
+    const updateCountdown = () => {
+      const targetTime = new Date(timeInput.value).getTime();
+      startCountdown(targetTime, countdownText, () => isToggleOn());
+    };
+
+    if (savedAuto.time) updateCountdown();
 
     daySelect.addEventListener("change", () => {
       const days = parseInt(daySelect.value);
@@ -385,7 +389,7 @@ function renderNotices() {
       future.setMilliseconds(0);
       const formatted = future.toISOString().slice(0, 16);
       timeInput.value = formatted;
-      startCountdown(future.getTime(), countdownText);
+      updateCountdown();
 
       localStorage.setItem(`autoSend_${id}`, JSON.stringify({
         time: formatted,
@@ -395,8 +399,7 @@ function renderNotices() {
     });
 
     timeInput.addEventListener("change", () => {
-      const manualTime = new Date(timeInput.value).getTime();
-      startCountdown(manualTime, countdownText);
+      updateCountdown();
       localStorage.setItem(`autoSend_${id}`, JSON.stringify({
         time: timeInput.value,
         enabled: isToggleOn(),
@@ -406,6 +409,7 @@ function renderNotices() {
 
     toggle.addEventListener("click", () => {
       toggle.classList.toggle("active");
+      updateCountdown();
       localStorage.setItem(`autoSend_${id}`, JSON.stringify({
         time: timeInput.value,
         enabled: isToggleOn(),
@@ -413,9 +417,7 @@ function renderNotices() {
       }));
     });
 
-    // ⏱️ Countdown auto-send
-    if (row._interval) clearInterval(row._interval);
-    row._interval = setInterval(() => {
+    setInterval(() => {
       const target = new Date(timeInput.value).getTime();
       const now = Date.now();
       if (
@@ -458,25 +460,35 @@ function renderNotices() {
   });
 }
 
-function startCountdown(targetTime, el) {
-  clearInterval(el._timer);
+function startCountdown(targetTime, display, isActiveCallback = () => true) {
+  clearInterval(display._timer);
+
   function update() {
     const now = Date.now();
     const diff = targetTime - now;
-    if (diff <= 0) {
-      el.textContent = "00:00:00";
-      el.style.color = "gray";
-      clearInterval(el._timer);
+
+    if (!isActiveCallback()) {
+      display.textContent = '⏸️ Paused';
+      display.style.color = 'gray';
       return;
     }
+
+    if (diff <= 0) {
+      display.textContent = "00:00:00";
+      display.style.color = "gray";
+      clearInterval(display._timer);
+      return;
+    }
+
     const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
     const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
     const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
-    el.textContent = `${h}:${m}:${s}`;
-    el.style.color = diff < 300000 ? "red" : "lime"; // merah jika < 5 menit
+    display.textContent = `${h}:${m}:${s}`;
+    display.style.color = diff < 300000 ? "red" : "lime";
   }
+
   update();
-  el._timer = setInterval(update, 1000);
+  display._timer = setInterval(update, 1000);
 }
 
   function createNotice() {
