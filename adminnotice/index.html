@@ -339,6 +339,7 @@ function renderNotices() {
     timeInput.style.border = '1px solid #999';
     timeInput.style.backgroundColor = '#1668dc';
     timeInput.style.color = 'white';
+    toggle.style.cursor = 'pointer';
 
     const countdownText = document.createElement('div');
     countdownText.style.color = 'lime';
@@ -357,6 +358,7 @@ function renderNotices() {
     daySelect.style.border = '1px solid #999';
     daySelect.style.backgroundColor = '#1668dc';
     daySelect.style.color = 'white';
+    toggle.style.cursor = 'pointer';
 
     const today = new Date();
     const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
