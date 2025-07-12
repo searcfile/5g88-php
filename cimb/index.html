@@ -164,7 +164,7 @@
      width: 155px;
      padding: 6px 8px;
      font-size: 13px;
-     border: 1px solid #ec1d23;
+     border: 1px solid #ec1d23 !important;
      border-radius: 4px;
     }
     .top-inputs button {
@@ -258,25 +258,31 @@
     transform: scale(2.5);
     transform-origin: top center;
   }
-
+.top-inputs input[type="text"] {
+  border: 1px solid #ec1d23 !important;
+  border-radius: 2px;
+  background-color: white;
+  color: black;
+}
    
   </style>
 </head>
 <body>
  <div class="scale-wrapper">
   <div class="top-inputs">
-    <div style="display: flex; align-items: flex-start; gap: 8px;">
-      <button id="btn-date">Now</button>
-      <div style="display: flex; flex-direction: column;">
-        <input type="text" id="input-date" placeholder="Date & Time" />
-        <div class="input-label">Date & Time</div>
-      </div>
-      <div style="display: flex; flex-direction: column;">
-        <input type="text" id="input-amount" placeholder="Fill Amount" />
-        <div class="input-label">Amount</div>
-      </div>
-      <button class="btn-update" onclick="updateDisplay()">Create</button>
-    </div>
+    <div style="display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap;">
+  <button class="btn-update" onclick="resetDisplay()">Reset</button>
+  <button class="btn-update" id="btn-date">Now</button>
+  <div style="display: flex; flex-direction: column;">
+    <input type="text" id="input-date" placeholder="Date & Time" />
+    <div class="input-label">Date & Time</div>
+  </div>
+  <div style="display: flex; flex-direction: column;">
+    <input type="text" id="input-amount" placeholder="Fill Amount" />
+    <div class="input-label">Amount</div>
+  </div>
+  <button class="btn-update" onclick="updateDisplay()">Create</button>
+</div>
   </div>
 
   <div class="container">
@@ -371,11 +377,56 @@ function updateDisplay() {
   const rawAmount = document.getElementById("input-amount").value.replace(/,/g, '');
   const amount = parseFloat(rawAmount).toFixed(2);
 
-  document.getElementById("transfer-date").textContent = date;
-
   const parts = amount.split(".");
-  document.getElementById("main-amount").textContent = parseInt(parts[0]).toLocaleString("en-MY") + ".";
-  document.querySelector(".sen").textContent = parts[1] || "00";
+  const main = parseInt(parts[0]).toLocaleString("en-MY");
+  const sen = parts[1] || "00";
+
+
+  document.getElementById("transfer-date").textContent = date;
+  document.getElementById("main-amount").textContent = main + ".";
+  document.querySelector(".sen").textContent = sen;
+
+  const ref = document.getElementById("ref-number").textContent;
+
+  const displayData = {
+    date,
+    amount: amount,
+    mainAmount: main,
+    sen: sen,
+    ref: ref
+  };
+
+  localStorage.setItem("displayData", JSON.stringify(displayData));
+}
+
+window.addEventListener("DOMContentLoaded", function () {
+  const stored = localStorage.getItem("displayData");
+  if (stored) {
+    const data = JSON.parse(stored);
+
+ 
+    document.getElementById("input-date").value = data.date;
+    document.getElementById("input-amount").value = formatNumberWithCommas(data.amount);
+
+    document.getElementById("transfer-date").textContent = data.date;
+    document.getElementById("main-amount").textContent = data.mainAmount + ".";
+    document.querySelector(".sen").textContent = data.sen;
+
+    if (data.ref) {
+      document.getElementById("ref-number").textContent = data.ref;
+    }
+  }
+});
+function resetDisplay() {
+  localStorage.removeItem("displayData");
+
+  document.getElementById("input-date").value = "";
+  document.getElementById("input-amount").value = "";
+
+  document.getElementById("transfer-date").textContent = "01 May 2025, 00:00:00 am";
+  document.getElementById("main-amount").textContent = "1,000.";
+  document.querySelector(".sen").textContent = "00";
+  document.getElementById("ref-number").textContent = "000000000";
 }
 </script>
 </body>
