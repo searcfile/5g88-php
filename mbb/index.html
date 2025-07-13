@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Transfer Receipt</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background-color: #f2f2f2;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 30px auto;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      background-color: white;
+    }
+
+    .header {
+      background-color: #36936b;
+      color: white;
+      padding: 20px;
+      position: relative;
+    }
+
+    .header h2 {
+      margin: 0;
+      font-weight: 500;
+    }
+
+    .header h2 span {
+      font-weight: bold;
+    }
+
+    .header p {
+      margin: 5px 0;
+    }
+
+    .favourite-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 5px;
+      color: #333;
+      font-weight: bold;
+      cursor: pointer;
+      border: 1px solid #ccc;
+    }
+
+    .content {
+      border-top: 4px solid gold;
+      padding: 20px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+
+    .row label {
+      color: #333;
+      font-weight: 500;
+    }
+
+    .row .value {
+      color: #666;
+      text-align: right;
+    }
+
+    input, select {
+      padding: 6px;
+      font-size: 16px;
+      font-family: 'Segoe UI', sans-serif;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .footer {
+      padding: 20px;
+      background-color: #fafafa;
+      border-top: 1px solid #ddd;
+    }
+
+    .footer .amount {
+      font-size: 18px;
+      color: red;
+      text-align: right;
+      font-weight: bold;
+    }
+
+    .footer .note {
+      text-align: right;
+      font-size: 13px;
+      color: #777;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>✔ Transfer To <span>TANG HON HONG</span></h2>
+      <p>140230185586</p>
+      <p id="amtDisplay">RM 145.00</p>
+      <button class="favourite-btn">★ Add to Favourite</button>
+    </div>
+
+    <div class="content">
+      <div class="row">
+        <label>Recipient's bank</label>
+        <select id="bank">
+          <option>TOUCH N GO eWALLET</option>
+          <option>Maybank</option>
+          <option>CIMB</option>
+          <option>RHB</option>
+          <option>Public Bank</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label>Transaction Type</label>
+        <div class="value">Funds Transfer</div>
+      </div>
+
+      <div class="row">
+        <label>Transfer Mode</label>
+        <div class="value">DuitNow Transfer</div>
+      </div>
+
+      <div class="row">
+        <label>Effective date</label>
+        <input type="text" id="date" value="Today 13 Jul 2025">
+      </div>
+
+      <div class="row">
+        <label>Recipient Reference</label>
+        <div class="value">Payment</div>
+      </div>
+
+      <div class="row">
+        <label>Status</label>
+        <div class="value">Successful</div>
+      </div>
+
+      <div class="row">
+        <label>Reference ID</label>
+        <div class="value">7421162640</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="row">
+        <label>Total Amount</label>
+        <input type="number" id="amountInput" value="145.00" step="0.01" onchange="updateAmount()"> 
+      </div>
+      <div class="amount" id="amountDisplay">RM 145.00</div>
+      <div class="note">Completed on Sunday 13 July 2025 at 19:40:13</div>
+    </div>
+  </div>
+
+  <script>
+    function updateAmount() {
+      const value = document.getElementById('amountInput').value;
+      document.getElementById('amountDisplay').innerText = 'RM ' + parseFloat(value).toFixed(2);
+      document.getElementById('amtDisplay').innerText = 'RM ' + parseFloat(value).toFixed(2);
+    }
+  </script>
+</body>
+</html>
