@@ -207,7 +207,7 @@
 </main>
 
   
- <audio id="notificationSound" preload="auto" src="https://easypay88.com/assets/sound/notification.wav"></audio>
+<audio id="notifSound" src="https://easypay88.com/assets/sound/notification.wav" preload="auto"></audio>
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -245,7 +245,7 @@ function desanitizeUserId(sanitized) {
 
 // Play notification sound
 function playNotificationSound() {
-  const audio = document.getElementById("notificationSound");
+  const audio = document.getElementById("notifSound");
   if (audio) {
     audio.volume = 1;
     audio.muted = false;
