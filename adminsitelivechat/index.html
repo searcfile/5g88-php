@@ -226,6 +226,11 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+    
+let userHasInteracted = false;
+document.body.addEventListener('click', () => {
+  userHasInteracted = true;
+});
 
 let activeUserIdSanitized = '';
 let activeUserIdEmail = '';
@@ -246,10 +251,11 @@ function desanitizeUserId(sanitized) {
 // Play notification sound
 function playNotificationSound() {
   const audio = document.getElementById("notifSound");
-  if (audio) {
-    audio.volume = 1;
-    audio.muted = false;
-    audio.play().catch(err => console.warn("Play sound error:", err));
+  if (audio && userHasInteracted) {
+    audio.currentTime = 0;
+    audio.play().catch(err => {
+      console.warn("🔇 Audio play blocked:", err);
+    });
   }
 }
 
