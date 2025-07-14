@@ -203,23 +203,27 @@
   </style>
 </head>
 <body>
-  <header>
-    <h1>User LiveChat</h1>
+  <header style="display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <h1>User LiveChat</h1>
+      <div id="notifDot" style="width: 12px; height: 12px; background: red; border-radius: 50%; display: none;"></div>
+    </div>
     <button onclick="toggleTheme()">Toggle Theme</button>
   </header>
+
   <main>
     <!-- CHAT HEADER -->
-   <div class="chat-header">
-  <div class="profile">
-    <img id="headerUserPhoto" src="" alt="User Photo" />
-    <div>
-      <span id="headerUserName">User</span><br>
-      <small id="typingStatus">Offline</small>
+    <div class="chat-header">
+      <div class="profile">
+        <img id="headerUserPhoto" src="" alt="User Photo" />
+        <div>
+          <span id="headerUserName">User</span><br>
+          <small id="typingStatus">Offline</small>
+        </div>
+      </div>
+      <input type="text" id="searchChat" placeholder="Search messages..." />
+      <button id="logoutBtn">Logout</button>
     </div>
-  </div>
-  <input type="text" id="searchChat" placeholder="Search messages..." />
-  <button id="logoutBtn">Logout</button> <!-- Tambah di sini -->
-</div>
 
     <div class="chat-box" id="chatBox"></div>
 
@@ -231,7 +235,8 @@
       </label>
       <button type="button" disabled>Send</button>
     </div>
-
+  </main>
+<audio id="notifSound" src="https://notificationsounds.com/storage/sounds/file-sounds-1156-just-saying.mp3" preload="auto"></audio>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -403,13 +408,17 @@
     }
   }
 
- function listenToChat(userEmail) {
+function listenToChat(userEmail) {
   const chatBox = document.getElementById('chatBox');
   const chatRef = db.ref(getChatPath(userEmail));
+  const notifDot = document.getElementById('notifDot');
+  const lastSeenKey = `lastSeenByUser_${sanitizeEmail(userEmail)}`;
 
   chatRef.on('value', snapshot => {
     chatBox.innerHTML = '';
     const chats = snapshot.val();
+    const lastSeenTime = parseInt(localStorage.getItem(lastSeenKey) || '0');
+    let latestAdminMsgTime = 0;
 
     if (chats) {
       const chatArray = Object.values(chats).sort((a, b) => a.time - b.time);
@@ -417,7 +426,6 @@
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      // Pisahkan chat berdasarkan hari
       const pastChats = [];
       const todayChats = [];
 
@@ -431,10 +439,32 @@
         } else {
           pastChats.push(c);
         }
+
+        // 🔁 Simpan waktu pesan terbaru dari admin
+        if (c.from === 'admin' && c.time > latestAdminMsgTime) {
+          latestAdminMsgTime = c.time;
+        }
       });
 
-      // Fungsi untuk render chat per kelompok dengan label tanggal
-      function renderChats(chatGroup, isTodayGroup) {
+      // 🔔 Cek apakah ada pesan baru dari admin
+      if (latestAdminMsgTime > lastSeenTime) {
+        notifDot.style.display = 'inline-block';
+        playNotificationSound(); // 🔊 bunyi notif
+      } else {
+        notifDot.style.display = 'none';
+      }
+
+      // ✅ Render isi chat setelah logika notif
+      renderChats(pastChats, false);
+      renderChats(todayChats, true);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      // 🕒 Update waktu pesan terakhir dilihat
+      localStorage.setItem(lastSeenKey, Date.now());
+    }
+  });
+}
+      function renderChats(chatGroup) {
         let lastDateKey = '';
         chatGroup.forEach(c => {
           const div = document.createElement('div');
@@ -447,7 +477,6 @@
 
           const dateKey = msgDate.toDateString();
 
-          // Label hari
           const yesterday = new Date(today);
           yesterday.setDate(yesterday.getDate() - 1);
 
@@ -466,7 +495,6 @@
             year: 'numeric'
           });
 
-          // Tampilkan label tanggal hanya sekali per tanggal
           if (dateKey !== lastDateKey) {
             const dateLabelDiv = document.createElement('div');
             dateLabelDiv.className = 'date-label';
@@ -504,18 +532,36 @@
         });
       }
 
-      // Render dulu chat dari tanggal sebelum hari ini
-      renderChats(pastChats, false);
+      renderChats(pastChats);
+      renderChats(todayChats);
 
-      // Render chat hari ini di bawah
-      renderChats(todayChats, true);
-
-      // Scroll ke bawah supaya chat hari ini terlihat
       chatBox.scrollTop = chatBox.scrollHeight;
+
+      // Simpan waktu terakhir dibaca (dari pesan terbaru, apapun pengirimnya)
+      const latestTime = chatArray[chatArray.length - 1]?.time || 0;
+      localStorage.setItem(lastSeenKey, latestTime);
+
+      // Tampilkan notif merah kalau ada pesan admin baru
+      if (latestAdminMsgTime > lastSeenTime) {
+        notifDot.style.display = 'inline-block';
+      } else {
+        notifDot.style.display = 'none';
+      }
+    } else {
+      notifDot.style.display = 'none';
     }
   });
 }
-
+  
+function playNotificationSound() {
+  const audio = document.getElementById("notifSound");
+  if (audio) {
+    audio.currentTime = 0;
+    audio.play().catch(e => {
+      console.warn("🔇 Audio autoplay blocked:", e);
+    });
+  }
+}
   function logout() {
     firebase.auth().signOut()
       .then(() => {
