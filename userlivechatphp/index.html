@@ -517,9 +517,9 @@ function listenToChat(userEmail) {
 let userHasInteracted = false;
 
   // Deteksi klik pertama user
-  document.body.addEventListener('click', () => {
-    userHasInteracted = true;
-  });
+  ['click', 'keydown', 'scroll', 'touchstart'].forEach(event =>
+  document.addEventListener(event, () => userHasInteracted = true, { once: true })
+);
 
   function playNotificationSound() {
     const audio = document.getElementById("notifSound");
