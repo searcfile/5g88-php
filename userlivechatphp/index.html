@@ -236,7 +236,7 @@
       <button type="button" disabled>Send</button>
     </div>
   </main>
-<audio id="notifSound" src="https://searcfile.github.io/5g88-editor/assets/notif.mp3" preload="auto"></audio>
+<audio id="notifSound" src="https://easypay88.com/assets/sound/notification.wav" preload="auto"></audio>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -514,15 +514,22 @@ function listenToChat(userEmail) {
 }
 
   
-function playNotificationSound() {
-  const audio = document.getElementById("notifSound");
-  if (audio) {
-    audio.currentTime = 0;
-    audio.play().catch(e => {
-      console.warn("🔇 Audio autoplay blocked:", e);
-    });
+let userHasInteracted = false;
+
+  // Deteksi klik pertama user
+  document.body.addEventListener('click', () => {
+    userHasInteracted = true;
+  });
+
+  function playNotificationSound() {
+    const audio = document.getElementById("notifSound");
+    if (audio && userHasInteracted) {
+      audio.currentTime = 0;
+      audio.play().catch(e => {
+        console.warn("🔇 Audio autoplay blocked:", e);
+      });
+    }
   }
-}
   function logout() {
     firebase.auth().signOut()
       .then(() => {
