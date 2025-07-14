@@ -233,7 +233,7 @@ let allUsersData = [];
 let lastMessageTimestamps = {};
 let selectedUserId = null;
 let allMessages = [];
-
+let isInitialChatLoad = true;
 // User ID sanitize/desanitize helpers
 function sanitizeUserId(email) {
   return email.replace(/\./g, '_').replace(/@/g, '_at_').replace(/,/g, '_');
@@ -350,31 +350,39 @@ function listenToChat() {
   chatBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
 
   chatRef.on('value', snapshot => {
-    const chats = snapshot.val();
-    if (!chats) {
-      chatBox.innerHTML = '<p style="text-align:center; color:white;">Belum ada pesan.</p>';
-      allMessages = [];
-      return;
-    }
+  const chats = snapshot.val();
+  if (!chats) {
+    chatBox.innerHTML = '<p style="text-align:center; color:white;">Belum ada pesan.</p>';
+    allMessages = [];
+    return;
+  }
 
     // Sort chats by time ascending
-    const chatEntries = Object.entries(chats).sort((a,b) => (a[1].time || 0) - (b[1].time || 0));
-    allMessages = chatEntries.map(([key, msg]) => {
-      // Mark message read if from user and unread
-      if (msg.from === 'user' && !msg.readByAdmin) {
-        db.ref(`chats/${activeUserIdSanitized}/${key}/readByAdmin`).set(true);
-        updateUserListFlags();
-        if (!lastMessageTimestamps[activeUserIdSanitized] || msg.time > lastMessageTimestamps[activeUserIdSanitized]) {
-          lastMessageTimestamps[activeUserIdSanitized] = msg.time;
+     const chatEntries = Object.entries(chats).sort((a,b) => (a[1].time || 0) - (b[1].time || 0));
+  allMessages = chatEntries.map(([key, msg]) => {
+    if (msg.from === 'user' && !msg.readByAdmin) {
+      db.ref(`chats/${activeUserIdSanitized}/${key}/readByAdmin`).set(true);
+      updateUserListFlags();
+
+      if (
+        !lastMessageTimestamps[activeUserIdSanitized] ||
+        msg.time > lastMessageTimestamps[activeUserIdSanitized]
+      ) {
+        lastMessageTimestamps[activeUserIdSanitized] = msg.time;
+
+        // ✅ Mainkan suara hanya jika bukan saat pertama load
+        if (!isInitialChatLoad) {
+          console.log("🔔 Pesan baru dari user - Mainkan suara");
           playNotificationSound();
         }
       }
-      return msg;
-    });
-
-    renderChatMessages(allMessages);
+    }
+    return msg;
   });
-}
+
+  renderChatMessages(allMessages);
+  isInitialChatLoad = false; // ✅ setelah render pertama, matikan flag ini
+});
 
 // Render user list with optional filter & search
 function renderUserList(users, filter = 'all', searchTerm = '') {
