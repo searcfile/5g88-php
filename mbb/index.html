@@ -518,37 +518,57 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
       const label = `${firstMsg.name || email} (${firstMsg.email || email})`;
       if (searchTerm && !label.toLowerCase().includes(searchTerm.toLowerCase())) return;
 
+      // === Div user container ===
       const userDiv = document.createElement('div');
       userDiv.className = 'user-item';
       userDiv.setAttribute('data-sanitized', sanitized);
-      userDiv.textContent = label + (hasUnread ? ' ❗' : '');
+      userDiv.style.display = 'flex';
+      userDiv.style.alignItems = 'center';
+      userDiv.style.gap = '10px';
       userDiv.style.cursor = 'pointer';
-      userDiv.style.padding = '4px 10px';
+      userDiv.style.padding = '6px 10px';
 
+      // === Avatar ===
+      const userImg = document.createElement('img');
+      userImg.src = firstMsg.photoURL || 'https://i.pravatar.cc/40';
+      userImg.alt = 'avatar';
+      userImg.style.width = '30px';
+      userImg.style.height = '30px';
+      userImg.style.borderRadius = '50%';
+      userImg.style.border = '1px solid gold';
+
+      // === Nama + email + ❗ label ===
+      const userLabel = document.createElement('span');
+      userLabel.textContent = label + (hasUnread ? ' ❗' : '');
+      userLabel.style.fontWeight = hasUnread ? 'bold' : 'normal';
+
+      userDiv.appendChild(userImg);
+      userDiv.appendChild(userLabel);
+
+      // === Klik user item ===
       userDiv.onclick = () => {
         activeUserIdEmail = email;
         activeUserIdSanitized = sanitized;
-        
-       const userName = formatUserName(firstMsg.name || email);
-   const avatarUrl = firstMsg.photoURL || ''; // Ambil photoURL jika ada
 
-document.getElementById("chatUserName").textContent = userName;
+        const userName = formatUserName(firstMsg.name || email);
+        const avatarUrl = firstMsg.photoURL || '';
 
-const avatarImg = document.getElementById("chatUserAvatar");
-if (avatarUrl) {
-  avatarImg.src = avatarUrl;
-  avatarImg.style.display = 'block';
-} else {
-  avatarImg.style.display = 'none';
-}
-        
+        document.getElementById("chatUserName").textContent = userName;
+
+        const avatarImg = document.getElementById("chatUserAvatar");
+        if (avatarUrl) {
+          avatarImg.src = avatarUrl;
+          avatarImg.style.display = 'block';
+        } else {
+          avatarImg.style.display = 'none';
+        }
+
         document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
         userDiv.classList.add('active');
 
         selectedUserId = sanitized;
         listenToChat();
 
-        // Clear search message input when switching user
         document.getElementById("searchMessage").value = '';
       };
 
@@ -556,7 +576,6 @@ if (avatarUrl) {
     });
   });
 }
-
 // Load user list initially and watch new users
 function loadUserList() {
   const userListBox = document.getElementById('userListBox');
