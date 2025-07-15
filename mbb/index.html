@@ -298,7 +298,16 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-    
+
+function formatUserName(name) {
+  if (!name) return 'Unknown';
+
+  const words = name.trim().split(' ');
+  if (words.length === 2 && words[0] === words[1]) {
+    return words[0]; // kalau sama, ambil satu
+  }
+  return name; // kalau beda, tampilkan semua
+}
 let userHasInteracted = false;
 document.body.addEventListener('click', () => {
   userHasInteracted = true;
@@ -495,7 +504,7 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
         activeUserIdEmail = email;
         activeUserIdSanitized = sanitized;
         
-        document.getElementById("chatUserName").textContent = firstMsg.name || email;
+       document.getElementById("chatUserName").textContent = formatUserName(firstMsg.name || email);
         
         document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
         userDiv.classList.add('active');
