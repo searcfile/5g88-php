@@ -358,58 +358,62 @@
   });
 
   async function sendMessage(userEmail) {
-    if (!userEmail) {
-      alert("❌ Gagal mengirim pesan: email tidak valid.");
-      logout();
-      return;
-    }
-
-    const msgInput = document.getElementById('msg');
-    const msg = msgInput.value.trim();
-    const fileInput = document.getElementById('fileInput');
-    const file = fileInput.files[0];
-
-    if (!msg && !file) return;
-
-    const userName = localStorage.getItem("username") || "User";
-    const time = Date.now();
-    const chatRef = db.ref(getChatPath(userEmail));
-
-    try {
-      if (file) {
-        const fileRef = storage.ref(`chat_images/${sanitizeEmail(userEmail)}/${time}_${file.name}`);
-        const snapshot = await fileRef.put(file);
-        const url = await snapshot.ref.getDownloadURL();
-        await chatRef.push({
-  from: 'user',
-  name: userName,
-  email: userEmail,
-  photoURL: localStorage.getItem("userphoto") || "",
-  text: msg,
-  time
-});
-      }
-
-      if (msg) {
-        await chatRef.push({
-  from: 'user',
-  name: userName,
-  email: userEmail,
-  photoURL: localStorage.getItem("userphoto") || "",
-  image: url,
-  time
-});
-        msgInput.value = '';
-      }
-
-      fileInput.value = '';
-      document.querySelector('.send-box button').disabled = true;
-    } catch (error) {
-      console.error("Error sending message:", error);
-      alert("❌ Gagal mengirim pesan.");
-    }
+  if (!userEmail) {
+    alert("❌ Gagal mengirim pesan: email tidak valid.");
+    logout();
+    return;
   }
 
+  const msgInput = document.getElementById('msg');
+  const msg = msgInput.value.trim();
+  const fileInput = document.getElementById('fileInput');
+  const file = fileInput.files[0];
+
+  if (!msg && !file) return;
+
+  const userName = localStorage.getItem("username") || "User";
+  const userPhoto = localStorage.getItem("userphoto") || "";
+  const time = Date.now();
+  const chatRef = db.ref(getChatPath(userEmail));
+
+  try {
+    // Jika ada gambar, upload dulu
+    if (file) {
+      const fileRef = storage.ref(`chat_images/${sanitizeEmail(userEmail)}/${time}_${file.name}`);
+      const snapshot = await fileRef.put(file);
+      const url = await snapshot.ref.getDownloadURL();
+
+      await chatRef.push({
+        from: 'user',
+        name: userName,
+        email: userEmail,
+        photoURL: userPhoto,
+        image: url,
+        time
+      });
+    }
+
+    // Jika ada teks, kirim juga
+    if (msg) {
+      await chatRef.push({
+        from: 'user',
+        name: userName,
+        email: userEmail,
+        photoURL: userPhoto,
+        text: msg,
+        time
+      });
+    }
+
+    msgInput.value = '';
+    fileInput.value = '';
+    document.querySelector('.send-box button').disabled = true;
+
+  } catch (error) {
+    console.error("Error sending message:", error);
+    alert("❌ Gagal mengirim pesan.");
+  }
+}
 function listenToChat(userEmail) {
   const chatBox = document.getElementById('chatBox');
   const chatRef = db.ref(getChatPath(userEmail));
