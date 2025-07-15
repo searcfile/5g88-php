@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LiveChat - Admin</title>
   <style>
-   :root {
+    :root {
   --bg-color: #29858f;
   --text-color: #f1f1f1;
   --primary-color: #facc15;
@@ -231,6 +231,10 @@ header {
   max-width: 400px;
   padding: 1rem;
 }
+    #chatHeaderUser img {
+  object-fit: cover;
+  border: 1px solid #ccc;
+}
   </style>
 </head>
 <body>
@@ -258,13 +262,16 @@ header {
   <div id="containerChatBox">
     <!-- Header Chat -->
     <div id="chatHeader">
-      <strong id="chatUserName">Select a user</strong>
-      <input
-        type="text"
-        id="searchMessage"
-        placeholder="Search messages..."
-      />
-    </div>
+  <div id="chatHeaderUser" style="display: flex; align-items: center; gap: 10px;">
+    <img id="chatUserAvatar" src="" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; display: none;" />
+    <strong id="chatUserName">Select a user</strong>
+  </div>
+  <input
+    type="text"
+    id="searchMessage"
+    placeholder="Search messages..."
+  />
+</div>
 
     <!-- Chat Box -->
     <div class="chat-box" id="chatBox"></div>
@@ -298,7 +305,16 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-    
+
+function formatUserName(name) {
+  if (!name) return 'Unknown';
+
+  const words = name.trim().split(' ');
+  if (words.length === 2 && words[0] === words[1]) {
+    return words[0]; // kalau sama, ambil satu
+  }
+  return name; // kalau beda, tampilkan semua
+}
 let userHasInteracted = false;
 document.body.addEventListener('click', () => {
   userHasInteracted = true;
@@ -382,9 +398,7 @@ function renderChatMessages(messages) {
 
   messages.forEach(msg => {
     const msgDate = new Date(msg.time);
-    // Pakai formatDateLabel di sini:
     const dateLabels = formatDateLabel(msgDate);
-
     const dateStr = dateLabels.day + ', ' + dateLabels.full;
 
     if (lastDate !== dateStr) {
@@ -405,14 +419,34 @@ function renderChatMessages(messages) {
 
     const div = document.createElement("div");
     div.className = 'message ' + (msg.from === 'admin' ? 'mine' : 'theirs');
-    const timeStr = msgDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    div.innerHTML = `
-      <div style="font-weight:bold;">
-        ${msg.from === 'admin' ? 'Admin' : msg.name || msg.email || 'User'}
-        <small style="font-size:0.75rem; color:#0b6906;">${timeStr}</small>
-      </div>
-      <div>${msg.text}</div>
-    `;
+
+    const timeStr = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const isUser = msg.from !== 'admin';
+    const senderName = isUser ? (msg.name || msg.email || 'User') : 'Admin';
+    const avatarImg = isUser && msg.photoURL
+      ? `<img src="${msg.photoURL}" alt="Avatar" style="width: 22px; height: 22px; border-radius: 50%; margin-right: 6px;">`
+      : '';
+
+    // Buat isi pesan
+    let messageHTML = `
+      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+        ${avatarImg}
+        <div style="font-weight: bold;">
+          ${senderName}
+          <small style="font-size: 0.75rem; color: #0b6906;">${timeStr}</small>
+        </div>
+      </div>`;
+
+    if (msg.text) {
+      messageHTML += `<div>${msg.text}</div>`;
+    }
+
+    if (msg.image) {
+      messageHTML += `<img src="${msg.image}" alt="Image" style="max-width: 100%; border-radius: 8px; margin-top: 4px;">`;
+    }
+
+    div.innerHTML = messageHTML;
     chatBox.appendChild(div);
   });
 
@@ -475,35 +509,70 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
 
     db.ref(`chats/${sanitized}`).once('value', snapshot => {
       const chatEntries = Object.values(snapshot.val() || []);
-      const firstMsg = chatEntries.find(m => m.from === 'user');
-      if (!firstMsg) return;
+      
+      const lastUserMsg = [...chatEntries]
+        .filter(m => m.from === 'user')
+        .sort((a, b) => (b.time || 0) - (a.time || 0))[0]; // user message terbaru
+
+      if (!lastUserMsg) return;
 
       const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
       if (filter === 'unread' && !hasUnread) return;
 
-      const label = `${firstMsg.name || email} (${firstMsg.email || email})`;
+      const label = `${lastUserMsg.name || email} (${lastUserMsg.email || email})`;
       if (searchTerm && !label.toLowerCase().includes(searchTerm.toLowerCase())) return;
 
+      // === Div user container ===
       const userDiv = document.createElement('div');
       userDiv.className = 'user-item';
       userDiv.setAttribute('data-sanitized', sanitized);
-      userDiv.textContent = label + (hasUnread ? ' ❗' : '');
+      userDiv.style.display = 'flex';
+      userDiv.style.alignItems = 'center';
+      userDiv.style.gap = '10px';
       userDiv.style.cursor = 'pointer';
-      userDiv.style.padding = '4px 10px';
+      userDiv.style.padding = '6px 10px';
 
+      // === Avatar ===
+      const userImg = document.createElement('img');
+      userImg.src = lastUserMsg.photoURL || 'https://i.pravatar.cc/40';
+      userImg.alt = 'avatar';
+      userImg.style.width = '30px';
+      userImg.style.height = '30px';
+      userImg.style.borderRadius = '50%';
+      userImg.style.border = '1px solid gold';
+
+      // === Nama + email + ❗ label ===
+      const userLabel = document.createElement('span');
+      userLabel.textContent = label + (hasUnread ? ' ❗' : '');
+      userLabel.style.fontWeight = hasUnread ? 'bold' : 'normal';
+
+      userDiv.appendChild(userImg);
+      userDiv.appendChild(userLabel);
+
+      // === Klik user item ===
       userDiv.onclick = () => {
         activeUserIdEmail = email;
         activeUserIdSanitized = sanitized;
-        
-        document.getElementById("chatUserName").textContent = firstMsg.name || email;
-        
+
+        const userName = formatUserName(lastUserMsg.name || email);
+        const avatarUrl = lastUserMsg.photoURL || '';
+
+        document.getElementById("chatUserName").textContent = userName;
+
+        const avatarImg = document.getElementById("chatUserAvatar");
+        if (avatarUrl) {
+          avatarImg.src = avatarUrl;
+          avatarImg.style.display = 'block';
+        } else {
+          avatarImg.style.display = 'none';
+        }
+
         document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
         userDiv.classList.add('active');
 
         selectedUserId = sanitized;
         listenToChat();
 
-        // Clear search message input when switching user
         document.getElementById("searchMessage").value = '';
       };
 
@@ -511,7 +580,6 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
     });
   });
 }
-
 // Load user list initially and watch new users
 function loadUserList() {
   const userListBox = document.getElementById('userListBox');
