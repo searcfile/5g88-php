@@ -381,22 +381,24 @@
         const snapshot = await fileRef.put(file);
         const url = await snapshot.ref.getDownloadURL();
         await chatRef.push({
-          from: 'user',
-          name: userName,
-          email: userEmail,
-          image: url,
-          time
-        });
+  from: 'user',
+  name: userName,
+  email: userEmail,
+  photoURL: localStorage.getItem("userphoto") || "",
+  text: msg,
+  time
+});
       }
 
       if (msg) {
         await chatRef.push({
-          from: 'user',
-          name: userName,
-          email: userEmail,
-          text: msg,
-          time
-        });
+  from: 'user',
+  name: userName,
+  email: userEmail,
+  photoURL: localStorage.getItem("userphoto") || "",
+  image: url,
+  time
+});
         msgInput.value = '';
       }
 
