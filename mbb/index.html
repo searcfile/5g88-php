@@ -424,10 +424,14 @@ function renderChatMessages(messages) {
     const senderName = isUser ? (msg.name || msg.email || 'User') : 'Admin';
 
     // Gunakan avatar dari data, jika tidak ada pakai default masing-masing
-    const avatarImg = msg.photoURL
-      ? `<img src="${msg.photoURL}" alt="Avatar" style="width: 22px; height: 22px; border-radius: 50%; margin-right: 6px;">`
-      : `<img src="${isUser ? 'https://i.pravatar.cc/40' : 'https://i.imgur.com/qiZFOs9.png'}" alt="Avatar" style="width: 22px; height: 22px; border-radius: 50%; margin-right: 6px;">`;
-
+    const avatarURL = msg.photoURL || (isUser ? 'https://i.pravatar.cc/40' : 'https://i.imgur.com/UhV9EWa.png');
+    const avatarImg = `
+    <img 
+    src="${avatarURL}" 
+    alt="Avatar" 
+    style="width: 24px; height: 24px; object-fit: cover; border-radius: 50%; border: 1px solid white; margin-right: 6px;"
+  >
+`;
     // HTML isi pesan
     let messageHTML = `
       <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
