@@ -398,9 +398,7 @@ function renderChatMessages(messages) {
 
   messages.forEach(msg => {
     const msgDate = new Date(msg.time);
-    // Pakai formatDateLabel di sini:
     const dateLabels = formatDateLabel(msgDate);
-
     const dateStr = dateLabels.day + ', ' + dateLabels.full;
 
     if (lastDate !== dateStr) {
@@ -421,14 +419,34 @@ function renderChatMessages(messages) {
 
     const div = document.createElement("div");
     div.className = 'message ' + (msg.from === 'admin' ? 'mine' : 'theirs');
-    const timeStr = msgDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    div.innerHTML = `
-      <div style="font-weight:bold;">
-        ${msg.from === 'admin' ? 'Admin' : msg.name || msg.email || 'User'}
-        <small style="font-size:0.75rem; color:#0b6906;">${timeStr}</small>
-      </div>
-      <div>${msg.text}</div>
-    `;
+
+    const timeStr = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const isUser = msg.from !== 'admin';
+    const senderName = isUser ? (msg.name || msg.email || 'User') : 'Admin';
+    const avatarImg = isUser && msg.photoURL
+      ? `<img src="${msg.photoURL}" alt="Avatar" style="width: 22px; height: 22px; border-radius: 50%; margin-right: 6px;">`
+      : '';
+
+    // Buat isi pesan
+    let messageHTML = `
+      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+        ${avatarImg}
+        <div style="font-weight: bold;">
+          ${senderName}
+          <small style="font-size: 0.75rem; color: #0b6906;">${timeStr}</small>
+        </div>
+      </div>`;
+
+    if (msg.text) {
+      messageHTML += `<div>${msg.text}</div>`;
+    }
+
+    if (msg.image) {
+      messageHTML += `<img src="${msg.image}" alt="Image" style="max-width: 100%; border-radius: 8px; margin-top: 4px;">`;
+    }
+
+    div.innerHTML = messageHTML;
     chatBox.appendChild(div);
   });
 
