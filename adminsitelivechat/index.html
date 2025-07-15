@@ -5,118 +5,195 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LiveChat - Admin</title>
   <style>
-    :root {
-      --bg-color: #29858f;
-      --text-color: #f1f1f1;
-      --primary-color: #facc15;
-    }
-    body.dark {
-      --bg-color: #1f1f1f;
-      --text-color: #f5f5f5;
-      --primary-color: #3b82f6;
-    }
-    body {
-      background: var(--bg-color);
-      color: #000000;
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background-color: var(--primary-color);
-      padding: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      color: var(--bg-color);
-    }
-    #chatHeader {
-      min-height: 40px;
-    }
-    .chat-box {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 1rem;
-      border: 1px solid #ddd;
-  
-      height: 70vh;
-      overflow-y: scroll;
-      background: #000000;
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
-    .chat-box::-webkit-scrollbar {
-      display: none;
-    }
-    .message {
-      padding: 0.5rem;
-      margin: 0.5rem 0;
-      border-radius: 10px;
-      max-width: 70%;
-      white-space: normal;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-    }
-    .mine {
-      background-image: linear-gradient(to bottom, #1d77ff33, #81acff, #c5ff4a);
-      color: #000000;
-      margin-left: auto;
-    }
-    .theirs {
-      background-image: linear-gradient(to bottom, #fdcb3c, #efe451, #98a1b1);
-    }
-    .send-box {
-      display: flex;
-      gap: 0.5rem;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 0;
-    }
-    .send-box input, .send-box button {
-      padding: 0.5rem;
-      font-size: 1rem;
-    }
-    .send-box input {
-      flex: 1;
-    }
-    select {
-      padding: 0.5rem;
-      margin-top: 1rem;
-      width: 80%;
-      font-size: 1rem;
-    }
-    .user-item:hover {
-    background: #e0e0e0;
-  }
-    .user-item.active {
-    background-color: gold;
-    color: black;
-    }
-    .user-item {
-      border: 1px solid #000; /* garis atas */
-      border-radius: 5px;
-      padding: 8px 10px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      background: white;
-     }
-     #msg {
-    width: 100%;
-    min-height: 20px;
-    padding: 8px;
-    font-size: 16px;
-    border-radius: 5px;
-    border: 2px solid gold;
-    resize: vertical;
-    box-sizing: border-box;
-       margin: 0 auto;
+   :root {
+  --bg-color: #29858f;
+  --text-color: #f1f1f1;
+  --primary-color: #facc15;
 }
-    #sendMessage {
-     border-radius: 5px;
-      border: 2px solid gold;
-    }
-      .date-label {
+
+body.dark {
+  --bg-color: #1f1f1f;
+  --text-color: #f5f5f5;
+  --primary-color: #3b82f6;
+}
+
+body {
+  background: var(--bg-color);
+  color: #000;
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== Header ===== */
+header {
+  background-color: var(--primary-color);
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--bg-color);
+}
+
+/* ===== Container Chat Box ===== */
+#containerChatBox {
+  background: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  padding: 15px;
+  max-width: 640px;
+  margin: 0 auto;
+  border: 1px solid #ddd;
+}
+
+/* ===== Chat Header ===== */
+#chatHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(to right, #facc15, #fef08a);
+  padding: 12px 18px;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+#chatUserName {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+/* ===== Search Message ===== */
+#searchMessage {
+  border: 1px solid #ccc;
+  padding: 6px 12px 6px 36px;
+  border-radius: 6px;
+  font-size: 14px;
+  background: url('https://cdn-icons-png.flaticon.com/512/622/622669.png') no-repeat 10px center;
+  background-size: 16px;
+  background-color: #fff8dc;
+  color: #333;
+  width: 50%;
+  transition: 0.3s;
+}
+
+#searchMessage:focus {
+  outline: none;
+  border-color: #d4af37;
+  background-color: #fff9e3;
+}
+
+/* ===== Chat Box ===== */
+.chat-box {
+  height: 60vh;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 15px;
+  background: #111;
+  color: white;
+  border-radius: 10px;
+  box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.05);
+  scroll-behavior: smooth;
+}
+
+.chat-box::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-box::-webkit-scrollbar-thumb {
+  background: #facc15;
+  border-radius: 6px;
+}
+
+.chat-box::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ===== Message Bubble ===== */
+.message {
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  border-radius: 10px;
+  max-width: 70%;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.mine {
+  background-image: linear-gradient(to bottom, #1d77ff33, #81acff, #c5ff4a);
+  color: #000;
+  margin-left: auto;
+}
+
+.theirs {
+  background-image: linear-gradient(to bottom, #fdcb3c, #efe451, #98a1b1);
+}
+
+/* ===== Send Box ===== */
+.send-box {
+  display: flex;
+  max-width: 600px;
+  margin: 10px auto 0;
+  border: 2px solid gold;
+  border-radius: 6px;
+  overflow: hidden;
+  background: white;
+}
+
+#msg {
+  flex: 1;
+  padding: 10px;
+  font-size: 14px;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.send-box button {
+  padding: 0 16px;
+  font-size: 14px;
+  background: gold;
+  border: none;
+  color: #000;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.send-box button:hover {
+  background: #e6c200;
+}
+
+.send-box button:active {
+  background: #c4a700;
+}
+
+/* ===== User List ===== */
+.user-item {
+  border: 1px solid #000;
+  border-radius: 5px;
+  padding: 8px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  background: white;
+}
+
+.user-item:hover {
+  background: #e0e0e0;
+}
+
+.user-item.active {
+  background-color: gold;
+  color: black;
+}
+
+/* ===== Date Label ===== */
+.date-label {
   text-align: center;
   margin: 20px 0;
 }
@@ -124,36 +201,36 @@
 .date-label-inner {
   display: inline-block;
   background-color: lightgreen;
-  padding: 2px 22px; /* tambah padding vertikal biar agak tinggi */
+  padding: 2px 22px;
   border-radius: 30px;
   font-size: 14px;
   color: #333;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  text-align: center; /* supaya teks di dalam center */
+  text-align: center;
   line-height: 1;
   white-space: nowrap;
 }
 
 .date-label-inner .day-label {
   font-weight: bold;
-  display: block; /* bikin baris 1 */
+  display: block;
   font-size: 16px;
 }
 
 .date-label-inner .full-date-label {
   font-size: 14px;
   color: #555;
-  display: block; /* bikin baris 2 */
+  display: block;
   margin-top: 2px;
   text-transform: capitalize;
 }
-   
+
+/* ===== Panel Optional ===== */
 .chat-panel {
   flex: 1;
   max-width: 400px;
   padding: 1rem;
 }
-
   </style>
 </head>
 <body>
@@ -178,30 +255,25 @@
   </div>
 
  <div style="flex: 0.5; padding: 1rem;">
-  <!-- Header Chat -->
-  <div id="chatHeader"
-     style="border: 1px solid #ccc; padding: 10px; background: #facc15; margin-bottom: 0; max-width: 600px; margin-left: auto; margin-right: auto;border-radius: 5px;">
-    <strong id="chatUserName">Select a user</strong>
-    <input
-      type="text"
-      id="searchMessage"
-      placeholder="Search messages..."
-      style="float: right; padding: 5px; border-radius: 4px; width: 50%;"
-    />
-    <div style="clear: both;"></div>
-  </div>
+  <div id="containerChatBox">
+    <!-- Header Chat -->
+    <div id="chatHeader">
+      <strong id="chatUserName">Select a user</strong>
+      <input
+        type="text"
+        id="searchMessage"
+        placeholder="Search messages..."
+      />
+    </div>
 
-  <!-- Chat Box -->
-  <div
-    class="chat-box"
-    id="chatBox"
-    style="height: 60vh; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;"
-  ></div>
+    <!-- Chat Box -->
+    <div class="chat-box" id="chatBox"></div>
 
-  <!-- Send Box -->
-  <div class="send-box" style="display: flex; gap: 10px;">
-    <textarea id="msg" placeholder="Type your message" rows="2" style="flex: 1;"></textarea>
-    <button onclick="sendMessage()">Send</button>
+    <!-- Send Box -->
+    <div class="send-box">
+      <textarea id="msg" placeholder="Type your message" rows="2"></textarea>
+      <button onclick="sendMessage()">Send</button>
+    </div>
   </div>
 </div>
 </main>
