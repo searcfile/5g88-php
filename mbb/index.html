@@ -117,12 +117,15 @@
       background-image: linear-gradient(to bottom, #fdcb3c, #efe451, #98a1b1);
     }
     .send-box {
-      display: flex;
-      gap: 0.5rem;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 0;
-    }
+  display: flex;
+  max-width: 600px;
+  margin: 10px auto 0;
+  gap: 0;
+  border: 2px solid gold;
+  border-radius: 6px;
+  overflow: hidden;
+  background: white;
+}
     .send-box input, .send-box button {
       padding: 0.5rem;
       font-size: 1rem;
@@ -152,17 +155,16 @@
       align-items: center;
       background: white;
      }
-     #msg {
-    width: 100%;
-    min-height: 20px;
-    padding: 8px;
-    font-size: 16px;
-    border-radius: 5px;
-    border: 2px solid gold;
-    resize: vertical;
-    box-sizing: border-box;
-       margin: 0 auto;
+    #msg {
+  flex: 1;
+  padding: 10px;
+  font-size: 14px;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: 'Segoe UI', sans-serif;
 }
+
     #sendMessage {
      border-radius: 5px;
       border: 2px solid gold;
@@ -204,7 +206,22 @@
   max-width: 400px;
   padding: 1rem;
 }
+.send-box button {
+  padding: 0 16px;
+  font-size: 14px;
+  background: gold;
+  border: none;
+  color: #000;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+    .send-box button:hover {
+  background: #e6c200;
+}
 
+.send-box button:active {
+  background: #c4a700;
+}
   </style>
 </head>
 <body>
