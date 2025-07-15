@@ -22,6 +22,15 @@
       margin: 0;
       padding: 0;
     }
+    #containerChatBox {
+  background: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  padding: 15px;
+  max-width: 640px;
+  margin: 0 auto;
+  border: 1px solid #ddd;
+}
     header {
       background-color: var(--primary-color);
       padding: 1rem;
@@ -220,30 +229,25 @@
   </div>
 
  <div style="flex: 0.5; padding: 1rem;">
-  <!-- Header Chat -->
-  <div id="chatHeader"
-     style="border: 1px solid #ccc; padding: 10px; background: #facc15; margin-bottom: 0; max-width: 600px; margin-left: auto; margin-right: auto;border-radius: 5px;">
-    <strong id="chatUserName">Select a user</strong>
-    <input
-      type="text"
-      id="searchMessage"
-      placeholder="Search messages..."
-      style="float: right; padding: 5px; border-radius: 4px; width: 50%;"
-    />
-    <div style="clear: both;"></div>
-  </div>
+  <div id="containerChatBox">
+    <!-- Header Chat -->
+    <div id="chatHeader">
+      <strong id="chatUserName">Select a user</strong>
+      <input
+        type="text"
+        id="searchMessage"
+        placeholder="Search messages..."
+      />
+    </div>
 
-  <!-- Chat Box -->
-  <div
-    class="chat-box"
-    id="chatBox"
-    style="height: 60vh; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;"
-  ></div>
+    <!-- Chat Box -->
+    <div class="chat-box" id="chatBox"></div>
 
-  <!-- Send Box -->
-  <div class="send-box" style="display: flex; gap: 10px;">
-    <textarea id="msg" placeholder="Type your message" rows="2" style="flex: 1;"></textarea>
-    <button onclick="sendMessage()">Send</button>
+    <!-- Send Box -->
+    <div class="send-box">
+      <textarea id="msg" placeholder="Type your message" rows="2"></textarea>
+      <button onclick="sendMessage()">Send</button>
+    </div>
   </div>
 </div>
 </main>
