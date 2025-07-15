@@ -177,11 +177,15 @@
     <div id="userListBox"></div>
   </div>
 
- <div style="flex: 0.5; padding: 1rem;">
-  <!-- Header Chat -->
+<div style="flex: 0.5; padding: 1rem;">
+  <!-- ✅ Chat Title Header -->
+  <div id="chatTitleHeader" style="border: 1px solid #ccc; background: gold; color: black; padding: 10px; font-size: 20px; font-weight: bold; text-align: left; max-width: 600px; margin: 0 auto 10px auto; border-radius: 5px;">
+    Select a user
+  </div>
+
+  <!-- ✅ Chat Search & Toolbar -->
   <div id="chatHeader"
      style="border: 1px solid #ccc; padding: 10px; background: #facc15; margin-bottom: 0; max-width: 600px; margin-left: auto; margin-right: auto;border-radius: 5px;">
-    <strong id="chatUserName">Select a user</strong>
     <input
       type="text"
       id="searchMessage"
@@ -191,20 +195,18 @@
     <div style="clear: both;"></div>
   </div>
 
-  <!-- Chat Box -->
+  <!-- ✅ Chat Box -->
   <div class="chat-box" id="chatBox">
-  <div id="chatContainer">
-    <div id="chatUserTitle" style="text-align: center; font-weight: bold; font-size: 18px; color: gold; margin-bottom: 10px;">
-      Chat Room
+    <div id="chatContainer">
+      <!-- Chat akan dirender di sini -->
     </div>
-    <!-- Semua chat akan tampil di sini -->
   </div>
-</div>
 
-<!-- Send Box -->
-<div class="send-box" style="display: flex; gap: 10px; max-width: 600px; margin: 10px auto;">
-  <textarea id="msg" placeholder="Type your message" rows="2" style="flex: 1;"></textarea>
-  <button onclick="sendMessage()">Send</button>
+  <!-- ✅ Send Box -->
+  <div class="send-box" style="display: flex; gap: 10px; max-width: 600px; margin: 10px auto;">
+    <textarea id="msg" placeholder="Type your message" rows="2" style="flex: 1;"></textarea>
+    <button onclick="sendMessage()">Send</button>
+  </div>
 </div>
 </main>
 
@@ -436,6 +438,7 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
         activeUserIdSanitized = sanitized;
         
         document.getElementById("chatUserName").textContent = firstMsg.name || email;
+        document.getElementById("chatTitleHeader").textContent = firstMsg.name || email;
         
         document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
         userDiv.classList.add('active');
