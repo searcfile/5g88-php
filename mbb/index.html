@@ -509,13 +509,17 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
 
     db.ref(`chats/${sanitized}`).once('value', snapshot => {
       const chatEntries = Object.values(snapshot.val() || []);
-      const firstMsg = chatEntries.find(m => m.from === 'user');
-      if (!firstMsg) return;
+      
+      const lastUserMsg = [...chatEntries]
+        .filter(m => m.from === 'user')
+        .sort((a, b) => (b.time || 0) - (a.time || 0))[0]; // user message terbaru
+
+      if (!lastUserMsg) return;
 
       const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
       if (filter === 'unread' && !hasUnread) return;
 
-      const label = `${firstMsg.name || email} (${firstMsg.email || email})`;
+      const label = `${lastUserMsg.name || email} (${lastUserMsg.email || email})`;
       if (searchTerm && !label.toLowerCase().includes(searchTerm.toLowerCase())) return;
 
       // === Div user container ===
@@ -530,7 +534,7 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
 
       // === Avatar ===
       const userImg = document.createElement('img');
-      userImg.src = firstMsg.photoURL || 'https://i.pravatar.cc/40';
+      userImg.src = lastUserMsg.photoURL || 'https://i.pravatar.cc/40';
       userImg.alt = 'avatar';
       userImg.style.width = '30px';
       userImg.style.height = '30px';
@@ -550,8 +554,8 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
         activeUserIdEmail = email;
         activeUserIdSanitized = sanitized;
 
-        const userName = formatUserName(firstMsg.name || email);
-        const avatarUrl = firstMsg.photoURL || '';
+        const userName = formatUserName(lastUserMsg.name || email);
+        const avatarUrl = lastUserMsg.photoURL || '';
 
         document.getElementById("chatUserName").textContent = userName;
 
