@@ -231,6 +231,10 @@ header {
   max-width: 400px;
   padding: 1rem;
 }
+    #chatHeaderUser img {
+  object-fit: cover;
+  border: 1px solid #ccc;
+}
   </style>
 </head>
 <body>
@@ -258,13 +262,16 @@ header {
   <div id="containerChatBox">
     <!-- Header Chat -->
     <div id="chatHeader">
-      <strong id="chatUserName">Select a user</strong>
-      <input
-        type="text"
-        id="searchMessage"
-        placeholder="Search messages..."
-      />
-    </div>
+  <div id="chatHeaderUser" style="display: flex; align-items: center; gap: 10px;">
+    <img id="chatUserAvatar" src="" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; display: none;" />
+    <strong id="chatUserName">Select a user</strong>
+  </div>
+  <input
+    type="text"
+    id="searchMessage"
+    placeholder="Search messages..."
+  />
+</div>
 
     <!-- Chat Box -->
     <div class="chat-box" id="chatBox"></div>
@@ -504,7 +511,18 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
         activeUserIdEmail = email;
         activeUserIdSanitized = sanitized;
         
-       document.getElementById("chatUserName").textContent = formatUserName(firstMsg.name || email);
+       const userName = formatUserName(firstMsg.name || email);
+   const avatarUrl = firstMsg.photoURL || ''; // Ambil photoURL jika ada
+
+document.getElementById("chatUserName").textContent = userName;
+
+const avatarImg = document.getElementById("chatUserAvatar");
+if (avatarUrl) {
+  avatarImg.src = avatarUrl;
+  avatarImg.style.display = 'block';
+} else {
+  avatarImg.style.display = 'none';
+}
         
         document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
         userDiv.classList.add('active');
