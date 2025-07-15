@@ -31,23 +31,65 @@
       color: var(--bg-color);
     }
     #chatHeader {
-      min-height: 40px;
-    }
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(to right, #facc15, #fef08a);
+  padding: 12px 18px;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+  font-size: 1rem;
+  color: #333;
+  max-width: 600px;
+  margin: 0 auto 10px auto;
+}
+    #chatUserName {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+    #searchMessage {
+  border: 1px solid #ccc;
+  padding: 6px 12px 6px 36px;
+  border-radius: 6px;
+  font-size: 14px;
+  background: url('https://cdn-icons-png.flaticon.com/512/622/622669.png') no-repeat 10px center;
+  background-size: 16px;
+  background-color: #fff8dc;
+  color: #333;
+  width: 50%;
+  transition: 0.3s;
+}
+
+#searchMessage:focus {
+  outline: none;
+  border-color: #d4af37;
+  background-color: #fff9e3;
+}
     .chat-box {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 1rem;
-      border: 1px solid #ddd;
-  
-      height: 70vh;
-      overflow-y: scroll;
-      background: #000000;
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
-    .chat-box::-webkit-scrollbar {
-      display: none;
-    }
+  height: 60vh;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 15px;
+  background: #111;
+  color: white;
+  border-radius: 10px;
+  box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.05);
+  scroll-behavior: smooth;
+}
+
+.chat-box::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-box::-webkit-scrollbar-thumb {
+  background: #facc15;
+  border-radius: 6px;
+}
+
+.chat-box::-webkit-scrollbar-track {
+  background: transparent;
+}
     .message {
       padding: 0.5rem;
       margin: 0.5rem 0;
@@ -177,15 +219,11 @@
     <div id="userListBox"></div>
   </div>
 
-<div style="flex: 0.5; padding: 1rem;">
-  <!-- ✅ Chat Title Header -->
-  <div id="chatTitleHeader" style="border: 1px solid #ccc; background: gold; color: black; padding: 10px; font-size: 20px; font-weight: bold; text-align: left; max-width: 600px; margin: 0 auto 10px auto; border-radius: 5px;">
-    Select a user
-  </div>
-
-  <!-- ✅ Chat Search & Toolbar -->
+ <div style="flex: 0.5; padding: 1rem;">
+  <!-- Header Chat -->
   <div id="chatHeader"
      style="border: 1px solid #ccc; padding: 10px; background: #facc15; margin-bottom: 0; max-width: 600px; margin-left: auto; margin-right: auto;border-radius: 5px;">
+    <strong id="chatUserName">Select a user</strong>
     <input
       type="text"
       id="searchMessage"
@@ -195,15 +233,15 @@
     <div style="clear: both;"></div>
   </div>
 
-  <!-- ✅ Chat Box -->
-  <div class="chat-box" id="chatBox">
-    <div id="chatContainer">
-      <!-- Chat akan dirender di sini -->
-    </div>
-  </div>
+  <!-- Chat Box -->
+  <div
+    class="chat-box"
+    id="chatBox"
+    style="height: 60vh; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;"
+  ></div>
 
-  <!-- ✅ Send Box -->
-  <div class="send-box" style="display: flex; gap: 10px; max-width: 600px; margin: 10px auto;">
+  <!-- Send Box -->
+  <div class="send-box" style="display: flex; gap: 10px;">
     <textarea id="msg" placeholder="Type your message" rows="2" style="flex: 1;"></textarea>
     <button onclick="sendMessage()">Send</button>
   </div>
@@ -307,23 +345,16 @@ function formatDateLabel(dateStr) {
 }
 
 function renderChatMessages(messages) {
-  const chatContainer = document.getElementById("chatContainer");
-  const chatUserTitle = document.getElementById("chatUserTitle");
-
-  if (!chatContainer) return;
-
-  chatContainer.innerHTML = "";
-
-  // Update nama user di atas chat
-  if (chatUserTitle && activeUserIdEmail) {
-    chatUserTitle.textContent = `Chat with ${activeUserIdEmail}`;
-  }
+  const chatBox = document.getElementById("chatBox");
+  chatBox.innerHTML = "";
 
   let lastDate = null;
 
   messages.forEach(msg => {
     const msgDate = new Date(msg.time);
+    // Pakai formatDateLabel di sini:
     const dateLabels = formatDateLabel(msgDate);
+
     const dateStr = dateLabels.day + ', ' + dateLabels.full;
 
     if (lastDate !== dateStr) {
@@ -331,19 +362,20 @@ function renderChatMessages(messages) {
 
       const dateLabelDiv = document.createElement("div");
       dateLabelDiv.className = "date-label";
+
       dateLabelDiv.innerHTML = `
         <div class="date-label-inner">
           <span class="day-label">${dateLabels.day}</span>
           <span class="full-date-label">${dateLabels.full}</span>
         </div>
       `;
-      chatContainer.appendChild(dateLabelDiv);
+
+      chatBox.appendChild(dateLabelDiv);
     }
 
     const div = document.createElement("div");
     div.className = 'message ' + (msg.from === 'admin' ? 'mine' : 'theirs');
     const timeStr = msgDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
     div.innerHTML = `
       <div style="font-weight:bold;">
         ${msg.from === 'admin' ? 'Admin' : msg.name || msg.email || 'User'}
@@ -351,14 +383,10 @@ function renderChatMessages(messages) {
       </div>
       <div>${msg.text}</div>
     `;
-    chatContainer.appendChild(div);
+    chatBox.appendChild(div);
   });
 
-  // Auto scroll ke bawah
-  const chatBox = document.getElementById("chatBox");
-  if (chatBox) {
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
+  chatBox.scrollTop = chatBox.scrollHeight;
 }
 // Listen to chat updates for active user
 function listenToChat() {
@@ -438,7 +466,6 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
         activeUserIdSanitized = sanitized;
         
         document.getElementById("chatUserName").textContent = firstMsg.name || email;
-        document.getElementById("chatTitleHeader").textContent = firstMsg.name || email;
         
         document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
         userDiv.classList.add('active');
