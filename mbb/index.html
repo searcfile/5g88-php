@@ -1,176 +1,589 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Transfer Receipt</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LiveChat - Admin</title>
   <style>
+    :root {
+      --bg-color: #29858f;
+      --text-color: #f1f1f1;
+      --primary-color: #facc15;
+    }
+    body.dark {
+      --bg-color: #1f1f1f;
+      --text-color: #f5f5f5;
+      --primary-color: #3b82f6;
+    }
     body {
+      background: var(--bg-color);
+      color: #000000;
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
-      background-color: #f2f2f2;
+      padding: 0;
     }
-
-    .container {
-      max-width: 700px;
-      margin: 30px auto;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      background-color: white;
-    }
-
-    .header {
-      background-color: #36936b;
-      color: white;
-      padding: 20px;
-      position: relative;
-    }
-
-    .header h2 {
-      margin: 0;
-      font-weight: 500;
-    }
-
-    .header h2 span {
-      font-weight: bold;
-    }
-
-    .header p {
-      margin: 5px 0;
-    }
-
-    .favourite-btn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: white;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 5px;
-      color: #333;
-      font-weight: bold;
-      cursor: pointer;
-      border: 1px solid #ccc;
-    }
-
-    .content {
-      border-top: 4px solid gold;
-      padding: 20px;
-    }
-
-    .row {
+    header {
+      background-color: var(--primary-color);
+      padding: 1rem;
       display: flex;
       justify-content: space-between;
-      margin-bottom: 15px;
+      align-items: center;
+      color: var(--bg-color);
     }
-
-    .row label {
-      color: #333;
-      font-weight: 500;
+    #chatHeader {
+      min-height: 40px;
     }
-
-    .row .value {
-      color: #666;
-      text-align: right;
+    .chat-box {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 1rem;
+      border: 1px solid #ddd;
+  
+      height: 70vh;
+      overflow-y: scroll;
+      background: #000000;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
-
-    input, select {
-      padding: 6px;
-      font-size: 16px;
-      font-family: 'Segoe UI', sans-serif;
+    .chat-box::-webkit-scrollbar {
+      display: none;
+    }
+    .message {
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      border-radius: 10px;
+      max-width: 70%;
+      white-space: normal;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    .mine {
+      background-image: linear-gradient(to bottom, #1d77ff33, #81acff, #c5ff4a);
+      color: #000000;
+      margin-left: auto;
+    }
+    .theirs {
+      background-image: linear-gradient(to bottom, #fdcb3c, #efe451, #98a1b1);
+    }
+    .send-box {
+      display: flex;
+      gap: 0.5rem;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 0;
+    }
+    .send-box input, .send-box button {
+      padding: 0.5rem;
+      font-size: 1rem;
+    }
+    .send-box input {
+      flex: 1;
+    }
+    select {
+      padding: 0.5rem;
+      margin-top: 1rem;
+      width: 80%;
+      font-size: 1rem;
+    }
+    .user-item:hover {
+    background: #e0e0e0;
+  }
+    .user-item.active {
+    background-color: gold;
+    color: black;
+    }
+    .user-item {
+      border: 1px solid #000; /* garis atas */
       border-radius: 5px;
-      border: 1px solid #ccc;
+      padding: 8px 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      background: white;
+     }
+     #msg {
+    width: 100%;
+    min-height: 20px;
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 2px solid gold;
+    resize: vertical;
+    box-sizing: border-box;
+       margin: 0 auto;
+}
+    #sendMessage {
+     border-radius: 5px;
+      border: 2px solid gold;
     }
+      .date-label {
+  text-align: center;
+  margin: 20px 0;
+}
 
-    .footer {
-      padding: 20px;
-      background-color: #fafafa;
-      border-top: 1px solid #ddd;
-    }
+.date-label-inner {
+  display: inline-block;
+  background-color: lightgreen;
+  padding: 2px 22px; /* tambah padding vertikal biar agak tinggi */
+  border-radius: 30px;
+  font-size: 14px;
+  color: #333;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  text-align: center; /* supaya teks di dalam center */
+  line-height: 1;
+  white-space: nowrap;
+}
 
-    .footer .amount {
-      font-size: 18px;
-      color: red;
-      text-align: right;
-      font-weight: bold;
-    }
+.date-label-inner .day-label {
+  font-weight: bold;
+  display: block; /* bikin baris 1 */
+  font-size: 16px;
+}
 
-    .footer .note {
-      text-align: right;
-      font-size: 13px;
-      color: #777;
-      margin-top: 10px;
-    }
+.date-label-inner .full-date-label {
+  font-size: 14px;
+  color: #555;
+  display: block; /* bikin baris 2 */
+  margin-top: 2px;
+  text-transform: capitalize;
+}
+   
+.chat-panel {
+  flex: 1;
+  max-width: 400px;
+  padding: 1rem;
+}
+
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h2>✔ Transfer To <span>TANG HON HONG</span></h2>
-      <p>140230185586</p>
-      <p id="amtDisplay">RM 145.00</p>
-      <button class="favourite-btn">★ Add to Favourite</button>
+  <header>
+    <h1>Admin LiveChat</h1>
+    <button onclick="toggleTheme()">Toggle Theme</button>
+  </header>
+
+  <main style="display: flex;">
+  <!-- Panel User -->
+  <div id="userList" style="width: 500px; border-right: 1px solid #ccc; padding: 1rem; overflow-y: auto; max-height: 80vh;">
+    <h3>User List</h3>
+
+    <input type="text" id="searchUser" placeholder="Cari user..." style="width: 100%; padding: 10px 5px; margin-bottom: 10px; border-radius: 5px;" />
+
+    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+      <button id="filterAll">All</button>
+      <button id="filterUnread">Unread</button>
     </div>
 
-    <div class="content">
-      <div class="row">
-        <label>Recipient's bank</label>
-        <select id="bank">
-          <option>TOUCH N GO eWALLET</option>
-          <option>Maybank</option>
-          <option>CIMB</option>
-          <option>RHB</option>
-          <option>Public Bank</option>
-        </select>
-      </div>
-
-      <div class="row">
-        <label>Transaction Type</label>
-        <div class="value">Funds Transfer</div>
-      </div>
-
-      <div class="row">
-        <label>Transfer Mode</label>
-        <div class="value">DuitNow Transfer</div>
-      </div>
-
-      <div class="row">
-        <label>Effective date</label>
-        <input type="text" id="date" value="Today 13 Jul 2025">
-      </div>
-
-      <div class="row">
-        <label>Recipient Reference</label>
-        <div class="value">Payment</div>
-      </div>
-
-      <div class="row">
-        <label>Status</label>
-        <div class="value">Successful</div>
-      </div>
-
-      <div class="row">
-        <label>Reference ID</label>
-        <div class="value">7421162640</div>
-      </div>
-    </div>
-
-    <div class="footer">
-      <div class="row">
-        <label>Total Amount</label>
-        <input type="number" id="amountInput" value="145.00" step="0.01" onchange="updateAmount()"> 
-      </div>
-      <div class="amount" id="amountDisplay">RM 145.00</div>
-      <div class="note">Completed on Sunday 13 July 2025 at 19:40:13</div>
-    </div>
+    <div id="userListBox"></div>
   </div>
 
+ <div style="flex: 0.5; padding: 1rem;">
+  <!-- Header Chat -->
+  <div id="chatHeader"
+     style="border: 1px solid #ccc; padding: 10px; background: #facc15; margin-bottom: 0; max-width: 600px; margin-left: auto; margin-right: auto;border-radius: 5px;">
+    <strong id="chatUserName">Select a user</strong>
+    <input
+      type="text"
+      id="searchMessage"
+      placeholder="Search messages..."
+      style="float: right; padding: 5px; border-radius: 4px; width: 50%;"
+    />
+    <div style="clear: both;"></div>
+  </div>
+
+  <!-- Chat Box -->
+  <div class="chat-box" id="chatBox">
+  <div id="chatContainer">
+    <div id="chatUserTitle" style="text-align: center; font-weight: bold; font-size: 18px; color: gold; margin-bottom: 10px;">
+      Chat Room
+    </div>
+    <!-- Semua chat akan tampil di sini -->
+  </div>
+</div>
+
+<!-- Send Box -->
+<div class="send-box" style="display: flex; gap: 10px; max-width: 600px; margin: 10px auto;">
+  <textarea id="msg" placeholder="Type your message" rows="2" style="flex: 1;"></textarea>
+  <button onclick="sendMessage()">Send</button>
+</div>
+</main>
+
+  
+<audio id="notifSound" src="https://easypay88.com/assets/sound/notification.wav" preload="auto"></audio>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
   <script>
-    function updateAmount() {
-      const value = document.getElementById('amountInput').value;
-      document.getElementById('amountDisplay').innerText = 'RM ' + parseFloat(value).toFixed(2);
-      document.getElementById('amtDisplay').innerText = 'RM ' + parseFloat(value).toFixed(2);
+ // Firebase config & init
+const firebaseConfig = {
+  apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
+  authDomain: "blurphp.firebaseapp.com",
+  databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "blurphp",
+  storageBucket: "blurphp.firebasedatabase.app",
+  messagingSenderId: "593904200464",
+  appId: "1:593904200464:web:cea7bc1360532c20d99395",
+  measurementId: "G-R494S2DPZ5"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+    
+let userHasInteracted = false;
+document.body.addEventListener('click', () => {
+  userHasInteracted = true;
+});
+
+let activeUserIdSanitized = '';
+let activeUserIdEmail = '';
+let allUsersData = [];
+let lastMessageTimestamps = {};
+let selectedUserId = null;
+let allMessages = [];
+let isInitialChatLoad = true;
+// User ID sanitize/desanitize helpers
+function sanitizeUserId(email) {
+  return email.replace(/\./g, '_').replace(/@/g, '_at_').replace(/,/g, '_');
+}
+
+function desanitizeUserId(sanitized) {
+  return sanitized.replace(/_at_/g, '@').replace(/_/g, '.');
+}
+
+// Play notification sound
+function playNotificationSound() {
+  const audio = document.getElementById("notifSound");
+  if (audio && userHasInteracted) {
+    audio.currentTime = 0;
+    audio.play().catch(err => {
+      console.warn("🔇 Audio play blocked:", err);
+    });
+  }
+}
+
+function formatDateLabel(dateStr) {
+  const today = new Date();
+  const date = new Date(dateStr);
+
+  function resetTime(d) {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
+  const todayReset = resetTime(today);
+  const dateReset = resetTime(date);
+
+  const diffTime = todayReset - dateReset; // ms
+
+  if (diffTime === 0) {
+    return {
+      day: "today",
+      full: date.toLocaleDateString("en-GB", {
+        year: "numeric",
+        month: "long",
+        day: "2-digit",
+      }).toLowerCase(),
+    };
+  } else if (diffTime === 86400000) {
+    return {
+      day: "yesterday",
+      full: date.toLocaleDateString("en-GB", {
+        year: "numeric",
+        month: "long",
+        day: "2-digit",
+      }).toLowerCase(),
+    };
+  } else {
+    return {
+      day: date.toLocaleDateString("en-GB", { weekday: "long" }).toLowerCase(),
+      full: date.toLocaleDateString("en-GB", {
+        year: "numeric",
+        month: "long",
+        day: "2-digit",
+      }).toLowerCase(),
+    };
+  }
+}
+
+function renderChatMessages(messages) {
+  const chatContainer = document.getElementById("chatContainer");
+  const chatUserTitle = document.getElementById("chatUserTitle");
+
+  if (!chatContainer) return;
+
+  chatContainer.innerHTML = "";
+
+  // Update nama user di atas chat
+  if (chatUserTitle && activeUserIdEmail) {
+    chatUserTitle.textContent = `Chat with ${activeUserIdEmail}`;
+  }
+
+  let lastDate = null;
+
+  messages.forEach(msg => {
+    const msgDate = new Date(msg.time);
+    const dateLabels = formatDateLabel(msgDate);
+    const dateStr = dateLabels.day + ', ' + dateLabels.full;
+
+    if (lastDate !== dateStr) {
+      lastDate = dateStr;
+
+      const dateLabelDiv = document.createElement("div");
+      dateLabelDiv.className = "date-label";
+      dateLabelDiv.innerHTML = `
+        <div class="date-label-inner">
+          <span class="day-label">${dateLabels.day}</span>
+          <span class="full-date-label">${dateLabels.full}</span>
+        </div>
+      `;
+      chatContainer.appendChild(dateLabelDiv);
     }
+
+    const div = document.createElement("div");
+    div.className = 'message ' + (msg.from === 'admin' ? 'mine' : 'theirs');
+    const timeStr = msgDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+    div.innerHTML = `
+      <div style="font-weight:bold;">
+        ${msg.from === 'admin' ? 'Admin' : msg.name || msg.email || 'User'}
+        <small style="font-size:0.75rem; color:#0b6906;">${timeStr}</small>
+      </div>
+      <div>${msg.text}</div>
+    `;
+    chatContainer.appendChild(div);
+  });
+
+  // Auto scroll ke bawah
+  const chatBox = document.getElementById("chatBox");
+  if (chatBox) {
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+}
+// Listen to chat updates for active user
+function listenToChat() {
+  if (!activeUserIdSanitized) return;
+  const chatRef = db.ref('chats/' + activeUserIdSanitized);
+  const chatBox = document.getElementById('chatBox');
+
+  chatRef.off();
+  chatBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
+
+  chatRef.on('value', snapshot => {
+    const chats = snapshot.val();
+    if (!chats) {
+      chatBox.innerHTML = '<p style="text-align:center; color:white;">Belum ada pesan.</p>';
+      allMessages = [];
+      return;
+    }
+
+    // Sort chats by time ascending
+    const chatEntries = Object.entries(chats).sort((a,b) => (a[1].time || 0) - (b[1].time || 0));
+    allMessages = chatEntries.map(([key, msg]) => {
+      if (msg.from === 'user' && !msg.readByAdmin) {
+        db.ref(`chats/${activeUserIdSanitized}/${key}/readByAdmin`).set(true);
+        updateUserListFlags();
+
+        if (
+          !lastMessageTimestamps[activeUserIdSanitized] ||
+          msg.time > lastMessageTimestamps[activeUserIdSanitized]
+        ) {
+          lastMessageTimestamps[activeUserIdSanitized] = msg.time;
+
+          // ✅ Mainkan suara hanya jika bukan saat pertama load
+          if (!isInitialChatLoad) {
+            playNotificationSound();
+          }
+        }
+      }
+      return msg;
+    });
+
+    renderChatMessages(allMessages);
+    isInitialChatLoad = false; // ✅ setelah render pertama, matikan flag ini
+  }); // ✅ ← ini menutup .on()
+} // ✅ ← Tambah
+
+// Render user list with optional filter & search
+function renderUserList(users, filter = 'all', searchTerm = '') {
+  const userListBox = document.getElementById('userListBox');
+  userListBox.innerHTML = ''; // Clear first
+
+  users.forEach(email => {
+    const sanitized = sanitizeUserId(email);
+
+    // Prevent duplicate user items
+    if (document.querySelector(`[data-sanitized="${sanitized}"]`)) return;
+
+    db.ref(`chats/${sanitized}`).once('value', snapshot => {
+      const chatEntries = Object.values(snapshot.val() || []);
+      const firstMsg = chatEntries.find(m => m.from === 'user');
+      if (!firstMsg) return;
+
+      const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
+      if (filter === 'unread' && !hasUnread) return;
+
+      const label = `${firstMsg.name || email} (${firstMsg.email || email})`;
+      if (searchTerm && !label.toLowerCase().includes(searchTerm.toLowerCase())) return;
+
+      const userDiv = document.createElement('div');
+      userDiv.className = 'user-item';
+      userDiv.setAttribute('data-sanitized', sanitized);
+      userDiv.textContent = label + (hasUnread ? ' ❗' : '');
+      userDiv.style.cursor = 'pointer';
+      userDiv.style.padding = '4px 10px';
+
+      userDiv.onclick = () => {
+        activeUserIdEmail = email;
+        activeUserIdSanitized = sanitized;
+        
+        document.getElementById("chatUserName").textContent = firstMsg.name || email;
+        
+        document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
+        userDiv.classList.add('active');
+
+        selectedUserId = sanitized;
+        listenToChat();
+
+        // Clear search message input when switching user
+        document.getElementById("searchMessage").value = '';
+      };
+
+      userListBox.appendChild(userDiv);
+    });
+  });
+}
+
+// Load user list initially and watch new users
+function loadUserList() {
+  const userListBox = document.getElementById('userListBox');
+  userListBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
+
+  db.ref('chats').once('value', snapshot => {
+    const users = Object.keys(snapshot.val() || {}).map(desanitizeUserId);
+    allUsersData = users;
+    userListBox.innerHTML = '';
+    renderUserList(users);
+  });
+}
+
+function watchNewUsers() {
+  db.ref('chats').on('child_added', snapshot => {
+    const sanitizedEmail = snapshot.key;
+    const email = desanitizeUserId(sanitizedEmail);
+    if (!allUsersData.includes(email)) {
+      allUsersData.push(email);
+      renderUserList([email]);
+    }
+  });
+}
+
+// Update unread flags on user list periodically
+function updateUserListFlags() {
+  const items = document.querySelectorAll('.user-item');
+  items.forEach(item => {
+    const sanitized = item.getAttribute('data-sanitized');
+    db.ref(`chats/${sanitized}`).once('value', snapshot => {
+      const chatEntries = Object.values(snapshot.val() || []);
+      const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
+      const email = desanitizeUserId(sanitized);
+      const firstMsg = chatEntries.find(m => m.from === 'user');
+      if (!firstMsg) return;
+
+      const labelBase = `${firstMsg.name || email} (${firstMsg.email || email})`;
+      item.textContent = labelBase + (hasUnread ? ' ❗' : '');
+      item.style.fontWeight = hasUnread ? 'bold' : 'normal';
+    });
+  });
+}
+setInterval(updateUserListFlags, 5000);
+
+// Filter chat messages by query
+function filterMessages(query) {
+  if (!query) {
+    renderChatMessages(allMessages);
+    return;
+  }
+  const filtered = allMessages.filter(m => m.text.toLowerCase().includes(query.toLowerCase()));
+  renderChatMessages(filtered);
+}
+
+function sendMessage() {
+  const msgInput = document.getElementById('msg');
+  const msg = msgInput.value.trim();
+  if (!selectedUserId || !msg) return alert("Pilih user dan tulis pesan dulu!");
+
+  const now = Date.now();
+
+  const newMsg = {
+    from: 'admin',
+    name: 'Admin',
+    email: 'admin@domain.com',
+    text: msg,
+    time: now,
+    readByAdmin: true
+  };
+
+  db.ref(`chats/${selectedUserId}`).push(newMsg, err => {
+    if (!err) {
+      msgInput.value = ''; // Kosongkan input saja
+      // JANGAN renderChatMessages di sini
+    } else {
+      alert('Gagal mengirim pesan');
+    }
+  });
+}
+
+// --- Init on window load ---
+window.onload = () => {
+  loadUserList();
+  watchNewUsers();
+
+  // Send message on Enter key (without Shift or Ctrl)
+  const msgInput = document.getElementById('msg');
+  if (msgInput) {
+    msgInput.addEventListener('keydown', e => {
+      if ((e.key === 'Enter') && !(e.shiftKey || e.ctrlKey)) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  }
+
+  // Filter all users
+  document.getElementById('filterAll').onclick = () => {
+    document.getElementById('userListBox').innerHTML = '';
+    renderUserList(allUsersData, 'all', document.getElementById('searchUser').value);
+  };
+
+  // Filter unread users
+  document.getElementById('filterUnread').onclick = () => {
+    document.getElementById('userListBox').innerHTML = '';
+    renderUserList(allUsersData, 'unread', document.getElementById('searchUser').value);
+  };
+
+  // Search users input
+  const searchUserInput = document.getElementById('searchUser');
+  if (searchUserInput) {
+    searchUserInput.addEventListener('input', e => {
+      const filterType = document.querySelector('input[name="filter"]:checked')?.value || 'all';
+      document.getElementById('userListBox').innerHTML = '';
+      renderUserList(allUsersData, filterType, e.target.value);
+    });
+  }
+
+  // Search messages input
+  const searchMessageInput = document.getElementById('searchMessage');
+  if (searchMessageInput) {
+    searchMessageInput.addEventListener('input', e => {
+      filterMessages(e.target.value);
+    });
+  }
+
+  // Send button
+  const sendBtn = document.getElementById('sendBtn');
+  if (sendBtn) {
+    sendBtn.onclick = sendMessage;
+  }
+};
   </script>
 </body>
 </html>
