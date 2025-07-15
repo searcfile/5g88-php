@@ -377,7 +377,7 @@
   const chatRef = db.ref(getChatPath(userEmail));
 
   try {
-    // Jika ada gambar, upload dulu
+    // Jika ada file, upload ke Firebase Storage
     if (file) {
       const fileRef = storage.ref(`chat_images/${sanitizeEmail(userEmail)}/${time}_${file.name}`);
       const snapshot = await fileRef.put(file);
@@ -393,7 +393,7 @@
       });
     }
 
-    // Jika ada teks, kirim juga
+    // Jika ada teks, kirim pesan teks
     if (msg) {
       await chatRef.push({
         from: 'user',
