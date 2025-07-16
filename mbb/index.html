@@ -1,105 +1,384 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>5G88 Live Chat Login</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Firebase -->
- <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LiveChat - User</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
+    :root {
+  --bg-color: #111111;
+  --text-color: #ffffff;
+  --primary-color: #facc15;
+}
+
+body.dark {
+  --bg-color: #1f1f1f;
+  --text-color: #f5f5f5;
+  --primary-color: #3b82f6;
+}
+
+body {
+  background: var(--bg-color);
+  color: #000;
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+}
+
+  header {
+    background-color: var(--primary-color);
+    padding: 0px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--bg-color);
+    height: 90px;
+  }
+
+  h1 {
+    color: #035657;
+    margin: 0;
+    font-size: 24px;
+  }
+
+  .chat-container {
+    max-width: 700px;
+    margin: 2rem auto;
+    border: 2px solid gold;
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: #000;
+    display: flex;
+    flex-direction: column;
+    height: 85vh;
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.2);
+  }
+
+  .chat-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: #222;
+    padding: 10px 14px;
+    color: gold;
+    font-weight: bold;
+    font-family: Arial, sans-serif;
+  }
+
+  .chat-header .profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .chat-header .profile img {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    border: 2px solid gold;
+  }
+
+  #searchChat {
+    flex-grow: 1;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: none;
+    font-size: 14px;
+  }
+
+  .chat-box {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 15px;
+  background: #000;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  height: 60vh;
+border-radius: 10px;
+}
+
+.chat-box::-webkit-scrollbar {
+  display: none;
+}
+  .message {
+    padding: 0.5rem 0.75rem;
+    margin: 0.5rem 0;
+    border-radius: 12px;
+    max-width: 80%;
+    word-wrap: break-word;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  }
+
+  .mine {
+    margin-left: auto;
+    background: linear-gradient(to bottom, #facc15, #aaa);
+    color: black;
+  }
+
+  .theirs {
+    margin-right: auto;
+    background: linear-gradient(to bottom, #1d77ff33, #81acff, #c5ff4a);
+  }
+
+  .send-box {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-top: 1px solid gold;
+    background: #111;
+    flex-wrap: wrap;
+   border-radius: 10px;
+  }
+
+  #msg {
+    width: 65%;
+    min-height: 40px;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: 2px solid gold;
+    resize: vertical;
+    box-sizing: border-box;
+  }
+
+  .file-label {
+    background: var(--primary-color);
+    color: var(--bg-color);
+    padding: 0.5rem;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+  }
+
+  input[type="file"] {
+    display: none;
+  }
+
+  .send-box button {
+    padding: 0 16px;
+    background: gold;
+    color: black;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .msg-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+    font-weight: bold;
+  }
+
+  .msg-header small {
+    font-size: 0.75rem;
+    color: #0b6906;
+  }
+
+  .msg-text {
+    margin: 0;
+    padding: 0;
+  }
+
+  .date-label {
+    text-align: center;
+    margin: 20px 0;
+  }
+
+  .date-label-inner {
+    display: inline-block;
+    background-color: lightgreen;
+    padding: 2px 30px;
+    border-radius: 20px;
+    font-size: 14px;
+    color: #333;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .date-label-inner .day-label {
+    font-weight: bold;
+  }
+
+  .date-label-inner .full-date-label {
+    font-size: 12px;
+    color: #555;
+  }
+
+  #logoutBtn {
+    background-color: black;
+    color: gold;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    border: 2px solid gold;
+    transition: 0.3s;
+  }
+
+  #logoutBtn:hover {
+    background-color: gold;
+    color: black;
+  }
+
+  @media (max-width: 600px) {
+    .chat-header {
+      flex-direction: column;
+      align-items: flex-start;
     }
 
-    body {
-      background: linear-gradient(135deg, #0f0f0f, #1c1c1c);
-      color: white;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-
-    .login-box {
-      background: #121212;
-      border: 2px solid gold;
-      border-radius: 10px;
-      padding: 40px 30px;
-      max-width: 400px;
+    #searchChat {
       width: 100%;
-      text-align: center;
-      box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
     }
 
-    .login-box h1 {
-      font-size: 28px;
-      color: gold;
-      margin-bottom: 20px;
+    .send-box {
+      flex-direction: column;
     }
 
-    .login-box p {
-      font-size: 14px;
-      color: #ccc;
-      margin-bottom: 30px;
+    #msg {
+      width: 100%;
     }
+  }
+  .chat-wrapper {
+  background: white;
+  max-width: 640px;
+  margin: 1rem auto 30px auto;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  height: 85vh; /* Tambah ini */
+  overflow: hidden;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  border: 1px solid gold;
+    padding: 15px;
+}
 
-    .google-btn {
-      background: gold;
-      color: #000;
-      border: none;
-      border-radius: 8px;
-      padding: 12px 20px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.3s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin: 0 auto;
-    }
+.chat-header {
+  background: linear-gradient(to right,#facc15, #fef08a);
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #fff3;
+    border-radius: 10px;
+      font-size: 1rem;
+      color: #333;
+  margin-bottom: 10px;
+  justify-content: space-between;
+}
 
-    .google-btn:hover {
-      background: #f1f1f1;
-    }
+.chat-header .profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
-    .google-icon {
-      height: 30px;
-      width: 30px;
-      border-radius: 50%;
-      background-color: black;
-    }
+.chat-header .profile img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid white;
+}
 
-    .footer {
-      margin-top: 20px;
-      font-size: 12px;
-      color: #777;
-    }
-  </style>
-</head>
+.chat-header .profile span {
+  font-weight: bold;
+  font-size: 16px;
+  color: black;
+}
+
+.search-wrapper {
+  flex-grow: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+#searchChat {
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  min-width: 200px;
+  max-width: 300px;
+}
+.msg-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  margin-right: 6px;
+  object-fit: cover;
+  border: 1px solid white;
+background-color:black;
+}
+</style>
+
 <body>
-  <div class="login-box">
-  <h1>Welcome to 5G88 Chat</h1>
-  <p>Please login with your Gmail to continue</p>
-  <button class="google-btn" onclick="googleLogin()">
-    <img class="google-icon" src="https://i.imgur.com/qiZFOs9.png" alt="Google Logo">
-    Start Chatting
-  </button>
-  <div class="footer">Secure login with Firebase</div>
-</div>
+  <!-- Header Atas -->
+ <header>
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <h1>User LiveChat</h1>
+    <div id="notifDot" style="width: 12px; height: 12px; background: red; border-radius: 50%; display: none;"></div>
+  </div>
+  <div style="display: flex; gap: 10px;">
+    <button onclick="toggleTheme()">🌓 Theme</button>
+    <button id="logoutBtn">Logout</button>
+  </div>
+</header>
+
+<!-- Chat Main -->
+<main>
+  <div class="chat-wrapper">
+    <!-- CHAT HEADER -->
+    <div class="chat-header">
+      <div class="profile">
+        <img id="headerUserPhoto" src="https://i.pravatar.cc/40" alt="User" />
+        <div>
+          <span id="headerUserName">5G 88</span><br />
+          <small id="typingStatus" style="font-size: 12px; font-weight: normal; color: black;">Offline</small>
+        </div>
+      </div>
+      <div class="search-wrapper">
+        <input type="text" id="searchChat" placeholder="🔍 Search messages..." />
+      </div>
+    </div>
+
+    <!-- CHAT CONTENT -->
+    <div class="chat-box" id="chatBox"></div>
+
+    <!-- SEND BOX -->
+    <div class="send-box">
+      <textarea id="msg" placeholder="Type your message" rows="2"></textarea>
+      <label class="file-label">
+        Upload Image
+        <input type="file" id="fileInput" accept="image/*">
+      </label>
+      <button type="button" disabled>Send</button>
+    </div>
+  </div>
+</main>
+<audio id="notifSound" src="https://easypay88.com/assets/sound/notification.wav" preload="auto"></audio>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
 
 <script>
- // Firebase config lengkap
+  // Konversi email jadi ID aman untuk path Firebase
+  function sanitizeEmail(email) {
+    return email.replace(/\./g, '_').replace(/@/g, '_at_').replace(/,/g, '_');
+  }
+
+  function getChatPath(email) {
+    return 'chats/' + sanitizeEmail(email);
+  }
+
   const firebaseConfig = {
     apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
     authDomain: "blurphp.firebaseapp.com",
@@ -110,33 +389,301 @@
     appId: "1:593904200464:web:cea7bc1360532c20d99395"
   };
 
-  // Inisialisasi Firebase
   firebase.initializeApp(firebaseConfig);
-
-  // Inisialisasi layanan Firebase
-  const auth = firebase.auth();
   const db = firebase.database();
   const storage = firebase.storage();
 
-  // Fungsi login Google
-  function googleLogin() {
-    const provider = new firebase.auth.GoogleAuthProvider();
+  let currentUserEmail = null;
 
-    auth.signInWithPopup(provider)
-      .then(result => {
-        const user = result.user;
+  firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+      const userName = localStorage.getItem("username") || user.displayName || "User";
+      const userEmail = localStorage.getItem("useremail") || user.email;
+      const userPhoto = localStorage.getItem("userphoto") || user.photoURL || "";
 
-        // Simpan data user di localStorage
-        localStorage.setItem("username", user.displayName);
-        localStorage.setItem("useremail", user.email);
-        localStorage.setItem("userphoto", user.photoURL);
+      if (!userEmail) {
+        alert("🚫 User email not found. Please login again.");
+        logout();
+        return;
+      }
 
-        // Redirect ke halaman chat setelah login sukses
-        window.location.href = "https://searcfile.github.io/5g88-php/userlivechatphp/";
-      })
-      .catch(error => {
-        alert("Login failed: " + error.message);
+      localStorage.setItem("username", userName);
+      localStorage.setItem("useremail", userEmail);
+      localStorage.setItem("userphoto", userPhoto);
+
+      currentUserEmail = userEmail;
+
+      
+      // SET CHAT HEADER PROFILE
+      const headerUserPhoto = document.getElementById('headerUserPhoto');
+      const headerUserName = document.getElementById('headerUserName');
+      const typingStatus = document.getElementById('typingStatus');
+      const searchInput = document.getElementById('searchChat');
+      const chatBox = document.getElementById('chatBox');
+
+      headerUserPhoto.src = userPhoto || 'https://i.pravatar.cc/40';
+      headerUserName.textContent = userName;
+      typingStatus.textContent = 'Online';
+
+      listenToChat(currentUserEmail);
+
+      const msgInput = document.getElementById('msg');
+      const sendBtn = document.querySelector('.send-box button');
+      const fileInput = document.getElementById('fileInput');
+
+      let typingTimer;
+      const typingDelay = 2000;
+
+      msgInput.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') {
+    if (e.shiftKey || e.ctrlKey) {
+      // Shift+Enter atau Ctrl+Enter bikin baris baru (newline)
+      return; // biarkan default behavior
+    } else {
+      // Enter doang, kirim pesan
+      e.preventDefault();
+      sendMessage(currentUserEmail);
+    }
+  }
+});
+
+      msgInput.addEventListener('input', () => {
+        sendBtn.disabled = !msgInput.value.trim() && !fileInput.files.length;
+
+        if (msgInput.value.trim() !== '') {
+          typingStatus.textContent = 'Typing...';
+          clearTimeout(typingTimer);
+          typingTimer = setTimeout(() => {
+            typingStatus.textContent = 'Online';
+          }, typingDelay);
+        } else {
+          typingStatus.textContent = 'Online';
+        }
       });
+
+      searchInput.addEventListener('input', () => {
+        const filter = searchInput.value.toLowerCase();
+        const messages = chatBox.querySelectorAll('.message');
+
+        messages.forEach(msg => {
+          const text = msg.textContent.toLowerCase();
+          if (text.includes(filter)) {
+            msg.style.display = '';
+          } else {
+            msg.style.display = 'none';
+          }
+        });
+      });
+
+      sendBtn.disabled = true;
+      sendBtn.addEventListener('click', () => sendMessage(currentUserEmail));
+
+    } else {
+      alert("🚫 Not logged in. Redirecting to login page...");
+      window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
+    }
+  });
+
+  async function sendMessage(userEmail) {
+  if (!userEmail) {
+    alert("❌ Gagal mengirim pesan: email tidak valid.");
+    logout();
+    return;
+  }
+
+  const msgInput = document.getElementById('msg');
+  const msg = msgInput.value.trim();
+  const fileInput = document.getElementById('fileInput');
+  const file = fileInput.files[0];
+
+  if (!msg && !file) return;
+
+  const userName = localStorage.getItem("username") || "User";
+  const userPhoto = localStorage.getItem("userphoto") || "";
+  const time = Date.now();
+  const chatRef = db.ref(getChatPath(userEmail));
+
+  try {
+    // Jika ada file, upload ke Firebase Storage
+    if (file) {
+      const fileRef = storage.ref(`chat_images/${sanitizeEmail(userEmail)}/${time}_${file.name}`);
+      const snapshot = await fileRef.put(file);
+      const url = await snapshot.ref.getDownloadURL();
+
+      await chatRef.push({
+        from: 'user',
+        name: userName,
+        email: userEmail,
+        photoURL: userPhoto,
+        image: url,
+        time
+      });
+    }
+
+    // Jika ada teks, kirim pesan teks
+    if (msg) {
+      await chatRef.push({
+        from: 'user',
+        name: userName,
+        email: userEmail,
+        photoURL: userPhoto,
+        text: msg,
+        time
+      });
+    }
+
+    msgInput.value = '';
+    fileInput.value = '';
+    document.querySelector('.send-box button').disabled = true;
+
+  } catch (error) {
+    console.error("Error sending message:", error);
+    alert("❌ Gagal mengirim pesan.");
+  }
+}
+function listenToChat(userEmail) {
+  const chatBox = document.getElementById('chatBox');
+  const chatRef = db.ref(getChatPath(userEmail));
+  const notifDot = document.getElementById('notifDot');
+  const lastSeenKey = `lastSeenByUser_${sanitizeEmail(userEmail)}`;
+
+  chatRef.on('value', snapshot => {
+    chatBox.innerHTML = '';
+    const chats = snapshot.val();
+    const lastSeenTime = parseInt(localStorage.getItem(lastSeenKey) || '0');
+    let latestAdminMsgTime = 0;
+
+    if (chats) {
+      const chatArray = Object.values(chats).sort((a, b) => a.time - b.time);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const pastChats = [], todayChats = [];
+
+      chatArray.forEach(c => {
+        const msgDateOnly = new Date(c.time); msgDateOnly.setHours(0, 0, 0, 0);
+        (msgDateOnly.getTime() === today.getTime() ? todayChats : pastChats).push(c);
+        if (c.from === 'admin' && c.time > latestAdminMsgTime) latestAdminMsgTime = c.time;
+      });
+
+      // 🔔 Notifikasi jika ada pesan admin baru
+      if (latestAdminMsgTime > lastSeenTime) {
+        notifDot.style.display = 'inline-block';
+        playNotificationSound();
+      } else {
+        notifDot.style.display = 'none';
+      }
+
+      renderChats(pastChats, today);  // kirim today ke fungsi render
+      renderChats(todayChats, today);
+
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      // Simpan waktu terakhir dibaca
+      const latestTime = chatArray[chatArray.length - 1]?.time || 0;
+      localStorage.setItem(lastSeenKey, latestTime);
+    } else {
+      notifDot.style.display = 'none';
+    }
+  });
+}
+ function renderChats(chatGroup, today) {
+  const chatBox = document.getElementById('chatBox');
+  let lastDateKey = '';
+
+  chatGroup.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'message ' + (c.from === 'user' ? 'mine' : 'theirs');
+
+    const msgDate = new Date(c.time);
+    const timeFormatted = msgDate.toLocaleTimeString('en-US', {
+      hour: '2-digit', minute: '2-digit', hour12: true
+    });
+
+    const dateKey = msgDate.toDateString();
+    const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+
+    let dayLabel = '';
+    if (dateKey === today.toDateString()) dayLabel = 'Today';
+    else if (dateKey === yesterday.toDateString()) dayLabel = 'Yesterday';
+    else dayLabel = msgDate.toLocaleDateString('en-GB', { weekday: 'long' });
+
+    const fullDateLabel = msgDate.toLocaleDateString('en-GB', {
+      day: '2-digit', month: 'short', year: 'numeric'
+    });
+
+    if (dateKey !== lastDateKey) {
+      const dateLabelDiv = document.createElement('div');
+      dateLabelDiv.className = 'date-label';
+      dateLabelDiv.innerHTML = `
+        <div class="date-label-inner">
+          <div class="day-label">${dayLabel}</div>
+          <div class="full-date-label">${fullDateLabel}</div>
+        </div>
+      `;
+      chatBox.appendChild(dateLabelDiv);
+      lastDateKey = dateKey;
+    }
+
+    const senderLabel = c.from === 'user' ? (c.name || 'You') : (c.name || 'Admin');
+    const senderPhoto = c.photoURL || "https://i.pravatar.cc/40";
+
+    if (c.text) {
+      div.innerHTML = `
+        <div class="msg-header">
+          <img src="${senderPhoto}" class="msg-avatar" alt="user" />
+          <span class="msg-info">${senderLabel}</span>
+          <small>${timeFormatted}</small>
+        </div>
+        <p class="msg-text">${c.text}</p>
+      `;
+    } else if (c.image) {
+      div.innerHTML = `
+        <div class="msg-header">
+          <img src="${senderPhoto}" class="msg-avatar" alt="user" />
+          <span class="msg-info">${senderLabel}</span>
+          <small>${timeFormatted}</small>
+        </div>
+        <img src="${c.image}" alt="Image" style="max-width: 100%; border-radius: 8px; margin-top: 4px;">
+      `;
+    }
+
+    chatBox.appendChild(div);
+  });
+}
+
+  
+let userHasInteracted = false;
+
+  // Deteksi klik pertama user
+  ['click', 'keydown', 'scroll', 'touchstart'].forEach(event =>
+  document.addEventListener(event, () => userHasInteracted = true, { once: true })
+);
+
+  function playNotificationSound() {
+    const audio = document.getElementById("notifSound");
+    if (audio && userHasInteracted) {
+      audio.currentTime = 0;
+      audio.play().catch(e => {
+        console.warn("🔇 Audio autoplay blocked:", e);
+      });
+    }
+  }
+  function logout() {
+    firebase.auth().signOut()
+      .then(() => {
+        localStorage.clear();
+        window.location.href = "https://searcfile.github.io/5g88-php/livechatloginphp/";
+      })
+      .catch((error) => {
+        console.error("Logout failed:", error);
+      });
+  }
+
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    logout();
+  });
+
+  function toggleTheme() {
+    document.body.classList.toggle('dark-theme');
   }
   </script>
 </body>
