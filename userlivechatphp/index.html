@@ -128,49 +128,53 @@ border-radius: 10px;
   }
 
   .send-box {
-    display: flex;
-    gap: 0.5rem;
-    padding: 1rem;
-    border-top: 1px solid gold;
-    background: #111;
-    flex-wrap: wrap;
-   border-radius: 10px;
-  }
+  display: flex;
+  gap: 10px;
+  padding: 1rem;
+  border-top: 1px solid gold;
+  background: #111;
+  border-radius: 10px;
+  align-items: stretch;
+}
 
   #msg {
-    width: 65%;
-    min-height: 40px;
-    padding: 10px;
-    font-size: 16px;
-    border-radius: 6px;
-    border: 2px solid gold;
-    resize: vertical;
-    box-sizing: border-box;
-  }
+  flex: 2;
+  min-height: 40px;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 6px;
+  border: 2px solid gold;
+  resize: vertical;
+  box-sizing: border-box;
+}
 
   .file-label {
-    background: #1668dc;
-    color: white;
-    padding: 0.5rem;
-    border-radius: 5px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-  }
+  flex-shrink: 0;
+  background: #1668dc;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
 
   input[type="file"] {
     display: none;
   }
 
   .send-box button {
-    padding: 0 16px;
-    background: #1668dc;
-    color: white;
-    font-weight: bold;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
+  flex: 1;
+  background: #1668dc;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  height: 100%;
+}
 
   .msg-header {
     display: flex;
