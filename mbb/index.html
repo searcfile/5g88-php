@@ -216,7 +216,6 @@ border-radius: 10px;
   #logoutBtn {
     background-color: black;
     color: gold;
-    padding: 8px 14px;
     border-radius: 6px;
     font-weight: bold;
     cursor: pointer;
@@ -225,10 +224,13 @@ border-radius: 10px;
   }
 
   #logoutBtn:hover {
-    background-color: #141414;
-    color: black;
+    background-color: transparant;
+    color: white;
   }
-
+ #logoutBtn:active {
+    background-color: transparant;
+    color: #8d8d8d;
+  }
   @media (max-width: 600px) {
     .chat-header {
       flex-direction: column;
