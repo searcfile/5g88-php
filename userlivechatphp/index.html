@@ -341,12 +341,14 @@ background-color:black;
 
 <body>
   <!-- Header Atas -->
- <header>
-  <div style="display: flex; align-items: center; gap: 10px;">
-    <h1>User LiveChat</h1>
-    <div id="notifDot" style="width: 12px; height: 12px; background: red; border-radius: 50%; display: none;"></div>
+<header>
+  <div style="width: 120px;"></div> <!-- spacer kiri -->
+
+  <div style="flex: 1; text-align: center;">
+    <h1 style="margin: 0;">User LiveChat</h1>
   </div>
-  <div style="display: flex; gap: 10px;">
+
+  <div style="display: flex; align-items: center; gap: 10px;">
     <button onclick="toggleTheme()">🌓 Theme</button>
     <button id="logoutBtn">Logout</button>
   </div>
