@@ -1,722 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LiveChat - Admin</title>
+  <meta charset="UTF-8">
+  <title>5G88 Live Chat Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Firebase -->
+ <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    :root {
-  --bg-color: #29858f;
-  --text-color: #f1f1f1;
-  --primary-color: #facc15;
-}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
 
-body.dark {
-  --bg-color: #1f1f1f;
-  --text-color: #f5f5f5;
-  --primary-color: #3b82f6;
-}
+    body {
+      background: linear-gradient(135deg, #0f0f0f, #1c1c1c);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
 
-body {
-  background: var(--bg-color);
-  color: #000;
-  font-family: 'Segoe UI', sans-serif;
-  margin: 0;
-  padding: 0;
-}
+    .login-box {
+      background: #121212;
+      border: 2px solid gold;
+      border-radius: 20px;
+      padding: 40px 30px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+    }
 
-/* ===== Header ===== */
-header {
-  background-color: var(--primary-color);
-  padding: 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: var(--bg-color);
-}
+    .login-box h1 {
+      font-size: 28px;
+      color: gold;
+      margin-bottom: 20px;
+    }
 
-/* ===== Container Chat Box ===== */
-#containerChatBox {
-  background: #f9f9f9;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  padding: 15px;
-  max-width: 640px;
-  margin: 0 auto;
-  border: 1px solid #ddd;
-}
+    .login-box p {
+      font-size: 14px;
+      color: #ccc;
+      margin-bottom: 30px;
+    }
 
-/* ===== Chat Header ===== */
-#chatHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: linear-gradient(to right, #facc15, #fef08a);
-  padding: 12px 18px;
-  border-radius: 10px;
-  border: 1px solid #e0e0e0;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-  font-size: 1rem;
-  color: #333;
-  margin-bottom: 10px;
-}
+    .google-btn {
+      background: white;
+      color: #333;
+      border: none;
+      border-radius: 30px;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
 
-#chatUserName {
-  font-weight: bold;
-  font-size: 1.1rem;
-}
+    .google-btn:hover {
+      background: #f1f1f1;
+    }
 
-/* ===== Search Message ===== */
-#searchMessage {
-  border: 1px solid #ccc;
-  padding: 6px 12px 6px 36px;
-  border-radius: 6px;
-  font-size: 14px;
-  background: url('https://cdn-icons-png.flaticon.com/512/622/622669.png') no-repeat 10px center;
-  background-size: 16px;
-  background-color: #fff8dc;
-  color: #333;
-  width: 50%;
-  transition: 0.3s;
-}
+    .google-icon {
+      height: 20px;
+      width: 20px;
+    }
 
-#searchMessage:focus {
-  outline: none;
-  border-color: #d4af37;
-  background-color: #fff9e3;
-}
-
-/* ===== Chat Box ===== */
-.chat-box {
-  height: 60vh;
-  overflow-y: auto;
-  border: 1px solid #ccc;
-  padding: 15px;
-  background: #111;
-  color: white;
-  border-radius: 10px;
-  box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.05);
-  scroll-behavior: smooth;
-}
-
-.chat-box::-webkit-scrollbar {
-  width: 6px;
-}
-
-.chat-box::-webkit-scrollbar-thumb {
-  background: #facc15;
-  border-radius: 6px;
-}
-
-.chat-box::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* ===== Message Bubble ===== */
-.message {
-  padding: 0.5rem;
-  margin: 0.5rem 0;
-  border-radius: 10px;
-  max-width: 70%;
-  white-space: normal;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-}
-
-.mine {
-  background-image: linear-gradient(to bottom, #1d77ff33, #81acff, #c5ff4a);
-  color: #000;
-  margin-left: auto;
-}
-
-.theirs {
-  background-image: linear-gradient(to bottom, #fdcb3c, #efe451, #98a1b1);
-}
-
-/* ===== Send Box ===== */
-.send-box {
-  display: flex;
-  max-width: 600px;
-  margin: 10px auto 0;
-  border: 2px solid gold;
-  border-radius: 6px;
-  overflow: hidden;
-  background: white;
-}
-
-#msg {
-  flex: 1;
-  padding: 10px;
-  font-size: 14px;
-  border: none;
-  outline: none;
-  resize: none;
-  font-family: 'Segoe UI', sans-serif;
-}
-
-.send-box button {
-  padding: 0 16px;
-  font-size: 14px;
-  background: gold;
-  border: none;
-  color: #000;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.send-box button:hover {
-  background: #e6c200;
-}
-
-.send-box button:active {
-  background: #c4a700;
-}
-
-/* ===== User List ===== */
-.user-item {
-  border: 1px solid #000;
-  border-radius: 5px;
-  padding: 8px 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  background: white;
-}
-
-.user-item:hover {
-  background: #e0e0e0;
-}
-
-.user-item.active {
-  background-color: gold;
-  color: black;
-}
-
-/* ===== Date Label ===== */
-.date-label {
-  text-align: center;
-  margin: 20px 0;
-}
-
-.date-label-inner {
-  display: inline-block;
-  background-color: lightgreen;
-  padding: 2px 22px;
-  border-radius: 30px;
-  font-size: 14px;
-  color: #333;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  text-align: center;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.date-label-inner .day-label {
-  font-weight: bold;
-  display: block;
-  font-size: 16px;
-}
-
-.date-label-inner .full-date-label {
-  font-size: 14px;
-  color: #555;
-  display: block;
-  margin-top: 2px;
-  text-transform: capitalize;
-}
-
-/* ===== Panel Optional ===== */
-.chat-panel {
-  flex: 1;
-  max-width: 400px;
-  padding: 1rem;
-}
-    #chatHeaderUser img {
-  object-fit: cover;
-  border: 1px solid #ccc;
-}
+    .footer {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #777;
+    }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Admin LiveChat</h1>
-    <button onclick="toggleTheme()">Toggle Theme</button>
-  </header>
-
-  <main style="display: flex;">
-  <!-- Panel User -->
-  <div id="userList" style="width: 500px; border-right: 1px solid #ccc; padding: 1rem; overflow-y: auto; max-height: 80vh;">
-    <h3>User List</h3>
-
-    <input type="text" id="searchUser" placeholder="Cari user..." style="width: 100%; padding: 10px 5px; margin-bottom: 10px; border-radius: 5px;" />
-
-    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-      <button id="filterAll">All</button>
-      <button id="filterUnread">Unread</button>
-    </div>
-
-    <div id="userListBox"></div>
-  </div>
-
- <div style="flex: 0.5; padding: 1rem;">
-  <div id="containerChatBox">
-    <!-- Header Chat -->
-    <div id="chatHeader">
-  <div id="chatHeaderUser" style="display: flex; align-items: center; gap: 10px;">
-    <img id="chatUserAvatar" src="" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; display: none;" />
-    <strong id="chatUserName">Select a user</strong>
-  </div>
-  <input
-    type="text"
-    id="searchMessage"
-    placeholder="Search messages..."
-  />
+  <div class="login-box">
+  <h1>Welcome to 5G88 Chat</h1>
+  <p>Please login with your Gmail to continue</p>
+  <button class="google-btn" onclick="googleLogin()">
+    <img class="google-icon" src="https://img.icons8.com/color/48/000000/google-logo.png" alt="Google Logo">
+    Sign in with Google
+  </button>
+  <div class="footer">Secure login with Firebase</div>
 </div>
 
-    <!-- Chat Box -->
-    <div class="chat-box" id="chatBox"></div>
-
-    <!-- Send Box -->
-    <div class="send-box">
-      <textarea id="msg" placeholder="Type your message" rows="2"></textarea>
-      <button onclick="sendMessage()">Send</button>
-    </div>
-  </div>
-</div>
-</main>
-
-  
-<audio id="notifSound" src="https://easypay88.com/assets/sound/notification.wav" preload="auto"></audio>
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-
-  <script>
- // Firebase config & init
-const firebaseConfig = {
-  apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
-  authDomain: "blurphp.firebaseapp.com",
-  databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "blurphp",
-  storageBucket: "blurphp.firebasedatabase.app",
-  messagingSenderId: "593904200464",
-  appId: "1:593904200464:web:cea7bc1360532c20d99395",
-  measurementId: "G-R494S2DPZ5"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-function formatUserName(name) {
-  if (!name) return 'Unknown';
-
-  const words = name.trim().split(' ');
-  if (words.length === 2 && words[0] === words[1]) {
-    return words[0]; // kalau sama, ambil satu
-  }
-  return name; // kalau beda, tampilkan semua
-}
-let userHasInteracted = false;
-document.body.addEventListener('click', () => {
-  userHasInteracted = true;
-});
-
-let activeUserIdSanitized = '';
-let activeUserIdEmail = '';
-let allUsersData = [];
-let lastMessageTimestamps = {};
-let selectedUserId = null;
-let allMessages = [];
-let isInitialChatLoad = true;
-// User ID sanitize/desanitize helpers
-function sanitizeUserId(email) {
-  return email.replace(/\./g, '_').replace(/@/g, '_at_').replace(/,/g, '_');
-}
-
-function desanitizeUserId(sanitized) {
-  return sanitized.replace(/_at_/g, '@').replace(/_/g, '.');
-}
-
-// Play notification sound
-function playNotificationSound() {
-  const audio = document.getElementById("notifSound");
-  if (audio && userHasInteracted) {
-    audio.currentTime = 0;
-    audio.play().catch(err => {
-      console.warn("🔇 Audio play blocked:", err);
-    });
-  }
-}
-
-function formatDateLabel(dateStr) {
-  const today = new Date();
-  const date = new Date(dateStr);
-
-  function resetTime(d) {
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  }
-
-  const todayReset = resetTime(today);
-  const dateReset = resetTime(date);
-
-  const diffTime = todayReset - dateReset; // ms
-
-  if (diffTime === 0) {
-    return {
-      day: "today",
-      full: date.toLocaleDateString("en-GB", {
-        year: "numeric",
-        month: "long",
-        day: "2-digit",
-      }).toLowerCase(),
-    };
-  } else if (diffTime === 86400000) {
-    return {
-      day: "yesterday",
-      full: date.toLocaleDateString("en-GB", {
-        year: "numeric",
-        month: "long",
-        day: "2-digit",
-      }).toLowerCase(),
-    };
-  } else {
-    return {
-      day: date.toLocaleDateString("en-GB", { weekday: "long" }).toLowerCase(),
-      full: date.toLocaleDateString("en-GB", {
-        year: "numeric",
-        month: "long",
-        day: "2-digit",
-      }).toLowerCase(),
-    };
-  }
-}
-
-function renderChatMessages(messages) {
-  const chatBox = document.getElementById("chatBox");
-  chatBox.innerHTML = "";
-
-  let lastDate = null;
-
-  messages.forEach(msg => {
-    const msgDate = new Date(msg.time);
-    const dateLabels = formatDateLabel(msgDate);
-    const dateStr = dateLabels.day + ', ' + dateLabels.full;
-
-    if (lastDate !== dateStr) {
-      lastDate = dateStr;
-
-      const dateLabelDiv = document.createElement("div");
-      dateLabelDiv.className = "date-label";
-      dateLabelDiv.innerHTML = `
-        <div class="date-label-inner">
-          <span class="day-label">${dateLabels.day}</span>
-          <span class="full-date-label">${dateLabels.full}</span>
-        </div>
-      `;
-      chatBox.appendChild(dateLabelDiv);
-    }
-
-    const div = document.createElement("div");
-    div.className = 'message ' + (msg.from === 'admin' ? 'mine' : 'theirs');
-
-    const timeStr = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    const isUser = msg.from !== 'admin';
-    const senderName = isUser ? (msg.name || msg.email || 'User') : 'Admin';
-
-    // Gunakan avatar dari data, jika tidak ada pakai default masing-masing
-    const avatarURL = msg.photoURL || (isUser ? 'https://i.pravatar.cc/40' : 'https://i.imgur.com/UhV9EWa.png');
-    const avatarImg = `
-    <img 
-    src="${avatarURL}" 
-    alt="Avatar" 
-    style="width: 24px; height: 24px; object-fit: cover; border-radius: 50%; border: 1px solid white; margin-right: 6px;background-color: currentcolor;"
-  >
-`;
-    // HTML isi pesan
-    let messageHTML = `
-      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-        ${avatarImg}
-        <div style="font-weight: bold;">
-          ${senderName}
-          <small style="font-size: 0.75rem; color: #0b6906;">${timeStr}</small>
-        </div>
-      </div>`;
-
-    if (msg.text) {
-      messageHTML += `<div>${msg.text}</div>`;
-    }
-
-    if (msg.image) {
-      messageHTML += `<img src="${msg.image}" alt="Image" style="max-width: 100%; border-radius: 8px; margin-top: 4px;">`;
-    }
-
-    div.innerHTML = messageHTML;
-    chatBox.appendChild(div);
-  });
-
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-// Listen to chat updates for active user
-function listenToChat() {
-  if (!activeUserIdSanitized) return;
-  const chatRef = db.ref('chats/' + activeUserIdSanitized);
-  const chatBox = document.getElementById('chatBox');
-
-  chatRef.off();
-  chatBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
-
-  chatRef.on('value', snapshot => {
-    const chats = snapshot.val();
-    if (!chats) {
-      chatBox.innerHTML = '<p style="text-align:center; color:white;">Belum ada pesan.</p>';
-      allMessages = [];
-      return;
-    }
-
-    // Sort chats by time ascending
-    const chatEntries = Object.entries(chats).sort((a,b) => (a[1].time || 0) - (b[1].time || 0));
-    allMessages = chatEntries.map(([key, msg]) => {
-      if (msg.from === 'user' && !msg.readByAdmin) {
-        db.ref(`chats/${activeUserIdSanitized}/${key}/readByAdmin`).set(true);
-        updateUserListFlags();
-
-        if (
-          !lastMessageTimestamps[activeUserIdSanitized] ||
-          msg.time > lastMessageTimestamps[activeUserIdSanitized]
-        ) {
-          lastMessageTimestamps[activeUserIdSanitized] = msg.time;
-
-          // ✅ Mainkan suara hanya jika bukan saat pertama load
-          if (!isInitialChatLoad) {
-            playNotificationSound();
-          }
-        }
-      }
-      return msg;
-    });
-
-    renderChatMessages(allMessages);
-    isInitialChatLoad = false; // ✅ setelah render pertama, matikan flag ini
-  }); // ✅ ← ini menutup .on()
-} // ✅ ← Tambah
-
-// Render user list with optional filter & search
-function renderUserList(users, filter = 'all', searchTerm = '') {
-  const userListBox = document.getElementById('userListBox');
-  userListBox.innerHTML = ''; // Clear first
-
-  users.forEach(email => {
-    const sanitized = sanitizeUserId(email);
-
-    // Prevent duplicate user items
-    if (document.querySelector(`[data-sanitized="${sanitized}"]`)) return;
-
-    db.ref(`chats/${sanitized}`).once('value', snapshot => {
-      const chatEntries = Object.values(snapshot.val() || []);
-      
-      const lastUserMsg = [...chatEntries]
-        .filter(m => m.from === 'user')
-        .sort((a, b) => (b.time || 0) - (a.time || 0))[0]; // user message terbaru
-
-      if (!lastUserMsg) return;
-
-      const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
-      if (filter === 'unread' && !hasUnread) return;
-
-      const label = `${lastUserMsg.name || email} (${lastUserMsg.email || email})`;
-      if (searchTerm && !label.toLowerCase().includes(searchTerm.toLowerCase())) return;
-
-      // === Div user container ===
-      const userDiv = document.createElement('div');
-      userDiv.className = 'user-item';
-      userDiv.setAttribute('data-sanitized', sanitized);
-      userDiv.style.display = 'flex';
-      userDiv.style.alignItems = 'center';
-      userDiv.style.gap = '10px';
-      userDiv.style.cursor = 'pointer';
-      userDiv.style.padding = '6px 10px';
-
-      // === Avatar ===
-      const userImg = document.createElement('img');
-      userImg.src = lastUserMsg.photoURL || 'https://i.pravatar.cc/40';
-      userImg.alt = 'avatar';
-      userImg.style.width = '30px';
-      userImg.style.height = '30px';
-      userImg.style.borderRadius = '50%';
-      userImg.style.border = '1px solid gold';
-
-      // === Nama + email + ❗ label ===
-      const userLabel = document.createElement('span');
-      userLabel.textContent = label + (hasUnread ? ' ❗' : '');
-      userLabel.style.fontWeight = hasUnread ? 'bold' : 'normal';
-
-      userDiv.appendChild(userImg);
-      userDiv.appendChild(userLabel);
-
-      // === Klik user item ===
-      userDiv.onclick = () => {
-        activeUserIdEmail = email;
-        activeUserIdSanitized = sanitized;
-
-        const userName = formatUserName(lastUserMsg.name || email);
-        const avatarUrl = lastUserMsg.photoURL || '';
-
-        document.getElementById("chatUserName").textContent = userName;
-
-        const avatarImg = document.getElementById("chatUserAvatar");
-        if (avatarUrl) {
-          avatarImg.src = avatarUrl;
-          avatarImg.style.display = 'block';
-        } else {
-          avatarImg.style.display = 'none';
-        }
-
-        document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
-        userDiv.classList.add('active');
-
-        selectedUserId = sanitized;
-        listenToChat();
-
-        document.getElementById("searchMessage").value = '';
-      };
-
-      userListBox.appendChild(userDiv);
-    });
-  });
-}
-// Load user list initially and watch new users
-function loadUserList() {
-  const userListBox = document.getElementById('userListBox');
-  userListBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
-
-  db.ref('chats').once('value', snapshot => {
-    const users = Object.keys(snapshot.val() || {}).map(desanitizeUserId);
-    allUsersData = users;
-    userListBox.innerHTML = '';
-    renderUserList(users);
-  });
-}
-
-function watchNewUsers() {
-  db.ref('chats').on('child_added', snapshot => {
-    const sanitizedEmail = snapshot.key;
-    const email = desanitizeUserId(sanitizedEmail);
-    if (!allUsersData.includes(email)) {
-      allUsersData.push(email);
-      renderUserList([email]);
-    }
-  });
-}
-
-// Update unread flags on user list periodically
-function updateUserListFlags() {
-  const items = document.querySelectorAll('.user-item');
-  items.forEach(item => {
-    const sanitized = item.getAttribute('data-sanitized');
-    db.ref(`chats/${sanitized}`).once('value', snapshot => {
-      const chatEntries = Object.values(snapshot.val() || []);
-      const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
-      const email = desanitizeUserId(sanitized);
-      const firstMsg = chatEntries.find(m => m.from === 'user');
-      if (!firstMsg) return;
-
-      const labelBase = `${firstMsg.name || email} (${firstMsg.email || email})`;
-      item.textContent = labelBase + (hasUnread ? ' ❗' : '');
-      item.style.fontWeight = hasUnread ? 'bold' : 'normal';
-    });
-  });
-}
-setInterval(updateUserListFlags, 5000);
-
-// Filter chat messages by query
-function filterMessages(query) {
-  if (!query) {
-    renderChatMessages(allMessages);
-    return;
-  }
-  const filtered = allMessages.filter(m => m.text.toLowerCase().includes(query.toLowerCase()));
-  renderChatMessages(filtered);
-}
-
-function sendMessage() {
-  const msgInput = document.getElementById('msg');
-  const msg = msgInput.value.trim();
-  if (!selectedUserId || !msg) return alert("Pilih user dan tulis pesan dulu!");
-
-  const now = Date.now();
-
-  const newMsg = {
-    from: 'admin',
-    name: 'Admin',
-    email: 'admin@domain.com',
-    photoURL: 'https://i.imgur.com/qiZFOs9.png',
-    text: msg,
-    time: now,
-    readByAdmin: true
+<script>
+ // Firebase config lengkap
+  const firebaseConfig = {
+    apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
+    authDomain: "blurphp.firebaseapp.com",
+    databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "blurphp",
+    storageBucket: "blurphp.appspot.com",
+    messagingSenderId: "593904200464",
+    appId: "1:593904200464:web:cea7bc1360532c20d99395"
   };
 
-  db.ref(`chats/${selectedUserId}`).push(newMsg, err => {
-    if (!err) {
-      msgInput.value = ''; // Kosongkan input saja
-      // JANGAN renderChatMessages di sini
-    } else {
-      alert('Gagal mengirim pesan');
-    }
-  });
-}
+  // Inisialisasi Firebase
+  firebase.initializeApp(firebaseConfig);
 
-// --- Init on window load ---
-window.onload = () => {
-  loadUserList();
-  watchNewUsers();
+  // Inisialisasi layanan Firebase
+  const auth = firebase.auth();
+  const db = firebase.database();
+  const storage = firebase.storage();
 
-  // Send message on Enter key (without Shift or Ctrl)
-  const msgInput = document.getElementById('msg');
-  if (msgInput) {
-    msgInput.addEventListener('keydown', e => {
-      if ((e.key === 'Enter') && !(e.shiftKey || e.ctrlKey)) {
-        e.preventDefault();
-        sendMessage();
-      }
-    });
+  // Fungsi login Google
+  function googleLogin() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+
+    auth.signInWithPopup(provider)
+      .then(result => {
+        const user = result.user;
+
+        // Simpan data user di localStorage
+        localStorage.setItem("username", user.displayName);
+        localStorage.setItem("useremail", user.email);
+        localStorage.setItem("userphoto", user.photoURL);
+
+        // Redirect ke halaman chat setelah login sukses
+        window.location.href = "https://searcfile.github.io/5g88-php/userlivechatphp/";
+      })
+      .catch(error => {
+        alert("Login failed: " + error.message);
+      });
   }
-
-  // Filter all users
-  document.getElementById('filterAll').onclick = () => {
-    document.getElementById('userListBox').innerHTML = '';
-    renderUserList(allUsersData, 'all', document.getElementById('searchUser').value);
-  };
-
-  // Filter unread users
-  document.getElementById('filterUnread').onclick = () => {
-    document.getElementById('userListBox').innerHTML = '';
-    renderUserList(allUsersData, 'unread', document.getElementById('searchUser').value);
-  };
-
-  // Search users input
-  const searchUserInput = document.getElementById('searchUser');
-  if (searchUserInput) {
-    searchUserInput.addEventListener('input', e => {
-      const filterType = document.querySelector('input[name="filter"]:checked')?.value || 'all';
-      document.getElementById('userListBox').innerHTML = '';
-      renderUserList(allUsersData, filterType, e.target.value);
-    });
-  }
-
-  // Search messages input
-  const searchMessageInput = document.getElementById('searchMessage');
-  if (searchMessageInput) {
-    searchMessageInput.addEventListener('input', e => {
-      filterMessages(e.target.value);
-    });
-  }
-
-  // Send button
-  const sendBtn = document.getElementById('sendBtn');
-  if (sendBtn) {
-    sendBtn.onclick = sendMessage;
-  }
-};
   </script>
 </body>
 </html>
