@@ -339,15 +339,17 @@ background-color:black;
 
 <body>
   <!-- Header Atas -->
- <header>
+<header>
   <div style="display: flex; align-items: center; gap: 10px;">
     <h1>USER LIVECHAT</h1>
     <div id="notifDot" style="width: 12px; height: 12px; background: red; border-radius: 50%; display: none;"></div>
   </div>
-  <div style="display: flex; gap: 10px;">
-    <button id="logoutBtn">Logout</button>
-  </div>
 </header>
+
+<!-- Tombol Logout dipindah ke bawah header -->
+<div style="display: flex; justify-content: flex-end; padding: 10px 20px;">
+  <button id="logoutBtn">Logout</button>
+</div>
 
 <!-- Chat Main -->
 <main>
