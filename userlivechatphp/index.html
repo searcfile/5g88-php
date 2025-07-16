@@ -227,6 +227,9 @@ body::-webkit-scrollbar {
   }
 
   #logoutBtn {
+    position: fixed;
+    top: 20px;
+     right: 20px;
     background-color: #141414;
     color: white;
     padding: 0px 15px;
@@ -237,6 +240,7 @@ body::-webkit-scrollbar {
     transition: 0.3s;
     font-size: 14px;
     height: 32px;
+    z-index: 1000;
   }
 
   #logoutBtn:hover {
@@ -345,15 +349,15 @@ background-color:black;
   </div>
 </header>
 
+ <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+      <button id="logoutBtn">Logout</button>
+    </div>
+    
 
 <!-- Chat Main -->
 <main>
   <div class="chat-wrapper">
     <!-- CHAT HEADER -->
-     <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
-      <button id="logoutBtn">Logout</button>
-    </div>
-    
     <div class="chat-header">
       <div class="profile">
         <img id="headerUserPhoto" src="https://i.pravatar.cc/40" alt="User" />
