@@ -227,9 +227,6 @@ body::-webkit-scrollbar {
   }
 
   #logoutBtn {
-    position: fixed;
-    top: 20px;
-     right: 20px;
     background-color: #141414;
     color: white;
     padding: 0px 15px;
@@ -240,7 +237,7 @@ body::-webkit-scrollbar {
     transition: 0.3s;
     font-size: 14px;
     height: 32px;
-    z-index: 1000;
+    width: 100%;
   }
 
   #logoutBtn:hover {
@@ -342,15 +339,15 @@ background-color:black;
 
 <body>
   <!-- Header Atas -->
-<header>
+ <header>
   <div style="display: flex; align-items: center; gap: 10px;">
     <h1>USER LIVECHAT</h1>
     <div id="notifDot" style="width: 12px; height: 12px; background: red; border-radius: 50%; display: none;"></div>
   </div>
-</header
-
-      <button id="logoutBtn">Logout</button>
-    
+  <div style="display: flex; gap: 10px;">
+    <button id="logoutBtn">Logout</button>
+  </div>
+</header>
 
 <!-- Chat Main -->
 <main>
