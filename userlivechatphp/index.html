@@ -341,6 +341,25 @@ body::-webkit-scrollbar {
   border: 1px solid white;
 background-color:black;
 }
+    #themeBtn {
+  background-color: #141414;
+  color: white;
+  padding: 0px 15px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  border: 1px solid #ffffff;
+  transition: 0.3s;
+  font-size: 14px;
+  height: 32px;
+  width: 100%;
+}
+
+#themeBtn:hover {
+  border-color: #3c89e8;
+  background-color: #141414;
+  color: #3c89e8;
+}
 </style>
 
 <body>
@@ -351,7 +370,7 @@ background-color:black;
     <div id="notifDot" style="width: 12px; height: 12px; background: red; border-radius: 50%; display: none;"></div>
   </div>
   <div style="display: flex; gap: 10px;">
-    <button onclick="toggleTheme()">🌓 Theme</button>
+   <button id="themeBtn" onclick="toggleTheme()">🌓 Theme</button>
     <button id="logoutBtn">Logout</button>
   </div>
 </header>
