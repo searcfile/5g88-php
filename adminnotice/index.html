@@ -49,6 +49,14 @@
       cursor: pointer;
       margin: 10px 15px 0 auto;
     }
+    .btn-create:hover { 
+     background: #3c89e8;
+     color: white;
+    }
+    .btn-create:active { 
+     background: #1554ad;
+     color: white;
+    }
 
     .notice-scroll {
       padding: 15px;
@@ -97,20 +105,34 @@
       white-space: nowrap;
     }
 
-    .btn-send { background-color: #1668dc; }
+    .btn-send { background-color: #1668dc;}
+    .btn-send:hover {
+     background: #3c89e8;
+     color: white;
+    }
+    .btn-send:active {
+     background: #1554ad;
+     color: white;
+    }
     .btn-edit { background-color: #999; }
+    .btn-edit:hover {
+     background: #bbbbbb;
+     color: white;
+    }
+    .btn-edit:active {
+     background: #757575;
+     color: white !important;
+    }
     .btn-save { background-color: green; }
     .btn-delete { background-color: red; }
-    
-    button:hover {
-   background-color: rgb(0 60 180 / 15%);
-  color: white;
-  transition: background-color 0.2s ease;
-  box-shadow: 0 2px 6px rgba(255, 255, 255, 0.2);
-}
-button:active {
-    color: rgba(255, 255, 255, 0.6);
-}
+    .btn-delete:hover {
+     background: #e75858;
+     color: white;
+    }
+    .btn-delete:active {
+     background: #b31616;
+     color: white !important;
+    }
     .main {
       flex-grow: 1;
       padding: 0;
@@ -127,10 +149,13 @@ button:active {
       font-size: 12px;
       border-radius: 6px;
       padding: 10px;
-      border: 1px solid #1668dc;
+      border: 1px solid #3c89e8;
       resize: none;
     }
-
+   .main textarea:focus {
+      outline: none;
+      border: 1px solid #1668dc;
+   }
    .main button:active {
     color: rgba(255, 255, 255, 0.6);
    }
@@ -162,19 +187,24 @@ button:active {
 }
 
 .btn-fly:hover {
-  filter: brightness(2.0);
-  box-shadow: 0 2px 2px rgba(255, 255, 255, 0.1);
-  transition: all 0.2s ease-in-out;
+ background: #3c89e8;
+ color: white;
+}
+.btn-fly:active {
+ background: #1554ad;
+ color: white !important;
 }
 
 .btn-clear {
-  background: red;
+  background: #dd1717;
 }
-
 .btn-clear:hover {
-  filter: brightness(2.0);
-  box-shadow: 0 2px 2px rgba(255, 255, 255, 0.2);
-  transition: all 0.2s ease-in-out;
+  background: #e75858;
+  color: white;
+}
+.btn-clear:active {
+  background: #b31616;
+  color: white !important;
 }
     .toggle-switch {
   width: 46px;
