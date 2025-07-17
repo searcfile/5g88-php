@@ -46,10 +46,10 @@
   .search-container {
   display: flex;
   align-items: center;
-  background: #1f1f1f;
+  width: 320px;
   border: 1px solid #333;
   border-radius: 6px;
-  width: 300px;
+  background-color: #1a1a1a;
   margin: 20px;
   overflow: hidden;
 }
@@ -64,21 +64,31 @@
   outline: none;
 }
 
+
 .search-container input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.4);
 }
+
 
 .search-container button {
   background: transparent;
   border: none;
   padding: 10px;
-  color: rgba(255, 255, 255, 0.5);
+  border-left: 1px solid #333;
   cursor: pointer;
-  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.search-container button:hover {
-  color: #3b8cff;
+.search-container button svg {
+  fill: none;
+  stroke: #aaa;
+  transition: stroke 0.2s;
+}
+
+.search-container button:hover svg {
+  stroke: #3b8cff;
 }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -88,9 +98,17 @@
 <div class="header">User List (Login)</div>
   
 <div class="search-container">
-  <input type="text" id="searchInput" placeholder="Search" />
-  <button id="searchBtn">
-    🔍
+  <input
+    type="text"
+    id="searchInput"
+    placeholder="Search"
+    autocomplete="off"
+  />
+  <button id="searchBtn" type="button">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <path d="M21 21L15 15" stroke="#aaa" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="10" cy="10" r="6" stroke="#aaa" stroke-width="2"/>
+    </svg>
   </button>
 </div>
   
@@ -236,7 +254,7 @@
   setInterval(preserveScrollAndLoad, 10000);
   window.onload = setupSearchListener;
 
-  document.getElementById('searchInput').addEventListener('input', () => {
+  document.getElementById('searchBtn').addEventListener('click', () => {
   const query = document.getElementById('searchInput').value;
   const filtered = filterTable(query, allLoginData);
   renderLoginTable(filtered);
