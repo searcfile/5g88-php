@@ -47,52 +47,59 @@
   display: flex;
   align-items: center;
   width: 500px;
-  border-radius: 6px;
   background-color: #141414;
   margin: 20px;
+  border-radius: 6px;
   overflow: hidden;
   border: 1px solid #424242;
 }
 
+/* INPUT */
 .search-container input {
   flex: 1;
-  background: transparent;
-  border: 1px solid #424242;
-  padding: 10px;
+  border: none;
+  padding: 10px 12px;
   color: white;
   font-size: 14px;
   background-color: #141414;
-}
-.search-container input:hover {
-  border: 1px solid #3c89e8;
-}
-.search-container input:focus {
-  border: 1px solid #1668dc;
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
   outline: none;
 }
 
 .search-container input::placeholder {
   color: rgba(255, 255, 255, 0.4);
 }
+
+.search-container input:focus {
+  outline: none;
+}
+
+/* BUTTON */
 .search-container button {
-  background: transparent;
+  background-color: transparent;
+  padding: 10px 14px;
   border: none;
-  padding: 10px;
   border-left: 1px solid #424242;
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #aaa;
+  transition: border 0.2s, color 0.2s;
+}
+
+.search-container button:hover {
+  color: #3c89e8;
+  border-left: 1px solid #3c89e8;
+  background-color: #1a1a1a;
 }
 
 .search-container button svg {
-  fill: none;
-  stroke: #aaa;
+  stroke: currentColor;
   transition: stroke 0.2s;
-}
-
-.search-container button:hover svg {
-  stroke: #3b8cff;
 }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
