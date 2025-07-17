@@ -117,21 +117,26 @@
       padding: 0;
     }
     .main-body {
-    padding: 0 20px;
-    }
+  padding: 0 20px;
+  height: calc(100vh - 140px); /* biar textarea fleksibel */
+  overflow-y: auto;
+}
 
     .main textarea {
-      width: 99%;
-      height: 700px;
-      background-color: #222;
-      color: #1668dc;
-      font-size: 12px;
-      border-radius: 6px;
-      padding: 10px;
-      border: 1px solid #1668dc;
-      resize: none;
-    }
-
+  width: 99%;
+  height: 100%;
+  min-height: 300px;
+  max-height: calc(100vh - 180px); /* Responsive max height */
+  background-color: #222;
+  color: #1668dc;
+  font-size: 12px;
+  border-radius: 6px;
+  padding: 10px;
+  border: 1px solid #1668dc;
+  resize: vertical;
+  overflow-y: auto;
+  white-space: pre-wrap; /* penting untuk multiline */
+}
    .main button:active {
     color: rgba(255, 255, 255, 0.6);
    }
