@@ -110,7 +110,7 @@
   transition: stroke 0.2s;
 }
 #searchBtn.loading {
-  animation: snapshotPulse 3s ease-in-out infinite;
+  animation: snapshotPulse 5s ease-in-out infinite;
   border: 1px solid #3b8cff;
   border-radius: 0 6px 6px 0;
 }
@@ -268,7 +268,7 @@
     loadLoginData();
     setTimeout(() => {
       window.scrollTo({ top: scrollY, behavior: 'instant' });
-    }, 100);
+    }, 50);
   }
 
   function setupSearchListener() {
