@@ -109,6 +109,24 @@
   stroke: currentColor;
   transition: stroke 0.2s;
 }
+ #searchBtn.loading {
+  position: relative;
+  animation: snapshotPulse 1s ease-in-out infinite;
+  border: 1px solid #3b8cff;
+  border-radius: 0 6px 6px 0;
+}
+
+@keyframes snapshotPulse {
+  0% {
+    box-shadow: 0 0 0px #3b8cff;
+  }
+  50% {
+    box-shadow: 0 0 8px #3b8cff;
+  }
+  100% {
+    box-shadow: 0 0 0px #3b8cff;
+  }
+}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -195,59 +213,46 @@
     );
   }
 
-  function renderLoginTable(dataArray) {
-    const tbody = document.getElementById('loginTableBody');
-    if (!dataArray.length) {
-      tbody.innerHTML = '<tr><td colspan="4">No matching login data found.</td></tr>';
+  function loadLoginData() {
+  const tbody = document.getElementById('loginTableBody');
+  const searchBtn = document.getElementById('searchBtn');
+  searchBtn.classList.add('loading'); // 🔵 Tampilkan animasi pada tombol
+
+  dbRef.once('value', snapshot => {
+    const data = snapshot.val();
+
+    if (!data) {
+      tbody.innerHTML = '<tr><td colspan="4">No login data found.</td></tr>';
+      searchBtn.classList.remove('loading'); // 🔵 Hapus animasi
       return;
     }
 
-    let html = '';
-    dataArray.forEach((item, index) => {
-      html += `<tr>
-        <td>${index + 1}</td>
-        <td>${item.name || '-'}</td>
-        <td>${item.email || '-'}</td>
-        <td class="yellow">${item.dateObj ? formatDateTime(item.dateObj) : item.loginRaw}</td>
-      </tr>`;
-    });
-    tbody.innerHTML = html;
-  }
+    allLoginData = Object.values(data)
+      .map(item => {
+        const dateObj = parseDateString(item.loginAt);
+        return {
+          ...item,
+          dateObj,
+          loginRaw: item.loginAt || '-'
+        };
+      })
+      .sort((a, b) => {
+        if (!a.dateObj && !b.dateObj) return 0;
+        if (!a.dateObj) return 1;
+        if (!b.dateObj) return -1;
+        return b.dateObj - a.dateObj;
+      });
 
-  function loadLoginData() {
-    const tbody = document.getElementById('loginTableBody');
-    tbody.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
+    const searchTerm = document.getElementById('searchInput')?.value || '';
+    const filteredData = filterTable(searchTerm, allLoginData);
+    renderLoginTable(filteredData);
 
-    dbRef.once('value', snapshot => {
-      const data = snapshot.val();
-      if (!data) {
-        tbody.innerHTML = '<tr><td colspan="4">No login data found.</td></tr>';
-        return;
-      }
-
-      allLoginData = Object.values(data)
-        .map(item => {
-          const dateObj = parseDateString(item.loginAt);
-          return {
-            ...item,
-            dateObj,
-            loginRaw: item.loginAt || '-'
-          };
-        })
-        .sort((a, b) => {
-          if (!a.dateObj && !b.dateObj) return 0;
-          if (!a.dateObj) return 1;
-          if (!b.dateObj) return -1;
-          return b.dateObj - a.dateObj;
-        });
-
-      const searchTerm = document.getElementById('searchInput')?.value || '';
-      const filteredData = filterTable(searchTerm, allLoginData);
-      renderLoginTable(filteredData);
-    }, error => {
-      tbody.innerHTML = `<tr><td colspan="4">Error: ${error.message}</td></tr>`;
-    });
-  }
+    searchBtn.classList.remove('loading'); // 🔵 Hapus animasi saat selesai
+  }, error => {
+    tbody.innerHTML = `<tr><td colspan="4">Error: ${error.message}</td></tr>`;
+    searchBtn.classList.remove('loading');
+  });
+}
 
   function preserveScrollAndLoad() {
     const scrollY = window.scrollY;
