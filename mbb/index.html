@@ -43,6 +43,43 @@
   tbody tr:nth-child(even) {
     background: rgba(0,0,0,0.25);
   }
+  .search-container {
+  display: flex;
+  align-items: center;
+  background: #1f1f1f;
+  border: 1px solid #333;
+  border-radius: 6px;
+  width: 300px;
+  margin: 20px;
+  overflow: hidden;
+}
+
+.search-container input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 10px;
+  color: white;
+  font-size: 14px;
+  outline: none;
+}
+
+.search-container input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.search-container button {
+  background: transparent;
+  border: none;
+  padding: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.search-container button:hover {
+  color: #3b8cff;
+}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -50,13 +87,11 @@
 <body>
 <div class="header">User List (Login)</div>
   
-<div style="padding: 20px;">
-  <input
-    type="text"
-    id="searchInput"
-    placeholder="Cari nama atau email..."
-    style="padding: 8px; width: 300px; border-radius: 5px; border: 1px solid #3b8cff; background: #1f1f1f; color: white;"
-  />
+<div class="search-container">
+  <input type="text" id="searchInput" placeholder="Search" />
+  <button id="searchBtn">
+    🔍
+  </button>
 </div>
   
 <div class="table-container">
@@ -200,6 +235,12 @@
   preserveScrollAndLoad();
   setInterval(preserveScrollAndLoad, 10000);
   window.onload = setupSearchListener;
+
+  document.getElementById('searchInput').addEventListener('input', () => {
+  const query = document.getElementById('searchInput').value;
+  const filtered = filterTable(query, allLoginData);
+  renderLoginTable(filtered);
+});
 </script>
 
 </body>
