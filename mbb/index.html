@@ -43,7 +43,7 @@
   tbody tr:nth-child(even) {
     background: rgba(0,0,0,0.25);
   }
-  .search-container {
+   .search-container {
   display: flex;
   align-items: center;
   width: 500px;
@@ -52,19 +52,16 @@
   margin: 20px;
   overflow: hidden;
   border: 1px solid #424242;
-  height: 42px;
 }
 
 .search-container input {
   flex: 1;
   background: transparent;
-  border: none;
+  border: 1px solid #424242;
   padding: 10px;
   color: white;
   font-size: 14px;
   background-color: #141414;
-  outline: none;
-  box-sizing: border-box;
 }
 .search-container input:hover {
   border: 1px solid #3c89e8;
@@ -73,15 +70,10 @@
   border: 1px solid #1668dc;
   outline: none;
 }
-.search-container:focus-within {
-  border: 1px solid #1668dc; /* Border biru muncul saat input fokus */
-}
 
 .search-container input::placeholder {
   color: rgba(255, 255, 255, 0.4);
 }
-
-
 .search-container button {
   background: transparent;
   border: none;
