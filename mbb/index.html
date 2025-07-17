@@ -57,11 +57,12 @@
 .search-container input {
   flex: 1;
   background: transparent;
-  border: 1px solid #424242;
+  border: none;
   padding: 10px;
   color: white;
   font-size: 14px;
   background-color: #141414;
+  outline: none;
 }
 .search-container input:hover {
   border: 1px solid #3c89e8;
@@ -69,6 +70,9 @@
 .search-container input:focus {
   border: 1px solid #1668dc;
   outline: none;
+}
+.search-container:focus-within {
+  border: 1px solid #1668dc; /* Border biru muncul saat input fokus */
 }
 
 .search-container input::placeholder {
