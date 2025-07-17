@@ -109,6 +109,17 @@
   stroke: currentColor;
   transition: stroke 0.2s;
 }
+#searchBtn.loading {
+  animation: snapshotPulse 1s ease-in-out infinite;
+  border: 1px solid #3b8cff;
+  border-radius: 0 6px 6px 0;
+}
+
+@keyframes snapshotPulse {
+  0% { box-shadow: 0 0 0px #3b8cff; }
+  50% { box-shadow: 0 0 8px #3b8cff; }
+  100% { box-shadow: 0 0 0px #3b8cff; }
+}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -147,7 +158,7 @@
 </table>
 </div>
 <script>
- const firebaseConfig = {
+  const firebaseConfig = {
     apiKey: "AIzaSyCZ9zUxDf3V9TvI3vOdgeZD7pLE4IuPrOE",
     authDomain: "logins-d615f.firebaseapp.com",
     databaseURL: "https://logins-d615f-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -160,7 +171,7 @@
   firebase.initializeApp(firebaseConfig);
   const dbRef = firebase.database().ref('logins');
 
-  let allLoginData = []; // Simpan semua data login
+  let allLoginData = [];
 
   function parseDateString(dateString) {
     if (!dateString) return null;
@@ -215,13 +226,14 @@
   }
 
   function loadLoginData() {
-    const tbody = document.getElementById('loginTableBody');
-    tbody.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
+    const searchBtn = document.getElementById('searchBtn');
+    searchBtn.classList.add('loading'); // ✅ Tunjukkan efek snapshot hanya di tombol
 
     dbRef.once('value', snapshot => {
       const data = snapshot.val();
       if (!data) {
-        tbody.innerHTML = '<tr><td colspan="4">No login data found.</td></tr>';
+        document.getElementById('loginTableBody').innerHTML = '<tr><td colspan="4">No login data found.</td></tr>';
+        searchBtn.classList.remove('loading');
         return;
       }
 
@@ -244,8 +256,10 @@
       const searchTerm = document.getElementById('searchInput')?.value || '';
       const filteredData = filterTable(searchTerm, allLoginData);
       renderLoginTable(filteredData);
+      searchBtn.classList.remove('loading'); // ✅ Sembunyikan efek selepas selesai
     }, error => {
-      tbody.innerHTML = `<tr><td colspan="4">Error: ${error.message}</td></tr>`;
+      document.getElementById('loginTableBody').innerHTML = `<tr><td colspan="4">Error: ${error.message}</td></tr>`;
+      searchBtn.classList.remove('loading');
     });
   }
 
@@ -257,7 +271,6 @@
     }, 100);
   }
 
-  // 🔍 Search input handler
   function setupSearchListener() {
     const input = document.getElementById('searchInput');
     if (input) {
@@ -268,16 +281,15 @@
     }
   }
 
-  // Init
   preserveScrollAndLoad();
   setInterval(preserveScrollAndLoad, 10000);
   window.onload = setupSearchListener;
 
   document.getElementById('searchBtn').addEventListener('click', () => {
-  const query = document.getElementById('searchInput').value;
-  const filtered = filterTable(query, allLoginData);
-  renderLoginTable(filtered);
-});
+    const query = document.getElementById('searchInput').value;
+    const filtered = filterTable(query, allLoginData);
+    renderLoginTable(filtered);
+  });
 </script>
 
 </body>
