@@ -235,6 +235,22 @@
 .toggle-switch.active::after {
   left: 26px;
 }
+  .judul-input {
+    width: 100%;
+    padding: 6px;
+    margin-bottom: 5px;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background-color: #111;
+    color: gold;
+    transition: all 0.2s ease;
+  }
+.judul-input:hover {
+    border: 1px solid #3c89e8;
+}
+.judul-input:focus {
+    border: 1px solid #1668dc;
+}
   </style>
 </head>
 <body>
@@ -533,15 +549,7 @@ function startCountdown(targetTime, display, isActiveCallback = () => true) {
   const judulInput = document.createElement('input');
   judulInput.type = 'text';
   judulInput.placeholder = 'Title Message...';
-  judulInput.style.cssText = `
-    width: 100%;
-    padding: 6px;
-    margin-bottom: 5px;
-    border-radius: 6px;
-    border: 1px solid #444;
-    background-color: #111;
-    color: gold;
-  `;
+  judulInput.className = 'judul-input';
 
   const textarea = document.createElement('textarea');
   textarea.placeholder = 'Type new message...';
