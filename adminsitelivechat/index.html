@@ -519,19 +519,22 @@ function listenToChat() {
   }); // ✅ ← ini menutup .on()
 } // ✅ ← Tambah
 
-function renderUserList(users, filter = 'all', searchTerm = '') {
+function renderUserList(users, filter = 'all', searchTerm = '', clear = true) {
   const userListBox = document.getElementById('userListBox');
-  userListBox.innerHTML = ''; // Clear first
+  if (clear) userListBox.innerHTML = ''; // hanya clear jika diminta
 
   users.forEach(email => {
     const sanitized = sanitizeUserId(email);
+
+    // Cegah duplicate user item jika sudah ada
+    if (document.querySelector(`[data-sanitized="${sanitized}"]`)) return;
 
     db.ref(`chats/${sanitized}`).once('value', snapshot => {
       const chatEntries = Object.values(snapshot.val() || []);
 
       const lastUserMsg = [...chatEntries]
         .filter(m => m.from === 'user')
-        .sort((a, b) => (b.time || 0) - (a.time || 0))[0]; // user message terbaru
+        .sort((a, b) => (b.time || 0) - (a.time || 0))[0];
 
       if (!lastUserMsg) return;
 
@@ -599,7 +602,7 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
         document.getElementById("searchMessage").value = '';
       };
 
-      // === Set kembali highlight user aktif
+      // === Highlight user aktif jika cocok
       if (activeUserIdSanitized && sanitized === activeUserIdSanitized) {
         userDiv.classList.add('active');
       }
@@ -627,7 +630,8 @@ function watchNewUsers() {
     const email = desanitizeUserId(sanitizedEmail);
     if (!allUsersData.includes(email)) {
       allUsersData.push(email);
-      renderUserList([email]);
+      // Tambah user baru tanpa clear yang lama
+      renderUserList([email], 'all', '', false);
     }
   });
 }
