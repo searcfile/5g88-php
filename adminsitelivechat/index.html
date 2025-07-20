@@ -519,23 +519,23 @@ function listenToChat() {
   }); // ✅ ← ini menutup .on()
 } // ✅ ← Tambah
 
-function renderUserList(users, filter = 'all', searchTerm = '', reset = true) {
+// Render user list with optional filter & search
+function renderUserList(users, filter = 'all', searchTerm = '') {
   const userListBox = document.getElementById('userListBox');
-  if (reset) userListBox.innerHTML = ''; // hanya clear kalau reset true
+  userListBox.innerHTML = ''; // Clear first
 
   users.forEach(email => {
     const sanitized = sanitizeUserId(email);
-    const userId = `user-${sanitized}`;
 
-    // Cegah duplikat
-    if (!reset && document.getElementById(userId)) return;
+    // Prevent duplicate user items
+    if (document.querySelector(`[data-sanitized="${sanitized}"]`)) return;
 
     db.ref(`chats/${sanitized}`).once('value', snapshot => {
       const chatEntries = Object.values(snapshot.val() || []);
-
+      
       const lastUserMsg = [...chatEntries]
         .filter(m => m.from === 'user')
-        .sort((a, b) => (b.time || 0) - (a.time || 0))[0];
+        .sort((a, b) => (b.time || 0) - (a.time || 0))[0]; // user message terbaru
 
       if (!lastUserMsg) return;
 
@@ -545,10 +545,9 @@ function renderUserList(users, filter = 'all', searchTerm = '', reset = true) {
       const label = `${lastUserMsg.name || email} (${lastUserMsg.email || email})`;
       if (searchTerm && !label.toLowerCase().includes(searchTerm.toLowerCase())) return;
 
-      // === Container ===
+      // === Div user container ===
       const userDiv = document.createElement('div');
       userDiv.className = 'user-item';
-      userDiv.id = userId;
       userDiv.setAttribute('data-sanitized', sanitized);
       userDiv.style.display = 'flex';
       userDiv.style.alignItems = 'center';
@@ -557,19 +556,15 @@ function renderUserList(users, filter = 'all', searchTerm = '', reset = true) {
       userDiv.style.padding = '6px 10px';
 
       // === Avatar ===
-      const avatarURL = lastUserMsg.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(lastUserMsg.name || email)}&background=random&color=fff`;
-
       const userImg = document.createElement('img');
-      userImg.src = avatarURL;
+      userImg.src = lastUserMsg.photoURL || 'https://i.pravatar.cc/40';
       userImg.alt = 'avatar';
       userImg.style.width = '30px';
       userImg.style.height = '30px';
       userImg.style.borderRadius = '50%';
       userImg.style.border = '1px solid gold';
-      userImg.style.objectFit = 'cover';
-      userImg.style.backgroundColor = '#000';
 
-      // === Label ===
+      // === Nama + email + ❗ label ===
       const userLabel = document.createElement('span');
       userLabel.textContent = label + (hasUnread ? ' ❗' : '');
       userLabel.style.fontWeight = hasUnread ? 'bold' : 'normal';
@@ -577,7 +572,7 @@ function renderUserList(users, filter = 'all', searchTerm = '', reset = true) {
       userDiv.appendChild(userImg);
       userDiv.appendChild(userLabel);
 
-      // === On Click ===
+      // === Klik user item ===
       userDiv.onclick = () => {
         activeUserIdEmail = email;
         activeUserIdSanitized = sanitized;
@@ -604,23 +599,30 @@ function renderUserList(users, filter = 'all', searchTerm = '', reset = true) {
         document.getElementById("searchMessage").value = '';
       };
 
-      // Active highlight
-      if (activeUserIdSanitized && sanitized === activeUserIdSanitized) {
-        userDiv.classList.add('active');
-      }
-
       userListBox.appendChild(userDiv);
     });
   });
 }
+// Load user list initially and watch new users
+function loadUserList() {
+  const userListBox = document.getElementById('userListBox');
+  userListBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
+
+  db.ref('chats').once('value', snapshot => {
+    const users = Object.keys(snapshot.val() || {}).map(desanitizeUserId);
+    allUsersData = users;
+    userListBox.innerHTML = '';
+    renderUserList(users);
+  });
+}
+
 function watchNewUsers() {
   db.ref('chats').on('child_added', snapshot => {
     const sanitizedEmail = snapshot.key;
     const email = desanitizeUserId(sanitizedEmail);
     if (!allUsersData.includes(email)) {
       allUsersData.push(email);
-      // Tambah user baru tanpa clear yang lama
-      renderUserList([email], 'all', '', false);
+      renderUserList([email]);
     }
   });
 }
