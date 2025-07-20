@@ -519,15 +519,16 @@ function listenToChat() {
   }); // ✅ ← ini menutup .on()
 } // ✅ ← Tambah
 
-function renderUserList(users, filter = 'all', searchTerm = '', clear = true) {
+function renderUserList(users, filter = 'all', searchTerm = '', reset = true) {
   const userListBox = document.getElementById('userListBox');
-  if (clear) userListBox.innerHTML = ''; // hanya clear jika diminta
+  if (reset) userListBox.innerHTML = ''; // hanya clear kalau reset true
 
   users.forEach(email => {
     const sanitized = sanitizeUserId(email);
+    const userId = `user-${sanitized}`;
 
-    // Cegah duplicate user item jika sudah ada
-    if (document.querySelector(`[data-sanitized="${sanitized}"]`)) return;
+    // Cegah duplikat
+    if (!reset && document.getElementById(userId)) return;
 
     db.ref(`chats/${sanitized}`).once('value', snapshot => {
       const chatEntries = Object.values(snapshot.val() || []);
@@ -544,9 +545,10 @@ function renderUserList(users, filter = 'all', searchTerm = '', clear = true) {
       const label = `${lastUserMsg.name || email} (${lastUserMsg.email || email})`;
       if (searchTerm && !label.toLowerCase().includes(searchTerm.toLowerCase())) return;
 
-      // === Div user container ===
+      // === Container ===
       const userDiv = document.createElement('div');
       userDiv.className = 'user-item';
+      userDiv.id = userId;
       userDiv.setAttribute('data-sanitized', sanitized);
       userDiv.style.display = 'flex';
       userDiv.style.alignItems = 'center';
@@ -567,7 +569,7 @@ function renderUserList(users, filter = 'all', searchTerm = '', clear = true) {
       userImg.style.objectFit = 'cover';
       userImg.style.backgroundColor = '#000';
 
-      // === Nama + email + ❗ label ===
+      // === Label ===
       const userLabel = document.createElement('span');
       userLabel.textContent = label + (hasUnread ? ' ❗' : '');
       userLabel.style.fontWeight = hasUnread ? 'bold' : 'normal';
@@ -575,7 +577,7 @@ function renderUserList(users, filter = 'all', searchTerm = '', clear = true) {
       userDiv.appendChild(userImg);
       userDiv.appendChild(userLabel);
 
-      // === Klik user item ===
+      // === On Click ===
       userDiv.onclick = () => {
         activeUserIdEmail = email;
         activeUserIdSanitized = sanitized;
@@ -602,7 +604,7 @@ function renderUserList(users, filter = 'all', searchTerm = '', clear = true) {
         document.getElementById("searchMessage").value = '';
       };
 
-      // === Highlight user aktif jika cocok
+      // Active highlight
       if (activeUserIdSanitized && sanitized === activeUserIdSanitized) {
         userDiv.classList.add('active');
       }
@@ -611,19 +613,6 @@ function renderUserList(users, filter = 'all', searchTerm = '', clear = true) {
     });
   });
 }
-// Load user list initially and watch new users
-function loadUserList() {
-  const userListBox = document.getElementById('userListBox');
-  userListBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
-
-  db.ref('chats').once('value', snapshot => {
-    const users = Object.keys(snapshot.val() || {}).map(desanitizeUserId);
-    allUsersData = users;
-    userListBox.innerHTML = '';
-    renderUserList(users);
-  });
-}
-
 function watchNewUsers() {
   db.ref('chats').on('child_added', snapshot => {
     const sanitizedEmail = snapshot.key;
