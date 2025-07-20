@@ -612,8 +612,8 @@ function listenToChat(userEmail) {
   let lastDateKey = '';
 
   chatGroup.forEach(c => {
-    const div = document.createElement('div');
-    div.className = 'message ' + (c.from === 'user' ? 'mine' : 'theirs');
+    // 🔒 Lewati pesan jika tidak punya waktu yang valid
+    if (!c.time || isNaN(new Date(c.time).getTime())) return;
 
     const msgDate = new Date(c.time);
     const timeFormatted = msgDate.toLocaleTimeString('en-US', {
@@ -645,6 +645,8 @@ function listenToChat(userEmail) {
       lastDateKey = dateKey;
     }
 
+    const div = document.createElement('div');
+    div.className = 'message ' + (c.from === 'user' ? 'mine' : 'theirs');
     const senderLabel = c.from === 'user' ? (c.name || 'You') : (c.name || 'Admin');
     const senderPhoto = c.photoURL || "https://i.pravatar.cc/40";
 
