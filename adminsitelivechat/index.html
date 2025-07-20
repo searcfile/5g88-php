@@ -519,7 +519,6 @@ function listenToChat() {
   }); // ✅ ← ini menutup .on()
 } // ✅ ← Tambah
 
-// Render user list with optional filter & search
 function renderUserList(users, filter = 'all', searchTerm = '') {
   const userListBox = document.getElementById('userListBox');
   userListBox.innerHTML = ''; // Clear first
@@ -527,12 +526,9 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
   users.forEach(email => {
     const sanitized = sanitizeUserId(email);
 
-    // Prevent duplicate user items
-    if (document.querySelector(`[data-sanitized="${sanitized}"]`)) return;
-
     db.ref(`chats/${sanitized}`).once('value', snapshot => {
       const chatEntries = Object.values(snapshot.val() || []);
-      
+
       const lastUserMsg = [...chatEntries]
         .filter(m => m.from === 'user')
         .sort((a, b) => (b.time || 0) - (a.time || 0))[0]; // user message terbaru
@@ -556,13 +552,17 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
       userDiv.style.padding = '6px 10px';
 
       // === Avatar ===
+      const avatarURL = lastUserMsg.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(lastUserMsg.name || email)}&background=random&color=fff`;
+
       const userImg = document.createElement('img');
-      userImg.src = lastUserMsg.photoURL || 'https://i.pravatar.cc/40';
+      userImg.src = avatarURL;
       userImg.alt = 'avatar';
       userImg.style.width = '30px';
       userImg.style.height = '30px';
       userImg.style.borderRadius = '50%';
       userImg.style.border = '1px solid gold';
+      userImg.style.objectFit = 'cover';
+      userImg.style.backgroundColor = '#000';
 
       // === Nama + email + ❗ label ===
       const userLabel = document.createElement('span');
@@ -598,6 +598,11 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
 
         document.getElementById("searchMessage").value = '';
       };
+
+      // === Set kembali highlight user aktif
+      if (activeUserIdSanitized && sanitized === activeUserIdSanitized) {
+        userDiv.classList.add('active');
+      }
 
       userListBox.appendChild(userDiv);
     });
