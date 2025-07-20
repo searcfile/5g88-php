@@ -586,15 +586,26 @@ function listenToChat(userEmail) {
         if (c.from === 'admin' && c.time > latestAdminMsgTime) latestAdminMsgTime = c.time;
       });
 
-      // 🔔 Notifikasi jika ada pesan admin baru
+      // 🔔 Jika ada pesan admin yang belum dilihat, tampilkan notifikasi
       if (latestAdminMsgTime > lastSeenTime) {
         notifDot.style.display = 'inline-block';
         playNotificationSound();
+
+        // 🔴 Kirim ke induk utk tampilkan dot merah di header LiveChat
+        if (window.parent !== window) {
+          window.parent.postMessage({ action: "show-livechat-notif" }, "*");
+        }
+
       } else {
         notifDot.style.display = 'none';
+
+        // ✅ Kirim ke induk utk sembunyikan dot merah
+        if (window.parent !== window) {
+          window.parent.postMessage({ action: "hide-livechat-notif" }, "*");
+        }
       }
 
-      renderChats(pastChats, today);  // kirim today ke fungsi render
+      renderChats(pastChats, today);
       renderChats(todayChats, today);
 
       chatBox.scrollTop = chatBox.scrollHeight;
@@ -604,6 +615,11 @@ function listenToChat(userEmail) {
       localStorage.setItem(lastSeenKey, latestTime);
     } else {
       notifDot.style.display = 'none';
+
+      // Kosong → pastikan dot merah disembunyikan juga di induk
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: "hide-livechat-notif" }, "*");
+      }
     }
   });
 }
