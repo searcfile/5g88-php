@@ -415,6 +415,12 @@ background-color:black;
   const db = firebase.database();
   const storage = firebase.storage();
 
+  window.addEventListener("focus", () => {
+  if (window.parent !== window) {
+    window.parent.postMessage({ action: "hide-livechat-notif" }, "*");
+  }
+});
+  
   let currentUserEmail = null;
 
   firebase.auth().onAuthStateChanged((user) => {
