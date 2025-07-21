@@ -104,9 +104,14 @@
       top: 5px;
       left: 10px;
       font-size: 28px;
-      color: gold;
+      color: rgba(255,255,255,0.65);
       cursor: pointer;
       z-index: 1100;
+      transition: color 0.3s;
+    }
+    .menu-icon:hover {
+      color: rgba(255,255,255,0.85);
+      transition: color 0.3s;
     }
     .menu-img {
       width: 20px;
@@ -309,17 +314,18 @@
       tabElement.className = "tab";
       tabElement.draggable = true;
       tabElement.dataset.index = index;
-      tabElement.style.background = "#222";
-      tabElement.style.color = "gold";
-      tabElement.style.padding = "2px 3px";
+      tabElement.style.background = "#rgba(255, 255, 255, 0.04)";
+      tabElement.style.color = "rgba(255, 255, 255, 0.85);";
+      tabElement.style.padding = "6px 16px";
       tabElement.style.marginRight = "0px";
       tabElement.style.borderRadius = "5px";
-      tabElement.style.border = "1px solid gold";
+      tabElement.style.border = "1px solid #303030";
       tabElement.style.display = "inline-flex";
       tabElement.style.alignItems = "center";
       tabElement.style.fontSize = "14px";
       tabElement.style.userSelect = "none";
       tabElement.style.cursor = "pointer";
+      tabElement.style.transition = "all 0.3s ease";
 
       tabElement.addEventListener("dragstart", function (e) {
         e.dataTransfer.setData("text/plain", index);
@@ -367,7 +373,7 @@
       closeBtn.style.border = "none";
       closeBtn.style.color = "red";
       closeBtn.style.fontSize = "14px";
-      closeBtn.style.transition = "all 0.2s ease";
+      closeBtn.style.transition = "all 0.3s ease";
       closeBtn.style.padding = "0";
       closeBtn.style.pointerEvents = "auto";
 
