@@ -374,37 +374,34 @@ function formatDateLabel(dateStr) {
   const todayReset = resetTime(today);
   const dateReset = resetTime(date);
 
-  const diffTime = todayReset - dateReset;
-
-  // Capitalize helper
-  const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+  const diffTime = todayReset - dateReset; // ms
 
   if (diffTime === 0) {
     return {
-      day: "Today",
+      day: "today",
       full: date.toLocaleDateString("en-GB", {
+        year: "numeric",
+        month: "long",
         day: "2-digit",
-        month: "short",
-        year: "numeric"
-      }),
+      }).toLowerCase(),
     };
   } else if (diffTime === 86400000) {
     return {
-      day: "Yesterday",
+      day: "yesterday",
       full: date.toLocaleDateString("en-GB", {
+        year: "numeric",
+        month: "long",
         day: "2-digit",
-        month: "short",
-        year: "numeric"
-      }),
+      }).toLowerCase(),
     };
   } else {
     return {
-      day: capitalize(date.toLocaleDateString("en-GB", { weekday: "long" })),
+      day: date.toLocaleDateString("en-GB", { weekday: "long" }).toLowerCase(),
       full: date.toLocaleDateString("en-GB", {
+        year: "numeric",
+        month: "long",
         day: "2-digit",
-        month: "short",
-        year: "numeric"
-      }),
+      }).toLowerCase(),
     };
   }
 }
