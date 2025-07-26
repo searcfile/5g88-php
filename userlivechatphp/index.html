@@ -699,6 +699,12 @@ function listenToChat(userEmail) {
   
 let userHasInteracted = false;
 
+  window.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "user-clicked") {
+    userHasInteracted = true;
+    console.log("✅ User click received from parent - sound enabled");
+  }
+});
   // Deteksi klik pertama user
   ['click', 'keydown', 'scroll', 'touchstart'].forEach(event =>
   document.addEventListener(event, () => userHasInteracted = true, { once: true })
