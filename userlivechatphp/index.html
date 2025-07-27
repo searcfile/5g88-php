@@ -426,14 +426,14 @@ function cleanDuplicateName(name) {
   }
   return name;
 }
-// 🧠 Update header foto & nama
+
 function updateUserHeader() {
-  const userName = localStorage.getItem("username") || "User";
+  let userName = localStorage.getItem("username") || "User";  // GANTI const → let
   const userPhoto = localStorage.getItem("userphoto") || "https://i.pravatar.cc/40";
   const nameEl = document.getElementById("headerUserName");
   const photoEl = document.getElementById("headerUserPhoto");
-  
-  userName = cleanDuplicateName(userName); 
+
+  userName = cleanDuplicateName(userName);  // ✅ Tidak error lagi
   if (nameEl) nameEl.textContent = userName;
   if (photoEl) photoEl.src = userPhoto;
 }
