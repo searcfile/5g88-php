@@ -416,12 +416,24 @@ const storage = firebase.storage();
 let currentUserEmail = null;
 let userHasInteracted = false;
 
+function cleanDuplicateName(name) {
+  const parts = name.trim().split(/\s+/);
+  const half = parts.length / 2;
+  if (parts.length % 2 === 0) {
+    const firstHalf = parts.slice(0, half).join(' ');
+    const secondHalf = parts.slice(half).join(' ');
+    if (firstHalf === secondHalf) return firstHalf;
+  }
+  return name;
+}
 // 🧠 Update header foto & nama
 function updateUserHeader() {
   const userName = localStorage.getItem("username") || "User";
   const userPhoto = localStorage.getItem("userphoto") || "https://i.pravatar.cc/40";
   const nameEl = document.getElementById("headerUserName");
   const photoEl = document.getElementById("headerUserPhoto");
+  
+  userName = cleanDuplicateName(userName); 
   if (nameEl) nameEl.textContent = userName;
   if (photoEl) photoEl.src = userPhoto;
 }
