@@ -637,6 +637,13 @@ function playNotificationSound() {
     audio.play().catch(e => console.warn("🔇 Audio autoplay blocked:", e));
   }
 }
+window.addEventListener("DOMContentLoaded", () => {
+  const email = localStorage.getItem("useremail");
+  if (email) {
+    console.log("🔁 Detected user data from localStorage, loading chat...");
+    initChatWithUserData();
+  }
+});
 </script>
 </body>
 </html>
