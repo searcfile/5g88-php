@@ -392,7 +392,8 @@ background-color:black;
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
 
 <script>
-// Konversi email jadi ID aman
+let chatInitialized = false;
+
 function sanitizeEmail(email) {
   return email.replace(/\./g, '_').replace(/@/g, '_at_').replace(/,/g, '_');
 }
@@ -416,7 +417,17 @@ const storage = firebase.storage();
 let currentUserEmail = null;
 let userHasInteracted = false;
 
-// Dengarkan data dari parent
+// 🧠 Update header foto & nama
+function updateUserHeader() {
+  const userName = localStorage.getItem("username") || "User";
+  const userPhoto = localStorage.getItem("userphoto") || "https://i.pravatar.cc/40";
+  const nameEl = document.getElementById("headerUserName");
+  const photoEl = document.getElementById("headerUserPhoto");
+  if (nameEl) nameEl.textContent = userName;
+  if (photoEl) photoEl.src = userPhoto;
+}
+
+// 🔁 Data dikirim dari parent (main page)
 window.addEventListener("message", (event) => {
   if (event.data?.type === "user-login" && event.data.user) {
     const { name, email, photo } = event.data.user;
@@ -424,26 +435,23 @@ window.addEventListener("message", (event) => {
       localStorage.setItem("username", name);
       localStorage.setItem("useremail", email);
       localStorage.setItem("userphoto", photo || "");
+      updateUserHeader();
       initChatWithUserData();
     }
   }
 });
 
-// Inisialisasi chat setelah terima user info
 function initChatWithUserData() {
-  const userName = localStorage.getItem("username") || "User";
-  const userEmail = localStorage.getItem("useremail");
-  const userPhoto = localStorage.getItem("userphoto") || "";
+  if (chatInitialized) return;
+  chatInitialized = true;
 
+  const userEmail = localStorage.getItem("useremail");
   if (!userEmail) return;
   currentUserEmail = userEmail;
 
-  // Set header UI
-  document.getElementById('headerUserPhoto').src = userPhoto || 'https://i.pravatar.cc/40';
-  document.getElementById('headerUserName').textContent = userName;
+  updateUserHeader();
   document.getElementById('typingStatus').textContent = 'Online';
 
-  // Event input & kirim pesan
   const msgInput = document.getElementById('msg');
   const sendBtn = document.querySelector('.send-box button');
   const fileInput = document.getElementById('fileInput');
@@ -463,14 +471,12 @@ function initChatWithUserData() {
 
   msgInput.addEventListener('input', () => {
     sendBtn.disabled = !msgInput.value.trim() && !fileInput.files.length;
+    document.getElementById('typingStatus').textContent = msgInput.value.trim() ? 'Typing...' : 'Online';
+    clearTimeout(typingTimer);
     if (msgInput.value.trim()) {
-      document.getElementById('typingStatus').textContent = 'Typing...';
-      clearTimeout(typingTimer);
       typingTimer = setTimeout(() => {
         document.getElementById('typingStatus').textContent = 'Online';
       }, typingDelay);
-    } else {
-      document.getElementById('typingStatus').textContent = 'Online';
     }
   });
 
@@ -479,8 +485,7 @@ function initChatWithUserData() {
 
   searchInput.addEventListener('input', () => {
     const filter = searchInput.value.toLowerCase();
-    const messages = chatBox.querySelectorAll('.message');
-    messages.forEach(msg => {
+    chatBox.querySelectorAll('.message').forEach(msg => {
       msg.style.display = msg.textContent.toLowerCase().includes(filter) ? '' : 'none';
     });
   });
@@ -490,7 +495,6 @@ function initChatWithUserData() {
 
 async function sendMessage(userEmail) {
   if (!userEmail) return;
-
   const msgInput = document.getElementById('msg');
   const fileInput = document.getElementById('fileInput');
   const msg = msgInput.value.trim();
@@ -625,7 +629,6 @@ function renderChats(chatGroup, today) {
   });
 }
 
-// Deteksi klik user agar sound boleh jalan
 ['click','keydown','scroll','touchstart'].forEach(event =>
   document.addEventListener(event, () => userHasInteracted = true, { once: true })
 );
@@ -637,10 +640,11 @@ function playNotificationSound() {
     audio.play().catch(e => console.warn("🔇 Audio autoplay blocked:", e));
   }
 }
+
 window.addEventListener("DOMContentLoaded", () => {
   const email = localStorage.getItem("useremail");
   if (email) {
-    console.log("🔁 Detected user data from localStorage, loading chat...");
+    updateUserHeader(); // ⬅️ Tambah update header saat load
     initChatWithUserData();
   }
 });
