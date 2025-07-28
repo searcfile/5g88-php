@@ -708,6 +708,9 @@ function addOrUpdateUser(sanitized, data) {
   if (renderedUserIds.has(sanitized)) return;
   if (allUsersData.some(([id]) => id === sanitized)) return;
 
+  const email = desanitizeUserId(sanitized); // ✅ Desanitize email
+  data.email = email; // ✅ Simpan email asli ke data
+
   db.ref(`chats/${sanitized}`)
     .orderByChild('time')
     .limitToLast(1)
@@ -729,8 +732,7 @@ function addOrUpdateUser(sanitized, data) {
       const displayList = allUsersData.map(([id, user]) => [id, user]);
       renderUserList(displayList, 'all', document.getElementById("searchUser")?.value || '');
 
-      // ✅ Catat sebagai sudah dirender
-      renderedUserIds.add(sanitized);
+      renderedUserIds.add(sanitized); // ✅ Catat sebagai sudah dirender
     });
 }
 
