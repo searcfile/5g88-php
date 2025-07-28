@@ -560,19 +560,14 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
       userDiv.style.cursor = 'pointer';
       userDiv.style.padding = '6px 10px';
 
-      const userImg = document.createElement('img');
-      userImg.src = avatar;
-      userImg.alt = 'avatar';
-      userImg.style.width = '30px';
-      userImg.style.height = '30px';
-      userImg.style.borderRadius = '50%';
-      userImg.style.border = '1px solid gold';
+      const userLabel = document.createElement('span');
+      userLabel.textContent = label + (hasUnread ? ' ❗' : '');
+      userLabel.style.fontWeight = hasUnread ? 'bold' : 'normal';
 
       const userLabel = document.createElement('span');
       userLabel.textContent = label + (hasUnread ? ' ❗' : '');
       userLabel.style.fontWeight = hasUnread ? 'bold' : 'normal';
 
-      userDiv.appendChild(userImg);
       userDiv.appendChild(userLabel);
 
       userDiv.onclick = () => {
