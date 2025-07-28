@@ -595,22 +595,20 @@ function loadUserList() {
       return;
     }
 
-    const promises = [];
-
-    userEntries.forEach(([sanitized, data]) => {
-      const p = db.ref(`chats/${sanitized}`)
-        .orderByChild('time')
-        .limitToLast(1)
-        .once('value')
-        .then(snap => {
-          let lastTime = 0;
-          snap.forEach(msg => {
-            lastTime = msg.val()?.time || 0;
-          });
-          return { sanitized, data, lastTime };
-        });
-      promises.push(p);
-    });
+  const promises = userEntries.map(([sanitized, data]) => {
+  return db.ref(`chats/${sanitized}`)
+    .orderByChild('time')
+    .limitToLast(1)
+    .once('value')
+    .then(snap => {
+      let lastTime = 0;
+      snap.forEach(msg => {
+        lastTime = msg.val()?.time || 0;
+      });
+      return { sanitized, data, lastTime };
+    })
+    .catch(() => ({ sanitized, data, lastTime: 0 }));
+});
 
     Promise.all(promises).then(results => {
       results.sort((a, b) => b.lastTime - a.lastTime);
