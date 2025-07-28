@@ -519,33 +519,24 @@ function listenToChat() {
   }); // ✅ ← ini menutup .on()
 } // ✅ ← Tambah
 
-// Render user list with optional filter & search
-function renderUserList(users, filter = 'all', searchTerm = '') {
+function renderUserList(userList, filter = 'all', searchTerm = '') {
   const userListBox = document.getElementById('userListBox');
-  userListBox.innerHTML = ''; // Clear first
+  userListBox.innerHTML = '';
 
-  users.forEach(email => {
-    const sanitized = sanitizeUserId(email);
+  userList.forEach(([sanitized, userData]) => {
+    const email = desanitizeUserId(sanitized);
+    const name = userData.name || email;
+    const avatar = userData.photoURL || 'https://i.pravatar.cc/40';
+    const label = `${name} (${email})`;
 
-    // Prevent duplicate user items
-    if (document.querySelector(`[data-sanitized="${sanitized}"]`)) return;
+    if (searchTerm && !label.toLowerCase().includes(searchTerm.toLowerCase())) return;
 
     db.ref(`chats/${sanitized}`).once('value', snapshot => {
       const chatEntries = Object.values(snapshot.val() || []);
-      
-      const lastUserMsg = [...chatEntries]
-        .filter(m => m.from === 'user')
-        .sort((a, b) => (b.time || 0) - (a.time || 0))[0]; // user message terbaru
-
-      if (!lastUserMsg) return;
-
       const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
+
       if (filter === 'unread' && !hasUnread) return;
 
-      const label = `${lastUserMsg.name || email} (${lastUserMsg.email || email})`;
-      if (searchTerm && !label.toLowerCase().includes(searchTerm.toLowerCase())) return;
-
-      // === Div user container ===
       const userDiv = document.createElement('div');
       userDiv.className = 'user-item';
       userDiv.setAttribute('data-sanitized', sanitized);
@@ -555,16 +546,14 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
       userDiv.style.cursor = 'pointer';
       userDiv.style.padding = '6px 10px';
 
-      // === Avatar ===
       const userImg = document.createElement('img');
-      userImg.src = lastUserMsg.photoURL || 'https://i.pravatar.cc/40';
+      userImg.src = avatar;
       userImg.alt = 'avatar';
       userImg.style.width = '30px';
       userImg.style.height = '30px';
       userImg.style.borderRadius = '50%';
       userImg.style.border = '1px solid gold';
 
-      // === Nama + email + ❗ label ===
       const userLabel = document.createElement('span');
       userLabel.textContent = label + (hasUnread ? ' ❗' : '');
       userLabel.style.fontWeight = hasUnread ? 'bold' : 'normal';
@@ -572,19 +561,16 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
       userDiv.appendChild(userImg);
       userDiv.appendChild(userLabel);
 
-      // === Klik user item ===
       userDiv.onclick = () => {
         activeUserIdEmail = email;
         activeUserIdSanitized = sanitized;
+        selectedUserId = sanitized;
 
-        const userName = formatUserName(lastUserMsg.name || email);
-        const avatarUrl = lastUserMsg.photoURL || '';
-
-        document.getElementById("chatUserName").textContent = userName;
+        document.getElementById("chatUserName").textContent = name;
 
         const avatarImg = document.getElementById("chatUserAvatar");
-        if (avatarUrl) {
-          avatarImg.src = avatarUrl;
+        if (avatar) {
+          avatarImg.src = avatar;
           avatarImg.style.display = 'block';
         } else {
           avatarImg.style.display = 'none';
@@ -593,10 +579,8 @@ function renderUserList(users, filter = 'all', searchTerm = '') {
         document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
         userDiv.classList.add('active');
 
-        selectedUserId = sanitized;
-        listenToChat();
-
         document.getElementById("searchMessage").value = '';
+        listenToChat();
       };
 
       userListBox.appendChild(userDiv);
@@ -608,25 +592,35 @@ function loadUserList() {
   const userListBox = document.getElementById('userListBox');
   userListBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
 
-  db.ref('chats').once('value', snapshot => {
-    const users = Object.keys(snapshot.val() || {}).map(desanitizeUserId);
-    allUsersData = users;
-    userListBox.innerHTML = '';
-    renderUserList(users);
+  db.ref('users').once('value', snapshot => {
+    const users = snapshot.val() || {};
+    const userEntries = Object.entries(users); // [ [key, data], ... ]
+    const promises = [];
+
+    userEntries.forEach(([sanitized, data]) => {
+      const p = db.ref(`chats/${sanitized}`)
+        .orderByChild('time')
+        .limitToLast(1)
+        .once('value')
+        .then(snap => {
+          let lastTime = 0;
+          snap.forEach(msg => {
+            lastTime = msg.val()?.time || 0;
+          });
+          return { sanitized, data, lastTime };
+        });
+      promises.push(p);
+    });
+
+    Promise.all(promises).then(results => {
+      results.sort((a, b) => b.lastTime - a.lastTime); // sort desc
+      allUsersData = results.map(u => desanitizeUserId(u.sanitized));
+      const formattedList = results.map(u => [u.sanitized, u.data]);
+      userListBox.innerHTML = '';
+      renderUserList(formattedList);
+    });
   });
 }
-
-function watchNewUsers() {
-  db.ref('chats').on('child_added', snapshot => {
-    const sanitizedEmail = snapshot.key;
-    const email = desanitizeUserId(sanitizedEmail);
-    if (!allUsersData.includes(email)) {
-      allUsersData.push(email);
-      renderUserList([email]);
-    }
-  });
-}
-
 // Update unread flags on user list periodically
 function updateUserListFlags() {
   const items = document.querySelectorAll('.user-item');
@@ -687,8 +681,6 @@ function sendMessage() {
 // --- Init on window load ---
 window.onload = () => {
   loadUserList();
-  watchNewUsers();
-
   // Send message on Enter key (without Shift or Ctrl)
   const msgInput = document.getElementById('msg');
   if (msgInput) {
