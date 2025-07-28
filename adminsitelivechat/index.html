@@ -519,18 +519,18 @@ function listenToChat() {
     renderChatMessages(allMessages);
     isInitialChatLoad = false;
 
-    // ⬆️ Update posisi user ke paling atas berdasarkan pesan terakhir
+    // ✅ Update urutan hanya jika pesan terakhir dari user
     const userIndex = allUsersData.findIndex(([id]) => id === activeUserIdSanitized);
     if (userIndex !== -1) {
-      const userEntry = allUsersData[userIndex];
-      const lastTime = allMessages.length > 0 ? allMessages[allMessages.length - 1].time : 0;
-      allUsersData[userIndex][2] = lastTime;
+      const lastMsg = allMessages[allMessages.length - 1];
+      if (lastMsg?.from === 'user') {
+        const lastTime = lastMsg.time || 0;
+        allUsersData[userIndex][2] = lastTime;
 
-      // 🔁 Sort dari terbaru ke lama
-      allUsersData.sort((a, b) => b[2] - a[2]);
-      const displayList = allUsersData.map(([s, d]) => [s, d]);
-
-      renderUserList(displayList, 'all', document.getElementById('searchUser')?.value || '');
+        allUsersData.sort((a, b) => b[2] - a[2]);
+        const displayList = allUsersData.map(([s, d]) => [s, d]);
+        renderUserList(displayList, 'all', document.getElementById('searchUser')?.value || '');
+      }
     }
   });
 }
