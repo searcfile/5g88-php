@@ -562,6 +562,9 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
 
       const userDiv = document.createElement('div');
       userDiv.className = 'user-item';
+      if (sanitized === activeUserIdSanitized) {
+         userDiv.classList.add('active'); // ✅ Pastikan warna aktif tetap ada
+     }
       userDiv.setAttribute('data-sanitized', sanitized);
 
       // ✅ Teks nama & email saja tanpa foto
