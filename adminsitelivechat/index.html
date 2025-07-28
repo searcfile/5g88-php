@@ -583,6 +583,7 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
 // Load user list initially and watch new users
 function loadUserList() {
   const userListBox = document.getElementById('userListBox');
+  userListBox.innerHTML = ''; // ✅ Tambahkan ini untuk hapus duplikat
   userListBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
 
   db.ref('users').once('value', snapshot => {
