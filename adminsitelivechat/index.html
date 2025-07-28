@@ -627,19 +627,18 @@ function loadUserList() {
         .catch(() => ({ sanitized, data, lastTime: 0 }));
     });
 
-    Promise.all(promises).then(results => {
-      results.sort((a, b) => b.lastTime - a.lastTime);
+Promise.all(promises).then(results => {
+  results.sort((a, b) => b.lastTime - a.lastTime);
 
-      allUsersData = results.map(u => [u.sanitized, u.data, u.lastTime]);
-      const formattedList = allUsersData.map(([s, d]) => [s, d]);
+  allUsersData = results.map(u => [u.sanitized, u.data, u.lastTime]);
+  const formattedList = allUsersData.map(([s, d]) => [s, d]);
 
-      userListBox.innerHTML = '';
-      renderUserList(formattedList);
+  userListBox.innerHTML = ''; // Kosongkan dulu
+  renderUserList(formattedList); // ✅ Panggil ini untuk tampilkan daftar awal user
 
-      // ✅ Simpan ID user yang sudah dirender
-      formattedList.forEach(([sanitized]) => renderedUserIds.add(sanitized));
-      initialUserListLoaded = true;
-    });
+  formattedList.forEach(([sanitized]) => renderedUserIds.add(sanitized));
+  initialUserListLoaded = true;
+});
   });
 }
 // Update unread flags on user list periodically
