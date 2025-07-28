@@ -703,6 +703,11 @@ window.onload = () => {
   loadUserList();
 
 function addOrUpdateUser(sanitized, data) {
+  // 🛡️ Cegah duplikat tambahan
+  if (allUsersData.some(([id]) => id === sanitized)) {
+    return;
+  }
+
   db.ref(`chats/${sanitized}`)
     .orderByChild('time')
     .limitToLast(1)
@@ -713,19 +718,18 @@ function addOrUpdateUser(sanitized, data) {
         lastTime = msg.val()?.time || 0;
       });
 
+      // Hapus data lama jika sudah ada
       const existingIndex = allUsersData.findIndex(([id]) => id === sanitized);
       if (existingIndex !== -1) {
-        // 🔁 Update data lama
-        allUsersData[existingIndex] = [sanitized, data, lastTime];
-      } else {
-        // ➕ Tambah data baru
-        allUsersData.push([sanitized, data, lastTime]);
+        allUsersData.splice(existingIndex, 1);
       }
 
-      // 🔁 Urutkan dari terbaru ke lama
+      // Tambah data baru
+      allUsersData.push([sanitized, data, lastTime]);
+
+      // Urutkan dari yang terbaru
       allUsersData.sort((a, b) => b[2] - a[2]);
 
-      // 🖼️ Render ulang
       const displayList = allUsersData.map(([id, user]) => [id, user]);
       renderUserList(displayList, 'all', document.getElementById("searchUser")?.value || '');
     });
@@ -735,7 +739,12 @@ function addOrUpdateUser(sanitized, data) {
 db.ref('users').on('child_added', (snap) => {
   const sanitized = snap.key;
   const data = snap.val();
-  addOrUpdateUser(sanitized, data);
+
+  // 🛡️ Hanya tambahkan kalau belum dirender saat awal
+  if (!initialUserListLoaded || !renderedUserIds.has(sanitized)) {
+    addOrUpdateUser(sanitized, data);
+    renderedUserIds.add(sanitized);
+  }
 });
 
 // 🔁 Listen user diubah (nama/foto/email)
