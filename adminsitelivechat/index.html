@@ -337,7 +337,8 @@ let userHasInteracted = false;
 document.body.addEventListener('click', () => {
   userHasInteracted = true;
 });
-
+  
+let currentFilterMode = 'all';
 let activeUserIdSanitized = '';
 let activeUserIdEmail = '';
 let allUsersData = [];
@@ -346,6 +347,7 @@ let selectedUserId = null;
 let allMessages = [];
 let isInitialChatLoad = true;
 // User ID sanitize/desanitize helpers
+
 function sanitizeUserId(email) {
   return email.replace(/\./g, '_dot_').replace(/@/g, '_at_');
 }
@@ -661,6 +663,28 @@ function loadUserList() {
     });
   });
 }
+db.ref("chats").on("child_changed", (snapshot) => {
+  const sanitizedId = snapshot.key;
+  const messages = snapshot.val();
+
+  if (!messages) return;
+
+  const messageEntries = Object.entries(messages);
+  const latestEntry = messageEntries.reduce((a, b) => (a[1].time > b[1].time ? a : b), [null, { time: 0 }]);
+  const latestTime = latestEntry[1]?.time || 0;
+
+  // ✅ Update waktu user di list
+  const userIndex = allUsersData.findIndex(([id]) => id === sanitizedId);
+  if (userIndex !== -1) {
+    allUsersData[userIndex][2] = latestTime;
+
+    allUsersData.sort((a, b) => b[2] - a[2]);
+
+    const searchValue = document.getElementById('searchUser')?.value || '';
+    const displayList = allUsersData.map(([s, d]) => [s, d]);
+    renderUserList(displayList, currentFilterMode, searchValue);
+  }
+});
 // Update unread flags on user list periodically
 function updateUserListFlags() {
   const items = document.querySelectorAll('.user-item');
@@ -805,18 +829,19 @@ db.ref('users').on('child_changed', (snap) => {
     });
   }
 
-  // Filter all users
-  document.getElementById('filterAll').onclick = () => {
-    document.getElementById('userListBox').innerHTML = '';
-    renderUserList(allUsersData, 'all', document.getElementById('searchUser').value);
-  };
+ // Filter all users
+document.getElementById('filterAll').onclick = () => {
+  currentFilterMode = 'all'; // ✅ WAJIB TAMBAH
+  document.getElementById('userListBox').innerHTML = '';
+  renderUserList(allUsersData, 'all', document.getElementById('searchUser').value);
+};
 
-  // Filter unread users
-  document.getElementById('filterUnread').onclick = () => {
-    document.getElementById('userListBox').innerHTML = '';
-    renderUserList(allUsersData, 'unread', document.getElementById('searchUser').value);
-  };
-
+// Filter unread users
+document.getElementById('filterUnread').onclick = () => {
+  currentFilterMode = 'unread'; // ✅ WAJIB TAMBAH
+  document.getElementById('userListBox').innerHTML = '';
+  renderUserList(allUsersData, 'unread', document.getElementById('searchUser').value);
+};
   // Search users input
   const searchUserInput = document.getElementById('searchUser');
   if (searchUserInput) {
