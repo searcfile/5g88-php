@@ -655,7 +655,8 @@ function updateUserListFlags() {
       const firstMsg = chatEntries.find(m => m.from === 'user');
       if (!firstMsg) return;
 
-      const labelBase = `${firstMsg.name || email} (${firstMsg.email || email})`;
+     const formattedName = formatUserName(firstMsg.name || email);
+     const labelBase = `${formattedName} (${firstMsg.email || email})`;
       item.textContent = labelBase + (hasUnread ? ' ❗' : '');
       item.style.fontWeight = hasUnread ? 'bold' : 'normal';
     });
