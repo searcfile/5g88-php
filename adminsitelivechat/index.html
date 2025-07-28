@@ -705,7 +705,6 @@ function sendMessage() {
 // --- Init on window load ---
 window.onload = () => {
   loadUserList();
-
 function addOrUpdateUser(sanitized, data) {
   db.ref(`chats/${sanitized}`)
     .orderByChild('time')
@@ -727,6 +726,9 @@ function addOrUpdateUser(sanitized, data) {
       // 🔁 Urutkan dari terbaru ke lama
       allUsersData.sort((a, b) => b[2] - a[2]);
 
+      // ✅ Simpan ID agar tidak render ulang
+      renderedUserIds.add(sanitized);
+
       const displayList = allUsersData.map(([id, user]) => [id, user]);
       renderUserList(displayList, 'all', document.getElementById("searchUser")?.value || '');
     });
@@ -737,11 +739,13 @@ db.ref('users').on('child_added', (snap) => {
   const sanitized = snap.key;
   const data = snap.val();
 
-  // ✅ Cegah duplikat render dari user yang sudah ditampilkan oleh loadUserList()
-  if (!initialUserListLoaded || renderedUserIds.has(sanitized)) return;
+  // ⛔ Tunggu sampai loadUserList selesai dulu
+  if (!initialUserListLoaded) return;
+
+  // ✅ Cegah render duplikat
+  if (renderedUserIds.has(sanitized)) return;
 
   addOrUpdateUser(sanitized, data);
-  renderedUserIds.add(sanitized); // Tambah ke daftar setelah diproses
 });
 
 // 🔁 Listen user diubah (nama/foto/email)
@@ -749,7 +753,7 @@ db.ref('users').on('child_changed', (snap) => {
   const sanitized = snap.key;
   const data = snap.val();
 
-  // ⚠️ child_changed biarkan update langsung, karena bisa nama atau foto berubah
+  // ⚠️ Biarkan update langsung meskipun sudah ada
   addOrUpdateUser(sanitized, data);
 });
   // Send message on Enter key (without Shift or Ctrl)
