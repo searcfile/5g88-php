@@ -733,6 +733,9 @@ function sendMessage() {
 }
 // --- Init on window load ---
 window.onload = () => {
+  selectedUserId = null;
+  activeUserIdSanitized = '';
+  activeUserIdEmail = '';
   loadUserList();
 
 function addOrUpdateUser(sanitized, data) {
