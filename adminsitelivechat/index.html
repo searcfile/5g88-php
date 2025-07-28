@@ -308,8 +308,8 @@ body {
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <script>
+let isLoadingUserList = true;
 let renderedUserIds = new Set();
-let initialUserListLoaded = false;
  // Firebase config & init
 const firebaseConfig = {
   apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
@@ -593,6 +593,7 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
       };
 
       userListBox.appendChild(userDiv);
+      renderedUserIds.add(sanitized); 
     });
   });
 }
@@ -638,7 +639,8 @@ function loadUserList() {
 
       // ✅ Simpan ID user yang sudah dirender
       formattedList.forEach(([sanitized]) => renderedUserIds.add(sanitized));
-      initialUserListLoaded = true;
+       isLoadingUserList = false;
+       initialUserListLoaded = true;
     });
   });
 }
@@ -703,10 +705,8 @@ window.onload = () => {
   loadUserList();
 
 function addOrUpdateUser(sanitized, data) {
-  // 🛡️ Cegah duplikat tambahan
-  if (allUsersData.some(([id]) => id === sanitized)) {
-    return;
-  }
+  if (renderedUserIds.has(sanitized)) return;
+  if (allUsersData.some(([id]) => id === sanitized)) return;
 
   db.ref(`chats/${sanitized}`)
     .orderByChild('time')
@@ -718,20 +718,19 @@ function addOrUpdateUser(sanitized, data) {
         lastTime = msg.val()?.time || 0;
       });
 
-      // Hapus data lama jika sudah ada
       const existingIndex = allUsersData.findIndex(([id]) => id === sanitized);
       if (existingIndex !== -1) {
         allUsersData.splice(existingIndex, 1);
       }
 
-      // Tambah data baru
       allUsersData.push([sanitized, data, lastTime]);
-
-      // Urutkan dari yang terbaru
       allUsersData.sort((a, b) => b[2] - a[2]);
 
       const displayList = allUsersData.map(([id, user]) => [id, user]);
       renderUserList(displayList, 'all', document.getElementById("searchUser")?.value || '');
+
+      // ✅ Catat sebagai sudah dirender
+      renderedUserIds.add(sanitized);
     });
 }
 
@@ -741,7 +740,7 @@ db.ref('users').on('child_added', (snap) => {
   const data = snap.val();
 
   // 🛡️ Hanya tambahkan kalau belum dirender saat awal
-  if (!initialUserListLoaded || !renderedUserIds.has(sanitized)) {
+  if (!isLoadingUserList && !renderedUserIds.has(sanitized)) {
     addOrUpdateUser(sanitized, data);
     renderedUserIds.add(sanitized);
   }
