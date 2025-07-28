@@ -499,9 +499,13 @@ function listenToChat() {
 
     allMessages = chatEntries.map(([key, msg]) => {
       const isUnread = msg.from === 'user' && !msg.readByAdmin;
+      const isFromUserAndNew = isUnread && !justOpenedChat;
+
+      if (isFromUserAndNew) {
+        shouldUpdatePosition = true;
+      }
 
       if (isUnread) {
-        shouldUpdatePosition = true;
         messagesToMarkRead.push(key);
 
         if (
@@ -524,14 +528,14 @@ function listenToChat() {
 
     // ✅ Set readByAdmin hanya kalau user benar-benar sedang aktif (diklik sekarang)
     if (justOpenedChat) {
-       justOpenedChat = false;
+      justOpenedChat = false;
       messagesToMarkRead.forEach(key => {
         db.ref(`chats/${activeUserIdSanitized}/${key}/readByAdmin`).set(true);
       });
       if (messagesToMarkRead.length > 0) updateUserListFlags();
     }
 
-    // 🔁 Hanya update posisi jika memang ada pesan baru dari user
+    // 🔁 Hanya update posisi jika memang ada pesan baru dari user (bukan karena klik)
     if (shouldUpdatePosition) {
       const userIndex = allUsersData.findIndex(([id]) => id === activeUserIdSanitized);
       if (userIndex !== -1) {
