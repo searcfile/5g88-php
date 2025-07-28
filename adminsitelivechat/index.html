@@ -541,7 +541,6 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
   userList.forEach(([sanitized, userData]) => {
     const email = desanitizeUserId(sanitized);
     const name = userData.name || email;
-    const avatar = userData.photoURL || 'https://i.pravatar.cc/40';
     const label = `${name} (${email})`;
 
     if (searchTerm && !label.toLowerCase().includes(searchTerm.toLowerCase())) return;
@@ -554,16 +553,8 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
       const userDiv = document.createElement('div');
       userDiv.className = 'user-item';
       userDiv.setAttribute('data-sanitized', sanitized);
-      userDiv.style.display = 'flex';
-      userDiv.style.alignItems = 'center';
-      userDiv.style.gap = '10px';
-      userDiv.style.cursor = 'pointer';
-      userDiv.style.padding = '6px 10px';
 
-      const userLabel = document.createElement('span');
-      userLabel.textContent = label + (hasUnread ? ' ❗' : '');
-      userLabel.style.fontWeight = hasUnread ? 'bold' : 'normal';
-
+      // ✅ Teks nama & email saja tanpa foto
       const userLabel = document.createElement('span');
       userLabel.textContent = label + (hasUnread ? ' ❗' : '');
       userLabel.style.fontWeight = hasUnread ? 'bold' : 'normal';
@@ -577,7 +568,7 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
 
         document.getElementById("chatUserName").textContent = formatUserName(name);
         const avatarImg = document.getElementById("chatUserAvatar");
-        avatarImg.src = avatar;
+        avatarImg.src = userData.photoURL || 'https://i.pravatar.cc/40';
         avatarImg.style.display = 'block';
 
         document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
@@ -588,7 +579,7 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
       };
 
       userListBox.appendChild(userDiv);
-      renderedUserIds.add(sanitized); 
+      renderedUserIds.add(sanitized); // ✅ Tambahkan ke daftar rendered
     });
   });
 }
