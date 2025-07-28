@@ -523,8 +523,8 @@ function listenToChat() {
     isInitialChatLoad = false;
 
     // ✅ Set readByAdmin hanya kalau user benar-benar sedang aktif (diklik sekarang)
-    const isUserActive = document.querySelector(`.user-item.active[data-sanitized="${activeUserIdSanitized}"]`);
-    if (isUserActive) {
+    if (justOpenedChat) {
+       justOpenedChat = false;
       messagesToMarkRead.forEach(key => {
         db.ref(`chats/${activeUserIdSanitized}/${key}/readByAdmin`).set(true);
       });
@@ -587,6 +587,8 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
       userDiv.appendChild(userLabel);
 
       userDiv.onclick = () => {
+        justOpenedChat = true; 
+        
         activeUserIdEmail = email;
         activeUserIdSanitized = sanitized;
         selectedUserId = sanitized;
