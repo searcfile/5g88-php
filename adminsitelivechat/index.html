@@ -543,8 +543,8 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
   userList.forEach(([sanitized, userData]) => {
     const email = desanitizeUserId(sanitized);
    const name = userData.name || email;
-   const emailName = email.split('@')[0].trim(); // ambil nama dari email (sebelum @)
-   const cleanName = name.trim();
+   const emailName = email.split('@')[0].trim();
+   const cleanName = formatUserName(name.trim());
 
 // ✅ Jika sama (case-insensitive), tunjuk sekali saja
    const finalName = cleanName.toLowerCase() === emailName.toLowerCase()
