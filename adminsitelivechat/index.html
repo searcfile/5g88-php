@@ -601,9 +601,7 @@ function loadUserList() {
   const userListBox = document.getElementById('userListBox');
   userListBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
 
-  // ✅ Reset daftar user yang sudah ditampilkan
-  renderedUserIds.clear();
-  allUsersData = [];
+  renderedUserIds.clear(); // ✅ reset ID user yang sudah ditampilkan
 
   db.ref('users').once('value', snapshot => {
     const users = snapshot.val() || {};
@@ -635,13 +633,11 @@ function loadUserList() {
       allUsersData = results.map(u => [u.sanitized, u.data, u.lastTime]);
       const formattedList = allUsersData.map(([s, d]) => [s, d]);
 
-      userListBox.innerHTML = ''; // Kosongkan dulu
-      renderUserList(formattedList); // ✅ Tampilkan user-user awal
+      userListBox.innerHTML = '';
+      renderUserList(formattedList);
 
       // ✅ Simpan ID user yang sudah dirender
       formattedList.forEach(([sanitized]) => renderedUserIds.add(sanitized));
-
-      // ✅ Tandai bahwa render awal sudah selesai
       initialUserListLoaded = true;
     });
   });
@@ -705,6 +701,7 @@ function sendMessage() {
 // --- Init on window load ---
 window.onload = () => {
   loadUserList();
+
 function addOrUpdateUser(sanitized, data) {
   db.ref(`chats/${sanitized}`)
     .orderByChild('time')
@@ -718,17 +715,17 @@ function addOrUpdateUser(sanitized, data) {
 
       const existingIndex = allUsersData.findIndex(([id]) => id === sanitized);
       if (existingIndex !== -1) {
+        // 🔁 Update data lama
         allUsersData[existingIndex] = [sanitized, data, lastTime];
       } else {
+        // ➕ Tambah data baru
         allUsersData.push([sanitized, data, lastTime]);
       }
 
       // 🔁 Urutkan dari terbaru ke lama
       allUsersData.sort((a, b) => b[2] - a[2]);
 
-      // ✅ Simpan ID agar tidak render ulang
-      renderedUserIds.add(sanitized);
-
+      // 🖼️ Render ulang
       const displayList = allUsersData.map(([id, user]) => [id, user]);
       renderUserList(displayList, 'all', document.getElementById("searchUser")?.value || '');
     });
@@ -738,13 +735,6 @@ function addOrUpdateUser(sanitized, data) {
 db.ref('users').on('child_added', (snap) => {
   const sanitized = snap.key;
   const data = snap.val();
-
-  // ⛔ Tunggu sampai loadUserList selesai dulu
-  if (!initialUserListLoaded) return;
-
-  // ✅ Cegah render duplikat
-  if (renderedUserIds.has(sanitized)) return;
-
   addOrUpdateUser(sanitized, data);
 });
 
@@ -752,8 +742,6 @@ db.ref('users').on('child_added', (snap) => {
 db.ref('users').on('child_changed', (snap) => {
   const sanitized = snap.key;
   const data = snap.val();
-
-  // ⚠️ Biarkan update langsung meskipun sudah ada
   addOrUpdateUser(sanitized, data);
 });
   // Send message on Enter key (without Shift or Ctrl)
