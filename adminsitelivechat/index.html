@@ -345,13 +345,12 @@ let allMessages = [];
 let isInitialChatLoad = true;
 // User ID sanitize/desanitize helpers
 function sanitizeUserId(email) {
-  return email.replace(/\./g, '_').replace(/@/g, '_at_').replace(/,/g, '_');
+  return email.replace(/\./g, '_dot_').replace(/@/g, '_at_');
 }
 
 function desanitizeUserId(sanitized) {
-  return sanitized.replace(/_at_/g, '@').replace(/_/g, '.');
+  return sanitized.replace(/_at_/g, '@').replace(/_dot_/g, '.');
 }
-
 // Play notification sound
 function playNotificationSound() {
   const audio = document.getElementById("notifSound");
@@ -534,7 +533,6 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
     db.ref(`chats/${sanitized}`).once('value', snapshot => {
       const chatEntries = Object.values(snapshot.val() || []);
       const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
-
       if (filter === 'unread' && !hasUnread) return;
 
       const userDiv = document.createElement('div');
@@ -567,14 +565,9 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
         selectedUserId = sanitized;
 
         document.getElementById("chatUserName").textContent = name;
-
         const avatarImg = document.getElementById("chatUserAvatar");
-        if (avatar) {
-          avatarImg.src = avatar;
-          avatarImg.style.display = 'block';
-        } else {
-          avatarImg.style.display = 'none';
-        }
+        avatarImg.src = avatar;
+        avatarImg.style.display = 'block';
 
         document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
         userDiv.classList.add('active');
@@ -594,7 +587,14 @@ function loadUserList() {
 
   db.ref('users').once('value', snapshot => {
     const users = snapshot.val() || {};
-    const userEntries = Object.entries(users); // [ [key, data], ... ]
+    const userEntries = Object.entries(users);
+
+    // ✅ Jika tidak ada user login, tampilkan pesan
+    if (userEntries.length === 0) {
+      userListBox.innerHTML = '<p style="text-align:center; color:gray;">Belum ada user login</p>';
+      return;
+    }
+
     const promises = [];
 
     userEntries.forEach(([sanitized, data]) => {
@@ -613,11 +613,11 @@ function loadUserList() {
     });
 
     Promise.all(promises).then(results => {
-      results.sort((a, b) => b.lastTime - a.lastTime); // sort desc
+      results.sort((a, b) => b.lastTime - a.lastTime);
       allUsersData = results.map(u => desanitizeUserId(u.sanitized));
       const formattedList = results.map(u => [u.sanitized, u.data]);
       userListBox.innerHTML = '';
-      renderUserList(formattedList);
+      renderUserList(formattedList); // ✅ kirim ke render
     });
   });
 }
