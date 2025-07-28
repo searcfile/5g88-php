@@ -701,40 +701,49 @@ function sendMessage() {
 window.onload = () => {
   loadUserList();
 
-db.ref('users').on('child_added', (snap) => {
-  const sanitized = snap.key;
-  const data = snap.val();
+const allUsersData = []; // Menyimpan [userId, userData, lastTime]
 
-  // Ambil waktu terakhir pesan
+// Fungsi untuk update atau tambah user ke list
+function addOrUpdateUser(sanitized, data) {
   db.ref(`chats/${sanitized}`)
     .orderByChild('time')
     .limitToLast(1)
     .once('value')
-    .then(snapMsg => {
+    .then(lastSnap => {
       let lastTime = 0;
-      snapMsg.forEach(msg => {
+      lastSnap.forEach(msg => {
         lastTime = msg.val()?.time || 0;
       });
 
-      // Cek apakah user sudah ada
+      // Hapus data lama jika sudah ada
       const existingIndex = allUsersData.findIndex(([id]) => id === sanitized);
       if (existingIndex !== -1) {
-        allUsersData.splice(existingIndex, 1); // Hapus data lama
+        allUsersData.splice(existingIndex, 1);
       }
 
-      // Tambah ulang data baru dengan lastTime
+      // Tambah data baru
       allUsersData.push([sanitized, data, lastTime]);
 
-      // Sort dari terbaru ke lama
+      // Urutkan dari yang terbaru
       allUsersData.sort((a, b) => b[2] - a[2]);
 
-      // Simpan ID dirender
-      renderedUserIds.add(sanitized);
-
-      // Render ulang
-      const displayList = allUsersData.map(([s, d]) => [s, d]);
-      renderUserList(displayList, 'all', document.getElementById('searchUser')?.value || '');
+      const displayList = allUsersData.map(([id, user]) => [id, user]);
+      renderUserList(displayList, 'all', document.getElementById("searchUser")?.value || '');
     });
+}
+
+// Listen untuk user baru
+db.ref('users').on('child_added', (snap) => {
+  const sanitized = snap.key;
+  const data = snap.val();
+  addOrUpdateUser(sanitized, data);
+});
+
+// Listen jika user ubah nama/email/foto
+db.ref('users').on('child_changed', (snap) => {
+  const sanitized = snap.key;
+  const data = snap.val();
+  addOrUpdateUser(sanitized, data);
 });
   // Send message on Enter key (without Shift or Ctrl)
   const msgInput = document.getElementById('msg');
