@@ -541,7 +541,7 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
   renderedUserIds.clear();
 
   userList.forEach(([sanitized, userData]) => {
-    const email = desanitizeUserId(sanitized);
+   const email = userData.email || desanitizeUserId(sanitized);
    const name = userData.name || email;
    const emailName = email.split('@')[0].trim();
    const cleanName = formatUserName(name.trim());
