@@ -829,7 +829,48 @@ db.ref('users').on('child_changed', (snap) => {
   if (sendBtn) {
     sendBtn.onclick = sendMessage;
   }
-};
+
+  // ✅ Listen semua user yang kirim pesan, agar bisa urutkan otomatis
+  db.ref("chats").on("child_changed", (snapshot) => {
+    const sanitizedId = snapshot.key;
+    const messages = snapshot.val();
+  
+    if (!messages) return;
+  
+    const messageEntries = Object.entries(messages);
+    const latestEntry = messageEntries.reduce((a, b) => (a[1].time > b[1].time ? a : b), [null, { time: 0 }]);
+    const latestTime = latestEntry[1]?.time || 0;
+  
+    const userIndex = allUsersData.findIndex(([id]) => id === sanitizedId);
+    if (userIndex !== -1) {
+      allUsersData[userIndex][2] = latestTime;
+      allUsersData.sort((a, b) => b[2] - a[2]);
+  
+      const displayList = allUsersData.map(([s, d]) => [s, d]);
+      renderUserList(displayList, 'all', document.getElementById('searchUser')?.value || '');
+    }
+  });
+   // ✅ Tambahan: Listen user baru kirim pesan pertama kali
+  db.ref("chats").on("child_added", snapshot => {
+    const sanitizedId = snapshot.key;
+    const messages = snapshot.val();
+    
+    if (!messages) return;
+
+    const messageEntries = Object.entries(messages);
+    const latestEntry = messageEntries.reduce((a, b) => (a[1].time > b[1].time ? a : b), [null, { time: 0 }]);
+    const latestTime = latestEntry[1]?.time || 0;
+
+    const userIndex = allUsersData.findIndex(([id]) => id === sanitizedId);
+    if (userIndex !== -1) {
+      allUsersData[userIndex][2] = latestTime;
+      allUsersData.sort((a, b) => b[2] - a[2]);
+
+      const displayList = allUsersData.map(([s, d]) => [s, d]);
+      renderUserList(displayList, 'all', document.getElementById('searchUser')?.value || '');
+    }
+  });
+}; // <--- Penutup window.onload
   </script>
 </body>
 </html>
