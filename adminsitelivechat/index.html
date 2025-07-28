@@ -704,26 +704,35 @@ window.onload = () => {
 db.ref('users').on('child_added', (snap) => {
   const sanitized = snap.key;
   const data = snap.val();
-  if (renderedUserIds.has(sanitized)) return;
 
+  // Ambil waktu terakhir pesan
   db.ref(`chats/${sanitized}`)
     .orderByChild('time')
     .limitToLast(1)
     .once('value')
-    .then(snapChat => {
+    .then(snapMsg => {
       let lastTime = 0;
-      snapChat.forEach(msg => {
+      snapMsg.forEach(msg => {
         lastTime = msg.val()?.time || 0;
       });
 
-      const newUser = [sanitized, data, lastTime];
-      allUsersData.push(newUser);
+      // Cek apakah user sudah ada
+      const existingIndex = allUsersData.findIndex(([id]) => id === sanitized);
+      if (existingIndex !== -1) {
+        allUsersData.splice(existingIndex, 1); // Hapus data lama
+      }
 
-      // 🔁 Urutkan dari terbaru ke lama
+      // Tambah ulang data baru dengan lastTime
+      allUsersData.push([sanitized, data, lastTime]);
+
+      // Sort dari terbaru ke lama
       allUsersData.sort((a, b) => b[2] - a[2]);
 
-      const displayList = allUsersData.map(([s, d]) => [s, d]);
+      // Simpan ID dirender
       renderedUserIds.add(sanitized);
+
+      // Render ulang
+      const displayList = allUsersData.map(([s, d]) => [s, d]);
       renderUserList(displayList, 'all', document.getElementById('searchUser')?.value || '');
     });
 });
