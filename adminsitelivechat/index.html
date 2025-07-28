@@ -679,6 +679,10 @@ function sendMessage() {
 // --- Init on window load ---
 window.onload = () => {
   loadUserList();
+
+   db.ref('users').on('child_added', () => {
+    loadUserList();
+  });
   // Send message on Enter key (without Shift or Ctrl)
   const msgInput = document.getElementById('msg');
   if (msgInput) {
