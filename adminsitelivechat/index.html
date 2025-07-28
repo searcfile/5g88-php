@@ -477,7 +477,6 @@ function renderChatMessages(messages) {
 
   chatBox.scrollTop = chatBox.scrollHeight;
 }
-// Listen to chat updates for active user
 function listenToChat() {
   if (!activeUserIdSanitized) return;
   const chatRef = db.ref('chats/' + activeUserIdSanitized);
@@ -496,13 +495,14 @@ function listenToChat() {
 
     const chatEntries = Object.entries(chats).sort((a, b) => (a[1].time || 0) - (b[1].time || 0));
     let shouldUpdatePosition = false;
+    let messagesToMarkRead = [];
 
     allMessages = chatEntries.map(([key, msg]) => {
       const isUnread = msg.from === 'user' && !msg.readByAdmin;
+
       if (isUnread) {
-        db.ref(`chats/${activeUserIdSanitized}/${key}/readByAdmin`).set(true);
-        updateUserListFlags();
         shouldUpdatePosition = true;
+        messagesToMarkRead.push(key);
 
         if (
           !lastMessageTimestamps[activeUserIdSanitized] ||
@@ -515,13 +515,20 @@ function listenToChat() {
           }
         }
       }
+
       return msg;
     });
 
     renderChatMessages(allMessages);
     isInitialChatLoad = false;
 
-    // 🔁 Hanya update posisi jika memang ada pesan baru (not just klik)
+    // ✅ Set readByAdmin setelah selesai proses logic
+    messagesToMarkRead.forEach(key => {
+      db.ref(`chats/${activeUserIdSanitized}/${key}/readByAdmin`).set(true);
+    });
+    if (messagesToMarkRead.length > 0) updateUserListFlags();
+
+    // 🔁 Hanya update posisi jika memang ada pesan baru dari user
     if (shouldUpdatePosition) {
       const userIndex = allUsersData.findIndex(([id]) => id === activeUserIdSanitized);
       if (userIndex !== -1) {
@@ -536,6 +543,7 @@ function listenToChat() {
     }
   });
 }
+
 function renderUserList(userList, filter = 'all', searchTerm = '') {
   const userListBox = document.getElementById('userListBox');
   userListBox.innerHTML = '';
