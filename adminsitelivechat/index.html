@@ -691,8 +691,12 @@ db.ref('users').on('child_added', (snap) => {
   const sanitized = snap.key;
   const data = snap.val();
 
+  // Cek apakah sudah dirender sebelumnya
   if (renderedUserIds.has(sanitized)) return;
-  renderedUserIds.add(sanitized);
+
+  // Cek juga apakah sudah ada di allUsersData
+  const alreadyExists = allUsersData.some(([id]) => id === sanitized);
+  if (alreadyExists) return;
 
   db.ref(`chats/${sanitized}`)
     .orderByChild('time')
@@ -706,10 +710,11 @@ db.ref('users').on('child_added', (snap) => {
 
       const userEntry = [sanitized, data];
 
-      // ✅ Tambahkan ke array utama tanpa duplikat
+      // ✅ Masukkan ke data utama
       allUsersData.push(userEntry);
+      renderedUserIds.add(sanitized);
 
-      // ✅ Render user baru langsung
+      // ✅ Render hanya user baru
       renderUserList([userEntry]);
     });
 });
