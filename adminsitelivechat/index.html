@@ -440,7 +440,8 @@ function renderChatMessages(messages) {
     const timeStr = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     const isUser = msg.from !== 'admin';
-    const senderName = isUser ? (msg.name || msg.email || 'User') : 'Admin';
+    const rawName = isUser ? (msg.name || msg.email || 'User') : 'Admin';
+    const senderName = formatUserName(rawName);
 
     // Gunakan avatar dari data, jika tidak ada pakai default masing-masing
     const avatarURL = msg.photoURL || (isUser ? 'https://i.pravatar.cc/40' : 'https://i.imgur.com/UhV9EWa.png');
@@ -565,7 +566,7 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
         activeUserIdSanitized = sanitized;
         selectedUserId = sanitized;
 
-        document.getElementById("chatUserName").textContent = name;
+        document.getElementById("chatUserName").textContent = formatUserName(name);
         const avatarImg = document.getElementById("chatUserAvatar");
         avatarImg.src = avatar;
         avatarImg.style.display = 'block';
