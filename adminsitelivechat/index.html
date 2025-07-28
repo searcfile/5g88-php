@@ -614,13 +614,14 @@ function loadUserList() {
 
     Promise.all(promises).then(results => {
       results.sort((a, b) => b.lastTime - a.lastTime);
-      allUsersData = results.map(u => desanitizeUserId(u.sanitized));
+
       const formattedList = results.map(u => [u.sanitized, u.data]);
+      allUsersData = formattedList; // ✅ SIMPAN DALAM FORMAT [sanitized, data]
 
       userListBox.innerHTML = '';
       renderUserList(formattedList);
 
-      // ✅ Simpan ID user yang sudah ditampilkan
+      // ✅ Simpan ID user yang sudah dirender
       formattedList.forEach(([sanitized]) => renderedUserIds.add(sanitized));
     });
   });
@@ -690,10 +691,8 @@ db.ref('users').on('child_added', (snap) => {
   const sanitized = snap.key;
   const data = snap.val();
 
-
   if (renderedUserIds.has(sanitized)) return;
   renderedUserIds.add(sanitized);
-  allUsersData.push([sanitized, data]);
 
   db.ref(`chats/${sanitized}`)
     .orderByChild('time')
@@ -705,8 +704,13 @@ db.ref('users').on('child_added', (snap) => {
         lastTime = msg.val()?.time || 0;
       });
 
-      // ✅ Render langsung user baru ke daftar
-      renderUserList([[sanitized, data]]);
+      const userEntry = [sanitized, data];
+
+      // ✅ Tambahkan ke array utama tanpa duplikat
+      allUsersData.push(userEntry);
+
+      // ✅ Render user baru langsung
+      renderUserList([userEntry]);
     });
 });
   // Send message on Enter key (without Shift or Ctrl)
