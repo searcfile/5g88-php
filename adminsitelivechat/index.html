@@ -785,6 +785,7 @@ function addOrUpdateUser(sanitized, data) {
         lastTime = msg.val()?.time || 0;
       });
 
+      if (lastTime === 0) lastTime = Date.now();
       const existingIndex = allUsersData.findIndex(([id]) => id === sanitized);
       if (existingIndex !== -1) {
         allUsersData.splice(existingIndex, 1);
