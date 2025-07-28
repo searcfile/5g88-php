@@ -648,6 +648,9 @@ function updateUserListFlags() {
   const items = document.querySelectorAll('.user-item');
   items.forEach(item => {
     const sanitized = item.getAttribute('data-sanitized');
+    const span = item.querySelector('span');
+    if (!span) return;
+
     db.ref(`chats/${sanitized}`).once('value', snapshot => {
       const chatEntries = Object.values(snapshot.val() || []);
       const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
@@ -664,12 +667,11 @@ function updateUserListFlags() {
         : cleanName;
 
       const labelBase = `${finalName} (${email})`;
-      item.textContent = labelBase + (hasUnread ? ' ❗' : '');
-      item.style.fontWeight = hasUnread ? 'bold' : 'normal';
+      span.textContent = labelBase + (hasUnread ? ' ❗' : '');
+      span.style.fontWeight = hasUnread ? 'bold' : 'normal';
     });
   });
 }
-setInterval(updateUserListFlags, 5000);
 
 // Filter chat messages by query
 function filterMessages(query) {
