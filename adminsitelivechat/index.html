@@ -522,11 +522,14 @@ function listenToChat() {
     renderChatMessages(allMessages);
     isInitialChatLoad = false;
 
-    // ✅ Set readByAdmin setelah selesai proses logic
-    messagesToMarkRead.forEach(key => {
-      db.ref(`chats/${activeUserIdSanitized}/${key}/readByAdmin`).set(true);
-    });
-    if (messagesToMarkRead.length > 0) updateUserListFlags();
+    // ✅ Set readByAdmin hanya kalau user benar-benar sedang aktif (diklik sekarang)
+    const isUserActive = document.querySelector(`.user-item.active[data-sanitized="${activeUserIdSanitized}"]`);
+    if (isUserActive) {
+      messagesToMarkRead.forEach(key => {
+        db.ref(`chats/${activeUserIdSanitized}/${key}/readByAdmin`).set(true);
+      });
+      if (messagesToMarkRead.length > 0) updateUserListFlags();
+    }
 
     // 🔁 Hanya update posisi jika memang ada pesan baru dari user
     if (shouldUpdatePosition) {
@@ -543,7 +546,6 @@ function listenToChat() {
     }
   });
 }
-
 function renderUserList(userList, filter = 'all', searchTerm = '') {
   const userListBox = document.getElementById('userListBox');
   userListBox.innerHTML = '';
