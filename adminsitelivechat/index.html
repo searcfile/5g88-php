@@ -691,32 +691,14 @@ db.ref('users').on('child_added', (snap) => {
   const sanitized = snap.key;
   const data = snap.val();
 
-  // Cek apakah sudah dirender sebelumnya
+  // Jika sudah pernah ditambahkan, abaikan
   if (renderedUserIds.has(sanitized)) return;
 
-  // Cek juga apakah sudah ada di allUsersData
-  const alreadyExists = allUsersData.some(([id]) => id === sanitized);
-  if (alreadyExists) return;
+  // Tambahkan dan render ulang seluruh daftar (tidak duplikat)
+  renderedUserIds.add(sanitized);
+  allUsersData.push([sanitized, data]);
 
-  db.ref(`chats/${sanitized}`)
-    .orderByChild('time')
-    .limitToLast(1)
-    .once('value')
-    .then(snapChat => {
-      let lastTime = 0;
-      snapChat.forEach(msg => {
-        lastTime = msg.val()?.time || 0;
-      });
-
-      const userEntry = [sanitized, data];
-
-      // ✅ Masukkan ke data utama
-      allUsersData.push(userEntry);
-      renderedUserIds.add(sanitized);
-
-      // ✅ Render hanya user baru
-      renderUserList([userEntry]);
-    });
+  renderUserList(allUsersData, 'all', document.getElementById('searchUser')?.value || '');
 });
   // Send message on Enter key (without Shift or Ctrl)
   const msgInput = document.getElementById('msg');
