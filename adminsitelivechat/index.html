@@ -516,10 +516,23 @@ function listenToChat() {
     });
 
     renderChatMessages(allMessages);
-    isInitialChatLoad = false; // ✅ setelah render pertama, matikan flag ini
-  }); // ✅ ← ini menutup .on()
-} // ✅ ← Tambah
+    isInitialChatLoad = false;
 
+    // ⬆️ Update posisi user ke paling atas berdasarkan pesan terakhir
+    const userIndex = allUsersData.findIndex(([id]) => id === activeUserIdSanitized);
+    if (userIndex !== -1) {
+      const userEntry = allUsersData[userIndex];
+      const lastTime = allMessages.length > 0 ? allMessages[allMessages.length - 1].time : 0;
+      allUsersData[userIndex][2] = lastTime;
+
+      // 🔁 Sort dari terbaru ke lama
+      allUsersData.sort((a, b) => b[2] - a[2]);
+      const displayList = allUsersData.map(([s, d]) => [s, d]);
+
+      renderUserList(displayList, 'all', document.getElementById('searchUser')?.value || '');
+    }
+  });
+}
 function renderUserList(userList, filter = 'all', searchTerm = '') {
   const userListBox = document.getElementById('userListBox');
   userListBox.innerHTML = '';
@@ -616,8 +629,8 @@ function loadUserList() {
     Promise.all(promises).then(results => {
       results.sort((a, b) => b.lastTime - a.lastTime);
 
-      const formattedList = results.map(u => [u.sanitized, u.data]);
-      allUsersData = formattedList; // ✅ SIMPAN DALAM FORMAT [sanitized, data]
+      allUsersData = results.map(u => [u.sanitized, u.data, u.lastTime]);
+      const formattedList = allUsersData.map(([s, d]) => [s, d]);
 
       userListBox.innerHTML = '';
       renderUserList(formattedList);
@@ -691,15 +704,28 @@ window.onload = () => {
 db.ref('users').on('child_added', (snap) => {
   const sanitized = snap.key;
   const data = snap.val();
-
-  // Jika sudah pernah ditambahkan, abaikan
   if (renderedUserIds.has(sanitized)) return;
 
-  // Tambahkan dan render ulang seluruh daftar (tidak duplikat)
-  renderedUserIds.add(sanitized);
-  allUsersData.push([sanitized, data]);
+  db.ref(`chats/${sanitized}`)
+    .orderByChild('time')
+    .limitToLast(1)
+    .once('value')
+    .then(snapChat => {
+      let lastTime = 0;
+      snapChat.forEach(msg => {
+        lastTime = msg.val()?.time || 0;
+      });
 
-  renderUserList(allUsersData, 'all', document.getElementById('searchUser')?.value || '');
+      const newUser = [sanitized, data, lastTime];
+      allUsersData.push(newUser);
+
+      // 🔁 Urutkan dari terbaru ke lama
+      allUsersData.sort((a, b) => b[2] - a[2]);
+
+      const displayList = allUsersData.map(([s, d]) => [s, d]);
+      renderedUserIds.add(sanitized);
+      renderUserList(displayList, 'all', document.getElementById('searchUser')?.value || '');
+    });
 });
   // Send message on Enter key (without Shift or Ctrl)
   const msgInput = document.getElementById('msg');
