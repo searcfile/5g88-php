@@ -308,6 +308,7 @@ body {
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <script>
+let renderedUserIds = new Set();
  // Firebase config & init
 const firebaseConfig = {
   apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
@@ -583,40 +584,44 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
 // Load user list initially and watch new users
 function loadUserList() {
   const userListBox = document.getElementById('userListBox');
-  userListBox.innerHTML = ''; // ✅ Tambahkan ini untuk hapus duplikat
   userListBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
+
+  renderedUserIds.clear(); // ✅ reset ID user yang sudah ditampilkan
 
   db.ref('users').once('value', snapshot => {
     const users = snapshot.val() || {};
     const userEntries = Object.entries(users);
 
-    // ✅ Jika tidak ada user login, tampilkan pesan
     if (userEntries.length === 0) {
       userListBox.innerHTML = '<p style="text-align:center; color:gray;">Belum ada user login</p>';
       return;
     }
 
-  const promises = userEntries.map(([sanitized, data]) => {
-  return db.ref(`chats/${sanitized}`)
-    .orderByChild('time')
-    .limitToLast(1)
-    .once('value')
-    .then(snap => {
-      let lastTime = 0;
-      snap.forEach(msg => {
-        lastTime = msg.val()?.time || 0;
-      });
-      return { sanitized, data, lastTime };
-    })
-    .catch(() => ({ sanitized, data, lastTime: 0 }));
-});
+    const promises = userEntries.map(([sanitized, data]) => {
+      return db.ref(`chats/${sanitized}`)
+        .orderByChild('time')
+        .limitToLast(1)
+        .once('value')
+        .then(snap => {
+          let lastTime = 0;
+          snap.forEach(msg => {
+            lastTime = msg.val()?.time || 0;
+          });
+          return { sanitized, data, lastTime };
+        })
+        .catch(() => ({ sanitized, data, lastTime: 0 }));
+    });
 
     Promise.all(promises).then(results => {
       results.sort((a, b) => b.lastTime - a.lastTime);
       allUsersData = results.map(u => desanitizeUserId(u.sanitized));
       const formattedList = results.map(u => [u.sanitized, u.data]);
+
       userListBox.innerHTML = '';
-      renderUserList(formattedList); // ✅ kirim ke render
+      renderUserList(formattedList);
+
+      // ✅ Simpan ID user yang sudah ditampilkan
+      formattedList.forEach(([sanitized]) => renderedUserIds.add(sanitized));
     });
   });
 }
@@ -681,9 +686,29 @@ function sendMessage() {
 window.onload = () => {
   loadUserList();
 
-   db.ref('users').on('child_added', () => {
-    loadUserList();
-  });
+db.ref('users').on('child_added', (snap) => {
+  const sanitized = snap.key;
+  const data = snap.val();
+
+
+  if (renderedUserIds.has(sanitized)) return;
+  renderedUserIds.add(sanitized);
+  allUsersData.push([sanitized, data]);
+
+  db.ref(`chats/${sanitized}`)
+    .orderByChild('time')
+    .limitToLast(1)
+    .once('value')
+    .then(snapChat => {
+      let lastTime = 0;
+      snapChat.forEach(msg => {
+        lastTime = msg.val()?.time || 0;
+      });
+
+      // ✅ Render langsung user baru ke daftar
+      renderUserList([[sanitized, data]]);
+    });
+});
   // Send message on Enter key (without Shift or Ctrl)
   const msgInput = document.getElementById('msg');
   if (msgInput) {
