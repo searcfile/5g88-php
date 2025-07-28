@@ -494,12 +494,15 @@ function listenToChat() {
       return;
     }
 
-    // Sort chats by time ascending
-    const chatEntries = Object.entries(chats).sort((a,b) => (a[1].time || 0) - (b[1].time || 0));
+    const chatEntries = Object.entries(chats).sort((a, b) => (a[1].time || 0) - (b[1].time || 0));
+    let shouldUpdatePosition = false;
+
     allMessages = chatEntries.map(([key, msg]) => {
-      if (msg.from === 'user' && !msg.readByAdmin) {
+      const isUnread = msg.from === 'user' && !msg.readByAdmin;
+      if (isUnread) {
         db.ref(`chats/${activeUserIdSanitized}/${key}/readByAdmin`).set(true);
         updateUserListFlags();
+        shouldUpdatePosition = true;
 
         if (
           !lastMessageTimestamps[activeUserIdSanitized] ||
@@ -507,7 +510,6 @@ function listenToChat() {
         ) {
           lastMessageTimestamps[activeUserIdSanitized] = msg.time;
 
-          // ✅ Mainkan suara hanya jika bukan saat pertama load
           if (!isInitialChatLoad) {
             playNotificationSound();
           }
@@ -519,12 +521,12 @@ function listenToChat() {
     renderChatMessages(allMessages);
     isInitialChatLoad = false;
 
-    // ✅ Update urutan hanya jika pesan terakhir dari user
-    const userIndex = allUsersData.findIndex(([id]) => id === activeUserIdSanitized);
-    if (userIndex !== -1) {
-      const lastMsg = allMessages[allMessages.length - 1];
-      if (lastMsg?.from === 'user') {
-        const lastTime = lastMsg.time || 0;
+    // 🔁 Hanya update posisi jika memang ada pesan baru (not just klik)
+    if (shouldUpdatePosition) {
+      const userIndex = allUsersData.findIndex(([id]) => id === activeUserIdSanitized);
+      if (userIndex !== -1) {
+        const lastMsg = allMessages[allMessages.length - 1];
+        const lastTime = lastMsg?.time || 0;
         allUsersData[userIndex][2] = lastTime;
 
         allUsersData.sort((a, b) => b[2] - a[2]);
@@ -702,8 +704,18 @@ function sendMessage() {
 
   db.ref(`chats/${selectedUserId}`).push(newMsg, err => {
     if (!err) {
-      msgInput.value = ''; // Kosongkan input saja
-      // JANGAN renderChatMessages di sini
+      msgInput.value = '';
+
+      // ✅ Update posisi user di list
+      const userIndex = allUsersData.findIndex(([id]) => id === selectedUserId);
+      if (userIndex !== -1) {
+        allUsersData[userIndex][2] = now;
+        allUsersData.sort((a, b) => b[2] - a[2]);
+
+        const displayList = allUsersData.map(([s, d]) => [s, d]);
+        renderUserList(displayList, 'all', document.getElementById('searchUser')?.value || '');
+      }
+
     } else {
       alert('Gagal mengirim pesan');
     }
