@@ -309,6 +309,7 @@ body {
 
   <script>
 let renderedUserIds = new Set();
+let initialUserListLoaded = false;
  // Firebase config & init
 const firebaseConfig = {
   apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
@@ -637,6 +638,7 @@ function loadUserList() {
 
       // ✅ Simpan ID user yang sudah dirender
       formattedList.forEach(([sanitized]) => renderedUserIds.add(sanitized));
+      initialUserListLoaded = true;
     });
   });
 }
@@ -696,15 +698,16 @@ function sendMessage() {
     }
   });
 }
-
 // --- Init on window load ---
 window.onload = () => {
   loadUserList();
 
-const allUsersData = []; // Menyimpan [userId, userData, lastTime]
-
-// Fungsi untuk update atau tambah user ke list
 function addOrUpdateUser(sanitized, data) {
+  // 🛡️ Cegah duplikat tambahan
+  if (allUsersData.some(([id]) => id === sanitized)) {
+    return;
+  }
+
   db.ref(`chats/${sanitized}`)
     .orderByChild('time')
     .limitToLast(1)
@@ -732,14 +735,19 @@ function addOrUpdateUser(sanitized, data) {
     });
 }
 
-// Listen untuk user baru
+// 🔁 Listen user baru
 db.ref('users').on('child_added', (snap) => {
   const sanitized = snap.key;
   const data = snap.val();
-  addOrUpdateUser(sanitized, data);
+
+  // 🛡️ Hanya tambahkan kalau belum dirender saat awal
+  if (!initialUserListLoaded || !renderedUserIds.has(sanitized)) {
+    addOrUpdateUser(sanitized, data);
+    renderedUserIds.add(sanitized);
+  }
 });
 
-// Listen jika user ubah nama/email/foto
+// 🔁 Listen user diubah (nama/foto/email)
 db.ref('users').on('child_changed', (snap) => {
   const sanitized = snap.key;
   const data = snap.val();
