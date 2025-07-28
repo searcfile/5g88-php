@@ -538,6 +538,8 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
   const userListBox = document.getElementById('userListBox');
   userListBox.innerHTML = '';
 
+  renderedUserIds.clear();
+
   userList.forEach(([sanitized, userData]) => {
     const email = desanitizeUserId(sanitized);
     const name = userData.name || email;
