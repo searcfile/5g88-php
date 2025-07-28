@@ -651,12 +651,12 @@ function updateUserListFlags() {
     db.ref(`chats/${sanitized}`).once('value', snapshot => {
       const chatEntries = Object.values(snapshot.val() || []);
       const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
-      const email = desanitizeUserId(sanitized);
+      const email = desanitizeUserId(sanitized); // ✅ ambil dari node id
       const firstMsg = chatEntries.find(m => m.from === 'user');
-      if (!firstMsg) return;
+     if (!firstMsg) return;
 
-     const formattedName = formatUserName(firstMsg.name || email);
-     const labelBase = `${formattedName} (${firstMsg.email || email})`;
+     const formattedName = formatUserName(firstMsg.name || email.split('@')[0]);
+     const labelBase = `${formattedName} (${email})`;
       item.textContent = labelBase + (hasUnread ? ' ❗' : '');
       item.style.fontWeight = hasUnread ? 'bold' : 'normal';
     });
