@@ -276,7 +276,7 @@ body {
   display: none;                /* Chrome, Safari, Opera */
 }
 #filterAll, #filterUnread {
-  border:1px solid #424242;
+  border:1px solid #424242 !important;
   background-color: #141414;     /* warna latar */
   color: white;                  /* warna teks */
   border: none;                  /* hilangkan border default */
@@ -314,8 +314,8 @@ body {
     <input type="text" id="searchUser" placeholder="Search user..." style="padding: 10px 5px; margin-bottom: 10px; border-radius: 6px; border:1px solid #424242; background: #141414; color: rgba(255, 255, 255, 0.85); width: 100%;" />
 
     <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-      <button id="filterAll">All</button>
-      <button id="filterUnread">Unread</button>
+     <button id="filterAll" class="active-filter">All</button>
+     <button id="filterUnread">Unread</button>
     </div>
   </div>
 
@@ -893,19 +893,6 @@ db.ref('users').on('child_changed', (snap) => {
     });
   }
 
- // Filter all users
-document.getElementById('filterAll').onclick = () => {
-  currentFilterMode = 'all'; // ✅ WAJIB TAMBAH
-  document.getElementById('userListBox').innerHTML = '';
-  renderUserList(allUsersData, 'all', document.getElementById('searchUser').value);
-};
-
-// Filter unread users
-document.getElementById('filterUnread').onclick = () => {
-  currentFilterMode = 'unread'; // ✅ WAJIB TAMBAH
-  document.getElementById('userListBox').innerHTML = '';
-  renderUserList(allUsersData, 'unread', document.getElementById('searchUser').value);
-};
   // Search users input
   const searchUserInput = document.getElementById('searchUser');
   if (searchUserInput) {
