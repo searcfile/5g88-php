@@ -332,15 +332,10 @@ body {
   <div id="containerChatBox">
     <!-- Header Chat -->
     <div id="chatHeader">
- <div id="chatHeaderUser" style="display: flex; flex-direction: column;">
-  <div style="display: flex; align-items: center; gap: 10px;">
+  <div id="chatHeaderUser" style="display: flex; align-items: center; gap: 10px;">
     <img id="chatUserAvatar" src="" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; display: none;" />
-    <div>
-      <strong id="chatUserName">Select a user</strong>
-      <div id="chatUserStatus" style="font-size: 12px; color: #aaa;">Offline</div>
-    </div>
+    <strong id="chatUserName">Select a user</strong>
   </div>
-</div>
   <input
     type="text"
     id="searchMessage"
@@ -630,23 +625,19 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
   userListBox.innerHTML = '';
 
   renderedUserIds.clear();
-  const emailSet = new Set(); // ✅ Simpan email yang sudah ditampilkan
 
   userList.forEach(([sanitized, userData]) => {
-    const email = userData.email || desanitizeUserId(sanitized);
-    const name = userData.name || email;
-    const emailName = email.split('@')[0].trim();
-    const cleanName = formatUserName(name.trim());
+   const email = userData.email || desanitizeUserId(sanitized);
+   const name = userData.name || email;
+   const emailName = email.split('@')[0].trim();
+   const cleanName = formatUserName(name.trim());
 
-    // ✅ Skip jika email ini sudah ditampilkan (hindari duplikat)
-    if (emailSet.has(email)) return;
-    emailSet.add(email);
+// ✅ Jika sama (case-insensitive), tunjuk sekali saja
+   const finalName = cleanName.toLowerCase() === emailName.toLowerCase()
+  ? emailName
+  : cleanName;
 
-    const finalName = cleanName.toLowerCase() === emailName.toLowerCase()
-      ? emailName
-      : cleanName;
-
-    const label = `${finalName} (${email})`;
+  const label = `${finalName} (${email})`;
 
     if (searchTerm && !label.toLowerCase().includes(searchTerm.toLowerCase())) return;
 
@@ -658,10 +649,11 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
       const userDiv = document.createElement('div');
       userDiv.className = 'user-item';
       if (sanitized === activeUserIdSanitized) {
-        userDiv.classList.add('active');
-      }
+         userDiv.classList.add('active'); // ✅ Pastikan warna aktif tetap ada
+     }
       userDiv.setAttribute('data-sanitized', sanitized);
 
+      // ✅ Teks nama & email saja tanpa foto
       const userLabel = document.createElement('span');
       userLabel.textContent = label + (hasUnread ? ' ❗' : '');
       userLabel.style.fontWeight = hasUnread ? 'bold' : 'normal';
@@ -669,15 +661,13 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
       userDiv.appendChild(userLabel);
 
       userDiv.onclick = () => {
-        justOpenedChat = true;
-
+        justOpenedChat = true; 
+        
         activeUserIdEmail = email;
         activeUserIdSanitized = sanitized;
         selectedUserId = sanitized;
 
         document.getElementById("chatUserName").textContent = formatUserName(name);
-        updateUserOnlineStatus(email);
-
         const avatarImg = document.getElementById("chatUserAvatar");
         avatarImg.src = userData.photoURL || 'https://i.pravatar.cc/40';
         avatarImg.style.display = 'block';
@@ -690,7 +680,7 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
       };
 
       userListBox.appendChild(userDiv);
-      renderedUserIds.add(sanitized);
+      renderedUserIds.add(sanitized); // ✅ Tambahkan ke daftar rendered
     });
   });
 }
@@ -720,30 +710,24 @@ function loadUserList() {
           snap.forEach(msg => {
             lastTime = msg.val()?.time || 0;
           });
-
-          // ✅ Gunakan lastLoginTime jika belum ada chat
-          if (lastTime === 0) {
-             lastTime = data.lastActive || Date.now();
-           }
-
           return { sanitized, data, lastTime };
         })
-        .catch(() => ({ sanitized, data, lastTime: data.lastLoginTime || 0 }));
+        .catch(() => ({ sanitized, data, lastTime: 0 }));
     });
 
     Promise.all(promises).then(results => {
       results.sort((a, b) => b.lastTime - a.lastTime);
 
       allUsersData = results.map(u => [u.sanitized, u.data, u.lastTime]);
-      const displayList = allUsersData.map(([s, d]) => [s, d]);
+      const formattedList = allUsersData.map(([s, d]) => [s, d]);
 
       userListBox.innerHTML = '';
-      renderUserList(displayList, currentFilterMode, document.getElementById("searchUser")?.value || '');
+      renderUserList(formattedList);
 
       // ✅ Simpan ID user yang sudah dirender
-      displayList.forEach(([sanitized]) => renderedUserIds.add(sanitized));
-      isLoadingUserList = false;
-      initialUserListLoaded = true;
+      formattedList.forEach(([sanitized]) => renderedUserIds.add(sanitized));
+       isLoadingUserList = false;
+       initialUserListLoaded = true;
     });
   });
 }
@@ -869,7 +853,7 @@ function addOrUpdateUser(sanitized, data) {
         lastTime = msg.val()?.time || 0;
       });
 
-      if (lastTime === 0) lastTime = data.lastActive || Date.now();
+      if (lastTime === 0) lastTime = Date.now();
       const existingIndex = allUsersData.findIndex(([id]) => id === sanitized);
       if (existingIndex !== -1) {
         allUsersData.splice(existingIndex, 1);
@@ -937,32 +921,48 @@ db.ref('users').on('child_changed', (snap) => {
   if (sendBtn) {
     sendBtn.onclick = sendMessage;
   }
+
+  // ✅ Listen semua user yang kirim pesan, agar bisa urutkan otomatis
+  db.ref("chats").on("child_changed", (snapshot) => {
+    const sanitizedId = snapshot.key;
+    const messages = snapshot.val();
+  
+    if (!messages) return;
+  
+    const messageEntries = Object.entries(messages);
+    const latestEntry = messageEntries.reduce((a, b) => (a[1].time > b[1].time ? a : b), [null, { time: 0 }]);
+    const latestTime = latestEntry[1]?.time || 0;
+  
+    const userIndex = allUsersData.findIndex(([id]) => id === sanitizedId);
+    if (userIndex !== -1) {
+      allUsersData[userIndex][2] = latestTime;
+      allUsersData.sort((a, b) => b[2] - a[2]);
+  
+      const displayList = allUsersData.map(([s, d]) => [s, d]);
+      renderUserList(displayList, 'all', document.getElementById('searchUser')?.value || '');
+    }
+  });
+   // ✅ Tambahan: Listen user baru kirim pesan pertama kali
+  db.ref("chats").on("child_added", snapshot => {
+    const sanitizedId = snapshot.key;
+    const messages = snapshot.val();
+    
+    if (!messages) return;
+
+    const messageEntries = Object.entries(messages);
+    const latestEntry = messageEntries.reduce((a, b) => (a[1].time > b[1].time ? a : b), [null, { time: 0 }]);
+    const latestTime = latestEntry[1]?.time || 0;
+
+    const userIndex = allUsersData.findIndex(([id]) => id === sanitizedId);
+    if (userIndex !== -1) {
+      allUsersData[userIndex][2] = latestTime;
+      allUsersData.sort((a, b) => b[2] - a[2]);
+
+      const displayList = allUsersData.map(([s, d]) => [s, d]);
+      renderUserList(displayList, 'all', document.getElementById('searchUser')?.value || '');
+    }
+  });
 }; // <--- Penutup window.onload
-function updateUserLastTime(sanitizedId, messages) {
-  const messageEntries = Object.entries(messages || {});
-  if (messageEntries.length === 0) return;
-
-  const latestEntry = messageEntries.reduce((a, b) => (a[1].time > b[1].time ? a : b), [null, { time: 0 }]);
-  const latestTime = latestEntry[1]?.time || 0;
-
-  const userIndex = allUsersData.findIndex(([id]) => id === sanitizedId);
-  if (userIndex !== -1) {
-    allUsersData[userIndex][2] = latestTime;
-    allUsersData.sort((a, b) => b[2] - a[2]);
-
-    const displayList = allUsersData.map(([s, d]) => [s, d]);
-    renderUserList(displayList, currentFilterMode, document.getElementById('searchUser')?.value || '');
-  }
-}
-
-db.ref("chats").on("child_changed", (snapshot) => {
-  updateUserLastTime(snapshot.key, snapshot.val());
-});
-
-db.ref("chats").on("child_added", (snapshot) => {
-  updateUserLastTime(snapshot.key, snapshot.val());
-});
-
   </script>
 </body>
 </html>
