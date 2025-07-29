@@ -276,26 +276,29 @@ body {
   display: none;                /* Chrome, Safari, Opera */
 }
 #filterAll, #filterUnread {
-  border:1px solid #424242 !important;
+  border:1px solid #424242;
   background-color: #141414;     /* warna latar */
   color: white;                  /* warna teks */              /* hilangkan border default */
   padding: 6px 14px;
   border-radius: 6px;            /* buat lengkung */
   cursor: pointer;
   font-weight: bold;
+  transition: all 0.3s ease;
   transition: background 0.3s ease;
 }
 
 #filterAll:hover,
 #filterUnread:hover {
-  border:1px solid #3c89e8;
+  border:1px solid #3c89e8 !important;
   background-color: #141414;
   color: #3c89e8;   /* warna hover */
+  transition: all 0.3s ease;
 }
 .active-filter {
   border:1px solid #1668dc !important;
   background-color: #141414 !important;
   color: #1668dc !important;
+  transition: all 0.3s ease;
 }
   </style>
 </head>
