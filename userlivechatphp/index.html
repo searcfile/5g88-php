@@ -666,8 +666,20 @@ function playNotificationSound() {
 window.addEventListener("DOMContentLoaded", () => {
   const email = localStorage.getItem("useremail");
   if (email) {
-    updateUserHeader(); // ⬅️ Tambah update header saat load
+    updateUserHeader();
     initChatWithUserData();
+
+    // ✅ Tambahkan pengecekan online status di sini
+    const sanitized = email.replace(/\./g, "_dot_").replace(/@/g, "_at_");
+    const connectedRef = firebase.database().ref(".info/connected");
+    const onlineRef = firebase.database().ref("users/" + sanitized + "/online");
+
+    connectedRef.on("value", (snap) => {
+      if (snap.val() === true) {
+        onlineRef.set(true);
+        onlineRef.onDisconnect().set(false);
+      }
+    });
   }
 });
 </script>
