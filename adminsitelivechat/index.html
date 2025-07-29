@@ -332,10 +332,15 @@ body {
   <div id="containerChatBox">
     <!-- Header Chat -->
     <div id="chatHeader">
-  <div id="chatHeaderUser" style="display: flex; align-items: center; gap: 10px;">
+ <div id="chatHeaderUser" style="display: flex; flex-direction: column;">
+  <div style="display: flex; align-items: center; gap: 10px;">
     <img id="chatUserAvatar" src="" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; display: none;" />
-    <strong id="chatUserName">Select a user</strong>
+    <div>
+      <strong id="chatUserName">Select a user</strong>
+      <div id="chatUserStatus" style="font-size: 12px; color: #aaa;">Offline</div>
+    </div>
   </div>
+</div>
   <input
     type="text"
     id="searchMessage"
@@ -668,6 +673,7 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
         selectedUserId = sanitized;
 
         document.getElementById("chatUserName").textContent = formatUserName(name);
+        updateUserOnlineStatus(email); // ✅ Tambah baris ini
         const avatarImg = document.getElementById("chatUserAvatar");
         avatarImg.src = userData.photoURL || 'https://i.pravatar.cc/40';
         avatarImg.style.display = 'block';
@@ -710,24 +716,30 @@ function loadUserList() {
           snap.forEach(msg => {
             lastTime = msg.val()?.time || 0;
           });
+
+          // ✅ Gunakan lastLoginTime jika belum ada chat
+          if (lastTime === 0) {
+            lastTime = data.lastLoginTime || Date.now();
+          }
+
           return { sanitized, data, lastTime };
         })
-        .catch(() => ({ sanitized, data, lastTime: 0 }));
+        .catch(() => ({ sanitized, data, lastTime: data.lastLoginTime || 0 }));
     });
 
     Promise.all(promises).then(results => {
       results.sort((a, b) => b.lastTime - a.lastTime);
 
       allUsersData = results.map(u => [u.sanitized, u.data, u.lastTime]);
-      const formattedList = allUsersData.map(([s, d]) => [s, d]);
+      const displayList = allUsersData.map(([s, d]) => [s, d]);
 
       userListBox.innerHTML = '';
-      renderUserList(formattedList);
+      renderUserList(displayList, currentFilterMode, document.getElementById("searchUser")?.value || '');
 
       // ✅ Simpan ID user yang sudah dirender
-      formattedList.forEach(([sanitized]) => renderedUserIds.add(sanitized));
-       isLoadingUserList = false;
-       initialUserListLoaded = true;
+      displayList.forEach(([sanitized]) => renderedUserIds.add(sanitized));
+      isLoadingUserList = false;
+      initialUserListLoaded = true;
     });
   });
 }
@@ -921,48 +933,45 @@ db.ref('users').on('child_changed', (snap) => {
   if (sendBtn) {
     sendBtn.onclick = sendMessage;
   }
-
-  // ✅ Listen semua user yang kirim pesan, agar bisa urutkan otomatis
-  db.ref("chats").on("child_changed", (snapshot) => {
-    const sanitizedId = snapshot.key;
-    const messages = snapshot.val();
-  
-    if (!messages) return;
-  
-    const messageEntries = Object.entries(messages);
-    const latestEntry = messageEntries.reduce((a, b) => (a[1].time > b[1].time ? a : b), [null, { time: 0 }]);
-    const latestTime = latestEntry[1]?.time || 0;
-  
-    const userIndex = allUsersData.findIndex(([id]) => id === sanitizedId);
-    if (userIndex !== -1) {
-      allUsersData[userIndex][2] = latestTime;
-      allUsersData.sort((a, b) => b[2] - a[2]);
-  
-      const displayList = allUsersData.map(([s, d]) => [s, d]);
-      renderUserList(displayList, 'all', document.getElementById('searchUser')?.value || '');
-    }
-  });
-   // ✅ Tambahan: Listen user baru kirim pesan pertama kali
-  db.ref("chats").on("child_added", snapshot => {
-    const sanitizedId = snapshot.key;
-    const messages = snapshot.val();
-    
-    if (!messages) return;
-
-    const messageEntries = Object.entries(messages);
-    const latestEntry = messageEntries.reduce((a, b) => (a[1].time > b[1].time ? a : b), [null, { time: 0 }]);
-    const latestTime = latestEntry[1]?.time || 0;
-
-    const userIndex = allUsersData.findIndex(([id]) => id === sanitizedId);
-    if (userIndex !== -1) {
-      allUsersData[userIndex][2] = latestTime;
-      allUsersData.sort((a, b) => b[2] - a[2]);
-
-      const displayList = allUsersData.map(([s, d]) => [s, d]);
-      renderUserList(displayList, 'all', document.getElementById('searchUser')?.value || '');
-    }
-  });
 }; // <--- Penutup window.onload
+function updateUserLastTime(sanitizedId, messages) {
+  const messageEntries = Object.entries(messages || {});
+  if (messageEntries.length === 0) return;
+
+  const latestEntry = messageEntries.reduce((a, b) => (a[1].time > b[1].time ? a : b), [null, { time: 0 }]);
+  const latestTime = latestEntry[1]?.time || 0;
+
+  const userIndex = allUsersData.findIndex(([id]) => id === sanitizedId);
+  if (userIndex !== -1) {
+    allUsersData[userIndex][2] = latestTime;
+    allUsersData.sort((a, b) => b[2] - a[2]);
+
+    const displayList = allUsersData.map(([s, d]) => [s, d]);
+    renderUserList(displayList, currentFilterMode, document.getElementById('searchUser')?.value || '');
+  }
+}
+
+db.ref("chats").on("child_changed", (snapshot) => {
+  updateUserLastTime(snapshot.key, snapshot.val());
+});
+
+db.ref("chats").on("child_added", (snapshot) => {
+  updateUserLastTime(snapshot.key, snapshot.val());
+});
+
+function updateUserOnlineStatus(email) {
+  const sanitized = email.replace(/\./g, "_dot_").replace(/@/g, "_at_");
+  const statusRef = db.ref('users/' + sanitized + '/online');
+
+  statusRef.on('value', (snap) => {
+    const isOnline = snap.val();
+    const statusElem = document.getElementById('chatUserStatus');
+    if (statusElem) {
+      statusElem.textContent = isOnline ? '🟢 Online' : '⚫ Offline';
+      statusElem.style.color = isOnline ? '#0f0' : '#aaa';
+    }
+  });
+}
   </script>
 </body>
 </html>
