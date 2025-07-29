@@ -275,6 +275,25 @@ body {
 .user-list-panel::-webkit-scrollbar {
   display: none;                /* Chrome, Safari, Opera */
 }
+#filterAll, #filterUnread {
+  background-color: #1668dc;     /* warna latar */
+  color: white;                  /* warna teks */
+  border: none;                  /* hilangkan border default */
+  padding: 6px 14px;
+  border-radius: 8px;            /* buat lengkung */
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+
+#filterAll:hover,
+#filterUnread:hover {
+  background-color: #3c89e8;     /* warna hover */
+}
+.active-filter {
+  background-color: #facc15 !important;
+  color: black !important;
+}
   </style>
 </head>
 <body>
@@ -391,6 +410,20 @@ function playNotificationSound() {
     });
   }
 }
+
+document.getElementById('filterAll').onclick = () => {
+  currentFilterMode = 'all';
+  document.getElementById('filterAll').classList.add('active-filter');
+  document.getElementById('filterUnread').classList.remove('active-filter');
+  renderUserList(allUsersData, 'all', document.getElementById('searchUser').value);
+};
+
+document.getElementById('filterUnread').onclick = () => {
+  currentFilterMode = 'unread';
+  document.getElementById('filterUnread').classList.add('active-filter');
+  document.getElementById('filterAll').classList.remove('active-filter');
+  renderUserList(allUsersData, 'unread', document.getElementById('searchUser').value);
+};
 
 function formatDateLabel(dateStr) {
   const today = new Date();
