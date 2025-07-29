@@ -630,19 +630,23 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
   userListBox.innerHTML = '';
 
   renderedUserIds.clear();
+  const emailSet = new Set(); // ✅ Simpan email yang sudah ditampilkan
 
   userList.forEach(([sanitized, userData]) => {
-   const email = userData.email || desanitizeUserId(sanitized);
-   const name = userData.name || email;
-   const emailName = email.split('@')[0].trim();
-   const cleanName = formatUserName(name.trim());
+    const email = userData.email || desanitizeUserId(sanitized);
+    const name = userData.name || email;
+    const emailName = email.split('@')[0].trim();
+    const cleanName = formatUserName(name.trim());
 
-// ✅ Jika sama (case-insensitive), tunjuk sekali saja
-   const finalName = cleanName.toLowerCase() === emailName.toLowerCase()
-  ? emailName
-  : cleanName;
+    // ✅ Skip jika email ini sudah ditampilkan (hindari duplikat)
+    if (emailSet.has(email)) return;
+    emailSet.add(email);
 
-  const label = `${finalName} (${email})`;
+    const finalName = cleanName.toLowerCase() === emailName.toLowerCase()
+      ? emailName
+      : cleanName;
+
+    const label = `${finalName} (${email})`;
 
     if (searchTerm && !label.toLowerCase().includes(searchTerm.toLowerCase())) return;
 
@@ -654,11 +658,10 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
       const userDiv = document.createElement('div');
       userDiv.className = 'user-item';
       if (sanitized === activeUserIdSanitized) {
-         userDiv.classList.add('active'); // ✅ Pastikan warna aktif tetap ada
-     }
+        userDiv.classList.add('active');
+      }
       userDiv.setAttribute('data-sanitized', sanitized);
 
-      // ✅ Teks nama & email saja tanpa foto
       const userLabel = document.createElement('span');
       userLabel.textContent = label + (hasUnread ? ' ❗' : '');
       userLabel.style.fontWeight = hasUnread ? 'bold' : 'normal';
@@ -666,14 +669,15 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
       userDiv.appendChild(userLabel);
 
       userDiv.onclick = () => {
-        justOpenedChat = true; 
-        
+        justOpenedChat = true;
+
         activeUserIdEmail = email;
         activeUserIdSanitized = sanitized;
         selectedUserId = sanitized;
 
         document.getElementById("chatUserName").textContent = formatUserName(name);
-        updateUserOnlineStatus(email); // ✅ Tambah baris ini
+        updateUserOnlineStatus(email);
+
         const avatarImg = document.getElementById("chatUserAvatar");
         avatarImg.src = userData.photoURL || 'https://i.pravatar.cc/40';
         avatarImg.style.display = 'block';
@@ -686,7 +690,7 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
       };
 
       userListBox.appendChild(userDiv);
-      renderedUserIds.add(sanitized); // ✅ Tambahkan ke daftar rendered
+      renderedUserIds.add(sanitized);
     });
   });
 }
