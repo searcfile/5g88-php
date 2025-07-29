@@ -963,19 +963,6 @@ db.ref("chats").on("child_added", (snapshot) => {
   updateUserLastTime(snapshot.key, snapshot.val());
 });
 
-function updateUserOnlineStatus(email) {
-  const sanitized = email.replace(/\./g, "_dot_").replace(/@/g, "_at_");
-  const statusRef = db.ref('users/' + sanitized + '/online');
-
-  statusRef.on('value', (snap) => {
-    const isOnline = snap.val();
-    const statusElem = document.getElementById('chatUserStatus');
-    if (statusElem) {
-      statusElem.textContent = isOnline ? '🟢 Online' : '⚫ Offline';
-      statusElem.style.color = isOnline ? '#0f0' : '#aaa';
-    }
-  });
-}
   </script>
 </body>
 </html>
