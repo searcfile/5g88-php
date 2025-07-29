@@ -723,8 +723,8 @@ function loadUserList() {
 
           // ✅ Gunakan lastLoginTime jika belum ada chat
           if (lastTime === 0) {
-            lastTime = data.lastLoginTime || Date.now();
-          }
+             lastTime = data.lastActive || Date.now();
+           }
 
           return { sanitized, data, lastTime };
         })
@@ -869,7 +869,7 @@ function addOrUpdateUser(sanitized, data) {
         lastTime = msg.val()?.time || 0;
       });
 
-      if (lastTime === 0) lastTime = Date.now();
+      if (lastTime === 0) lastTime = data.lastActive || Date.now();
       const existingIndex = allUsersData.findIndex(([id]) => id === sanitized);
       if (existingIndex !== -1) {
         allUsersData.splice(existingIndex, 1);
