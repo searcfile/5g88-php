@@ -262,6 +262,19 @@ body {
   padding-top: 1rem;
   padding-bottom: 1rem;
 }
+.user-list-panel {
+  width: 500px;
+  border-right: 1px solid #424242;
+  padding: 1rem;
+  overflow-y: auto;
+  max-height: 80vh;
+  color: white;
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE 10+ */
+}
+.user-list-panel::-webkit-scrollbar {
+  display: none;                /* Chrome, Safari, Opera */
+}
   </style>
 </head>
 <body>
@@ -269,7 +282,7 @@ body {
 
   <main style="display: flex;">
   <!-- Panel User -->
-  <div id="userList" style="width: 500px; border-right: 1px solid #424242; padding: 0 1rem; overflow-y: auto; max-height: 80vh; color: white;">
+  <div id="userList" class="user-list-panel">
 
   <!-- Sticky Header -->
   <div class="user-list-header" style="position: sticky; top: 0; background: #111; z-index: 10; padding-top: 1rem; padding-bottom: 1rem;">
