@@ -972,7 +972,7 @@ db.ref("chats").on("child_added", (snapshot) => {
 });
 
 function updateUserOnlineStatus(email) {
-  const sanitized = sanitizeEmail(email); // ✅ Pakai fungsi yang seragam
+  const sanitized = sanitizeUserId(email); // ✅ Pakai fungsi yang seragam
 
   const statusRef = db.ref('users/' + sanitized + '/online');
 
