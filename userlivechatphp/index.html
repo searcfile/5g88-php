@@ -392,7 +392,7 @@ background-color:black;
 let chatInitialized = false;
 
 function sanitizeEmail(email) {
-  return email.replace(/\./g, '_').replace(/@/g, '_at_').replace(/,/g, '_');
+  return email.toLowerCase().replace(/\./g, "_");
 }
 function getChatPath(email) {
   return 'chats/' + sanitizeEmail(email);
@@ -668,8 +668,9 @@ window.addEventListener("DOMContentLoaded", () => {
   if (email) {
     updateUserHeader(); // ⬅️ Tambah update header saat load
     initChatWithUserData();
-   // ✅ Tambahkan pengecekan online status di sini
-    const sanitized = email.replace(/\./g, "_dot_").replace(/@/g, "_at_");
+
+    // ✅ Gunakan fungsi sanitizeEmail untuk konsistensi
+    const sanitized = sanitizeEmail(email);
     const connectedRef = firebase.database().ref(".info/connected");
     const onlineRef = firebase.database().ref("users/" + sanitized + "/online");
 
