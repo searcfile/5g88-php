@@ -688,6 +688,7 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
         userDiv.classList.add('active');
 
         document.getElementById("searchMessage").value = '';
+        updateUserOnlineStatus(email);
         listenToChat();
       };
 
