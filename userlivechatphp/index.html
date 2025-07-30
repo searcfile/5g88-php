@@ -666,10 +666,9 @@ function playNotificationSound() {
 window.addEventListener("DOMContentLoaded", () => {
   const email = localStorage.getItem("useremail");
   if (email) {
-    updateUserHeader(); // ⬅️ Tambah update header saat load
+    updateUserHeader();
     initChatWithUserData();
 
-    // ✅ Gunakan fungsi sanitizeEmail untuk konsistensi
     const sanitized = sanitizeEmail(email);
     const connectedRef = firebase.database().ref(".info/connected");
     const onlineRef = firebase.database().ref("users/" + sanitized + "/online");
@@ -679,6 +678,11 @@ window.addEventListener("DOMContentLoaded", () => {
         onlineRef.set(true);
         onlineRef.onDisconnect().set(false);
       }
+    });
+
+    // ✅ Tambahan ini untuk update saat user tutup tab
+    window.addEventListener("beforeunload", () => {
+      firebase.database().ref("users/" + sanitized + "/online").set(false);
     });
   }
 });
