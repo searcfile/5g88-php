@@ -838,6 +838,14 @@ function sendMessage() {
     if (!err) {
       msgInput.value = '';
 
+      // ✅ Kirim notifikasi ke user (dot merah + sound)
+      db.ref(`notifications/${selectedUserId}`).set({
+        from: 'admin',
+        text: msg,
+        time: now,
+        unread: true
+      });
+
       // ✅ Update posisi user di list
       const userIndex = allUsersData.findIndex(([id]) => id === selectedUserId);
       if (userIndex !== -1) {
