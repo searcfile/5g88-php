@@ -944,48 +944,46 @@ db.ref('users').on('child_changed', (snap) => {
   if (sendBtn) {
     sendBtn.onclick = sendMessage;
   }
-
-  // ✅ Listen semua user yang kirim pesan, agar bisa urutkan otomatis
-  db.ref("chats").on("child_changed", (snapshot) => {
-    const sanitizedId = snapshot.key;
-    const messages = snapshot.val();
-  
-    if (!messages) return;
-  
-    const messageEntries = Object.entries(messages);
-    const latestEntry = messageEntries.reduce((a, b) => (a[1].time > b[1].time ? a : b), [null, { time: 0 }]);
-    const latestTime = latestEntry[1]?.time || 0;
-  
-    const userIndex = allUsersData.findIndex(([id]) => id === sanitizedId);
-    if (userIndex !== -1) {
-      allUsersData[userIndex][2] = latestTime;
-      allUsersData.sort((a, b) => b[2] - a[2]);
-  
-      const displayList = allUsersData.map(([s, d]) => [s, d]);
-      renderUserList(displayList, 'all', document.getElementById('searchUser')?.value || '');
-    }
-  });
-   // ✅ Tambahan: Listen user baru kirim pesan pertama kali
-  db.ref("chats").on("child_added", snapshot => {
-    const sanitizedId = snapshot.key;
-    const messages = snapshot.val();
-    
-    if (!messages) return;
-
-    const messageEntries = Object.entries(messages);
-    const latestEntry = messageEntries.reduce((a, b) => (a[1].time > b[1].time ? a : b), [null, { time: 0 }]);
-    const latestTime = latestEntry[1]?.time || 0;
-
-    const userIndex = allUsersData.findIndex(([id]) => id === sanitizedId);
-    if (userIndex !== -1) {
-      allUsersData[userIndex][2] = latestTime;
-      allUsersData.sort((a, b) => b[2] - a[2]);
-
-      const displayList = allUsersData.map(([s, d]) => [s, d]);
-      renderUserList(displayList, 'all', document.getElementById('searchUser')?.value || '');
-    }
-  });
 }; // <--- Penutup window.onload
+function updateUserLastTime(sanitizedId, messages) {
+  const messageEntries = Object.entries(messages || {});
+  if (messageEntries.length === 0) return;
+
+  const latestEntry = messageEntries.reduce((a, b) => (a[1].time > b[1].time ? a : b), [null, { time: 0 }]);
+  const latestTime = latestEntry[1]?.time || 0;
+
+  const userIndex = allUsersData.findIndex(([id]) => id === sanitizedId);
+  if (userIndex !== -1) {
+    allUsersData[userIndex][2] = latestTime;
+    allUsersData.sort((a, b) => b[2] - a[2]);
+
+    const displayList = allUsersData.map(([s, d]) => [s, d]);
+    renderUserList(displayList, currentFilterMode, document.getElementById('searchUser')?.value || '');
+  }
+}
+
+db.ref("chats").on("child_changed", (snapshot) => {
+  updateUserLastTime(snapshot.key, snapshot.val());
+});
+
+db.ref("chats").on("child_added", (snapshot) => {
+  updateUserLastTime(snapshot.key, snapshot.val());
+});
+
+function updateUserOnlineStatus(email) {
+  const sanitized = sanitizeEmail(email); // ✅ Pakai fungsi yang seragam
+
+  const statusRef = db.ref('users/' + sanitized + '/online');
+
+  statusRef.on('value', (snap) => {
+    const isOnline = snap.val();
+    const statusElem = document.getElementById('chatUserStatus');
+    if (statusElem) {
+      statusElem.textContent = isOnline ? '🟢 Online' : '⚫️ Offline';
+      statusElem.style.color = isOnline ? '#0f0' : '#aaa';
+    }
+  });
+}
   </script>
 </body>
 </html>
