@@ -410,11 +410,11 @@ let isInitialChatLoad = true;
 // User ID sanitize/desanitize helpers
 
 function sanitizeUserId(email) {
-  return email.replace(/\./g, '_dot_').replace(/@/g, '_at_');
+  return email.toLowerCase().replace(/\./g, '_');
 }
 
 function desanitizeUserId(sanitized) {
-  return sanitized.replace(/_at_/g, '@').replace(/_dot_/g, '.');
+  return sanitized.replace(/_/g, '.');
 }
 // Play notification sound
 function playNotificationSound() {
