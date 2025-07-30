@@ -339,10 +339,15 @@ body {
   <div id="containerChatBox">
     <!-- Header Chat -->
     <div id="chatHeader">
-  <div id="chatHeaderUser" style="display: flex; align-items: center; gap: 10px;">
+ <div id="chatHeaderUser" style="display: flex; flex-direction: column;">
+  <div style="display: flex; align-items: center; gap: 10px;">
     <img id="chatUserAvatar" src="" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; display: none;" />
-    <strong id="chatUserName">Select a user</strong>
+    <div>
+      <strong id="chatUserName">Select a user</strong>
+      <div id="chatUserStatus" style="font-size: 12px; color: #aaa;">Offline</div>
+    </div>
   </div>
+</div>
   <input
     type="text"
     id="searchMessage"
