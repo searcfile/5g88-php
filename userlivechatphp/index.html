@@ -552,43 +552,46 @@ function listenToChat(userEmail) {
   const chatRef = db.ref(getChatPath(userEmail));
   const lastSeenKey = `lastSeenByUser_${sanitizeEmail(userEmail)}`;
 
-  chatRef.on('value', snapshot => {
-    chatBox.innerHTML = '';
-    const chats = snapshot.val();
-    const lastSeenTime = parseInt(localStorage.getItem(lastSeenKey) || '0');
-    let latestAdminMsgTime = 0;
+chatRef.on('value', snapshot => {
+  chatBox.innerHTML = '';
+  const chats = snapshot.val();
+  const lastSeenTime = parseInt(localStorage.getItem(lastSeenKey) || '0');
+  let latestAdminMsgTime = 0;
 
-    if (chats) {
-      const chatArray = Object.values(chats).sort((a, b) => a.time - b.time);
-      const today = new Date(); today.setHours(0, 0, 0, 0);
-      const pastChats = [], todayChats = [];
+  if (chats) {
+    const chatArray = Object.values(chats).sort((a, b) => a.time - b.time);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const pastChats = [], todayChats = [];
 
-      chatArray.forEach(c => {
-        const msgDateOnly = new Date(c.time); msgDateOnly.setHours(0, 0, 0, 0);
-        (msgDateOnly.getTime() === today.getTime() ? todayChats : pastChats).push(c);
-        if (c.from === 'admin' && c.time > latestAdminMsgTime) latestAdminMsgTime = c.time;
-      });
+    chatArray.forEach(c => {
+      const msgDateOnly = new Date(c.time); msgDateOnly.setHours(0, 0, 0, 0);
+      (msgDateOnly.getTime() === today.getTime() ? todayChats : pastChats).push(c);
+      if (c.from === 'admin' && c.time > latestAdminMsgTime) latestAdminMsgTime = c.time;
+    });
 
-      if (latestAdminMsgTime > lastSeenTime) {
-        notifDot.style.display = 'inline-block';
-        playNotificationSound();
-        if (window.parent !== window) window.parent.postMessage({ action: "show-livechat-notif" }, "*");
-      } else {
-        notifDot.style.display = 'none';
-        if (window.parent !== window) window.parent.postMessage({ action: "hide-livechat-notif" }, "*");
-      }
+    // ✅ Simpan waktu terakhir pesan apapun, secepat mungkin
+    const latestTime = chatArray[chatArray.length - 1]?.time || 0;
+    localStorage.setItem(lastSeenKey, latestTime);
 
-      renderChats(pastChats, today);
-      renderChats(todayChats, today);
-      chatBox.scrollTop = chatBox.scrollHeight;
-
-      const latestTime = chatArray[chatArray.length - 1]?.time || 0;
-      localStorage.setItem(lastSeenKey, latestTime);
+    // ✅ Dot merah & bunyi hanya jika ada pesan admin baru
+    if (latestAdminMsgTime > lastSeenTime) {
+      notifDot.style.display = 'inline-block';
+      playNotificationSound();
+      if (window.parent !== window) window.parent.postMessage({ action: "show-livechat-notif" }, "*");
     } else {
       notifDot.style.display = 'none';
       if (window.parent !== window) window.parent.postMessage({ action: "hide-livechat-notif" }, "*");
     }
-  });
+
+    renderChats(pastChats, today);
+    renderChats(todayChats, today);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+  } else {
+    notifDot.style.display = 'none';
+    if (window.parent !== window) window.parent.postMessage({ action: "hide-livechat-notif" }, "*");
+  }
+});
 }
 
 function renderChats(chatGroup, today) {
@@ -683,6 +686,31 @@ window.addEventListener("DOMContentLoaded", () => {
     // ✅ Tambahan ini untuk update saat user tutup tab
     window.addEventListener("beforeunload", () => {
       firebase.database().ref("users/" + sanitized + "/online").set(false);
+    });
+
+    // ✅ 🔔 Listener Notifikasi dari Admin (dot merah + bunyi)
+    const notifRef = firebase.database().ref("notifications/" + sanitized);
+
+    notifRef.on("value", (snapshot) => {
+      const notif = snapshot.val();
+      if (notif && notif.unread) {
+        // 🔴 Tampilkan dot merah
+        const notifDot = document.getElementById("notifDot");
+        if (notifDot) notifDot.style.display = "inline-block";
+
+        // 🔊 Bunyi notifikasi
+        playNotificationSound();
+
+        // 📩 Kirim ke parent page
+        if (window.parent !== window) {
+          window.parent.postMessage({ action: "show-livechat-notif" }, "*");
+        }
+
+        // ✅ Tandai sudah dibaca setelah 3 detik (opsional)
+        setTimeout(() => {
+          firebase.database().ref("notifications/" + sanitized + "/unread").set(false);
+        }, 3000);
+      }
     });
   }
 });
