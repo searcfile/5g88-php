@@ -100,13 +100,11 @@
       margin-left: 260px;
     }
     .menu-icon {
-      position: absolute;
-      top: 5px;
-      left: 10px;
-      font-size: 28px;
-      color: gold;
-      cursor: pointer;
+        font-size: 28px;
+         color: gold;
+       cursor: pointer;
       z-index: 1100;
+      margin-right: 10px;
     }
     .menu-img {
       width: 20px;
@@ -205,7 +203,7 @@
   .live-chat-button {
   display: flex;
   align-items: center;
-  background: transparant;
+  background: transparent;
   border: none;
   color: white;
   font-size: 14px;
@@ -213,9 +211,11 @@
   transition: background 0.2s;
   }
 .live-chat-button:hover {
+  background: transparent;
   color: #111;
 }
 .live-chat-button.active-livechat {
+  background: transparent;
   color: gold;
 }
   </style>
@@ -283,9 +283,11 @@ let hasPlayed = false;
 
 function playNotif() {
   const audio = document.getElementById("notifSound");
-  if (audio) {
+  if (audio && userHasInteracted) {
     audio.currentTime = 0;
-    audio.play().catch(() => {});
+    audio.play().catch((err) => {
+      console.warn("🔇 Audio blocked by browser:", err);
+    });
   }
 }
 
@@ -321,7 +323,7 @@ function checkUnread() {
     if (foundUnread && !hasPlayed) {
       playNotif();
       hasPlayed = true;
-      setTimeout(() => hasPlayed = false, 5000); // anti spam
+      setTimeout(() => hasPlayed = false, 3000); // anti spam
     }
   });
 }
@@ -373,23 +375,21 @@ function addTab(label, url) {
     existingTabs.push({ label, url });
     saveTabs(existingTabs);
   }
+
   renderTabs();
   loadPage(url);
 
+  // ✅ Highlight tombol LiveChat jika tab ADMIN LIVECHAT dibuka
   const liveBtn = document.getElementById("liveChatBtn");
+  const dot = document.getElementById("livechatDot");
+
   if (liveBtn) {
-    if (label === "ADMIN LIVECHAT") {
+    if (label === "ADMIN LIVECHAT" || label === "LIVE CHAT") {
       liveBtn.classList.add("active-livechat");
-      const dot = document.getElementById("livechatDot");
-      if (dot) dot.style.display = "none";
+      if (dot) dot.style.display = "none"; // sembunyikan dot merah
     } else {
       liveBtn.classList.remove("active-livechat");
     }
-  }
-  // ✅ Sembunyikan dot merah kalau buka LIVE CHAT
-  if (label === "LIVE CHAT") {
-    const dot = document.getElementById("livechatDot");
-    if (dot) dot.style.display = "none";
   }
 }
 
