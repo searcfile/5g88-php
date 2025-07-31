@@ -268,15 +268,28 @@ body {
 .user-list-panel {
   width: 500px;
   border-right: 1px solid #424242;
-  padding: 1rem;
-  overflow-y: auto;
-  max-height: 80vh;
-  color: white;
-  scrollbar-width: none;        /* Firefox */
-  -ms-overflow-style: none;     /* IE 10+ */
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  color: white; 
+  background: #111;
 }
-.user-list-panel::-webkit-scrollbar {
-  display: none;                /* Chrome, Safari, Opera */
+.user-list-header {
+  padding: 1rem;
+  background: #111;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.user-scroll-box {
+  overflow-y: auto;
+  max-height: calc(80vh - 140px);
+  padding: 1rem;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.user-scroll-box::-webkit-scrollbar {
+  display: none;
 }
 #filterAll, #filterUnread {
   border:1px solid #424242;
@@ -317,22 +330,17 @@ body {
 
   <main style="display: flex;">
   <!-- Panel User -->
-  <div id="userList" class="user-list-panel">
-
-  <!-- Sticky Header -->
-  <div class="user-list-header" style="position: sticky; top: 0; background: #111; z-index: 10; padding-top: 1rem; padding-bottom: 1rem;">
+ <div id="userList" class="user-list-panel">
+  <div class="user-list-header">
     <h3>User List</h3>
-
     <input type="text" id="searchUser" placeholder="Search user..." />
-
-    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-     <button id="filterAll" class="active-filter">All</button>
-     <button id="filterUnread">Unread</button>
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+      <button id="filterAll" class="active-filter">All</button>
+      <button id="filterUnread">Unread</button>
     </div>
   </div>
 
-  <!-- Scrollable User List -->
-  <div id="userListBox"></div>
+  <div id="userListBox" class="user-scroll-box"></div>
 </div>
 
  <div style="flex: 0.5; padding: 1rem;">
