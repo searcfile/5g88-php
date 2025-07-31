@@ -82,7 +82,7 @@
     .header img {position: absolute;max-height: 40px;top: 5px;}
     .container {transition: margin-left 0.3s ease;position: relative;}
     .container.shrink {margin-left: 260px;}
-    .menu-icon {position: absolute;top: 5px;left: 10px;font-size: 28px;color: rgba(255, 255, 255, 0.65);cursor: pointer;z-index: 1100;transition: color 0.3s;}.menu-icon:hover {color: #ffe34d;transition: color 0.2s;}.active-menu-icon {color: #1668dc;transition: all 0.2s ease;}.menu-icon:active {color: #1554ad;transition: color 0.2s;}
+    .menu-icon {position: absolute;top: 5px;left: 10px;font-size: 28px;color: rgba(255, 255, 255, 0.65);cursor: pointer;z-index: 1100;transition: color 0.3s;}.menu-icon:hover {color: #3c89e8;transition: color 0.2s;}.active-menu-icon {color: #1668dc;transition: all 0.2s ease;}.menu-icon:active {color: #1554ad;transition: color 0.2s;}
     .menu-img {width: 20px;height: 20px;vertical-align: middle;margin-right: 8px;border-radius: 4px;}
     @media (max-width: 600px) {.container.shrink {margin-left: 0;}}}
     html, body {height: 100%;}
@@ -329,6 +329,14 @@ function openSidebar() {
     document.querySelector('.header').classList.remove('shrink');
     document.getElementById("tabBar").classList.remove('shrink');
   }
+  document.addEventListener("click", (e) => {
+  const isSidebar = e.target.closest("#sidebar");
+  const isMenuIcon = e.target.closest("#menuIcon");
+
+  if (!isSidebar && !isMenuIcon && sidebar.classList.contains("active")) {
+    closeSidebar();
+  }
+});
 
   function saveTabs(tabs) {
     localStorage.setItem("openTabs", JSON.stringify(tabs));
