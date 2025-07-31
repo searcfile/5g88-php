@@ -220,6 +220,10 @@
   transition: all 0.3s;
   color: #1668dc;
 }
+.live-chat-button.active-livechat {
+  color: #1668dc;
+  background: transparent;
+}
   .dot-icon {
   position: absolute;
   top: -2px;
@@ -376,8 +380,8 @@
 
   tabBar.style.display = "flex";
   tabBar.style.alignItems = "center";
-  tabBar.style.padding = "10px 20px";
-  tabBar.style.background = "#111";
+  tabBar.style.padding = "10px 2px";
+  tabBar.style.background = "black";
 
   menuIcon.addEventListener("click", openSidebar);
   overlay.addEventListener("click", closeSidebar);
