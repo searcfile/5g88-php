@@ -675,7 +675,7 @@ function renderUserList(userList, filter = 'all', searchTerm = '') {
 
       // ✅ Teks nama & email saja tanpa foto
       const userLabel = document.createElement('span');
-      userLabel.textContent = label + (hasUnread ? ' ❗' : '');
+      userLabel.innerHTML = `${label} ${hasUnread ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="red"><path d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 4a1 1 0 0 0-1 1v6a1 1 0 1 0 2 0V7a1 1 0 0 0-1-1zm0 10a1.5 1.5 0 1 0 0 3a1.5 1.5 0 0 0 0-3z"/></svg>' : ''}`;
       userLabel.style.fontWeight = hasUnread ? 'bold' : 'normal';
 
       userDiv.appendChild(userLabel);
