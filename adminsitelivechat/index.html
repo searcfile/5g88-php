@@ -369,7 +369,7 @@ body {
     <!-- Send Box -->
     <div class="send-box">
       <textarea id="msg" placeholder="Type your message" rows="2"></textarea>
-      <button onclick="sendMessage()">Send</button>
+      <button id="sendBtn" disabled>Send</button>
     </div>
   </div>
 </div>
@@ -876,6 +876,17 @@ window.onload = () => {
   activeUserIdEmail = '';
   loadUserList();
 
+  const msgInput = document.getElementById('msg');
+const sendBtn = document.getElementById('sendBtn');
+
+if (msgInput) {
+  msgInput.addEventListener('input', updateSendButtonState);
+}
+
+if (sendBtn) {
+  sendBtn.addEventListener('click', sendMessage);
+}
+  
 function addOrUpdateUser(sanitized, data) {
   if (renderedUserIds.has(sanitized)) return;
   if (allUsersData.some(([id]) => id === sanitized)) return;
@@ -963,6 +974,15 @@ db.ref('users').on('child_changed', (snap) => {
     sendBtn.onclick = sendMessage;
   }
 }; // <--- Penutup window.onload
+function updateSendButtonState() {
+  const msgInput = document.getElementById('msg');
+  const sendBtn = document.getElementById('sendBtn');
+
+  const msg = msgInput?.value.trim();
+  const isUserSelected = !!selectedUserId;
+
+  sendBtn.disabled = !(isUserSelected && msg);
+}
 function updateUserLastTime(sanitizedId, messages) {
   const messageEntries = Object.entries(messages || {});
   if (messageEntries.length === 0) return;
