@@ -508,7 +508,7 @@ async function sendMessage(userEmail) {
   const msg = msgInput.value.trim();
   const file = fileInput.files[0];
 
-  if (!msg && !file) return;
+  if ((!msg || msg === "") && !file) return;
 
   const userName = localStorage.getItem("username") || "User";
   const userPhoto = localStorage.getItem("userphoto") || "";
