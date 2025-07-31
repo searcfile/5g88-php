@@ -140,7 +140,7 @@
    }
   .tab {
    background: gold;
-   color: #111;
+   color: rgba(255, 255, 255, 0.85);
    padding: 5px 12px;
    border-radius: 8px;
    font-weight: bold;
@@ -166,20 +166,20 @@
    }
   .tab.active-tab-bar {
    background: gold;
-   color: #000;
+   color: #1668dc;
    font-weight: bold;
    }
   .tab:hover {
-   background-color: #111 !important;
-   color: #ffffff !important;
+   background-color: transparant !important;
+   color: #3c89e8 !important;
    font-weight: bold !important;
-    border: 2px solid white !important;
+   border: 1px solid #424242 !important;
    }
     .active-tab {
-      background-color: #111 !important;
-      color: #ffffff !important;
+      background-color: transparant !important;
+      color: #1668dc !important;
       font-weight: bold;
-      border: 2px solid white !important;
+      border: 1px solid #424242 !important;
      }
   .floating-logo {
    position: fixed;
@@ -218,7 +218,7 @@
 .live-chat-button.active-detail {
   background: transparent;
   transition: all 0.3s;
-  color: gold;
+  color: #1668dc;
 }
   .dot-icon {
   position: absolute;
@@ -256,7 +256,7 @@
 
     <button id="liveChatBtn" onclick="addTab('ADMIN LIVECHAT', 'https://searcfile.github.io/5g88-php/adminsitelivechat/')" class="live-chat-button" style="position: relative;">
        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="margin-right: 6px;">
-       <path d="M21 6h-18v12h4v3l4-3h10v-12zm0-2c1.104 0 2 .896 2 2v12c0 1.104-.896 2-2 2h-10l-6 4v-4h-4c-1.104 0-2-.896-2-2v-12c0-1.104.896-2 2-2h18z"/>
+       <path d="M24 20h-3v4l-5.333-4h-7.667v-4h2v2h6.333l2.667 2v-2h3v-8.001h-2v-2h4v12.001zm-6-6h-9.667l-5.333 4v-4h-3v-14.001h18v14.001zm-9-4.084h-5v1.084h5v-1.084zm5-2.916h-10v1h10v-1zm0-3h-10v1h10v-1z"/>
        </svg>
   <span>LiveChat</span>
   <svg id="livechatDot" class="dot-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="red" viewBox="0 0 24 24">
@@ -462,12 +462,12 @@ if (detailBtn) {
       tabElement.className = "tab";
       tabElement.draggable = true;
       tabElement.dataset.index = index;
-      tabElement.style.background = "#222";
-      tabElement.style.color = "gold";
-      tabElement.style.padding = "2px 3px";
+      tabElement.style.background = "rgba(255, 255, 255, 0.04)";
+      tabElement.style.color = "color: rgba(255, 255, 255, 0.85)";
+      tabElement.style.padding = "6px 16px";
       tabElement.style.marginRight = "0px";
       tabElement.style.borderRadius = "5px";
-      tabElement.style.border = "1px solid gold";
+      tabElement.style.border = "1px solid #424242";
       tabElement.style.display = "inline-flex";
       tabElement.style.alignItems = "center";
       tabElement.style.fontSize = "14px";
@@ -544,22 +544,48 @@ if (detailBtn) {
     });
   }
 
-  function loadPage(url) {
+function loadPage(url) {
   pageFrame.src = url;
   localStorage.setItem("activeTabUrl", url);
   closeSidebar();
+
   document.querySelectorAll(".tab").forEach(tab => {
     tab.classList.remove("active-tab");
   });
+
   const tabs = getTabs();
   const tabElements = document.querySelectorAll(".tab");
+
   tabs.forEach((tab, index) => {
-    if (tab.url === url) {
-      if (tabElements[index]) {
-        tabElements[index].classList.add("active-tab");
-      }
+    if (tab.url === url && tabElements[index]) {
+      tabElements[index].classList.add("active-tab");
     }
   });
+
+  // ✅ Tambahan: aktifkan tombol header yang sesuai
+  const matchedTab = tabs.find(tab => tab.url === url);
+  const label = matchedTab?.label || "";
+
+  const liveBtn = document.getElementById("liveChatBtn");
+  const detailBtn = document.getElementById("detailLoginBtn");
+
+  if (liveBtn) {
+    if (label === "ADMIN LIVECHAT" || label === "LIVE CHAT") {
+      liveBtn.classList.add("active-livechat");
+      const dot = document.getElementById("livechatDot");
+      if (dot) dot.style.display = "none";
+    } else {
+      liveBtn.classList.remove("active-livechat");
+    }
+  }
+
+  if (detailBtn) {
+    if (label === "DETAIL LOGIN") {
+      detailBtn.classList.add("active-detail");
+    } else {
+      detailBtn.classList.remove("active-detail");
+    }
+  }
 }
 
   window.onload = () => {
