@@ -217,8 +217,15 @@
 }
 .live-chat-button.active-detail {
   background: transparent;
-  transition: all 0.3s
+  transition: all 0.3s;
   color: gold;
+}
+  .dot-icon {
+  position: absolute;
+  top: -2px;
+  right: -6px;
+  display: none;
+  z-index: 2;
 }
   </style>
 </head>
@@ -247,13 +254,15 @@
   <div style="display: flex; align-items: center; gap: 10px;">
     <div class="menu-icon" id="menuIcon">☰</div>
 
-    <button id="liveChatBtn" onclick="addTab('ADMIN LIVECHAT', 'https://searcfile.github.io/5g88-php/adminsitelivechat/')" class="live-chat-button">
-      <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="margin-right: 6px;">
-        <path d="M21 6h-18v12h4v3l4-3h10v-12zm0-2c1.104 0 2 .896 2 2v12c0 1.104-.896 2-2 2h-10l-6 4v-4h-4c-1.104 0-2-.896-2-2v-12c0-1.104.896-2 2-2h18z"/>
-      </svg>
-      <span>LiveChat</span>
-      <span id="livechatDot" style="display:none; margin-left: 6px; width: 10px; height: 10px; background: red; border-radius: 50%;"></span>
-    </button>
+    <button id="liveChatBtn" onclick="addTab('ADMIN LIVECHAT', 'https://searcfile.github.io/5g88-php/adminsitelivechat/')" class="live-chat-button" style="position: relative;">
+       <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="margin-right: 6px;">
+       <path d="M21 6h-18v12h4v3l4-3h10v-12zm0-2c1.104 0 2 .896 2 2v12c0 1.104-.896 2-2 2h-10l-6 4v-4h-4c-1.104 0-2-.896-2-2v-12c0-1.104.896-2 2-2h18z"/>
+       </svg>
+  <span>LiveChat</span>
+  <svg id="livechatDot" class="dot-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="red" viewBox="0 0 24 24">
+    <path d="M12 0C5.371 0 0 5.371 0 12c0 6.628 5.371 12 12 12s12-5.372 12-12c0-6.629-5.371-12-12-12zm1 17h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+  </svg>
+</button>
 
     <button id="detailLoginBtn" onclick="addTab('DETAIL LOGIN', 'https://searcfile.github.io/5G88-editor/admindatabase/')" class="live-chat-button">
       <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="margin-right: 6px;">
@@ -422,6 +431,15 @@ function addTab(label, url) {
       liveBtn.classList.remove("active-livechat");
     }
   }
+  const detailBtn = document.getElementById("detailLoginBtn");
+
+if (detailBtn) {
+  if (label === "DETAIL LOGIN") {
+    detailBtn.classList.add("active-detail");
+  } else {
+    detailBtn.classList.remove("active-detail");
+  }
+}
 }
 
   function closeTab(label) {
