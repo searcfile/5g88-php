@@ -205,17 +205,19 @@
   align-items: center;
   background: transparent;
   border: none;
-  color: white;
+  color: rgba(255, 255, 255, 0.65);
   font-size: 14px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: color 0.3s;
   }
 .live-chat-button:hover {
   background: transparent;
-  color: #111;
+  color: rgba(255, 255, 255, 0.85);
+  transition: color 0.3s;
 }
-.live-chat-button.active-livechat {
+.live-chat-button.active-detail {
   background: transparent;
+  transition: all 0.3s
   color: gold;
 }
   </style>
@@ -245,7 +247,6 @@
   <div style="display: flex; align-items: center; gap: 10px;">
     <div class="menu-icon" id="menuIcon">☰</div>
 
-    <!-- Tombol LiveChat -->
     <button id="liveChatBtn" onclick="addTab('ADMIN LIVECHAT', 'https://searcfile.github.io/5g88-php/adminsitelivechat/')" class="live-chat-button">
       <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="margin-right: 6px;">
         <path d="M21 6h-18v12h4v3l4-3h10v-12zm0-2c1.104 0 2 .896 2 2v12c0 1.104-.896 2-2 2h-10l-6 4v-4h-4c-1.104 0-2-.896-2-2v-12c0-1.104.896-2 2-2h18z"/>
@@ -253,8 +254,16 @@
       <span>LiveChat</span>
       <span id="livechatDot" style="display:none; margin-left: 6px; width: 10px; height: 10px; background: red; border-radius: 50%;"></span>
     </button>
+
+    <button id="detailLoginBtn" onclick="addTab('DETAIL LOGIN', 'https://searcfile.github.io/5G88-editor/admindatabase/')" class="live-chat-button">
+      <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="margin-right: 6px;">
+        <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 14a1.5 1.5 0 1 1 1.5-1.5A1.5 1.5 0 0 1 12 16Zm1-4h-2V7h2Z"/>
+      </svg>
+      <span>Detail Login</span>
+    </button>
   </div>
 </div>
+
    <div id="tabBar" class="tab-bar"></div>
 
   <div class="container" id="mainContainer">
@@ -266,67 +275,89 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 <script>
+  // ✅ Firebase config
   const firebaseConfig = {
-  apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
-  authDomain: "blurphp.firebaseapp.com",
-  databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "blurphp",
-  storageBucket: "blurphp.firebasedatabase.app",
-  messagingSenderId: "593904200464",
-  appId: "1:593904200464:web:cea7bc1360532c20d99395",
-  measurementId: "G-R494S2DPZ5"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+    apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
+    authDomain: "blurphp.firebaseapp.com",
+    databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "blurphp",
+    storageBucket: "blurphp.firebasedatabase.app",
+    messagingSenderId: "593904200464",
+    appId: "1:593904200464:web:cea7bc1360532c20d99395",
+    measurementId: "G-R494S2DPZ5"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-let hasPlayed = false;
+  // ✅ Interaksi user diperlukan agar audio bisa diputar
+  let userHasInteracted = false;
+  document.addEventListener('click', () => {
+    userHasInteracted = true;
+    console.log("✅ userHasInteracted = true");
+  });
 
-function playNotif() {
-  const audio = document.getElementById("notifSound");
-  if (audio && userHasInteracted) {
-    audio.currentTime = 0;
-    audio.play().catch((err) => {
-      console.warn("🔇 Audio blocked by browser:", err);
-    });
+  let hasPlayed = false;
+  const notifiedKeys = new Set(); // untuk deteksi pesan baru yang belum dibunyikan
+
+  function playNotif() {
+    const audio = document.getElementById("notifSound");
+    if (audio && userHasInteracted) {
+      audio.currentTime = 0;
+      audio.play()
+        .then(() => console.log("✅ Audio diputar"))
+        .catch(err => console.warn("🔇 Audio gagal diputar:", err));
+    } else {
+      console.warn("❌ Tidak bisa play: belum ada interaksi user");
+    }
   }
-}
 
-function showLivechatDot(status) {
-  const dot = document.getElementById("livechatDot");
-  if (dot) dot.style.display = status ? "inline-block" : "none";
-}
+  function showLivechatDot(status) {
+    const dot = document.getElementById("livechatDot");
+    if (dot) dot.style.display = status ? "inline-block" : "none";
+  }
 
-// ✅ Pantau semua pesan dari user yang belum dibaca admin
-db.ref("chats").on("child_added", checkUnread);
-db.ref("chats").on("child_changed", checkUnread);
-
-function checkUnread() {
-  db.ref("chats").once("value", (snapshot) => {
+  // ✅ Pantau semua pesan baru (real-time)
+  db.ref("chats").on("child_changed", (snapshot) => {
+    const userId = snapshot.key;
+    const messages = snapshot.val();
     let foundUnread = false;
-    snapshot.forEach(userSnap => {
-      const messages = userSnap.val();
-      if (messages) {
-        for (const key in messages) {
-          const msg = messages[key];
-          if (msg.from === "user" && msg.readByAdmin !== true) {
-            foundUnread = true;
-            break;
-          }
-        }
+
+    for (const msgId in messages) {
+      const msg = messages[msgId];
+      const key = `${userId}-${msgId}`;
+
+      if (msg.from === "user" && msg.readByAdmin !== true && !notifiedKeys.has(key)) {
+        console.log("🔔 Pesan baru terdeteksi:", key);
+        playNotif();
+        showLivechatDot(true);
+        notifiedKeys.add(key);
+        foundUnread = true;
       }
-    });
+    }
 
-    // ✅ Update dot merah
-    showLivechatDot(foundUnread);
-
-    // ✅ Mainkan suara jika dot belum ditampilkan sebelumnya
-    if (foundUnread && !hasPlayed) {
-      playNotif();
-      hasPlayed = true;
-      setTimeout(() => hasPlayed = false, 3000); // anti spam
+    if (!foundUnread) {
+      showLivechatDot(false);
     }
   });
-}
+
+  // ✅ Juga pantau child_added (jika user baru kirim pesan pertama kali)
+  db.ref("chats").on("child_added", (snapshot) => {
+    const userId = snapshot.key;
+    const messages = snapshot.val();
+    if (!messages) return;
+
+    for (const msgId in messages) {
+      const msg = messages[msgId];
+      const key = `${userId}-${msgId}`;
+
+      if (msg.from === "user" && msg.readByAdmin !== true && !notifiedKeys.has(key)) {
+        console.log("🔔 Pesan baru dari user baru:", key);
+        playNotif();
+        showLivechatDot(true);
+        notifiedKeys.add(key);
+      }
+    }
+  });
   const tabBar = document.getElementById("tabBar");
   const menuIcon = document.getElementById("menuIcon");
   const sidebar = document.getElementById("sidebar");
