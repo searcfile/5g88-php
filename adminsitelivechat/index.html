@@ -920,15 +920,16 @@ db.ref('users').on('child_changed', (snap) => {
   addOrUpdateUser(sanitized, data);
 });
   // Send message on Enter key (without Shift or Ctrl)
-  const msgInput = document.getElementById('msg');
-  if (msgInput) {
-    msgInput.addEventListener('keydown', e => {
-      if ((e.key === 'Enter') && !(e.shiftKey || e.ctrlKey)) {
-        e.preventDefault();
-        sendMessage();
-      }
-    });
-  }
+ if (msgInput) {
+  msgInput.addEventListener('keydown', e => {
+    if ((e.key === 'Enter') && !(e.shiftKey || e.ctrlKey)) {
+      e.preventDefault();
+      const text = msgInput.value.trim();
+      if (!selectedUserId || !text) return; // ⛔ Stop tanpa alert
+      sendMessage(); // ✅ Kirim hanya jika ada user & isi
+    }
+  });
+}
 
   // Search users input
   const searchUserInput = document.getElementById('searchUser');
