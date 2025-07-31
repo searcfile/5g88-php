@@ -870,29 +870,86 @@ function sendMessage() {
   });
 }
 // --- Init on window load ---
+let msgInput;
+let sendBtn;
+
 window.onload = () => {
   selectedUserId = null;
   activeUserIdSanitized = '';
   activeUserIdEmail = '';
   loadUserList();
 
-  const msgInput = document.getElementById('msg');
-const sendBtn = document.getElementById('sendBtn');
+  msgInput = document.getElementById('msg');
+  sendBtn = document.getElementById('sendBtn');
 
-if (msgInput) {
-  msgInput.addEventListener('input', updateSendButtonState);
+  if (msgInput) {
+    msgInput.addEventListener('input', updateSendButtonState);
+    msgInput.addEventListener('keydown', e => {
+      if ((e.key === 'Enter') && !(e.shiftKey || e.ctrlKey)) {
+        e.preventDefault();
+        const text = msgInput.value.trim();
+        if (!selectedUserId || !text) return;
+        sendMessage();
+      }
+    });
+  }
+
+  if (sendBtn) {
+    sendBtn.addEventListener('click', sendMessage);
+  }
+
+  const searchUserInput = document.getElementById('searchUser');
+  if (searchUserInput) {
+    searchUserInput.addEventListener('input', e => {
+      const filterType = document.querySelector('input[name="filter"]:checked')?.value || 'all';
+      document.getElementById('userListBox').innerHTML = '';
+      renderUserList(allUsersData, filterType, e.target.value);
+    });
+  }
+
+  const searchMessageInput = document.getElementById('searchMessage');
+  if (searchMessageInput) {
+    searchMessageInput.addEventListener('input', e => {
+      filterMessages(e.target.value);
+    });
+  }
+
+  db.ref('users').on('child_added', (snap) => {
+    const sanitized = snap.key;
+    const data = snap.val();
+    if (!isLoadingUserList && !renderedUserIds.has(sanitized)) {
+      addOrUpdateUser(sanitized, data);
+      renderedUserIds.add(sanitized);
+    }
+  });
+
+  db.ref('users').on('child_changed', (snap) => {
+    const sanitized = snap.key;
+    const data = snap.val();
+    addOrUpdateUser(sanitized, data);
+  });
+
+  db.ref("chats").on("child_changed", (snapshot) => {
+    updateUserLastTime(snapshot.key, snapshot.val());
+  });
+
+  db.ref("chats").on("child_added", (snapshot) => {
+    updateUserLastTime(snapshot.key, snapshot.val());
+  });
+};
+
+function updateSendButtonState() {
+  const msg = msgInput?.value.trim();
+  const isUserSelected = !!selectedUserId;
+  if (sendBtn) sendBtn.disabled = !(isUserSelected && msg);
 }
 
-if (sendBtn) {
-  sendBtn.addEventListener('click', sendMessage);
-}
-  
 function addOrUpdateUser(sanitized, data) {
   if (renderedUserIds.has(sanitized)) return;
   if (allUsersData.some(([id]) => id === sanitized)) return;
 
-  const email = desanitizeUserId(sanitized); // ✅ Desanitize email
-  data.email = email; // ✅ Simpan email asli ke data
+  const email = desanitizeUserId(sanitized);
+  data.email = email;
 
   db.ref(`chats/${sanitized}`)
     .orderByChild('time')
@@ -916,73 +973,10 @@ function addOrUpdateUser(sanitized, data) {
       const displayList = allUsersData.map(([id, user]) => [id, user]);
       renderUserList(displayList, 'all', document.getElementById("searchUser")?.value || '');
 
-      renderedUserIds.add(sanitized); // ✅ Catat sebagai sudah dirender
+      renderedUserIds.add(sanitized);
     });
 }
 
-// 🔁 Listen user baru
-db.ref('users').on('child_added', (snap) => {
-  const sanitized = snap.key;
-  const data = snap.val();
-
-  // 🛡️ Hanya tambahkan kalau belum dirender saat awal
-  if (!isLoadingUserList && !renderedUserIds.has(sanitized)) {
-    addOrUpdateUser(sanitized, data);
-    renderedUserIds.add(sanitized);
-  }
-});
-
-// 🔁 Listen user diubah (nama/foto/email)
-db.ref('users').on('child_changed', (snap) => {
-  const sanitized = snap.key;
-  const data = snap.val();
-  addOrUpdateUser(sanitized, data);
-});
-  // Send message on Enter key (without Shift or Ctrl)
- if (msgInput) {
-  msgInput.addEventListener('keydown', e => {
-    if ((e.key === 'Enter') && !(e.shiftKey || e.ctrlKey)) {
-      e.preventDefault();
-      const text = msgInput.value.trim();
-      if (!selectedUserId || !text) return; // ⛔ Stop tanpa alert
-      sendMessage(); // ✅ Kirim hanya jika ada user & isi
-    }
-  });
-}
-
-  // Search users input
-  const searchUserInput = document.getElementById('searchUser');
-  if (searchUserInput) {
-    searchUserInput.addEventListener('input', e => {
-      const filterType = document.querySelector('input[name="filter"]:checked')?.value || 'all';
-      document.getElementById('userListBox').innerHTML = '';
-      renderUserList(allUsersData, filterType, e.target.value);
-    });
-  }
-
-  // Search messages input
-  const searchMessageInput = document.getElementById('searchMessage');
-  if (searchMessageInput) {
-    searchMessageInput.addEventListener('input', e => {
-      filterMessages(e.target.value);
-    });
-  }
-
-  // Send button
-  const sendBtn = document.getElementById('sendBtn');
-  if (sendBtn) {
-    sendBtn.onclick = sendMessage;
-  }
-}; // <--- Penutup window.onload
-function updateSendButtonState() {
-  const msgInput = document.getElementById('msg');
-  const sendBtn = document.getElementById('sendBtn');
-
-  const msg = msgInput?.value.trim();
-  const isUserSelected = !!selectedUserId;
-
-  sendBtn.disabled = !(isUserSelected && msg);
-}
 function updateUserLastTime(sanitizedId, messages) {
   const messageEntries = Object.entries(messages || {});
   if (messageEntries.length === 0) return;
@@ -1000,17 +994,8 @@ function updateUserLastTime(sanitizedId, messages) {
   }
 }
 
-db.ref("chats").on("child_changed", (snapshot) => {
-  updateUserLastTime(snapshot.key, snapshot.val());
-});
-
-db.ref("chats").on("child_added", (snapshot) => {
-  updateUserLastTime(snapshot.key, snapshot.val());
-});
-
 function updateUserOnlineStatus(email) {
-  const sanitized = sanitizeUserId(email); // ✅ Pakai fungsi yang seragam
-
+  const sanitized = sanitizeUserId(email);
   const statusRef = db.ref('users/' + sanitized + '/online');
 
   statusRef.on('value', (snap) => {
