@@ -328,6 +328,7 @@ function openSidebar() {
     document.querySelector(".floating-logo").classList.remove("shrink");
     document.querySelector('.header').classList.remove('shrink');
     document.getElementById("tabBar").classList.remove('shrink');
+    document.getElementById("menuIcon").classList.remove("active-menu-icon");
   }
   document.addEventListener("click", (e) => {
   const isSidebar = e.target.closest("#sidebar");
