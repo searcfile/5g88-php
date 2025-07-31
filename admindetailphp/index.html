@@ -84,8 +84,9 @@
       height: 55px;
       background: #111;
       display: flex;
-      justify-content: center;
+      justify-content: space-between;
       align-items: center;
+      padding: 0 10px;
     }
     .header img {
       position: absolute;
@@ -202,7 +203,28 @@
    margin-left: 260px;
    transition: margin-left 0.3s;
    }
-  
+  .live-chat-button {
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 5px 10px;
+  margin-left: auto;
+  margin-right: 10px;
+  transition: background 0.2s;
+}
+.live-chat-button:hover {
+  background: gold;
+  color: #111;
+}
+.live-chat-button.active-livechat {
+  background: gold;
+  color: #111;
+}
   </style>
 </head>
 <body>
@@ -226,17 +248,87 @@
   </a>
 </div> 
   
-  <div class="header">
-    <div class="menu-icon" id="menuIcon">☰</div>
-  </div>
+ <div class="header">
+  <div class="menu-icon" id="menuIcon">☰</div>
+
+  <button id="liveChatBtn" onclick="addTab('ADMIN LIVECHAT', 'https://searcfile.github.io/5g88-php/adminsitelivechat/')" class="live-chat-button">
+    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="margin-right: 6px;">
+      <path d="M21 6h-18v12h4v3l4-3h10v-12zm0-2c1.104 0 2 .896 2 2v12c0 1.104-.896 2-2 2h-10l-6 4v-4h-4c-1.104 0-2-.896-2-2v-12c0-1.104.896-2 2-2h18z"/>
+    </svg>
+    <span>LiveChat</span>
+    <span id="livechatDot" style="display:none; margin-left: 6px; width: 10px; height: 10px; background: red; border-radius: 50%;"></span>
+  </button>
+</div>
    <div id="tabBar" class="tab-bar"></div>
-  
+
   <div class="container" id="mainContainer">
   <iframe id="pageFrame" src="" style="width: 100%; height: calc(100vh - 95px); border: none;"></iframe>
 </iframe>
 </div>
 
-    <script>
+<audio id="notifSound" src="https://easypay88.com/assets/sound/notification.wav" preload="auto"></audio>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script>
+  const firebaseConfig = {
+  apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
+  authDomain: "blurphp.firebaseapp.com",
+  databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "blurphp",
+  storageBucket: "blurphp.firebasedatabase.app",
+  messagingSenderId: "593904200464",
+  appId: "1:593904200464:web:cea7bc1360532c20d99395",
+  measurementId: "G-R494S2DPZ5"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let hasPlayed = false;
+
+function playNotif() {
+  const audio = document.getElementById("notifSound");
+  if (audio) {
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+  }
+}
+
+function showLivechatDot(status) {
+  const dot = document.getElementById("livechatDot");
+  if (dot) dot.style.display = status ? "inline-block" : "none";
+}
+
+// ✅ Pantau semua pesan dari user yang belum dibaca admin
+db.ref("chats").on("child_added", checkUnread);
+db.ref("chats").on("child_changed", checkUnread);
+
+function checkUnread() {
+  db.ref("chats").once("value", (snapshot) => {
+    let foundUnread = false;
+    snapshot.forEach(userSnap => {
+      const messages = userSnap.val();
+      if (messages) {
+        for (const key in messages) {
+          const msg = messages[key];
+          if (msg.from === "user" && msg.readByAdmin !== true) {
+            foundUnread = true;
+            break;
+          }
+        }
+      }
+    });
+
+    // ✅ Update dot merah
+    showLivechatDot(foundUnread);
+
+    // ✅ Mainkan suara jika dot belum ditampilkan sebelumnya
+    if (foundUnread && !hasPlayed) {
+      playNotif();
+      hasPlayed = true;
+      setTimeout(() => hasPlayed = false, 5000); // anti spam
+    }
+  });
+}
   const tabBar = document.getElementById("tabBar");
   const menuIcon = document.getElementById("menuIcon");
   const sidebar = document.getElementById("sidebar");
@@ -278,16 +370,32 @@
     return JSON.parse(localStorage.getItem("openTabs")) || [];
   }
 
-  function addTab(label, url) {
-    const existingTabs = getTabs();
-    const exists = existingTabs.some(tab => tab.label === label);
-    if (!exists) {
-      existingTabs.push({ label, url });
-      saveTabs(existingTabs);
-    }
-    renderTabs();
-    loadPage(url);
+function addTab(label, url) {
+  const existingTabs = getTabs();
+  const exists = existingTabs.some(tab => tab.label === label);
+  if (!exists) {
+    existingTabs.push({ label, url });
+    saveTabs(existingTabs);
   }
+  renderTabs();
+  loadPage(url);
+
+  const liveBtn = document.getElementById("liveChatBtn");
+  if (liveBtn) {
+    if (label === "ADMIN LIVECHAT") {
+      liveBtn.classList.add("active-livechat");
+      const dot = document.getElementById("livechatDot");
+      if (dot) dot.style.display = "none";
+    } else {
+      liveBtn.classList.remove("active-livechat");
+    }
+  }
+  // ✅ Sembunyikan dot merah kalau buka LIVE CHAT
+  if (label === "LIVE CHAT") {
+    const dot = document.getElementById("livechatDot");
+    if (dot) dot.style.display = "none";
+  }
+}
 
   function closeTab(label) {
     let tabs = getTabs().filter(tab => tab.label !== label);
