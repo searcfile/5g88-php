@@ -327,6 +327,23 @@ body {
   float: right;
   margin-left: auto;
 }
+#chatUserStatus {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.status-main {
+  font-size: 13px;
+  font-weight: bold;
+  color: #aaa;
+}
+
+.status-sub {
+  font-size: 11px;
+  color: #bbb;
+}
   </style>
 </head>
 <body>
@@ -1018,14 +1035,13 @@ function updateUserOnlineStatus(email) {
   userRef.on('value', (snapshot) => {
     const data = snapshot.val();
     const isOnline = data?.online;
-    const lastSeen = data?.lastLoginTime;
+    const lastSeen = data?.lastLoginTime; // Atau ganti ke data?.lastSeen kalau sudah ubah nama
     const statusElem = document.getElementById('chatUserStatus');
 
     if (!statusElem) return;
 
     if (isOnline) {
-      statusElem.textContent = '🟢 Online';
-      statusElem.style.color = '#0f0';
+      statusElem.innerHTML = `<span class="status-main">🟢 Online</span>`;
     } else {
       let timeString = '';
       if (lastSeen) {
@@ -1041,8 +1057,10 @@ function updateUserOnlineStatus(email) {
         timeString = `${isToday ? 'today' : dateObj.toLocaleDateString()} at ${displayHour}:${minutes} ${ampm}`;
       }
 
-      statusElem.textContent = `⚫️ Offline${timeString ? ' • last seen ' + timeString : ''}`;
-      statusElem.style.color = '#aaa';
+      statusElem.innerHTML = `
+        <span class="status-main">⚫️ Offline</span>
+        ${timeString ? `<span class="status-sub">• last seen ${timeString}</span>` : ''}
+      `;
     }
   });
 }
