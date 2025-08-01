@@ -328,24 +328,27 @@ body {
   margin-left: auto;
 }
 #chatUserStatus {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;        /* ❗ Cegah pindah baris */
-  overflow: hidden;           /* ❗ Cegah overflow */
-  text-overflow: ellipsis;    /* ❗ Tambah ... jika terlalu panjang */
-  max-width: 100%;            /* Atur lebar maksimum */
+  display: block;             /* ⬅️ Ganti jadi block agar tidak terlalu dipaksa horizontal */
+  white-space: nowrap;        /* Tetap cegah baris baru */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  line-height: 1;
 }
 
 .status-main {
   font-size: 12px;
   font-weight: bold;
-  color: #aaa;
+  color: #0f0;
 }
 
 .status-sub {
   font-size: 12px;
   color: #bbb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1;
 }
   </style>
 </head>
@@ -1038,7 +1041,7 @@ function updateUserOnlineStatus(email) {
   userRef.on('value', (snapshot) => {
     const data = snapshot.val();
     const isOnline = data?.online;
-    const lastSeen = data?.lastLoginTime; // Atau ganti ke data?.lastSeen kalau sudah ubah nama
+    const lastSeen = data?.lastLoginTime; // atau ganti ke lastSeen jika kamu sudah rename
     const statusElem = document.getElementById('chatUserStatus');
 
     if (!statusElem) return;
@@ -1060,10 +1063,7 @@ function updateUserOnlineStatus(email) {
         timeString = `${isToday ? 'today' : dateObj.toLocaleDateString()} at ${displayHour}:${minutes} ${ampm}`;
       }
 
-      statusElem.innerHTML = `
-        <span class="status-main">⚫️</span>
-        ${timeString ? `<span class="status-sub">Last seen ${timeString}</span>` : ''}
-      `;
+      statusElem.innerHTML = timeString ? `<span class="status-sub">Last seen ${timeString}</span>` : '';
     }
   });
 }
