@@ -331,17 +331,20 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: wrap;
+  white-space: nowrap;        /* ❗ Cegah pindah baris */
+  overflow: hidden;           /* ❗ Cegah overflow */
+  text-overflow: ellipsis;    /* ❗ Tambah ... jika terlalu panjang */
+  max-width: 100%;            /* Atur lebar maksimum */
 }
 
 .status-main {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: bold;
   color: #aaa;
 }
 
 .status-sub {
-  font-size: 11px;
+  font-size: 10px;
   color: #bbb;
 }
   </style>
