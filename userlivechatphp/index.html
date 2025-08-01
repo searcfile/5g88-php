@@ -695,39 +695,39 @@ window.addEventListener("DOMContentLoaded", () => {
 
     const sanitized = sanitizeEmail(email);
     const connectedRef = firebase.database().ref(".info/connected");
-    const onlineRef = firebase.database().ref("users/" + sanitized + "/online");
+    const userRef = firebase.database().ref("users/" + sanitized);
 
     connectedRef.on("value", (snap) => {
       if (snap.val() === true) {
-        onlineRef.set(true);
-        onlineRef.onDisconnect().set(false);
+        userRef.update({ online: true });
+        userRef.onDisconnect().update({
+          online: false,
+          lastLoginTime: Date.now()
+        });
       }
     });
 
-    // ✅ Tambahan ini untuk update saat user tutup tab
     window.addEventListener("beforeunload", () => {
-      firebase.database().ref("users/" + sanitized + "/online").set(false);
+      userRef.update({
+        online: false,
+        lastLoginTime: Date.now()
+      });
     });
 
     // ✅ 🔔 Listener Notifikasi dari Admin (dot merah + bunyi)
     const notifRef = firebase.database().ref("notifications/" + sanitized);
-
     notifRef.on("value", (snapshot) => {
       const notif = snapshot.val();
       if (notif && notif.unread) {
-        // 🔴 Tampilkan dot merah
         const notifDot = document.getElementById("notifDot");
         if (notifDot) notifDot.style.display = "inline-block";
 
-        // 🔊 Bunyi notifikasi
         playNotificationSound();
 
-        // 📩 Kirim ke parent page
         if (window.parent !== window) {
           window.parent.postMessage({ action: "show-livechat-notif" }, "*");
         }
 
-        // ✅ Tandai sudah dibaca setelah 3 detik (opsional)
         setTimeout(() => {
           firebase.database().ref("notifications/" + sanitized + "/unread").set(false);
         }, 2000);
