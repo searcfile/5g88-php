@@ -1062,7 +1062,7 @@ function updateUserOnlineStatus(email) {
 
       statusElem.innerHTML = `
         <span class="status-main">⚫️ Offline</span>
-        ${timeString ? `<span class="status-sub">• last seen ${timeString}</span>` : ''}
+        ${timeString ? `<span class="status-sub">last seen ${timeString}</span>` : ''}
       `;
     }
   });
