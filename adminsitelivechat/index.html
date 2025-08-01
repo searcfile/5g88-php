@@ -1013,14 +1013,36 @@ function updateUserLastTime(sanitizedId, messages) {
 
 function updateUserOnlineStatus(email) {
   const sanitized = sanitizeUserId(email);
-  const statusRef = db.ref('users/' + sanitized + '/online');
+  const userRef = db.ref('users/' + sanitized);
 
-  statusRef.on('value', (snap) => {
-    const isOnline = snap.val();
+  userRef.on('value', (snapshot) => {
+    const data = snapshot.val();
+    const isOnline = data?.online;
+    const lastSeen = data?.lastLoginTime;
     const statusElem = document.getElementById('chatUserStatus');
-    if (statusElem) {
-      statusElem.textContent = isOnline ? '🟢 Online' : '⚫️ Offline';
-      statusElem.style.color = isOnline ? '#0f0' : '#aaa';
+
+    if (!statusElem) return;
+
+    if (isOnline) {
+      statusElem.textContent = '🟢 Online';
+      statusElem.style.color = '#0f0';
+    } else {
+      let timeString = '';
+      if (lastSeen) {
+        const dateObj = new Date(lastSeen);
+        const now = new Date();
+        const isToday = dateObj.toDateString() === now.toDateString();
+
+        const hours = dateObj.getHours();
+        const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const displayHour = hours % 12 || 12;
+
+        timeString = `${isToday ? 'today' : dateObj.toLocaleDateString()} at ${displayHour}:${minutes} ${ampm}`;
+      }
+
+      statusElem.textContent = `⚫️ Offline${timeString ? ' • last seen ' + timeString : ''}`;
+      statusElem.style.color = '#aaa';
     }
   });
 }
