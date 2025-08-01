@@ -344,7 +344,7 @@ body {
 }
 
 .status-sub {
-  font-size: 10px;
+  font-size: 12px;
   color: #bbb;
 }
   </style>
@@ -1061,8 +1061,8 @@ function updateUserOnlineStatus(email) {
       }
 
       statusElem.innerHTML = `
-        <span class="status-main">⚫️ Offline</span>
-        ${timeString ? `<span class="status-sub">last seen ${timeString}</span>` : ''}
+        <span class="status-main">⚫️</span>
+        ${timeString ? `<span class="status-sub">Last seen ${timeString}</span>` : ''}
       `;
     }
   });
