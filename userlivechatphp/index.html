@@ -695,17 +695,18 @@ window.addEventListener("DOMContentLoaded", () => {
 
     const sanitized = sanitizeEmail(email);
     const connectedRef = firebase.database().ref(".info/connected");
-    const userRef = firebase.database().ref("users/" + sanitized);
+    const userRef = db.ref("users/" + sanitized);
 
     connectedRef.on("value", (snap) => {
-      if (snap.val() === true) {
-        userRef.update({ online: true });
-        userRef.onDisconnect().update({
-          online: false,
-          lastLoginTime: Date.now()
-        });
-      }
+  if (snap.val() === true) {
+    userRef.update({ online: true }).then(() => {
+      userRef.onDisconnect().update({
+        online: false,
+        lastLoginTime: Date.now()
+      });
     });
+  }
+});
 
     window.addEventListener("beforeunload", () => {
       userRef.update({
@@ -715,7 +716,7 @@ window.addEventListener("DOMContentLoaded", () => {
     });
 
     // ✅ 🔔 Listener Notifikasi dari Admin (dot merah + bunyi)
-    const notifRef = firebase.database().ref("notifications/" + sanitized);
+    const notifRef = db.ref("notifications/" + sanitized);
     notifRef.on("value", (snapshot) => {
       const notif = snapshot.val();
       if (notif && notif.unread) {
