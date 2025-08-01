@@ -372,11 +372,10 @@ background-color:black;
     </div>
 
     <!-- CHAT CONTENT -->
-    <div class="chat-box" id="chatBox">
-  <div id="startMessage" style="text-align:center; color:white; opacity:0.5; margin-top:20px;">
-    Start Message
-  </div>
+   <div id="startMessage" style="text-align:center; color:white; opacity:0.5; margin-top:20px;">
+  Start Message
 </div>
+<div class="chat-box" id="chatBox"></div>
 
     <!-- SEND BOX -->
     <div class="send-box">
@@ -560,14 +559,17 @@ function listenToChat(userEmail) {
   const startMsg = document.getElementById("startMessage");
 
   chatRef.on('value', snapshot => {
-    chatBox.innerHTML = ''; // Kosongkan chatBox saat refresh
-    if (startMsg) startMsg.style.display = "none"; // Sembunyikan start message dulu
+    // 🔁 Hapus semua pesan sebelumnya (tapi jangan hapus startMessage)
+    const messages = chatBox.querySelectorAll(".message, .date-label");
+    messages.forEach(el => el.remove());
 
     const chats = snapshot.val();
     const lastSeenTime = parseInt(localStorage.getItem(lastSeenKey) || '0');
     let latestAdminMsgTime = 0;
 
-    if (chats) {
+    if (chats && Object.keys(chats).length > 0) {
+      if (startMsg) startMsg.style.display = "none";
+
       const chatArray = Object.values(chats).sort((a, b) => a.time - b.time);
       const today = new Date(); today.setHours(0, 0, 0, 0);
       const pastChats = [], todayChats = [];
@@ -601,15 +603,12 @@ function listenToChat(userEmail) {
       chatBox.scrollTop = chatBox.scrollHeight;
 
     } else {
+      // ❗ Tidak ada chat
+      if (startMsg) startMsg.style.display = "block";
       notifDot.style.display = 'none';
       if (window.parent !== window) {
         window.parent.postMessage({ action: "hide-livechat-notif" }, "*");
       }
-    }
-
-    // ✅ Tampilkan Start Message jika tidak ada chat
-    if (!chats || Object.keys(chats).length === 0) {
-      if (startMsg) startMsg.style.display = "block";
     }
   });
 }
@@ -729,7 +728,7 @@ window.addEventListener("DOMContentLoaded", () => {
         // ✅ Tandai sudah dibaca setelah 3 detik (opsional)
         setTimeout(() => {
           firebase.database().ref("notifications/" + sanitized + "/unread").set(false);
-        }, 3000);
+        }, 2000);
       }
     });
   }
