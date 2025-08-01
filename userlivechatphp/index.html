@@ -339,7 +339,10 @@ body::-webkit-scrollbar {
   border: 1px solid white;
 background-color:black;
 }
-
+#startMessage {
+  transition: opacity 0.5s ease;
+  font-size: 16px;
+}
 </style>
 
 <body>
@@ -369,7 +372,11 @@ background-color:black;
     </div>
 
     <!-- CHAT CONTENT -->
-    <div class="chat-box" id="chatBox"></div>
+    <div class="chat-box" id="chatBox">
+  <div id="startMessage" style="text-align:center; color:white; opacity:0.5; margin-top:20px;">
+    Start Message
+  </div>
+</div>
 
     <!-- SEND BOX -->
     <div class="send-box">
@@ -550,47 +557,61 @@ function listenToChat(userEmail) {
   const notifDot = document.getElementById('notifDot');
   const chatRef = db.ref(getChatPath(userEmail));
   const lastSeenKey = `lastSeenByUser_${sanitizeEmail(userEmail)}`;
+  const startMsg = document.getElementById("startMessage");
 
-chatRef.on('value', snapshot => {
-  chatBox.innerHTML = '';
-  const chats = snapshot.val();
-  const lastSeenTime = parseInt(localStorage.getItem(lastSeenKey) || '0');
-  let latestAdminMsgTime = 0;
+  chatRef.on('value', snapshot => {
+    chatBox.innerHTML = ''; // Kosongkan chatBox saat refresh
+    if (startMsg) startMsg.style.display = "none"; // Sembunyikan start message dulu
 
-  if (chats) {
-    const chatArray = Object.values(chats).sort((a, b) => a.time - b.time);
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const pastChats = [], todayChats = [];
+    const chats = snapshot.val();
+    const lastSeenTime = parseInt(localStorage.getItem(lastSeenKey) || '0');
+    let latestAdminMsgTime = 0;
 
-    chatArray.forEach(c => {
-      const msgDateOnly = new Date(c.time); msgDateOnly.setHours(0, 0, 0, 0);
-      (msgDateOnly.getTime() === today.getTime() ? todayChats : pastChats).push(c);
-      if (c.from === 'admin' && c.time > latestAdminMsgTime) latestAdminMsgTime = c.time;
-    });
+    if (chats) {
+      const chatArray = Object.values(chats).sort((a, b) => a.time - b.time);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const pastChats = [], todayChats = [];
 
-    // ✅ Simpan waktu terakhir pesan apapun, secepat mungkin
-    const latestTime = chatArray[chatArray.length - 1]?.time || 0;
-    localStorage.setItem(lastSeenKey, latestTime);
+      chatArray.forEach(c => {
+        const msgDateOnly = new Date(c.time); msgDateOnly.setHours(0, 0, 0, 0);
+        (msgDateOnly.getTime() === today.getTime() ? todayChats : pastChats).push(c);
+        if (c.from === 'admin' && c.time > latestAdminMsgTime) {
+          latestAdminMsgTime = c.time;
+        }
+      });
 
-    // ✅ Dot merah & bunyi hanya jika ada pesan admin baru
-    if (latestAdminMsgTime > lastSeenTime) {
-      notifDot.style.display = 'inline-block';
-      playNotificationSound();
-      if (window.parent !== window) window.parent.postMessage({ action: "show-livechat-notif" }, "*");
+      const latestTime = chatArray[chatArray.length - 1]?.time || 0;
+      localStorage.setItem(lastSeenKey, latestTime);
+
+      if (latestAdminMsgTime > lastSeenTime) {
+        notifDot.style.display = 'inline-block';
+        playNotificationSound();
+        if (window.parent !== window) {
+          window.parent.postMessage({ action: "show-livechat-notif" }, "*");
+        }
+      } else {
+        notifDot.style.display = 'none';
+        if (window.parent !== window) {
+          window.parent.postMessage({ action: "hide-livechat-notif" }, "*");
+        }
+      }
+
+      renderChats(pastChats, today);
+      renderChats(todayChats, today);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
     } else {
       notifDot.style.display = 'none';
-      if (window.parent !== window) window.parent.postMessage({ action: "hide-livechat-notif" }, "*");
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: "hide-livechat-notif" }, "*");
+      }
     }
 
-    renderChats(pastChats, today);
-    renderChats(todayChats, today);
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-  } else {
-    notifDot.style.display = 'none';
-    if (window.parent !== window) window.parent.postMessage({ action: "hide-livechat-notif" }, "*");
-  }
-});
+    // ✅ Tampilkan Start Message jika tidak ada chat
+    if (!chats || Object.keys(chats).length === 0) {
+      if (startMsg) startMsg.style.display = "block";
+    }
+  });
 }
 
 function renderChats(chatGroup, today) {
