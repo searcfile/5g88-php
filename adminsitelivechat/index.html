@@ -361,11 +361,14 @@ body {
   <div class="user-list-header">
     <h3>User List</h3>
     <input type="text" id="searchUser" placeholder="Search user..." />
-    <div style="display: flex; gap: 10px; margin-top: 10px;">
-      <button id="filterAll" class="active-filter">All</button>
-      <button id="filterUnread">Unread</button>
-    </div>
+    <div style="display: flex; gap: 10px; margin-top: 10px; align-items:center;">
+  <button id="filterAll" class="active-filter">All</button>
+  <button id="filterUnread">Unread</button>
+  
+  <div style="margin-left: auto; color:#fff; font-size: 14px;">
+    Total Users: <span id="totalUsers">0</span> | Online: <span id="onlineUsers">0</span>
   </div>
+</div>
 
   <div id="userListBox" class="user-scroll-box"></div>
 </div>
@@ -424,6 +427,20 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+    
+function updateUserCounts() {
+  const totalUsersElem = document.getElementById('totalUsers');
+  const onlineUsersElem = document.getElementById('onlineUsers');
+
+  db.ref('users').on('value', snapshot => {
+    const users = snapshot.val() || {};
+    const totalUsers = Object.keys(users).length;
+    const onlineUsers = Object.values(users).filter(user => user.online).length;
+
+    totalUsersElem.textContent = totalUsers;
+    onlineUsersElem.textContent = onlineUsers;
+  });
+}
 
 function formatUserName(name) {
   if (!name) return 'Unknown';
@@ -918,7 +935,8 @@ window.onload = () => {
   activeUserIdSanitized = '';
   activeUserIdEmail = '';
   loadUserList();
-
+  updateUserCounts();
+  
   msgInput = document.getElementById('msg');
   sendBtn = document.getElementById('sendBtn');
 
