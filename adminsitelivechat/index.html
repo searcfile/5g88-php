@@ -353,22 +353,23 @@ body {
   </style>
 </head>
 <body>
- <div class="header">Admin LiveChat</div>
+<div class="header">Admin LiveChat</div>
 
-  <main style="display: flex;">
+<main style="display: flex;">
   <!-- Panel User -->
- <div id="userList" class="user-list-panel">
-  <div class="user-list-header">
-    <h3>User List</h3>
-    <input type="text" id="searchUser" placeholder="Search user..." />
-    <div style="display: flex; gap: 10px; margin-top: 10px; align-items:center;">
-  <button id="filterAll" class="active-filter">All</button>
-  <button id="filterUnread">Unread</button>
-  
-  <div style="margin-left: auto; color:#fff; font-size: 14px;">
-    Total Users: <span id="totalUsers">0</span> | Online: <span id="onlineUsers">0</span>
-  </div>
-</div>
+  <div id="userList" class="user-list-panel">
+    <div class="user-list-header">
+      <h3>User List</h3>
+      <input type="text" id="searchUser" placeholder="Search user..." />
+      <div style="display: flex; gap: 10px; margin-top: 10px; align-items: center;">
+        <button id="filterAll" class="active-filter">All</button>
+        <button id="filterUnread">Unread</button>
+        
+        <div style="margin-left: auto; color:#fff; font-size: 14px;">
+          Total Users: <span id="totalUsers">0</span> | Online: <span id="onlineUsers">0</span>
+        </div>
+      </div>
+    </div>
 
   <div id="userListBox" class="user-scroll-box"></div>
 </div>
