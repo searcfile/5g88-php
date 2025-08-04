@@ -634,16 +634,15 @@ function renderSeenStatus(msg) {
   if (seen) {
     // ✔✔ (dua centang hijau)
     return `
-      <svg width="18" height="18" viewBox="0 0 24 24" style="${iconStyle}" fill="#00ff00">
-        <path d="M1 14l5 5L22 3l-1.4-1.4L6 17.2l-3.6-3.6z"></path>
-        <path d="M5 14l5 5L23 3l-1.4-1.4L10 17.2l-3.6-3.6z" transform="translate(-3,-3) scale(0.95)"></path>
+      <svg width="18" height="18" viewBox="0 0 24 24" style="${iconStyle}" fill="#1668dc">
+        <path d="M24 6.278l-11.16 12.722-6.84-6 1.319-1.49 5.341 4.686 9.865-11.196 1.475 1.278zm-22.681 5.232l6.835 6.01-1.314 1.48-6.84-6 1.319-1.49zm9.278.218l5.921-6.728 1.482 1.285-5.921 6.756-1.482-1.313z"/>
       </svg>
     `;
   } else {
     // ✔ (satu centang kelabu)
     return `
-      <svg width="18" height="18" viewBox="0 0 24 24" style="${iconStyle}" fill="#999">
-        <path d="M2 14l5 5L22 4" />
+      <svg width="18" height="18" viewBox="0 0 24 24" style="${iconStyle}" fill="#1668dc">
+        <path d="M21 6.285l-11.16 12.733-6.84-6.018 1.319-1.49 5.341 4.686 9.865-11.196 1.475 1.285z" />
       </svg>
     `;
   }
