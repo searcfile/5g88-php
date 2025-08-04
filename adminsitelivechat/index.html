@@ -611,8 +611,11 @@ function renderChatMessages(messages) {
       </div>`;
 
     if (msg.text) {
-      messageHTML += `<div>${msg.text}</div>`;
-    }
+  messageHTML += `<div style="display:flex; justify-content:space-between; align-items: center;">
+    <span>${msg.text}</span>
+    ${msg.from === 'admin' ? renderSeenStatus(msg) : ''}
+  </div>`;
+}
 
     if (msg.image) {
       messageHTML += `<img src="${msg.image}" alt="Image" style="max-width: 100%; border-radius: 8px; margin-top: 4px;">`;
@@ -623,6 +626,34 @@ function renderChatMessages(messages) {
   });
 
   chatBox.scrollTop = chatBox.scrollHeight;
+}
+function renderSeenStatus(msg) {
+  const iconStyle = "margin-left: 6px;";
+  const seen = msg.seenByUser;
+  const isOnline = window.currentUserOnline === true;
+
+  if (seen) {
+    // ✔✔ Dua centang biru → SUDAH DIBACA
+    return `
+      <svg width="18" height="18" viewBox="0 0 24 24" style="${iconStyle}" fill="#1668dc">
+        <path d="M24 6.278l-11.16 12.722-6.84-6 1.319-1.49 5.341 4.686 9.865-11.196 1.475 1.278zm-22.681 5.232l6.835 6.01-1.314 1.48-6.84-6 1.319-1.49zm9.278.218l5.921-6.728 1.482 1.285-5.921 6.756-1.482-1.313z"/>
+      </svg>
+    `;
+  } else if (isOnline) {
+    // ✔✔ Dua centang hijau → ONLINE tapi BELUM BACA
+    return `
+      <svg width="18" height="18" viewBox="0 0 24 24" style="${iconStyle}" fill="#999">
+        <path d="M24 6.278l-11.16 12.722-6.84-6 1.319-1.49 5.341 4.686 9.865-11.196 1.475 1.278zm-22.681 5.232l6.835 6.01-1.314 1.48-6.84-6 1.319-1.49zm9.278.218l5.921-6.728 1.482 1.285-5.921 6.756-1.482-1.313z"/>
+      </svg>
+    `;
+  } else {
+    // ✔ Satu centang abu → OFFLINE
+    return `
+      <svg width="18" height="18" viewBox="0 0 24 24" style="${iconStyle}" fill="#999">
+        <path d="M21 6.285l-11.16 12.733-6.84-6.018 1.319-1.49 5.341 4.686 9.865-11.196 1.475 1.285z" />
+      </svg>
+    `;
+  }
 }
 function listenToChat() {
   if (!activeUserIdSanitized) return;
@@ -1073,13 +1104,16 @@ function updateUserOnlineStatus(email) {
 
   if (!statusElem) return;
 
-  // 🔁 Pantau status online biasa
+  // 🔁 Pantau status online
   userRef.on('value', (snapshot) => {
     const data = snapshot.val();
     const isOnline = data?.online;
     const lastSeen = data?.lastLoginTime;
 
-    // Kalau sedang mengetik, kita biarkan fungsi `typingRef` yang handle
+    // ✅ Simpan ke global variable
+    window.currentUserOnline = isOnline;
+
+    // ⛔ Jangan ganti status kalau sedang mengetik
     if (!data?.typing) {
       if (isOnline) {
         statusElem.innerHTML = `<span class="status-main">🟢 Online</span>`;
@@ -1103,20 +1137,22 @@ function updateUserOnlineStatus(email) {
     }
   });
 
-  // 🔁 Pantau status "Typing..."
+  // Pantau status "Typing..."
   typingRef.on('value', (snapshot) => {
     const isTyping = snapshot.val();
     if (isTyping) {
       statusElem.innerHTML = `<span class="status-typing">💬 Typing...</span>`;
     } else {
-      // Setelah selesai typing, kita tunggu status online yang isi balik statusElem
-      // (biar tidak saling tumpang)
+      // Setelah typing, render kembali online/offline
       userRef.once('value').then((snap) => {
         const data = snap.val();
         if (!data) return;
 
         const isOnline = data.online;
         const lastSeen = data.lastLoginTime;
+
+        // ✅ Simpan ulang ke global (cadangan)
+        window.currentUserOnline = isOnline;
 
         if (isOnline) {
           statusElem.innerHTML = `<span class="status-main">🟢 Online</span>`;
