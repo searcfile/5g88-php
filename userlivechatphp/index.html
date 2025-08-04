@@ -394,12 +394,6 @@ background-color:black;
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
 
 <script>
-document.addEventListener("contextmenu", e => e.preventDefault());
-  document.onkeydown = function (e) {
-    if (e.key === "F12" || (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key.toUpperCase()))) {
-      return false;
-    }
-  };
 let chatInitialized = false;
 
 function sanitizeEmail(email) {
@@ -489,15 +483,24 @@ function initChatWithUserData() {
   });
 
   msgInput.addEventListener('input', () => {
-    sendBtn.disabled = !msgInput.value.trim() && !fileInput.files.length;
-    document.getElementById('typingStatus').textContent = msgInput.value.trim() ? 'Typing...' : 'Online';
+  sendBtn.disabled = !msgInput.value.trim() && !fileInput.files.length;
+  document.getElementById('typingStatus').textContent = msgInput.value.trim() ? 'Typing...' : 'Online';
+
+  const sanitized = sanitizeEmail(currentUserEmail);
+  const typingRef = firebase.database().ref("users/" + sanitized + "/typing");
+
+  if (msgInput.value.trim()) {
+    typingRef.set(true);
+
     clearTimeout(typingTimer);
-    if (msgInput.value.trim()) {
-      typingTimer = setTimeout(() => {
-        document.getElementById('typingStatus').textContent = 'Online';
-      }, typingDelay);
-    }
-  });
+    typingTimer = setTimeout(() => {
+      typingRef.set(false);
+      document.getElementById('typingStatus').textContent = 'Online';
+    }, 3000); // stop typing after 3s of no input
+  } else {
+    typingRef.set(false);
+  }
+});
 
   sendBtn.addEventListener('click', () => sendMessage(currentUserEmail));
   sendBtn.disabled = true;
@@ -548,6 +551,7 @@ async function sendMessage(userEmail) {
     });
 
     msgInput.value = '';
+    firebase.database().ref("users/" + sanitized + "/typing").set(false);
     fileInput.value = '';
     document.querySelector('.send-box button').disabled = true;
 
