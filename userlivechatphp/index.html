@@ -395,12 +395,13 @@ background-color:black;
 
 <script>
 document.addEventListener("contextmenu", e => e.preventDefault());
-document.onkeydown = function (e) {
-if (e.key === "F12" || (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key.toUpperCase()))) {
+  document.onkeydown = function (e) {
+    if (e.key === "F12" || (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key.toUpperCase()))) {
       return false;
     }
   };
 let chatInitialized = false;
+
 function sanitizeEmail(email) {
   return email.toLowerCase().replace(/\./g, "_");
 }
@@ -488,24 +489,15 @@ function initChatWithUserData() {
   });
 
   msgInput.addEventListener('input', () => {
-  sendBtn.disabled = !msgInput.value.trim() && !fileInput.files.length;
-  document.getElementById('typingStatus').textContent = msgInput.value.trim() ? 'Typing...' : 'Online';
-
-  const sanitized = sanitizeEmail(currentUserEmail);
-  const typingRef = firebase.database().ref("users/" + sanitized + "/typing");
-
-  if (msgInput.value.trim()) {
-    typingRef.set(true);
-
+    sendBtn.disabled = !msgInput.value.trim() && !fileInput.files.length;
+    document.getElementById('typingStatus').textContent = msgInput.value.trim() ? 'Typing...' : 'Online';
     clearTimeout(typingTimer);
-    typingTimer = setTimeout(() => {
-      typingRef.set(false);
-      document.getElementById('typingStatus').textContent = 'Online';
-    }, 3000); // stop typing after 3s of no input
-  } else {
-    typingRef.set(false);
-  }
-});
+    if (msgInput.value.trim()) {
+      typingTimer = setTimeout(() => {
+        document.getElementById('typingStatus').textContent = 'Online';
+      }, typingDelay);
+    }
+  });
 
   sendBtn.addEventListener('click', () => sendMessage(currentUserEmail));
   sendBtn.disabled = true;
@@ -556,7 +548,6 @@ async function sendMessage(userEmail) {
     });
 
     msgInput.value = '';
-    firebase.database().ref("users/" + sanitized + "/typing").set(false);
     fileInput.value = '';
     document.querySelector('.send-box button').disabled = true;
 
@@ -573,72 +564,62 @@ function listenToChat(userEmail) {
   const lastSeenKey = `lastSeenByUser_${sanitizeEmail(userEmail)}`;
   const startMsg = document.getElementById("startMessage");
 
-chatRef.on('value', snapshot => {
-  const chats = snapshot.val();
+  chatRef.on('value', snapshot => {
+    const chats = snapshot.val();
 
-  // Hapus pesan lama
-  const oldMessages = chatBox.querySelectorAll(".message, .date-label");
-  oldMessages.forEach(el => el.remove());
+    // 🔁 Hapus semua pesan lama (tapi jangan hapus #startMessage)
+    const oldMessages = chatBox.querySelectorAll(".message, .date-label");
+    oldMessages.forEach(el => el.remove());
 
-  // Tampilkan pesan awal jika tidak ada chat
-  if (!chats || Object.keys(chats).length === 0) {
-    if (startMsg) startMsg.style.display = "block";
-    notifDot.style.display = 'none';
-    if (window.parent !== window) {
-      window.parent.postMessage({ action: "hide-livechat-notif" }, "*");
+    // ✅ Jika tidak ada chat, tampilkan pesan awal
+    if (!chats || Object.keys(chats).length === 0) {
+      if (startMsg) startMsg.style.display = "block";
+      notifDot.style.display = 'none';
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: "hide-livechat-notif" }, "*");
+      }
+      return; // Stop rendering karena tidak ada chat
     }
-    return;
-  }
 
-  if (startMsg) startMsg.style.display = "none";
+    // ✅ Kalau ada chat, sembunyikan pesan awal
+    if (startMsg) startMsg.style.display = "none";
 
-  const lastSeenTime = parseInt(localStorage.getItem(lastSeenKey) || '0');
-  let latestAdminMsgTime = 0;
-  const chatArray = Object.values(chats).sort((a, b) => a.time - b.time);
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const pastChats = [], todayChats = [];
+    const lastSeenTime = parseInt(localStorage.getItem(lastSeenKey) || '0');
+    let latestAdminMsgTime = 0;
+    const chatArray = Object.values(chats).sort((a, b) => a.time - b.time);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const pastChats = [], todayChats = [];
 
-  // ✅ Tandai pesan dari admin sebagai sudah dibaca
-  const updates = {};
-  snapshot.forEach(childSnap => {
-    const msg = childSnap.val();
-    const key = childSnap.key;
-    if (msg.from === 'admin' && !msg.seenByUser) {
-      updates[key + '/seenByUser'] = true;
+    chatArray.forEach(c => {
+      const msgDateOnly = new Date(c.time); msgDateOnly.setHours(0, 0, 0, 0);
+      (msgDateOnly.getTime() === today.getTime() ? todayChats : pastChats).push(c);
+      if (c.from === 'admin' && c.time > latestAdminMsgTime) {
+        latestAdminMsgTime = c.time;
+      }
+    });
+
+    // ⏱️ Simpan waktu terakhir lihat
+    const latestTime = chatArray[chatArray.length - 1]?.time || 0;
+    localStorage.setItem(lastSeenKey, latestTime);
+
+    // 🔴 Dot notifikasi + bunyi
+    if (latestAdminMsgTime > lastSeenTime) {
+      notifDot.style.display = 'inline-block';
+      playNotificationSound();
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: "show-livechat-notif" }, "*");
+      }
+    } else {
+      notifDot.style.display = 'none';
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: "hide-livechat-notif" }, "*");
+      }
     }
+
+    renderChats(pastChats, today);
+    renderChats(todayChats, today);
+    chatBox.scrollTop = chatBox.scrollHeight;
   });
-  if (Object.keys(updates).length > 0) {
-    chatRef.update(updates);
-  }
-
-  chatArray.forEach(c => {
-    const msgDateOnly = new Date(c.time); msgDateOnly.setHours(0, 0, 0, 0);
-    (msgDateOnly.getTime() === today.getTime() ? todayChats : pastChats).push(c);
-    if (c.from === 'admin' && c.time > latestAdminMsgTime) {
-      latestAdminMsgTime = c.time;
-    }
-  });
-
-  const latestTime = chatArray[chatArray.length - 1]?.time || 0;
-  localStorage.setItem(lastSeenKey, latestTime);
-
-  if (latestAdminMsgTime > lastSeenTime) {
-    notifDot.style.display = 'inline-block';
-    playNotificationSound();
-    if (window.parent !== window) {
-      window.parent.postMessage({ action: "show-livechat-notif" }, "*");
-    }
-  } else {
-    notifDot.style.display = 'none';
-    if (window.parent !== window) {
-      window.parent.postMessage({ action: "hide-livechat-notif" }, "*");
-    }
-  }
-
-  renderChats(pastChats, today);
-  renderChats(todayChats, today);
-  chatBox.scrollTop = chatBox.scrollHeight;
-});
 }
 function renderChats(chatGroup, today) {
   const chatBox = document.getElementById('chatBox');
