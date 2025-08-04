@@ -350,6 +350,18 @@ body {
   text-overflow: ellipsis;
   line-height: 1;
 }
+.status-main {
+  color: #00ff00;
+  font-weight: bold;
+}
+.status-sub {
+  color: #aaa;
+  font-size: 12px;
+}
+.status-typing {
+  color: orange;
+  font-weight: bold;
+}
   </style>
 </head>
 <body>
@@ -1056,33 +1068,74 @@ function updateUserLastTime(sanitizedId, messages) {
 function updateUserOnlineStatus(email) {
   const sanitized = sanitizeUserId(email);
   const userRef = db.ref('users/' + sanitized);
+  const typingRef = db.ref('users/' + sanitized + '/typing');
+  const statusElem = document.getElementById('chatUserStatus');
 
+  if (!statusElem) return;
+
+  // 🔁 Pantau status online biasa
   userRef.on('value', (snapshot) => {
     const data = snapshot.val();
     const isOnline = data?.online;
-    const lastSeen = data?.lastLoginTime; // atau ganti ke lastSeen jika kamu sudah rename
-    const statusElem = document.getElementById('chatUserStatus');
+    const lastSeen = data?.lastLoginTime;
 
-    if (!statusElem) return;
+    // Kalau sedang mengetik, kita biarkan fungsi `typingRef` yang handle
+    if (!data?.typing) {
+      if (isOnline) {
+        statusElem.innerHTML = `<span class="status-main">🟢 Online</span>`;
+      } else {
+        let timeString = '';
+        if (lastSeen) {
+          const dateObj = new Date(lastSeen);
+          const now = new Date();
+          const isToday = dateObj.toDateString() === now.toDateString();
 
-    if (isOnline) {
-      statusElem.innerHTML = `<span class="status-main">🟢 Online</span>`;
-    } else {
-      let timeString = '';
-      if (lastSeen) {
-        const dateObj = new Date(lastSeen);
-        const now = new Date();
-        const isToday = dateObj.toDateString() === now.toDateString();
+          const hours = dateObj.getHours();
+          const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+          const ampm = hours >= 12 ? 'PM' : 'AM';
+          const displayHour = hours % 12 || 12;
 
-        const hours = dateObj.getHours();
-        const minutes = dateObj.getMinutes().toString().padStart(2, '0');
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        const displayHour = hours % 12 || 12;
+          timeString = `${isToday ? 'today' : dateObj.toLocaleDateString()} at ${displayHour}:${minutes} ${ampm}`;
+        }
 
-        timeString = `${isToday ? 'today' : dateObj.toLocaleDateString()} at ${displayHour}:${minutes} ${ampm}`;
+        statusElem.innerHTML = timeString ? `<span class="status-sub">Last seen ${timeString}</span>` : '';
       }
+    }
+  });
 
-      statusElem.innerHTML = timeString ? `<span class="status-sub">Last seen ${timeString}</span>` : '';
+  // 🔁 Pantau status "Typing..."
+  typingRef.on('value', (snapshot) => {
+    const isTyping = snapshot.val();
+    if (isTyping) {
+      statusElem.innerHTML = `<span class="status-typing">💬 Typing...</span>`;
+    } else {
+      // Setelah selesai typing, kita tunggu status online yang isi balik statusElem
+      // (biar tidak saling tumpang)
+      userRef.once('value').then((snap) => {
+        const data = snap.val();
+        if (!data) return;
+
+        const isOnline = data.online;
+        const lastSeen = data.lastLoginTime;
+
+        if (isOnline) {
+          statusElem.innerHTML = `<span class="status-main">🟢 Online</span>`;
+        } else if (lastSeen) {
+          const dateObj = new Date(lastSeen);
+          const now = new Date();
+          const isToday = dateObj.toDateString() === now.toDateString();
+
+          const hours = dateObj.getHours();
+          const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+          const ampm = hours >= 12 ? 'PM' : 'AM';
+          const displayHour = hours % 12 || 12;
+
+          const timeString = `${isToday ? 'today' : dateObj.toLocaleDateString()} at ${displayHour}:${minutes} ${ampm}`;
+          statusElem.innerHTML = `<span class="status-sub">Last seen ${timeString}</span>`;
+        } else {
+          statusElem.innerHTML = '';
+        }
+      });
     }
   });
 }
