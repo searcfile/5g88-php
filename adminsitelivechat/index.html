@@ -1082,7 +1082,7 @@ function updateUserOnlineStatus(email) {
     // Kalau sedang mengetik, kita biarkan fungsi `typingRef` yang handle
     if (!data?.typing) {
       if (isOnline) {
-        statusElem.innerHTML = `<span class="status-main">🟢 Online</span>`;
+        statusElem.innerHTML = `<span class="status-main">Online</span>`;
       } else {
         let timeString = '';
         if (lastSeen) {
@@ -1107,7 +1107,7 @@ function updateUserOnlineStatus(email) {
   typingRef.on('value', (snapshot) => {
     const isTyping = snapshot.val();
     if (isTyping) {
-      statusElem.innerHTML = `<span class="status-typing">💬 Typing...</span>`;
+      statusElem.innerHTML = `<span class="status-typing">Typing...</span>`;
     } else {
       // Setelah selesai typing, kita tunggu status online yang isi balik statusElem
       // (biar tidak saling tumpang)
