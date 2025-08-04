@@ -394,8 +394,13 @@ background-color:black;
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
 
 <script>
+document.addEventListener("contextmenu", e => e.preventDefault());
+document.onkeydown = function (e) {
+if (e.key === "F12" || (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key.toUpperCase()))) {
+      return false;
+    }
+  };
 let chatInitialized = false;
-
 function sanitizeEmail(email) {
   return email.toLowerCase().replace(/\./g, "_");
 }
