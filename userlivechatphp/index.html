@@ -639,7 +639,7 @@ chatRef.on('value', snapshot => {
   renderChats(todayChats, today);
   chatBox.scrollTop = chatBox.scrollHeight;
 });
-
+}
 function renderChats(chatGroup, today) {
   const chatBox = document.getElementById('chatBox');
   let lastDateKey = '';
