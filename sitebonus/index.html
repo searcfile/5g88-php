@@ -514,18 +514,19 @@ body{
       top.appendChild(d);
     });
 
-    // Row 2 (bonus)
-    const bottom = $('#summaryRowBottom'); 
-    bottom.innerHTML = '';
+const bottom = $('#summaryRowBottom');
+bottom.innerHTML = '';
 
-    const halfDep   = t.bd / 2;
-    const halfRes   = t.br / 2;
-    const salesOnly = t.bsBase;       // <- hanya dari target bonus sales
+const halfDep   = t.bd / 2;
+const halfRes   = t.br / 2;
+const salesOnly = t.bsBase;             // hanya bonus dari target sales
+const totalAmt  = halfDep + halfRes + salesOnly;
 
 [
   { title: 'Bonus Deposit ½ Σ', val: halfDep.toLocaleString() },
   { title: 'Bonus Resit ½ Σ',   val: halfRes.toLocaleString() },
-  { title: 'Bonus Sales Σ',     val: salesOnly.toLocaleString() }, // <- di sini
+  { title: 'Bonus Sales Σ',     val: salesOnly.toLocaleString() },
+  { title: 'Total Bonus Σ',     val: totalAmt.toLocaleString() }, // <— kartu baru di kanan
 ].forEach(c => {
   const d = document.createElement('div');
   d.className = 'card';
