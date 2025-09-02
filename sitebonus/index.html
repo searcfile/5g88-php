@@ -327,12 +327,12 @@
         <td>${dt}</td>
         <td style="text-align:center"><span class="pill ${r.site==='5G88'?'site-5g88':'site-spm888'}">${r.site}</span></td>
         <td class="num green">${fmtNum(r.deposit)}</td>
-        <td class="num red">${fmtNum(r.withdrawal)}</td>
+        <td class="num red">-${fmtNum(Math.abs(r.withdrawal))}</td>
         <td class="num cyan">${fmtNum(r.bonus)}</td>
         <td>${fmtNum(r.forfeit)}</td>
         <td>${fmtInt(r.member)}</td>
         <td>${fmtNum(r.resit)}</td>
-        <td>${fmtNum(r.sales)}</td>
+        <td class="${r.sales < 0 ? 'num red' : 'num green'}">${fmtNum(r.sales)}</td>
         <td>
           <div class="actions">
             <button class="iconbtn" onclick='openModal(${JSON.stringify(r)})'>Edit</button>
