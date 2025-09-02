@@ -3,68 +3,43 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Monthly Bonus Recorder | 5G88</title>
+<title>Monthly Bonus Recorder</title>
 <style>
   :root{
-    --bg:#0a0a0a; --card:#121212;
-    --text:#e6e6e6; --sub:#a7a7a7; --gold:#ffd166; --gold-2:#ffcf4d;
-    --red:#f87171; --green:#22c55e; --cyan:#60a5fa; --ring:rgba(255,209,102,.55);
+    --bg:#0a0a0a; --card:#121212; --text:#e6e6e6; --sub:#a7a7a7;
+    --gold:#ffd166; --gold-2:#ffcf4d; --red:#f87171; --green:#22c55e; --cyan:#60a5fa; --ring:rgba(255,209,102,.55);
   }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{margin:0; background:var(--bg); color:var(--text);
-    font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial;}
+  *{box-sizing:border-box} html,body{height:100%}
+  body{margin:0; background:var(--bg); color:var(--text); font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial}
 
-  /* Header: filter & export */
-  .header{
-    position:sticky; top:0; z-index:50;
-    background:linear-gradient(180deg,#111,#0c0c0c);
-    border-bottom:1px solid #242424; padding:12px 14px;
-    display:flex; gap:10px; align-items:center; flex-wrap:wrap;
-  }
-  .brand{display:flex; align-items:center; gap:10px; font-weight:700; padding:6px 10px; border-radius:10px;
-    background:#0f0f0f; border:1px solid #222;}
-  .brand .dot{width:8px; height:8px; border-radius:50%; background:var(--gold); box-shadow:0 0 12px var(--gold);}
+  /* Header */
+  .header{position:sticky; top:0; z-index:50; background:linear-gradient(180deg,#111,#0c0c0c);
+    border-bottom:1px solid #242424; padding:12px 14px; display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  .brand{display:flex; gap:10px; align-items:center; font-weight:700; padding:6px 10px; border-radius:10px; background:#0f0f0f; border:1px solid #222}
+  .brand .dot{width:8px; height:8px; border-radius:50%; background:var(--gold); box-shadow:0 0 12px var(--gold)}
   .spacer{flex:1}
-  .select,.input,.btn{
-    height:36px; border-radius:8px; border:1px solid #2a2a2a; background:#121212; color:var(--text);
-    padding:0 10px; outline:none; transition:border .15s, box-shadow .2s;
-  }
-  .select:hover,.input:hover{border-color:#3a3a3a}
-  .select:focus,.input:focus{border-color:var(--gold); box-shadow:0 0 0 4px var(--ring)}
-  .btn{
-    background:linear-gradient(180deg,var(--gold),var(--gold-2)); border:1px solid #8a6b1a;
-    color:#000; font-weight:700; cursor:pointer; box-shadow:0 6px 18px rgba(255,209,102,.25);
-  }
+  .select,.input,.btn{height:36px; border-radius:8px; border:1px solid #2a2a2a; background:#121212; color:var(--text); padding:0 10px; outline:none; transition:border .15s, box-shadow .2s}
+  .select:hover,.input:hover{border-color:#3a3a3a} .select:focus,.input:focus{border-color:var(--gold); box-shadow:0 0 0 4px var(--ring)}
+  .btn{background:linear-gradient(180deg,var(--gold),var(--gold-2)); border:1px solid #8a6b1a; color:#000; font-weight:700; cursor:pointer; box-shadow:0 6px 18px rgba(255,209,102,.25)}
   .btn:hover{filter:brightness(1.04)} .btn:active{transform:translateY(1px)}
-  .btn.ghost{background:#141414; color:var(--text); border:1px solid #2d2d2d; box-shadow:none;}
-  .btn.ghost:hover{border-color:#3a3a3a}
+  .btn.ghost{background:#141414; color:#e6e6e6; border:1px solid #2d2d2d}
   .hint{color:var(--sub); font-size:12px}
 
   .wrap{max-width:1200px; margin:16px auto; padding:0 14px 60px}
 
   /* summary rows */
-  .cards-row{
-    display:flex; gap:10px; overflow-x:auto; padding-bottom:4px;
-    scrollbar-width: thin;
-  }
-  .card{
-    background:linear-gradient(180deg,#141414,#0e0e0e);
-    border:1px solid #232323; border-radius:14px; padding:12px;
-    min-width:200px; /* biar 1 baris scroll kalau tak muat */
-  }
+  .cards-row{display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; scrollbar-width:thin}
+  .card{background:linear-gradient(180deg,#141414,#0e0e0e); border:1px solid #232323; border-radius:14px; padding:12px; min-width:200px}
   .card h4{margin:0 0 2px; font-size:12px; color:#cfcfcf; font-weight:600}
   .card .val{font-size:18px; font-weight:800}
   .val.red{color:var(--red)} .val.green{color:var(--green)} .val.cyan{color:var(--cyan)}
 
-  /* toolbar di atas tabel (kiri) */
+  /* toolbar atas tabel */
   .toolbar{display:flex; gap:8px; align-items:center; margin:10px 0 6px}
-
-  .badge{display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px;
-    border:1px solid #2a2a2a; background:#111; color:#ccc; font-size:12px;}
+  .badge{display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px; border:1px solid #2a2a2a; background:#111; color:#ccc; font-size:12px}
 
   /* table */
-  .table{background:#101010; border:1px solid #222; border-radius:14px; overflow:hidden;}
+  .table{background:#101010; border:1px solid #222; border-radius:14px; overflow:hidden}
   .table thead{background:linear-gradient(180deg,#161616,#131313)}
   .table th,.table td{padding:10px; border-bottom:1px dashed #222; text-align:right; white-space:nowrap}
   .table th:first-child,.table td:first-child{text-align:left}
@@ -75,16 +50,15 @@
   .pill.site-spm888{color:#eee; background:#273142; border-color:#3a4b66}
   .num.red{color:var(--red)} .num.green{color:var(--green)} .num.cyan{color:var(--cyan)}
   .actions{display:flex; gap:8px; justify-content:flex-end}
-  .iconbtn{height:28px; padding:0 10px; border-radius:8px; border:1px solid #2a2a2a; background:#151515; color:#ddd; cursor:pointer; font-weight:600;}
+  .iconbtn{height:28px; padding:0 10px; border-radius:8px; border:1px solid #2a2a2a; background:#151515; color:#ddd; cursor:pointer; font-weight:600}
   .iconbtn:hover{border-color:#3a3a3a} .iconbtn.del{border-color:#3a2222; background:#191111; color:#ffb4b4}
-  .empty{padding:24px; text-align:center; color:#9f9f9f; border-top:1px dashed #222; background:repeating-linear-gradient(45deg,#0e0e0e 0 8px,#0c0c0c 8px 16px);}
+  .empty{padding:24px; text-align:center; color:#9f9f9f; border-top:1px dashed #222; background:repeating-linear-gradient(45deg,#0e0e0e 0 8px,#0c0c0c 8px 16px)}
 
-  /* modal generik */
+  /* modal */
   .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; backdrop-filter:blur(3px)}
   .modal.show{display:flex}
   .overlay{position:absolute; inset:0; background:rgba(0,0,0,.55)}
-  .dialog{position:relative; z-index:1; width:min(980px,calc(100% - 24px)); background:#111; border:1px solid #2a2a2a;
-    border-radius:16px; padding:14px; box-shadow:0 30px 80px rgba(0,0,0,.55);}
+  .dialog{position:relative; z-index:1; width:min(980px,calc(100% - 24px)); background:#111; border:1px solid #2a2a2a; border-radius:16px; padding:14px; box-shadow:0 30px 80px rgba(0,0,0,.55)}
   .dialog h3{margin:0 0 10px; font-size:18px}
   .grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
   @media (max-width:680px){ .grid{grid-template-columns:1fr} }
@@ -93,7 +67,6 @@
   .input[type="number"]{text-align:left}
   .dialog .foot{display:flex; gap:8px; justify-content:flex-end; margin-top:12px}
 
-  /* tier editor */
   .tier-head{font-weight:700; margin-top:8px; margin-bottom:4px}
   .tier-list{border:1px solid #2a2a2a; border-radius:10px; padding:8px; background:#101010}
   .tier-row{display:grid; grid-template-columns:1fr 1fr auto; gap:8px; margin-bottom:6px}
@@ -103,39 +76,29 @@
 </style>
 </head>
 <body>
-  <!-- Header (filters & export) -->
+  <!-- Header filters -->
   <div class="header">
-    <div class="brand"><span class="dot"></span> <span>Bonus Recorder</span></div>
-
-    <select id="siteFilter" class="select" title="Site">
-      <option value="ALL">All Sites</option>
-      <option value="5G88">5G88</option>
-      <option value="SPM888">SPM888</option>
-    </select>
-
-    <select id="monthFilter" class="select" title="Month"></select>
-
+    <div class="brand"><span class="dot"></span><span>Bonus Recorder</span></div>
+    <select id="siteFilter" class="select"><option value="ALL">All Sites</option><option value="5G88">5G88</option><option value="SPM888">SPM888</option></select>
+    <select id="monthFilter" class="select"></select>
     <div class="spacer"></div>
     <button id="exportBtn" class="btn ghost">Export CSV</button>
   </div>
 
   <div class="wrap">
-    <!-- ROW 1: semua kartu ringkasan dalam 1 baris (scroll bila tak muat) -->
+    <!-- Row 1 summary -->
     <div class="cards-row" id="summaryRowTop"></div>
-    <!-- ROW 2: khusus Bonus Deposit Σ & Bonus Resit Σ -->
+    <!-- Row 2 summary (Bonus Deposit ½, Bonus Resit ½, Bonus Sales) -->
     <div class="cards-row" id="summaryRowBottom" style="margin-top:8px;"></div>
 
-    <!-- Toolbar: Set Target + Create (di atas tabel) -->
+    <!-- Toolbar above table -->
     <div class="toolbar">
       <button id="targetBtn" class="btn ghost">Set Target</button>
       <button id="createBtn" class="btn">Create</button>
       <span id="targetBadge" class="badge" style="display:none"></span>
     </div>
 
-    <!-- Info bulan arsip (opsional) -->
-    <div id="archiveBanner" class="badge" style="display:none; margin:8px 0">
-      Anda sedang melihat bulan <b id="bannerMonth" style="margin-left:6px"></b>
-    </div>
+    <div id="archiveBanner" class="badge" style="display:none; margin:8px 0">Anda sedang melihat bulan <b id="bannerMonth" style="margin-left:6px"></b></div>
 
     <!-- Table -->
     <div class="table">
@@ -173,10 +136,10 @@
           </tr>
         </tfoot>
       </table>
-      <div id="emptyState" class="empty" style="display:none">Belum ada data untuk filter ini. Klik <b>Create</b> untuk tambah data baru.</div>
+      <div id="emptyState" class="empty" style="display:none">Belum ada data. Klik <b>Create</b> untuk tambah data.</div>
     </div>
 
-    <div class="hint" style="margin-top:8px">Semua data disimpan lokal di browser (localStorage). Silakan export CSV untuk backup.</div>
+    <div class="hint" style="margin-top:8px">Data tersimpan di browser (localStorage). Gunakan Export CSV untuk backup.</div>
   </div>
 
   <!-- Modal Create/Edit -->
@@ -185,55 +148,24 @@
     <div class="dialog" role="dialog" aria-modal="true">
       <h3 id="modalTitle">Create Record</h3>
       <div class="grid">
-        <div class="group">
-          <label for="m_site">Site</label>
-          <select id="m_site" class="select">
-            <option value="5G88">5G88</option>
-            <option value="SPM888">SPM888</option>
-          </select>
+        <div class="group"><label for="m_site">Site</label>
+          <select id="m_site" class="select"><option value="5G88">5G88</option><option value="SPM888">SPM888</option></select>
         </div>
-        <div class="group">
-          <label for="m_dt">Date & Time</label>
-          <input id="m_dt" class="input" type="datetime-local">
-        </div>
-
-        <div class="group"><label for="m_deposit">Total Deposit</label>
-          <input id="m_deposit" class="input" type="number" step="0.01" min="0" placeholder="0.00">
-        </div>
-        <div class="group"><label for="m_withdrawal">Total Withdrawal</label>
-          <input id="m_withdrawal" class="input" type="number" step="0.01" min="0" placeholder="0.00">
-        </div>
-
-        <div class="group"><label for="m_bonus">Total Bonus</label>
-          <input id="m_bonus" class="input" type="number" step="0.01" min="0" placeholder="0.00">
-        </div>
-        <div class="group"><label for="m_forfeit">Total Forfeit</label>
-          <input id="m_forfeit" class="input" type="number" step="0.01" min="0" placeholder="0.00">
-        </div>
-
-        <div class="group"><label for="m_member">Total Member</label>
-          <input id="m_member" class="input" type="number" step="1" min="0" placeholder="0">
-        </div>
-        <div class="group"><label for="m_resit">Total Resit In</label>
-          <input id="m_resit" class="input" type="number" step="0.01" min="0" placeholder="0.00">
-        </div>
-
-        <div class="group"><label for="m_sales">Total Sales (auto)</label>
-          <input id="m_sales" class="input" type="number" step="0.01" readonly placeholder="0.00" title="Auto = Deposit − Withdrawal">
-        </div>
-        <div class="group">
-          <label>&nbsp;</label>
-          <div class="hint">Sales auto: <b>Deposit − Withdrawal</b></div>
-        </div>
+        <div class="group"><label for="m_dt">Date & Time</label><input id="m_dt" class="input" type="datetime-local"></div>
+        <div class="group"><label for="m_deposit">Total Deposit</label><input id="m_deposit" class="input" type="number" step="0.01" min="0"></div>
+        <div class="group"><label for="m_withdrawal">Total Withdrawal</label><input id="m_withdrawal" class="input" type="number" step="0.01" min="0"></div>
+        <div class="group"><label for="m_bonus">Total Bonus</label><input id="m_bonus" class="input" type="number" step="0.01" min="0"></div>
+        <div class="group"><label for="m_forfeit">Total Forfeit</label><input id="m_forfeit" class="input" type="number" step="0.01" min="0"></div>
+        <div class="group"><label for="m_member">Total Member</label><input id="m_member" class="input" type="number" step="1" min="0"></div>
+        <div class="group"><label for="m_resit">Total Resit In</label><input id="m_resit" class="input" type="number" step="0.01" min="0"></div>
+        <div class="group"><label for="m_sales">Total Sales (auto)</label><input id="m_sales" class="input" type="number" step="0.01" readonly title="Auto = Deposit − Withdrawal"></div>
+        <div class="group"><label>&nbsp;</label><div class="hint">Sales auto: <b>Deposit − Withdrawal</b></div></div>
       </div>
-      <div class="foot">
-        <button class="btn ghost" onclick="closeModal()">Cancel</button>
-        <button id="saveBtn" class="btn">Save</button>
-      </div>
+      <div class="foot"><button class="btn ghost" onclick="closeModal()">Cancel</button><button id="saveBtn" class="btn">Save</button></div>
     </div>
   </div>
 
-  <!-- Modal Set Target (multi-tier) -->
+  <!-- Modal Set Target (multi-tier: Deposit, Resit, Sales) -->
   <div id="targetModal" class="modal" aria-hidden="true">
     <div class="overlay" onclick="closeTargetModal()"></div>
     <div class="dialog" role="dialog" aria-modal="true">
@@ -247,10 +179,11 @@
       <div id="resTierList" class="tier-list"></div>
       <button class="btn addline" id="addResTier">+ Add Resit Tier</button>
 
-      <div class="foot">
-        <button class="btn ghost" onclick="closeTargetModal()">Cancel</button>
-        <button id="saveTargetBtn" class="btn">Save Target</button>
-      </div>
+      <div class="tier-head" style="margin-top:12px">Sales Tiers</div>
+      <div id="salesTierList" class="tier-list"></div>
+      <button class="btn addline" id="addSalesTier">+ Add Sales Tier</button>
+
+      <div class="foot"><button class="btn ghost" onclick="closeTargetModal()">Cancel</button><button id="saveTargetBtn" class="btn">Save Target</button></div>
     </div>
   </div>
 
@@ -264,20 +197,34 @@
 
   const LS_KEY='bonusRecords.v1';
   const LS_LAST_MONTH='bonusRecords.lastOpenedMonth';
-  const LS_TARGET='bonusTargets.v2';
+  const LS_TARGET='bonusTargets.v3'; // versi baru (tambah sales tiers)
 
   const readStore=()=>{try{return JSON.parse(localStorage.getItem(LS_KEY))||[]}catch{return[]}};
   const writeStore=a=>localStorage.setItem(LS_KEY,JSON.stringify(a));
 
   function readTarget(){
     let t; try{ t=JSON.parse(localStorage.getItem(LS_TARGET)); }catch{ t=null; }
-    if(t && t.depositTiers && t.resitTiers) return t;
-    // default tiers
-    t={depositTiers:[{threshold:8000,bonus:20},{threshold:10000,bonus:25}],
-       resitTiers:[{threshold:250,bonus:30},{threshold:500,bonus:60}]};
-    localStorage.setItem(LS_TARGET,JSON.stringify(t)); return t;
+    if (t && t.depositTiers && t.resitTiers && t.salesTiers) return t;
+
+    // fallback: upgrade dari versi lama
+    try{
+      const old = JSON.parse(localStorage.getItem('bonusTargets.v2'));
+      if (old) {
+        const upgraded = {depositTiers: old.depositTiers||[{threshold:8000,bonus:20}],
+                          resitTiers: old.resitTiers||[{threshold:250,bonus:30}],
+                          salesTiers:[{threshold:30000, bonus:300}]};
+        localStorage.setItem(LS_TARGET, JSON.stringify(upgraded));
+        return upgraded;
+      }
+    }catch{}
+
+    const def={depositTiers:[{threshold:8000,bonus:20},{threshold:10000,bonus:25}],
+               resitTiers:[{threshold:250,bonus:30},{threshold:500,bonus:60}],
+               salesTiers:[{threshold:30000,bonus:300}]};
+    localStorage.setItem(LS_TARGET, JSON.stringify(def));
+    return def;
   }
-  const writeTarget=t=>localStorage.setItem(LS_TARGET,JSON.stringify(t));
+  const writeTarget=t=>localStorage.setItem(LS_TARGET, JSON.stringify(t));
   const pickTierBonus=(v,tiers)=>Array.isArray(tiers)?tiers.reduce((m,t)=>v>=+t.threshold?Math.max(m,+t.bonus||0):m,0):0;
 
   let editingId=null;
@@ -286,12 +233,10 @@
     buildMonthOptions();
     autoSwitchToCurrentMonth();
     render();
-
     $('#createBtn').addEventListener('click',()=>openModal());
     $('#exportBtn').addEventListener('click', exportCSV);
     $('#siteFilter').addEventListener('change', render);
     $('#monthFilter').addEventListener('change', ()=>{localStorage.setItem(LS_LAST_MONTH,$('#monthFilter').value); render();});
-
     $('#targetBtn').addEventListener('click', openTargetModal);
     updateTargetBadge();
   });
@@ -307,9 +252,9 @@
     const cur=toYYYYMM(new Date()); const last=localStorage.getItem(LS_LAST_MONTH);
     if(last!==cur){ $('#monthFilter').value=cur; localStorage.setItem(LS_LAST_MONTH,cur); }
   }
-  const prettyMonth=yyyyMM=>{const [y,m]=yyyyMM.split('-').map(Number);return new Date(y,m-1,1).toLocaleDateString(undefined,{month:'long',year:'numeric'});};
+  const prettyMonth=yyyyMM=>{const [y,m]=yyyyMM.split('-').map(Number);return new Date(y,m-1,1).toLocaleDateString(undefined,{month:'long',year:'numeric'})};
 
-  /* ---------- Create/Edit ---------- */
+  /* ----- Create/Edit ----- */
   function openModal(rec=null){
     editingId=rec?.id ?? null;
     $('#modalTitle').textContent=editingId?'Edit Record':'Create Record';
@@ -335,13 +280,10 @@
       id: editingId ?? ('id_'+Date.now()+Math.random().toString(36).slice(2,7)),
       site: $('#m_site').value,
       datetime: dt.toISOString(), month: toYYYYMM(dt),
-      deposit: +($('#m_deposit').value||0),
-      withdrawal: +($('#m_withdrawal').value||0),
-      bonus: +($('#m_bonus').value||0),
-      forfeit: +($('#m_forfeit').value||0),
-      member: parseInt($('#m_member').value||0,10),
-      resit: +($('#m_resit').value||0),
-      sales: +($('#m_sales').value||0),
+      deposit:+($('#m_deposit').value||0), withdrawal:+($('#m_withdrawal').value||0),
+      bonus:+($('#m_bonus').value||0), forfeit:+($('#m_forfeit').value||0),
+      member:parseInt($('#m_member').value||0,10), resit:+($('#m_resit').value||0),
+      sales:+($('#m_sales').value||0),
     };
   }
   function saveModal(){
@@ -353,28 +295,30 @@
     closeModal(); render();
   }
 
-  /* ---------- Target Modal (multi-tier) ---------- */
+  /* ----- Target Modal (Deposit, Resit, Sales) ----- */
   function openTargetModal(){
     const t=readTarget();
-    renderTierEditor('#depTierList', t.depositTiers, true);
-    renderTierEditor('#resTierList', t.resitTiers, false);
+    renderTierEditor('#depTierList', t.depositTiers, 'Bonus Deposit');
+    renderTierEditor('#resTierList', t.resitTiers, 'Bonus Resit');
+    renderTierEditor('#salesTierList', t.salesTiers, 'Bonus Sales');
     $('#targetModal').classList.add('show');
     $('#addDepTier').onclick=()=>addTierRow('#depTierList');
     $('#addResTier').onclick=()=>addTierRow('#resTierList');
+    $('#addSalesTier').onclick=()=>addTierRow('#salesTierList');
     $('#saveTargetBtn').onclick=saveTarget;
   }
   const closeTargetModal=()=>$('#targetModal').classList.remove('show');
-  function renderTierEditor(sel, tiers, isDep){
+  function renderTierEditor(sel, tiers, label){
     const box=$(sel); box.innerHTML='';
     const head=document.createElement('div'); head.className='tier-row';
-    head.innerHTML=`<div class="hint" style="align-self:center">Threshold (≥)</div><div class="hint" style="align-self:center">${isDep?'Bonus Deposit':'Bonus Resit'}</div><div></div>`;
+    head.innerHTML=`<div class="hint" style="align-self:center">Threshold (≥)</div><div class="hint" style="align-self:center">${label}</div><div></div>`;
     box.appendChild(head);
     (tiers||[]).forEach(t=>addTierRow(sel,t.threshold,t.bonus));
   }
   function addTierRow(sel, threshold='', bonus=''){
     const box=$(sel); const row=document.createElement('div'); row.className='tier-row';
-    row.innerHTML=`<input type="number" min="0" step="0.01" class="input" placeholder="e.g. 8000" value="${threshold}">
-                   <input type="number" min="0" step="1" class="input" placeholder="e.g. 20" value="${bonus}">
+    row.innerHTML=`<input type="number" min="0" step="0.01" class="input" placeholder="e.g. 30000" value="${threshold}">
+                   <input type="number" min="0" step="1" class="input" placeholder="e.g. 300" value="${bonus}">
                    <button class="rm">Remove</button>`;
     row.querySelector('.rm').onclick=()=>row.remove(); box.appendChild(row);
   }
@@ -384,36 +328,38 @@
       const out=[]; for(const r of rows){ const [th,bo]=r.querySelectorAll('input'); const thr=+th.value||0; const bon=+bo.value||0; if(thr>0&&bon>0) out.push({threshold:thr,bonus:bon}); }
       out.sort((a,b)=>a.threshold-b.threshold); return out;
     };
-    const t={depositTiers:readRows('#depTierList'), resitTiers:readRows('#resTierList')};
+    const t={depositTiers:readRows('#depTierList'), resitTiers:readRows('#resTierList'), salesTiers:readRows('#salesTierList')};
     if(!t.depositTiers.length) t.depositTiers=[{threshold:8000,bonus:20}];
     if(!t.resitTiers.length)   t.resitTiers=[{threshold:250, bonus:30}];
+    if(!t.salesTiers.length)   t.salesTiers=[{threshold:30000, bonus:300}];
     writeTarget(t); updateTargetBadge(); closeTargetModal(); render();
   }
   function updateTargetBadge(){
     const t=readTarget();
     const fmt=arr=>arr.map(x=>`≥ ${Number(x.threshold).toLocaleString()} → +${x.bonus}`).join('; ');
-    const el=$('#targetBadge'); el.textContent=`Dep: ${fmt(t.depositTiers)} | Resit: ${fmt(t.resitTiers)}`; el.style.display='inline-flex';
+    const el=$('#targetBadge');
+    el.textContent=`Dep: ${fmt(t.depositTiers)} | Resit: ${fmt(t.resitTiers)} | Sales: ${fmt(t.salesTiers)}`;
+    el.style.display='inline-flex';
   }
 
-  /* ---------- Render ---------- */
+  /* ----- Render ----- */
   function render(){
     const site=$('#siteFilter').value, month=$('#monthFilter').value, targets=readTarget();
     const data=readStore().filter(r=>r.month===month).filter(r=>site==='ALL'?true:r.site===site)
       .sort((a,b)=>new Date(b.datetime)-new Date(a.datetime));
 
-    // archive info
     const cur=toYYYYMM(new Date()); const isArchive=month!==cur;
     $('#archiveBanner').style.display=isArchive?'inline-flex':'none';
     $('#bannerMonth').textContent=prettyMonth(month);
 
-    // table body
     const tb=$('#tbody'); tb.innerHTML='';
-    let totals={d:0,w:0,b:0,f:0,m:0,r:0,s:0, bd:0, br:0};
+    let totals={d:0,w:0,b:0,f:0,m:0,r:0,s:0, bd:0, br:0, bsBase:0};
 
     for(const r of data){
       const dt=new Date(r.datetime).toLocaleString(undefined,{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
       const bonusDep=pickTierBonus(r.deposit, targets.depositTiers);
-      const bonusRes=pickTierBonus(r.resit, targets.resitTiers);
+      const bonusRes=pickTierBonus(r.resit,   targets.resitTiers);
+      const bonusSalesBase=pickTierBonus(r.sales, targets.salesTiers); // base dari tier sales (tanpa ½ dep/res)
 
       const tr=document.createElement('tr');
       tr.innerHTML=`
@@ -437,7 +383,8 @@
       tb.appendChild(tr);
 
       totals.d+=r.deposit; totals.w+=r.withdrawal; totals.b+=r.bonus; totals.f+=r.forfeit;
-      totals.m+=r.member; totals.r+=r.resit; totals.s+=r.sales; totals.bd+=bonusDep; totals.br+=bonusRes;
+      totals.m+=r.member; totals.r+=r.resit; totals.s+=r.sales;
+      totals.bd+=bonusDep; totals.br+=bonusRes; totals.bsBase+=bonusSalesBase;
     }
     $('#emptyState').style.display=data.length?'none':'block';
 
@@ -456,67 +403,57 @@
   }
 
   function renderSummaryRows(t, count, site, month){
-    // ROW 1
+    // Row 1
     const top=$('#summaryRowTop'); top.innerHTML='';
-    const mainCards=[
+    [
       {title:'Month', val: prettyMonth(month)},
       {title:'Site', val: site==='ALL'?'All Sites':site},
       {title:'Total Deposit', val: fmtNum(t.d), cls:'green'},
       {title:'Total Withdrawal', val: fmtNum(t.w), cls:'red'},
       {title:'Total Bonus', val: fmtNum(t.b), cls:'cyan'},
-      {title:'Total Sales', val: fmtNum(t.s), cls: t.s<0?'red':'green'},
+      {title:'Total Sales', val: fmtNum(t.s), cls:t.s<0?'red':'green'},
       {title:'Total Forfeit', val: fmtNum(t.f)},
       {title:'Total Resit In', val: fmtNum(t.r)},
       {title:'Total Member', val: fmtInt(t.m)},
       {title:'Records', val: count.toLocaleString()},
-    ];
-    mainCards.forEach(c=>{
-      const div=document.createElement('div'); div.className='card';
-      div.innerHTML=`<h4>${c.title}</h4><div class="val ${c.cls||''}">${c.val}</div>`;
-      top.appendChild(div);
-    });
+    ].forEach(c=>{const d=document.createElement('div'); d.className='card'; d.innerHTML=`<h4>${c.title}</h4><div class="val ${c.cls||''}">${c.val}</div>`; top.appendChild(d);});
 
-    // ROW 2
+    // Row 2
     const bottom=$('#summaryRowBottom'); bottom.innerHTML='';
-    const subCards=[
-      {title:'Bonus Deposit Σ', val: t.bd.toLocaleString()},
-      {title:'Bonus Resit Σ',   val: t.br.toLocaleString()},
-    ];
-    subCards.forEach(c=>{
-      const div=document.createElement('div'); div.className='card';
-      div.innerHTML=`<h4>${c.title}</h4><div class="val">${c.val}</div>`;
-      bottom.appendChild(div);
-    });
+    const halfDep = t.bd/2;
+    const halfRes = t.br/2;
+    const salesTotal = t.bsBase + halfDep + halfRes; // sesuai instruksi
+    [
+      {title:'Bonus Deposit ½ Σ', val: halfDep.toLocaleString()},
+      {title:'Bonus Resit ½ Σ',   val: halfRes.toLocaleString()},
+      {title:'Bonus Sales Σ',     val: salesTotal.toLocaleString()},
+    ].forEach(c=>{const d=document.createElement('div'); d.className='card'; d.innerHTML=`<h4>${c.title}</h4><div class="val">${c.val}</div>`; bottom.appendChild(d);});
   }
 
   function delRecord(id){
     if(!confirm('Delete this record?')) return;
-    writeStore(readStore().filter(r=>r.id!==id));
-    render();
+    writeStore(readStore().filter(r=>r.id!==id)); render();
   }
 
   function exportCSV(){
     const site=$('#siteFilter').value, month=$('#monthFilter').value, t=readTarget();
     const data=readStore().filter(r=>r.month===month).filter(r=>site==='ALL'?true:r.site===site)
       .sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
-    const header=['datetime','site','deposit','withdrawal','bonus','forfeit','member','resit_in','sales','bonus_deposit','bonus_resit'];
+    const header=['datetime','site','deposit','withdrawal','bonus','forfeit','member','resit_in','sales','bonus_deposit','bonus_resit','bonus_sales_base'];
     const rows=[header.join(',')];
     for(const r of data){
       const bDep=pickTierBonus(r.deposit, t.depositTiers);
       const bRes=pickTierBonus(r.resit,   t.resitTiers);
-      rows.push([new Date(r.datetime).toISOString(), r.site, r.deposit, r.withdrawal, r.bonus, r.forfeit, r.member, r.resit, r.sales, bDep, bRes].join(','));
+      const bSales=pickTierBonus(r.sales, t.salesTiers);
+      rows.push([new Date(r.datetime).toISOString(), r.site, r.deposit, r.withdrawal, r.bonus, r.forfeit, r.member, r.resit, r.sales, bDep, bRes, bSales].join(','));
     }
     const blob=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8;'});
-    const url=URL.createObjectURL(blob); const a=document.createElement('a');
-    a.href=url; a.download=`bonus-${month}-${site}.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`bonus-${month}-${site}.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
   }
 
-  // expose
-  window.openModal=openModal;
-  window.closeModal=closeModal;
-  window.delRecord=delRecord;
-  window.openTargetModal=openTargetModal;
-  window.closeTargetModal=closeTargetModal;
+  // helpers exposed
+  window.openModal=openModal; window.closeModal=closeModal; window.delRecord=delRecord;
+  window.openTargetModal=openTargetModal; window.closeTargetModal=closeTargetModal;
 </script>
 </body>
 </html>
