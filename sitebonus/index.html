@@ -1,364 +1,426 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bonus Files Manager</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Transactions | Bonus Manager</title>
 <style>
   :root{
-    --bg:#0a0a0a; --panel:#101010; --line:#262626; --muted:#b3b3b3;
-    --gold:#ffd24d; --gold2:#ffea9a;
+    --bg:#090f12; --panel:#0d1418; --panel-2:#0b1114; --line:#1e2a33;
+    --muted:#a9b4bd; --text:#eaf1f5; --gold:#ffd24d; --gold2:#ffea9a; --accent:#2f4959;
+    --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
-  a{color:inherit}
-  /* HEADER */
-  .header{position:sticky;top:0;z-index:40;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
-  .h-inner{max-width:1100px;margin:0 auto;padding:12px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+  a{color:inherit;text-decoration:none}
+  /* TOP NAV */
+  .nav{background:linear-gradient(180deg,#0b1a24,#0b1620); border-bottom:1px solid #12212a;}
+  .nav-inner{max-width:1200px;margin:0 auto;padding:8px 14px;display:flex;align-items:center;gap:10px}
   .brand{display:flex;align-items:center;gap:10px;margin-right:auto}
-  .brand .logo{width:36px;height:20px;border-radius:999px;background:linear-gradient(90deg,var(--gold2),var(--gold));box-shadow:0 0 14px 3px rgba(255,210,77,.35)}
-  .brand .title{font-weight:800;letter-spacing:.3px}
-  .filters{display:flex;gap:8px;flex-wrap:wrap}
-  .chip{padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:#141414;color:#e8e8e8;cursor:pointer;font-size:14px}
-  .chip:hover{border-color:var(--gold)}
-  .chip.active{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#111;border-color:#b98e00;box-shadow:0 0 0 3px rgba(255,210,77,.15)}
-  /* BAR */
-  .bar{max-width:1100px;margin:12px auto 0;padding:0 16px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  .search{flex:1;display:flex;align-items:center;gap:8px;background:#0f0f0f;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
-  .search input{flex:1;background:transparent;border:none;outline:none;color:#fff;font-size:14px}
-  .btn{appearance:none;border:none;border-radius:10px;padding:9px 12px;background:#161616;color:#fff;border:1px solid var(--line);cursor:pointer;font-weight:600}
+  .brand .logo{width:32px;height:20px;border-radius:999px;background:linear-gradient(90deg,var(--gold2),var(--gold));box-shadow:0 0 14px 3px rgba(255,210,77,.35)}
+  .brand .name{font-weight:800;letter-spacing:.3px}
+  .tabs{display:flex;gap:8px}
+  .tab{padding:8px 12px;border-radius:8px;background:transparent;border:1px solid transparent;color:#c5d1da;cursor:pointer;font-weight:600}
+  .tab.active{background:#0f202a;border-color:#1c3340;color:#fff}
+  .right{margin-left:auto;display:flex;gap:10px;align-items:center}
+  .pill{padding:6px 10px;border-radius:999px;background:#0e2430;border:1px solid #143243;color:#9cd2ef;font-weight:700}
+  /* FILTER BAR */
+  .bar{background:#0b1216;border-bottom:1px solid var(--line)}
+  .bar-inner{max-width:1200px;margin:0 auto;padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .search{flex:1;display:flex;align-items:center;gap:8px;background:#0f171c;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  .search input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:14px}
+  .select, .input, .btn{appearance:none;background:#0f171c;border:1px solid var(--line);color:var(--text);border-radius:8px;padding:8px 10px;font-size:14px}
+  .btn{cursor:pointer;font-weight:700}
   .btn:hover{border-color:var(--gold)}
-  .btn.gold{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#111;border-color:#b98e00}
-  .count{font-size:12px;color:var(--muted)}
-  /* GRID */
-  .wrap{max-width:1100px;margin:10px auto 40px;padding:0 16px}
-  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-  @media (max-width:820px){.grid{grid-template-columns:1fr}}
-  .card{display:flex;gap:12px;background:linear-gradient(180deg,#111,#0a0a0a);border:1px solid var(--line);border-radius:12px;padding:12px}
-  .thumb{width:86px;height:64px;border:1px solid #333;border-radius:8px;background:#0f0f0f;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 auto}
-  .thumb img{width:100%;height:100%;object-fit:cover}
-  .thumb .pdf{font-weight:800;font-size:20px}
-  .meta{flex:1 1 auto;min-width:0}
-  .name{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .sub{margin-top:4px;font-size:12px;color:#d9d9d9;display:flex;gap:8px;flex-wrap:wrap}
-  .badge{padding:2px 8px;border-radius:999px;font-size:11px;color:#111;background:linear-gradient(180deg,var(--gold2),var(--gold));border:1px solid #b98e00}
-  .note{color:#bcbcbc}
-  .actions{display:flex;gap:8px}
-  .empty{margin-top:12px;text-align:center;padding:24px;border:1px dashed var(--line);border-radius:12px;color:var(--muted)}
+  .btn.primary{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#111;border-color:#b98e00}
+  .chips{display:flex;gap:6px;align-items:center}
+  .chip{padding:7px 10px;border:1px solid var(--line);background:#0f171c;border-radius:999px;cursor:pointer;color:#d4dde4;font-weight:600}
+  .chip.active{background:#14333f;border-color:#1f4b5c}
+  /* CONTENT */
+  .wrap{max-width:1200px;margin:14px auto;padding:0 14px}
+  .table{width:100%;border-collapse:separate;border-spacing:0 8px}
+  .th, .td{padding:10px 12px;font-size:13px}
+  .thead{background:#0d161b;border:1px solid var(--line);border-radius:10px}
+  .thead .th{font-weight:800;border-bottom:1px solid #0f212b}
+  .row{background:linear-gradient(180deg,#101b21,#0a1216);border:1px solid var(--line);border-radius:10px}
+  .td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .td.site{font-weight:800}
+  .td .badge{padding:2px 6px;border-radius:999px;background:#11242e;border:1px solid #1d3b4a;color:#9fd3ec;font-size:11px}
+  .empty{display:flex;gap:10px;align-items:center;justify-content:center;color:#90a1ab;height:220px;background:#0b1216;border:1px dashed var(--line);border-radius:12px}
+  .actions{display:flex;gap:6px}
+  .btn.small{padding:6px 8px;font-size:12px}
+  .btn.danger{border-color:#3a1b1b;background:#1a0f0f;color:#f7c6c6}
+  .btn.danger:hover{border-color:#7b2a2a}
   /* DIALOG */
-  dialog{border:none;border-radius:14px;padding:0;background:#0f0f0f;color:#fff;max-width:520px;width:calc(100% - 24px)}
-  dialog::backdrop{background:rgba(0,0,0,.55)}
-  .dlg-h{padding:14px 16px;border-bottom:1px solid #222;font-weight:800}
-  .dlg-b{padding:16px;display:grid;gap:10px}
+  dialog{border:none;border-radius:14px;padding:0;background:#0f171c;color:var(--text);max-width:560px;width:calc(100% - 24px)}
+  dialog::backdrop{background:rgba(2,6,8,.6)}
+  .dlg-h{padding:14px 16px;border-bottom:1px solid var(--line);font-weight:800}
+  .dlg-b{padding:14px;display:grid;gap:10px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .row{display:grid;gap:6px}
-  input[type="text"], select, textarea{background:#101010;border:1px solid #2a2a2a;border-radius:10px;color:#fff;padding:10px 12px;outline:none}
-  textarea{min-height:70px;resize:vertical}
-  .filebox{border:1px dashed #3a3a3a;border-radius:10px;padding:14px;text-align:center}
-  .dlg-f{display:flex;gap:10px;justify-content:flex-end;border-top:1px solid #222;padding:12px 16px}
-  .note-sm{font-size:12px;color:var(--muted)}
-  /* TOAST */
-  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;background:#111827;color:#e5e7eb;padding:12px 16px;border-radius:10px;border:1px solid #233044;display:none;z-index:50}
+  .dlg-f{display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--line);padding:12px 16px}
+  .hint{font-size:12px;color:var(--muted)}
+  /* UTIL */
+  .righty{text-align:right}
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<div class="header">
-  <div class="h-inner">
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-inner">
     <div class="brand">
       <div class="logo"></div>
-      <div>
-        <div class="title">Bonus Files</div>
-        <div style="font-size:12px;color:#bdbdbd">Multi Sub‑Account (5G88, SPM888, …)</div>
-      </div>
+      <div class="name">Control Panel</div>
     </div>
-    <div class="filters" id="filters"></div>
+    <div class="tabs">
+      <button class="tab">Dashboard</button>
+      <button class="tab">Cash Transfer</button>
+      <button class="tab active">Transactions</button>
+      <button class="tab">Player</button>
+      <button class="tab">Report</button>
+      <button class="tab">Livechat</button>
+    </div>
+    <div class="right">
+      <div class="pill" id="bankMeter">Bank Meter: 0.00</div>
+      <div class="pill" id="balance">536.00</div>
+      <div class="pill">support2</div>
+    </div>
   </div>
 </div>
 
-<!-- BAR -->
+<!-- FILTER BAR -->
 <div class="bar">
-  <div class="search">
-    <input id="q" placeholder="Cari nama file… (cth: Superman, Welcome Bonus, 02/09)">
-    <button class="btn" id="clearBtn" title="Clear search">✕</button>
+  <div class="bar-inner">
+    <div class="search" title="Search by site name">
+      <span>🔎</span>
+      <input id="q" placeholder="Search site (e.g. 5G88, SPM888, NEPWIN88)"/>
+    </div>
+
+    <div class="chips" id="typeChips">
+      <div class="chip active" data-type="deposit">1. Deposit</div>
+      <div class="chip active" data-type="withdrawal">2. Withdrawal</div>
+      <div class="chip active" data-type="bonus">3. Bonus</div>
+    </div>
+
+    <select id="statusSel" class="select" title="Status">
+      <option value="">Status</option>
+      <option>Pending</option>
+      <option>Approved</option>
+      <option>Rejected</option>
+    </select>
+
+    <select id="creditSel" class="select" title="Category">
+      <option value="">Category</option>
+      <option>Promotion</option>
+      <option>System</option>
+      <option>Manual</option>
+    </select>
+
+    <input id="dateFrom" type="date" class="input" />
+    <span style="opacity:.6">→</span>
+    <input id="dateTo" type="date" class="input" />
+    <button id="sortBtn" class="btn">Date Descend</button>
+    <button id="detailBtn" class="btn">Detail View</button>
+    <button id="createBtn" class="btn primary">Create</button>
   </div>
-  <button class="btn gold" id="addBtn">+ Add File</button>
-  <button class="btn" id="exportBtn">Export JSON</button>
-  <label class="btn" for="importFile" style="cursor:pointer">Import JSON</label>
-  <input id="importFile" type="file" accept=".json" hidden>
-  <div class="count" id="count">0 files</div>
 </div>
 
-<!-- GRID -->
+<!-- CONTENT -->
 <div class="wrap">
-  <div class="grid" id="grid"></div>
-  <div class="empty" id="empty" style="display:none">Belum ada file. Klik <b>+ Add File</b> untuk menambah.</div>
+  <!-- Header row -->
+  <div class="thead">
+    <div class="th" style="display:grid;grid-template-columns: 160px 120px repeat(6,1fr) 90px 130px 140px;gap:0;border-radius:10px 10px 0 0">
+      <div class="th">Date & Time</div>
+      <div class="th">Site</div>
+      <div class="th righty">Deposit</div>
+      <div class="th righty">Withdrawal</div>
+      <div class="th righty">FOC</div>
+      <div class="th righty">Total Bonus</div>
+      <div class="th righty">Total Forfeit</div>
+      <div class="th righty">Active</div>
+      <div class="th righty">Resit In</div>
+      <div class="th">Status</div>
+      <div class="th">Action</div>
+    </div>
+  </div>
+
+  <div id="tbody"></div>
+
+  <div id="empty" class="empty" style="display:none">
+    <div>📭</div><div>No data</div>
+  </div>
 </div>
 
-<!-- ADD DIALOG -->
+<!-- CREATE DIALOG -->
 <dialog id="dlg">
-  <div class="dlg-h">Tambah / Simpan Bonus File</div>
+  <div class="dlg-h">Create Transaction</div>
   <form method="dialog" id="form">
     <div class="dlg-b">
-      <div class="row">
-        <label>Site / Sub Account</label>
-        <div style="display:flex;gap:8px">
-          <select id="site"></select>
-          <input id="newSite" type="text" placeholder="atau ketik site baru (mis: SPM888)">
+      <div class="grid2">
+        <div class="row">
+          <label>Site / Sub Account</label>
+          <input id="site" class="input" placeholder="e.g. 5G88, SPM888" required/>
+        </div>
+        <div class="row">
+          <label>Date & Time</label>
+          <input id="dt" type="datetime-local" class="input" required/>
         </div>
       </div>
-      <div class="row">
-        <label>Nama file (judul)</label>
-        <input id="name" type="text" placeholder="Contoh: Superman Bonus 02/09/2025" required>
-      </div>
-      <div class="row">
-        <label>Upload file (gambar/PDF)</label>
-        <div class="filebox">
-          <input id="file" type="file" accept="image/*,.pdf">
-          <div class="note-sm">Gambar akan dipratinjau. PDF disimpan dengan ikon.</div>
+
+      <div class="grid2">
+        <div class="row">
+          <label>Deposit</label>
+          <input id="deposit" type="number" step="0.01" class="input" placeholder="0.00"/>
+        </div>
+        <div class="row">
+          <label>Withdrawal</label>
+          <input id="withdrawal" type="number" step="0.01" class="input" placeholder="0.00"/>
         </div>
       </div>
-      <div class="row">
-        <label>Catatan (opsional)</label>
-        <textarea id="note" placeholder="Contoh: Banner harian, format Superman…"></textarea>
+
+      <div class="grid2">
+        <div class="row">
+          <label>FOC</label>
+          <input id="foc" type="number" step="0.01" class="input" placeholder="0.00"/>
+        </div>
+        <div class="row">
+          <label>Total Bonus</label>
+          <input id="bonus" type="number" step="0.01" class="input" placeholder="0.00"/>
+        </div>
       </div>
+
+      <div class="grid2">
+        <div class="row">
+          <label>Total Forfeit</label>
+          <input id="forfeit" type="number" step="0.01" class="input" placeholder="0.00"/>
+        </div>
+        <div class="row">
+          <label>Active Member</label>
+          <input id="active" type="number" step="1" class="input" placeholder="0"/>
+        </div>
+      </div>
+
+      <div class="row">
+        <label>Resit In</label>
+        <input id="resit" type="number" step="0.01" class="input" placeholder="0.00"/>
+      </div>
+
+      <div class="grid2">
+        <div class="row">
+          <label>Status</label>
+          <select id="status" class="select">
+            <option>Pending</option>
+            <option>Approved</option>
+            <option>Rejected</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>Category</label>
+          <select id="category" class="select">
+            <option>Promotion</option>
+            <option>System</option>
+            <option>Manual</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="hint">Semua angka opsional — kosong akan dianggap 0.</div>
     </div>
     <div class="dlg-f">
       <button class="btn" value="cancel">Cancel</button>
-      <button class="btn gold" id="saveBtn" value="default">Save</button>
+      <button id="saveBtn" class="btn primary" value="default">Create</button>
     </div>
   </form>
 </dialog>
 
-<div class="toast" id="toast">Saved</div>
-
 <script>
-/* ================== STORAGE & STATE ================== */
-const LS_KEY = 'bonusFiles.v1';
-/** shape:
- * {id, site, name, mime, url, createdAt, note}
- * url: blob url (session) + dataUrl (persist) -> we store dataUrl (base64) for persistence
- */
-let items = load();
-let activeSite = '_ALL_';
-let query = '';
+/* ======= STATE & STORAGE ======= */
+const LS_KEY = 'tx.v1';
+let sortDesc = true;
+let filters = {
+  q: '',
+  types: new Set(['deposit','withdrawal','bonus']), // for extensibility
+  status: '',
+  category: '',
+  from: '',
+  to: ''
+};
+let data = load();
 
+/* ======= ELEMENTS ======= */
 const els = {
-  filters: document.getElementById('filters'),
-  grid: document.getElementById('grid'),
-  empty: document.getElementById('empty'),
-  count: document.getElementById('count'),
   q: document.getElementById('q'),
-  clearBtn: document.getElementById('clearBtn'),
-  addBtn: document.getElementById('addBtn'),
+  chips: document.getElementById('typeChips'),
+  statusSel: document.getElementById('statusSel'),
+  creditSel: document.getElementById('creditSel'),
+  dateFrom: document.getElementById('dateFrom'),
+  dateTo: document.getElementById('dateTo'),
+  sortBtn: document.getElementById('sortBtn'),
+  createBtn: document.getElementById('createBtn'),
+  tbody: document.getElementById('tbody'),
+  empty: document.getElementById('empty'),
   dlg: document.getElementById('dlg'),
   form: document.getElementById('form'),
   site: document.getElementById('site'),
-  newSite: document.getElementById('newSite'),
-  name: document.getElementById('name'),
-  file: document.getElementById('file'),
-  note: document.getElementById('note'),
-  saveBtn: document.getElementById('saveBtn'),
-  toast: document.getElementById('toast'),
-  exportBtn: document.getElementById('exportBtn'),
-  importFile: document.getElementById('importFile'),
+  dt: document.getElementById('dt'),
+  deposit: document.getElementById('deposit'),
+  withdrawal: document.getElementById('withdrawal'),
+  foc: document.getElementById('foc'),
+  bonus: document.getElementById('bonus'),
+  forfeit: document.getElementById('forfeit'),
+  active: document.getElementById('active'),
+  resit: document.getElementById('resit'),
+  status: document.getElementById('status'),
+  category: document.getElementById('category'),
 };
 
-/* ================== INIT ================== */
+/* ======= INIT ======= */
 init();
 function init(){
-  renderFilterChips();
+  // default date range = today
+  const today = new Date();
+  els.dateFrom.value = toDateInput(today);
+  els.dateTo.value = toDateInput(today);
+
+  // handlers
+  els.q.oninput = ()=>{ filters.q = els.q.value.trim().toLowerCase(); render(); };
+  els.chips.addEventListener('click', (e)=>{
+    const c = e.target.closest('.chip'); if(!c) return;
+    const t = c.dataset.type;
+    c.classList.toggle('active');
+    c.classList.contains('active') ? filters.types.add(t) : filters.types.delete(t);
+    render();
+  });
+  els.statusSel.onchange = ()=>{ filters.status = els.statusSel.value; render(); };
+  els.creditSel.onchange = ()=>{ filters.category = els.creditSel.value; render(); };
+  els.dateFrom.onchange = ()=>{ filters.from = els.dateFrom.value; render(); };
+  els.dateTo.onchange = ()=>{ filters.to = els.dateTo.value; render(); };
+  els.sortBtn.onclick = ()=>{ sortDesc = !sortDesc; els.sortBtn.textContent = sortDesc ? 'Date Descend' : 'Date Ascend'; render(); };
+  els.createBtn.onclick = openCreate;
+
   render();
-  els.addBtn.onclick = openDialog;
-  els.clearBtn.onclick = ()=>{ els.q.value=''; query=''; render(); };
-  els.q.oninput = ()=>{ query = els.q.value.trim().toLowerCase(); render(); };
-  window.addEventListener('keydown', e=>{ if(e.key==='/' && !isTyping()){ e.preventDefault(); els.q.focus(); }});
-  els.form.addEventListener('submit', handleSave);
-  els.exportBtn.onclick = exportJSON;
-  els.importFile.onchange = importJSON;
 }
 
-/* ================== RENDER ================== */
-function renderFilterChips(){
-  const sitesFromData = [...new Set(items.map(x=>x.site))].sort((a,b)=>a.localeCompare(b));
-  els.filters.innerHTML = '';
-  const make = (id,label)=>{
-    const b = document.createElement('button');
-    b.className = 'chip';
-    b.dataset.id = id;
-    b.textContent = label;
-    b.onclick = ()=>{ activeSite = id; updateActive(); render(); };
-    return b;
-  };
-  els.filters.appendChild(make('_ALL_','ALL'));
-  sitesFromData.forEach(s=> els.filters.appendChild(make(s,s)));
-  updateActive();
-}
-function updateActive(){
-  [...els.filters.children].forEach(ch=> ch.classList.toggle('active', ch.dataset.id===activeSite));
-}
-
+/* ======= RENDER TABLE ======= */
 function render(){
-  const data = getFiltered();
-  els.grid.innerHTML = '';
-  els.count.textContent = `${data.length} file${data.length!==1?'s':''}`;
-  if(!data.length){ els.empty.style.display='block'; els.grid.style.display='none'; return; }
-  els.empty.style.display='none'; els.grid.style.display='grid';
-  data.forEach(item => els.grid.appendChild(card(item)));
+  const rows = getFilteredSorted();
+  els.tbody.innerHTML = '';
+  if(rows.length === 0){ els.empty.style.display = 'flex'; return; }
+  els.empty.style.display = 'none';
+
+  rows.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.style.display = 'grid';
+    row.style.gridTemplateColumns = '160px 120px repeat(6,1fr) 90px 130px 140px';
+
+    const cells = [
+      td(text(fmtDT(item.dt))),
+      td(text(item.site), 'site'),
+      td(text(fmtNum(item.deposit)), 'num'),
+      td(text(fmtNum(item.withdrawal)), 'num'),
+      td(text(fmtNum(item.foc)), 'num'),
+      td(text(fmtNum(item.bonus)), 'num'),
+      td(text(fmtNum(item.forfeit)), 'num'),
+      td(text(item.active ?? 0), 'num'),
+      td(text(fmtNum(item.resit)), 'num'),
+      td(html(`<span class="badge">${item.status||'-'}</span>`)),
+      td(actions(item))
+    ];
+    cells.forEach(c => row.appendChild(c));
+    els.tbody.appendChild(row);
+  });
+}
+function td(content, cls=''){ const x=document.createElement('div'); x.className='td'+(cls?(' '+cls):''); x.appendChild(content); return x; }
+function text(t){ return document.createTextNode(t); }
+function html(h){ const d=document.createElement('div'); d.innerHTML=h; return d.firstChild || d; }
+function actions(item){
+  const wrap = document.createElement('div'); wrap.className='actions';
+  const view = document.createElement('button'); view.className='btn small'; view.textContent='View';
+  view.onclick = ()=> alert(JSON.stringify(item,null,2));
+  const del = document.createElement('button'); del.className='btn small danger'; del.textContent='Delete';
+  del.onclick = ()=>{ if(confirm('Delete this record?')){ data = data.filter(x=>x.id!==item.id); save(); render(); } };
+  wrap.append(view, del);
+  return wrap;
 }
 
-function card(it){
-  const c = document.createElement('div'); c.className='card';
+/* ======= FILTERING/SORTING ======= */
+function getFilteredSorted(){
+  let arr = data.slice();
 
-  const th = document.createElement('div'); th.className='thumb';
-  if((it.mime||'').includes('image/')){
-    const img = new Image(); img.src = it.url; th.appendChild(img);
-  }else{
-    const d = document.createElement('div'); d.className='pdf'; d.textContent='PDF'; th.appendChild(d);
+  // site search
+  if(filters.q){
+    arr = arr.filter(x => (x.site||'').toLowerCase().includes(filters.q));
+  }
+  // status/category
+  if(filters.status) arr = arr.filter(x => (x.status||'') === filters.status);
+  if(filters.category) arr = arr.filter(x => (x.category||'') === filters.category);
+
+  // date range (inclusive)
+  const f = filters.from || els.dateFrom.value;
+  const t = filters.to || els.dateTo.value;
+  if(f) arr = arr.filter(x => x.dt >= toISODateStart(f));
+  if(t) arr = arr.filter(x => x.dt <= toISODateEnd(t));
+
+  // chips (types) — here just informative (we keep all; you can wire to business rules if needed)
+  // Example rule: if ONLY 'deposit' selected, show entries where deposit>0, etc.
+  if(filters.types.size && filters.types.size<3){
+    arr = arr.filter(x=>{
+      const sel = [];
+      if(x.deposit>0) sel.push('deposit');
+      if(x.withdrawal>0) sel.push('withdrawal');
+      if(x.bonus>0) sel.push('bonus');
+      return sel.some(t => filters.types.has(t));
+    });
   }
 
-  const meta = document.createElement('div'); meta.className='meta';
-  const name = document.createElement('div'); name.className='name'; name.textContent = it.name || '(no name)';
-  const sub = document.createElement('div'); sub.className='sub';
-  const b = document.createElement('span'); b.className='badge'; b.textContent = it.site;
-  const dt = document.createElement('span'); dt.textContent = '• ' + fmtDate(it.createdAt);
-  const note = document.createElement('span'); note.className='note'; if(it.note) note.textContent = '• ' + it.note;
-  sub.append(b, dt); if(it.note) sub.append(note);
-
-  const acts = document.createElement('div'); acts.className='actions';
-  const open = button('Open', ()=> openItem(it));
-  const copy = button('Copy Link', async ()=> {
-    try{ await navigator.clipboard.writeText(it.url); toast('Link copied'); }catch{ toast('Copy failed'); }
-  });
-  const del = button('Delete', ()=> deleteItem(it.id));
-  acts.append(open, copy, del);
-
-  meta.append(name, sub);
-  c.append(th, meta, acts);
-  return c;
-}
-function button(label, fn){
-  const x = document.createElement('button');
-  x.className = label==='Copy Link' ? 'btn gold' : 'btn';
-  if(label==='Open') x.classList.add('open');
-  x.textContent = label;
-  x.onclick = fn;
-  return x;
-}
-
-/* ================== DIALOG ================== */
-function openDialog(){
-  // build site dropdown from current sites; also add suggestions
-  const sites = [...new Set(items.map(x=>x.site))]; // existing
-  const defaults = ['5G88','SPM888'];
-  const all = [...new Set([...defaults, ...sites])].sort((a,b)=>a.localeCompare(b));
-  els.site.innerHTML = all.map(s=>`<option value="${s}">${s}</option>`).join('');
-  els.newSite.value = '';
-  els.name.value = '';
-  els.file.value = '';
-  els.note.value = '';
-  els.dlg.showModal();
-}
-async function handleSave(e){
-  e.preventDefault();
-  let site = (els.newSite.value.trim()) || els.site.value;
-  if(!site){ toast('Isi site'); return; }
-  const name = els.name.value.trim();
-  if(!name){ toast('Isi nama file'); return; }
-  const f = els.file.files[0];
-  if(!f){ toast('Pilih file'); return; }
-  const mime = f.type || '';
-  const dataUrl = await fileToDataUrl(f); // persist
-  const item = {
-    id: randomId(),
-    site,
-    name,
-    mime,
-    url: dataUrl,
-    createdAt: Date.now(),
-    note: els.note.value.trim()
-  };
-  items.unshift(item);
-  save(); render(); renderFilterChips();
-  els.dlg.close();
-  toast('Saved');
-}
-
-/* ================== FILTER ================== */
-function getFiltered(){
-  let arr = items.slice();
-  if(activeSite !== '_ALL_') arr = arr.filter(x=> x.site === activeSite);
-  if(query) arr = arr.filter(x=> (x.name||'').toLowerCase().includes(query));
+  // sort
+  arr.sort((a,b)=> sortDesc ? (b.dt - a.dt) : (a.dt - b.dt));
   return arr;
 }
 
-/* ================== ACTIONS ================== */
-function openItem(it){
-  // create blob to open in new tab (works for image & pdf)
-  const a = document.createElement('a');
-  a.href = it.url; a.target = '_blank'; a.rel='noopener';
-  a.click();
+/* ======= CREATE ======= */
+function openCreate(){
+  // defaults
+  els.site.value = '';
+  els.dt.value = toDatetimeLocalInput(new Date());
+  ['deposit','withdrawal','foc','bonus','forfeit','active','resit'].forEach(id=> els[id].value='');
+  els.status.value = 'Pending';
+  els.category.value = 'Promotion';
+  els.dlg.showModal();
 }
-function deleteItem(id){
-  if(!confirm('Delete file ini?')) return;
-  items = items.filter(x=> x.id!==id);
-  save(); render();
-}
-
-/* ================== UTILS ================== */
-function load(){
-  try{ return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); }catch{ return []; }
-}
-function save(){
-  localStorage.setItem(LS_KEY, JSON.stringify(items));
-}
-function fmtDate(ts){
-  try{
-    const d = new Date(ts);
-    const dd = String(d.getDate()).padStart(2,'0');
-    const mm = String(d.getMonth()+1).padStart(2,'0');
-    const yyyy = d.getFullYear();
-    const hh = String(d.getHours()).padStart(2,'0');
-    const min = String(d.getMinutes()).padStart(2,'0');
-    return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
-  }catch{ return ''; }
-}
-function isTyping(){
-  const a=document.activeElement; return a && (a.tagName==='INPUT' || a.tagName==='TEXTAREA');
-}
-function randomId(){ return Math.random().toString(36).slice(2)+Date.now().toString(36); }
-function fileToDataUrl(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
-function toast(msg){
-  const t=els.toast; t.textContent=msg; t.style.display='block'; t.style.opacity='0';
-  requestAnimationFrame(()=>{ t.style.transition='opacity .2s'; t.style.opacity='1'; });
-  setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.style.display='none',220); },1300);
-}
-
-/* ================== EXPORT / IMPORT ================== */
-function exportJSON(){
-  const blob = new Blob([JSON.stringify(items,null,2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download='bonus-files.json'; a.click();
-  setTimeout(()=>URL.revokeObjectURL(url),500);
-}
-function importJSON(e){
-  const f=e.target.files[0]; if(!f) return;
-  const r=new FileReader();
-  r.onload=()=>{
-    try{
-      const data=JSON.parse(r.result||'[]');
-      if(!Array.isArray(data)) throw new Error('bad json');
-      // merge (new first); avoid dup by id
-      const ids = new Set(items.map(x=>x.id));
-      const add = data.filter(x=>x && x.id && !ids.has(x.id));
-      items = [...add, ...items];
-      save(); render(); renderFilterChips();
-      toast('Imported');
-    }catch(err){ toast('Import failed'); }
+els.form.addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const item = {
+    id: rid(),
+    site: els.site.value.trim(),
+    dt: new Date(els.dt.value).getTime(),
+    deposit: num(els.deposit.value),
+    withdrawal: num(els.withdrawal.value),
+    foc: num(els.foc.value),
+    bonus: num(els.bonus.value),
+    forfeit: num(els.forfeit.value),
+    active: Math.max(0, parseInt(els.active.value||'0',10) || 0),
+    resit: num(els.resit.value),
+    status: els.status.value,
+    category: els.category.value
   };
-  r.readAsText(f);
-  e.target.value = '';
-}
+  if(!item.site || !item.dt){ alert('Isi Site dan Date & Time'); return; }
+  data.push(item); save(); els.dlg.close(); render();
+});
+
+/* ======= UTIL ======= */
+function load(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]')}catch{return[]} }
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(data)); }
+function num(v){ const n=parseFloat(v); return isFinite(n)? n : 0; }
+function rid(){ return Math.random().toString(36).slice(2)+Date.now().toString(36); }
+function fmtNum(n){ if(n===undefined||n===null) return '0'; return Number(n).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2}); }
+function fmtDT(ts){ const d=new Date(ts); const dd=String(d.getDate()).padStart(2,'0'); const mm=String(d.getMonth()+1).padStart(2,'0'); const yyyy=d.getFullYear(); const hh=String(d.getHours()).padStart(2,'0'); const mi=String(d.getMinutes()).padStart(2,'0'); return `${yyyy}-${mm}-${dd} ${hh}:${mi}`; }
+function toDateInput(d){ const x=new Date(d); const yyyy=x.getFullYear(); const mm=String(x.getMonth()+1).padStart(2,'0'); const dd=String(x.getDate()).padStart(2,'0'); return `${yyyy}-${mm}-${dd}`; }
+function toDatetimeLocalInput(d){ const x=new Date(d); const yyyy=x.getFullYear(); const mm=String(x.getMonth()+1).padStart(2,'0'); const dd=String(x.getDate()).padStart(2,'0'); const hh=String(x.getHours()).padStart(2,'0'); const mi=String(x.getMinutes()).padStart(2,'0'); return `${yyyy}-${mm}-${dd}T${hh}:${mi}`; }
+function toISODateStart(s){ return new Date(s+'T00:00:00').getTime(); }
+function toISODateEnd(s){ return new Date(s+'T23:59:59').getTime(); }
 </script>
 </body>
 </html>
