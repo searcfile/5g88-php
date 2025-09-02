@@ -308,7 +308,7 @@ body{
     $('#siteFilter').addEventListener('change', render);
     $('#monthFilter').addEventListener('change', ()=>{localStorage.setItem(LS_LAST_MONTH,$('#monthFilter').value); render();});
     $('#targetBtn').addEventListener('click', openTargetModal);
-    updateTargetBadge();
+    // updateTargetBadge();  <-- dihapus
   });
 
   function buildMonthOptions(){
@@ -402,14 +402,10 @@ body{
     if(!t.depositTiers.length) t.depositTiers=[{threshold:8000,bonus:20}];
     if(!t.resitTiers.length)   t.resitTiers=[{threshold:250, bonus:30}];
     if(!t.salesTiers.length)   t.salesTiers=[{threshold:30000, bonus:300}];
-    writeTarget(t); updateTargetBadge(); closeTargetModal(); render();
-  }
-  function updateTargetBadge(){
-    const t=readTarget();
-    const fmt=arr=>arr.map(x=>`≥ ${Number(x.threshold).toLocaleString()} → +${x.bonus}`).join('; ');
-    const el=$('#targetBadge');
-    el.textContent=`Dep: ${fmt(t.depositTiers)} | Resit: ${fmt(t.resitTiers)} | Sales: ${fmt(t.salesTiers)}`;
-    el.style.display='inline-flex';
+    writeTarget(t);
+    // updateTargetBadge();  <-- dihapus
+    closeTargetModal();
+    render();
   }
 
   /* ----- Render ----- */
@@ -429,7 +425,7 @@ body{
       const dt=new Date(r.datetime).toLocaleString(undefined,{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
       const bonusDep=pickTierBonus(r.deposit, targets.depositTiers);
       const bonusRes=pickTierBonus(r.resit,   targets.resitTiers);
-      const bonusSalesBase=pickTierBonus(r.sales, targets.salesTiers); // base dari tier sales (tanpa ½ dep/res)
+      const bonusSalesBase=pickTierBonus(r.sales, targets.salesTiers); // base dari tier sales
 
       const tr=document.createElement('tr');
       tr.innerHTML=`
@@ -492,7 +488,7 @@ body{
     const bottom=$('#summaryRowBottom'); bottom.innerHTML='';
     const halfDep = t.bd/2;
     const halfRes = t.br/2;
-    const salesTotal = t.bsBase + halfDep + halfRes; // sesuai instruksi
+    const salesTotal = t.bsBase + halfDep + halfRes;
     [
       {title:'Bonus Deposit ½ Σ', val: halfDep.toLocaleString()},
       {title:'Bonus Resit ½ Σ',   val: halfRes.toLocaleString()},
