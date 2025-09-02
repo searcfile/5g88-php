@@ -1,574 +1,710 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>5G88 Admin Panel — Tabs</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Panel — 5G88 Style</title>
 <style>
   :root{
-    --bg:#0b1220;
-    --bg-soft:#0f1a2b;
-    --panel:#0e1626;
-    --line:#1d2a3f;
-    --text:#e6e8ee;
-    --muted:#a9b0c0;
-    --gold:#f5c84b;
-    --gold-2:#ffe34d;
-    --green:#6adf77;
-    --red:#ff6b6b;
+    --bg:#0b0f14;           /* page */
+    --nav:#0d1b2a;          /* header/nav bar */
+    --pane:#0f1620;         /* panels */
+    --muted:#9aa4b2;        /* muted text */
+    --text:#e6edf3;         /* main text */
+    --line:#1f2a37;         /* borders */
+    --blue:#1f6feb;         /* primary button */
+    --blue-2:#2b7bff;
+    --chip:#0f2236;
+    --chip-on:#16324b;
+    --green:#22c55e;
+    --red:#ef4444;
+    --gold:#ffd166;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
-    margin:0;background:#030712;color:var(--text);
-    font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
   }
 
   /* Top header */
-  .header{
-    position:fixed; inset:0 0 auto 0; height:56px; z-index:50;
-    display:flex; align-items:center; gap:10px;
-    padding:0 12px; background:#071120; border-bottom:1px solid var(--line);
+  .topbar{
+    position:sticky; top:0; z-index:1000;
+    background:var(--nav);
+    border-bottom:1px solid var(--line);
   }
-  .site-select{
-    display:flex; align-items:center; gap:6px; margin-right:8px;
+  .topbar-inner{
+    display:flex; align-items:center; gap:12px;
+    padding:10px 14px;
   }
-  .select{
-    appearance:none; -webkit-appearance:none; -moz-appearance:none;
-    height:34px; padding:0 30px 0 12px; border-radius:8px;
-    background:var(--panel); color:var(--text);
-    border:1px solid #22314c; cursor:pointer; position:relative;
-  }
-  .select:focus{outline:none; border-color:var(--gold)}
-  .select-wrap{position:relative}
-  .select-wrap:after{
-    content:""; position:absolute; right:10px; top:50%; margin-top:-2px;
-    border:5px solid transparent; border-top-color:#cfd6e6;
-    pointer-events:none;
-  }
-
-  .nav{
-    display:flex; align-items:center; gap:6px; flex:1; overflow:hidden;
-  }
-  .nav-btn{
+  .select-site{
     display:flex; align-items:center; gap:8px;
-    padding:8px 12px; border-radius:8px; color:#cfd6e6;
-    border:1px solid transparent; background:transparent;
-    cursor:pointer; white-space:nowrap;
+    background:#0b1725; border:1px solid var(--line); color:var(--text);
+    height:36px; padding:0 10px; border-radius:8px;
   }
-  .nav-btn:hover{background:#0c1a2f; border-color:#1e2e4b}
-  .nav-btn.active{background:#123; border-color:#2b3f62; color:#fff}
-  .nav-btn svg{opacity:.9}
-
-  /* Right info chips (dummy meters) */
-  .chip{
-    height:32px; display:inline-flex; align-items:center; gap:8px;
-    padding:0 10px; border-radius:8px; background:#0c1729; color:#cfe7d5;
-    border:1px solid #20324f; white-space:nowrap;
+  .select-site select{
+    background:transparent; color:var(--text); border:none; outline:none; height:34px
   }
-  .chip.green{color:#baf3c0}
-  .chip .dot{width:9px;height:9px;border-radius:50%; background:var(--green)}
-
-  /* Tab bar under header */
-  .tabbar-wrap{
-    position:fixed; top:56px; left:0; right:0; height:44px; z-index:40;
-    background:#050b14; border-bottom:1px solid var(--line);
-  }
-  .tabbar{
-    height:44px; display:flex; align-items:center; gap:8px;
-    overflow:auto; scrollbar-width:none; padding:0 10px;
-  }
-  .tabbar::-webkit-scrollbar{display:none}
-
-  .tab{
-    display:flex; align-items:center; gap:10px;
-    height:30px; padding:0 10px; border-radius:8px;
-    background:#0e192a; color:#cfd6e6; border:1px solid #1d2a3f;
-    user-select:none; cursor:pointer; white-space:nowrap;
-  }
-  .tab.active{background:#13223a; color:#fff; border-color:#2a3d60}
-  .tab .close{
-    width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center;
-    border-radius:6px; color:#b8c0d2; font-weight:700;
-  }
-  .tab .close:hover{background:#1a2a46; color:#fff}
-  .tab.dragging{opacity:.5}
-
-  /* Content area */
-  .content{
-    position:fixed; top:100px; left:0; right:0; bottom:0; overflow:auto;
-    background:var(--bg); padding:16px;
-  }
-  .panel{
-    background:var(--panel); border:1px solid var(--line); border-radius:12px;
-    padding:14px; box-shadow:0 6px 20px rgba(0,0,0,.25);
-  }
-  .panel h2{margin:0 0 12px 0; font-size:18px; font-weight:600}
-  .muted{color:var(--muted)}
-
-  /* Transactions table */
-  .filters{
-    display:flex; flex-wrap:wrap; gap:10px; margin-bottom:12px;
-  }
-  .input, .button, .badge{
-    height:34px; padding:0 10px; border-radius:8px; border:1px solid #22314c;
-    background:#0c1729; color:#e7ecf7;
-  }
-  .input::placeholder{color:#8ea0be}
-  .button{
-    cursor:pointer; background:linear-gradient(180deg,#132644,#0c1729);
-  }
-  .button:hover{border-color:var(--gold); box-shadow:0 0 0 2px rgba(245,200,75,.15) inset}
-  .button.gold{background:#2a2008; border-color:#3a2c09}
-  .button.gold:hover{border-color:var(--gold-2)}
-  .badge{display:inline-flex; align-items:center; gap:6px}
-
-  table{width:100%; border-collapse:collapse; overflow:hidden; border-radius:10px}
-  th,td{padding:10px 12px; border-bottom:1px solid #1b2740}
-  th{background:#0f1c32; text-align:left; color:#d9e2f5; font-weight:600}
-  tr:hover td{background:#0d1830}
-  .amount.pos{color:#87f59b}
-  .amount.neg{color:#ff9b9b}
-  .tag{padding:2px 8px; border-radius:20px; border:1px solid #2a3c60; background:#101e36; font-size:12px}
-  .right{text-align:right}
-
-  /* Tiny helpers */
-  .hidden{display:none}
   .spacer{flex:1}
-
-  @media (max-width:720px){
-    .nav{display:none}
-    .chip{display:none}
+  .badge{
+    display:inline-flex; align-items:center; gap:8px; height:30px;
+    padding:0 10px; border-radius:8px; background:#0b1725; border:1px solid var(--line); font-size:12px; color:var(--muted)
   }
+  .badge .green{color:#67e8f9}
+  .userbox{
+    display:flex; align-items:center; gap:8px; height:32px; padding:0 10px;
+    border-radius:8px; background:#0b1725; border:1px solid var(--line)
+  }
+
+  /* Main nav */
+  .mainnav{
+    display:flex; gap:6px; padding:8px 10px 10px; border-top:1px solid rgba(255,255,255,0.04);
+  }
+  .navbtn{
+    display:flex; align-items:center; gap:8px;
+    height:36px; padding:0 12px; border-radius:8px;
+    background:transparent; border:1px solid transparent; color:var(--text);
+    cursor:pointer; user-select:none;
+  }
+  .navbtn.active, .navbtn:hover{ background:#0b1725; border-color:var(--line) }
+  .navbtn .dot{ width:8px; height:8px; background:#2dd4bf; border-radius:999px }
+
+  /* Under-header chip tabs (opened pages) */
+  .pagechips{
+    position:sticky; top:84px; z-index:900;
+    background:var(--bg); border-bottom:1px solid var(--line);
+    padding:8px 10px; display:flex; gap:6px; flex-wrap:wrap;
+  }
+  .chip{
+    display:flex; align-items:center; gap:8px;
+    background:var(--chip); border:1px solid var(--line);
+    padding:6px 10px; border-radius:10px; cursor:pointer; user-select:none;
+  }
+  .chip.active{ background:var(--chip-on); border-color:#264a73 }
+  .chip .x{ font-size:12px; opacity:.7; padding:2px 6px; border-radius:6px; }
+  .chip .x:hover{ background:#1b2b40; opacity:1 }
+
+  /* Filters bar */
+  .filters{
+    position:sticky; top:130px; z-index:800;
+    background:var(--bg);
+    padding:10px; border-bottom:1px solid var(--line);
+    display:grid; grid-template-columns: 1fr; gap:8px;
+  }
+  .row{ display:flex; gap:8px; flex-wrap:wrap }
+  .search{
+    flex:1; display:flex; align-items:center; gap:8px;
+    background:var(--pane); border:1px solid var(--line); height:36px; padding:0 10px; border-radius:8px;
+  }
+  .search input{ flex:1; background:transparent; border:none; outline:none; color:var(--text) }
+
+  .pills{ display:flex; gap:6px; flex-wrap:wrap }
+  .pill{
+    display:flex; align-items:center; gap:6px; height:32px; padding:0 10px;
+    background:var(--chip); border:1px solid var(--line); border-radius:999px; font-size:13px; cursor:pointer
+  }
+  .pill.active{ background:#0c2a45; border-color:#1f3f66 }
+  .pill .close{ opacity:.6 }
+  .pill .close:hover{ opacity:1 }
+
+  .select{
+    display:flex; align-items:center; gap:8px; height:36px; padding:0 10px;
+    background:var(--pane); border:1px solid var(--line); border-radius:8px;
+  }
+  .select select{ background:transparent; border:none; color:var(--text); outline:none; height:34px }
+
+  .datebox{ display:flex; align-items:center; gap:8px }
+  .date{
+    background:var(--pane); border:1px solid var(--line); color:var(--text);
+    height:36px; padding:0 10px; border-radius:8px;
+  }
+
+  .btn{
+    height:36px; padding:0 14px; border-radius:8px; border:1px solid transparent; cursor:pointer; color:#fff;
+    background:var(--blue);
+  }
+  .btn:hover{ background:var(--blue-2) }
+  .btn.ghost{ background:#152232; border-color:#243448 }
+  .btn.gray{ background:#223043 }
+  .btn.success{ background:#1d8f4d }
+  .btn.warning{ background:#a16207 }
+  .btn.outline{ background:transparent; color:var(--text); border-color:#2a3c52 }
+  .btn.small{ height:30px; padding:0 10px; font-size:12px }
+
+  /* Content */
+  .content{ padding:12px 10px 40px }
+  .card{
+    background:var(--pane); border:1px solid var(--line); border-radius:10px; overflow:hidden;
+  }
+  .table{
+    width:100%; border-collapse:collapse;
+  }
+  .table th, .table td{
+    border-bottom:1px solid var(--line); padding:12px; text-align:left; font-size:14px;
+  }
+  .table th{ background:#0f1c2a; color:#c7d2de }
+  .empty{
+    text-align:center; padding:40px 16px; color:#7b8794;
+    display:flex; flex-direction:column; align-items:center; gap:10px
+  }
+  .empty .box{
+    width:56px; height:40px; border:2px dashed #2c3b52; border-radius:10px; display:flex; align-items:center; justify-content:center; opacity:.7
+  }
+
+  /* Modal */
+  .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:2000 }
+  .modal{ width:min(920px,95vw); background:var(--pane); border:1px solid var(--line); border-radius:12px; overflow:hidden }
+  .modal header{ padding:14px 16px; background:#132030; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between }
+  .modal .body{ padding:16px }
+  .grid{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px }
+  .field{ display:flex; flex-direction:column; gap:6px }
+  .field label{ font-size:12px; color:#aab6c2 }
+  .field input, .field select, .field textarea{
+    height:38px; border-radius:8px; border:1px solid var(--line); background:#0e1926; color:var(--text); padding:0 10px; outline:none;
+  }
+  .field input[type="datetime-local"]{ padding:6px 10px; height:38px }
+  .modal footer{ padding:12px 16px; display:flex; gap:8px; justify-content:flex-end; border-top:1px solid var(--line); background:#0f1c22 }
+
+  /* Drag ghost */
+  .chip.dragging{ opacity:.6; outline:1px dashed #335a86 }
+
+  /* Small helpers */
+  .muted{ color:var(--muted) }
+  .right{ text-align:right }
+  .nowrap{ white-space:nowrap }
+  .w-100{ width:100% }
+  .hidden{ display:none !important }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<header class="header">
-  <div class="site-select">
-    <div class="select-wrap">
-      <select id="siteSelect" class="select">
-        <option value="5G88">5G88</option>
-        <option value="SPM888">SPM888</option>
-      </select>
+  <!-- ======= TOP HEADER ======= -->
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="select-site">
+        <span>Select Site</span>
+        <select id="siteSelectHeader">
+          <option value="all">All</option>
+          <option value="5g88">5G88</option>
+          <option value="spm888">SPM888</option>
+        </select>
+      </div>
+
+      <button class="navbtn active" data-page="Dashboard"><span class="dot"></span>Dashboard</button>
+      <button class="navbtn" data-page="Transactions"><span class="dot"></span>Transactions</button>
+      <button class="navbtn" data-page="Cash Transfer"><span class="dot"></span>Cash Transfer</button>
+      <button class="navbtn" data-page="Player"><span class="dot"></span>Player</button>
+      <button class="navbtn" data-page="Report"><span class="dot"></span>Report</button>
+      <button class="navbtn" data-page="Livechat"><span class="dot"></span>Livechat</button>
+
+      <div class="spacer"></div>
+
+      <div class="badge" id="klTime">Kuala_Lumpur: --:--</div>
+      <div class="badge"><span>🏦 Bank Meter</span></div>
+      <div class="badge"><span class="green">4,775,580.50</span></div>
+      <div class="badge"><span class="green">536.00</span></div>
+      <div class="userbox">support2</div>
+    </div>
+
+    <!-- opened pages chips -->
+    <div class="pagechips" id="pageChips"></div>
+  </div>
+
+  <!-- ======= FILTERS ======= -->
+  <div class="filters" id="filtersBar">
+    <div class="row">
+      <div class="search w-100">
+        <svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M10 18a8 8 0 1 1 5.293-14.293A8 8 0 0 1 10 18m11.707 2.293l-5.388-5.388a10 10 0 1 0-1.414 1.414l5.388 5.388z"/></svg>
+        <input id="searchInput" placeholder="Search" />
+      </div>
+      <div class="pills" id="typePills">
+        <div class="pill active" data-type="deposit"><span>1. Deposit</span><span class="close">✕</span></div>
+        <div class="pill active" data-type="withdrawal"><span>2. Withdrawal</span><span class="close">✕</span></div>
+        <div class="pill active" data-type="bonus"><span>3. Bonus</span><span class="close">✕</span></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="select">
+        <select id="statusSelect">
+          <option value="all">All Status</option>
+          <option selected value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
+
+      <div class="select">
+        <select id="promoSelect">
+          <option value="all" selected>Promotion</option>
+          <option value="welcome">Welcome Bonus</option>
+          <option value="rebate">Rebate</option>
+          <option value="cashback">Cashback</option>
+        </select>
+      </div>
+
+      <div class="select">
+        <select id="creditTypeSelect">
+          <option value="all" selected>Credit Type</option>
+          <option value="bank">Bank Transfer</option>
+          <option value="ewallet">E‑Wallet</option>
+          <option value="cash">Cash</option>
+        </select>
+      </div>
+
+      <div class="datebox">
+        <input type="date" id="dateFrom" class="date">
+        <span class="muted">→</span>
+        <input type="date" id="dateTo" class="date">
+      </div>
+
+      <button class="btn gray" id="sortBtn">Date Descend</button>
+      <button class="btn outline" id="detailBtn">Detail View</button>
+      <button class="btn" id="openCreate">Create</button>
     </div>
   </div>
 
-  <nav class="nav" id="topNav">
-    <button class="nav-btn" data-tab="Dashboard">
-      <!-- icon -->
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
-      Dashboard
-    </button>
-    <button class="nav-btn" data-tab="Transactions">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3V6zm0 5h12v2H3v-2zm0 5h18v2H3v-2z"/></svg>
-      Transactions
-    </button>
-    <button class="nav-btn" data-tab="Cash Transfer">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 5h14v14H5z" opacity=".25"/><path d="M7 12h10M12 7v10" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-      Cash Transfer
-    </button>
-    <button class="nav-btn" data-tab="Player">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5 0-9 2.5-9 5v1h18v-1c0-2.5-4-5-9-5Z"/></svg>
-      Player
-    </button>
-    <button class="nav-btn" data-tab="Report">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v16H4z" opacity=".2"/><path d="M8 16V8M12 16V6m4 10V10" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-      Report
-    </button>
-    <button class="nav-btn" data-tab="Livechat">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v11H7l-3 3V4z"/></svg>
-      Livechat
-    </button>
-  </nav>
-
-  <div class="spacer"></div>
-
-  <div class="chip green">
-    <span class="dot"></span> Bank Meter
+  <!-- ======= CONTENT ======= -->
+  <div class="content">
+    <div class="card">
+      <table class="table" id="txTable">
+        <thead>
+          <tr>
+            <th>Transaction</th>
+            <th class="right nowrap">Site</th>
+            <th class="right nowrap">Date</th>
+            <th class="right nowrap">Status</th>
+            <th class="right nowrap">Action</th>
+          </tr>
+        </thead>
+        <tbody id="txBody">
+          <tr id="emptyRow">
+            <td colspan="5">
+              <div class="empty">
+                <div class="box">📦</div>
+                <div>No data</div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
-</header>
 
-<!-- TAB BAR -->
-<div class="tabbar-wrap">
-  <div id="tabBar" class="tabbar"></div>
-</div>
+  <!-- ======= CREATE MODAL ======= -->
+  <div class="modal-backdrop" id="createModal">
+    <div class="modal">
+      <header>
+        <strong>Create — Save Totals</strong>
+        <button class="btn small outline" id="closeCreate">Close</button>
+      </header>
+      <div class="body">
+        <div class="grid">
+          <div class="field"><label>Site</label>
+            <select id="mSite">
+              <option value="5g88">5G88</option>
+              <option value="spm888">SPM888</option>
+            </select>
+          </div>
 
-<!-- CONTENT -->
-<main id="content" class="content">
-  <div class="panel">
-    <h2>Selamat datang 👋</h2>
-    <div class="muted">Klik item di header (contoh <b>Transactions</b>) untuk buka tab. Tab boleh di-<i>drag</i> susun ikut suka dan boleh ditutup (×). Pilih <b>Site</b> di kiri untuk tukar data.</div>
+          <div class="field"><label>Date & Time</label>
+            <input id="mDate" type="datetime-local">
+          </div>
+
+          <div class="field"><label>Total Deposit</label>
+            <input id="mDeposit" type="number" step="0.01" min="0" value="0">
+          </div>
+          <div class="field"><label>Total Withdrawal</label>
+            <input id="mWithdraw" type="number" step="0.01" min="0" value="0">
+          </div>
+          <div class="field"><label>Total Bonus</label>
+            <input id="mBonus" type="number" step="0.01" min="0" value="0">
+          </div>
+          <div class="field"><label>Total Forfeit</label>
+            <input id="mForfeit" type="number" step="0.01" min="0" value="0">
+          </div>
+          <div class="field"><label>Total Resit</label>
+            <input id="mResit" type="number" step="0.01" min="0" value="0">
+          </div>
+          <div class="field"><label>Active Member</label>
+            <input id="mActive" type="number" step="1" min="0" value="0">
+          </div>
+
+          <div class="field"><label>Total Sales
+            <span class="muted">(auto = Dep - Wd + Bonus - Forfeit + Resit)</span></label>
+            <input id="mSales" type="number" step="0.01" value="0">
+          </div>
+
+          <div class="field" style="align-items:flex-start">
+            <label>&nbsp;</label>
+            <label style="display:flex; gap:8px; align-items:center; font-size:13px">
+              <input id="overrideSales" type="checkbox"> Manual override Total Sales
+            </label>
+          </div>
+        </div>
+      </div>
+      <footer>
+        <button class="btn outline" id="resetForm">Reset</button>
+        <button class="btn success" id="saveCreate">Save</button>
+      </footer>
+    </div>
   </div>
-</main>
 
 <script>
-/* =========================
-   Demo data per SITE
-   ========================= */
-const DATA = {
-  "5G88": {
-    transactions: [
-      { id:"TX-10021", type:"Deposit",  player:"adam88", amount: 1200,  status:"Success", time:"2025-09-02 14:05" },
-      { id:"TX-10022", type:"Withdraw", player:"mimi77", amount:-500,  status:"Pending", time:"2025-09-02 14:16" },
-      { id:"TX-10023", type:"Bonus",    player:"jack",   amount: 150,   status:"Success", time:"2025-09-02 14:37" },
-      { id:"TX-10024", type:"Deposit",  player:"neo55",  amount: 300,   status:"Failed",  time:"2025-09-02 15:02" },
-    ],
-    transfers: [
-      { from:"Bank A", to:"Bank B", amount: 20000, by:"support2", time:"2025-09-02 13:40" },
-      { from:"Bank B", to:"Bank A", amount: 12000, by:"support2", time:"2025-09-02 15:05" },
-    ],
-    players: [
-      { user:"adam88", vip:"Gold", balance: 356.20, last:"2025-09-02 15:11" },
-      { user:"mimi77", vip:"Silver", balance: 82.00, last:"2025-09-02 15:06" },
-      { user:"neo55",  vip:"Bronze", balance: 0.00, last:"2025-09-02 12:50" },
-    ]
-  },
-  "SPM888": {
-    transactions: [
-      { id:"TX-20031", type:"Deposit",  player:"raya", amount: 800, status:"Success", time:"2025-09-02 12:09" },
-      { id:"TX-20032", type:"Withdraw", player:"ken", amount:-1200, status:"Pending", time:"2025-09-02 13:01" },
-      { id:"TX-20033", type:"Bonus",    player:"nina", amount: 70, status:"Success", time:"2025-09-02 13:44" },
-    ],
-    transfers: [
-      { from:"Vault", to:"Bank C", amount: 5000, by:"support1", time:"2025-09-02 11:10" },
-    ],
-    players: [
-      { user:"raya", vip:"Silver", balance: 142.00, last:"2025-09-02 12:30" },
-      { user:"ken",  vip:"Gold", balance: 9.50, last:"2025-09-02 13:09" },
-    ]
+/* =============== UTIL =============== */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const fmt = n => Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+const todayISO = () => new Date().toISOString().slice(0,10);
+function parseNum(v){ const n = parseFloat(v); return isNaN(n)?0:n }
+
+/* Clock (KL) */
+function startClock(){
+  const el = $('#klTime');
+  function tick(){
+    const now = new Date();
+    // KL = UTC+8 -> assume local = user TZ; show HH:mm & short date
+    const fmtOpt = { hour:'2-digit', minute:'2-digit' };
+    const time = new Intl.DateTimeFormat('en-GB', fmtOpt).format(now);
+    const dopt = { day:'2-digit', month:'short' };
+    const d = new Intl.DateTimeFormat('en-GB', dopt).format(now);
+    el.textContent = `Kuala_Lumpur: ${time} ${d}`;
   }
-};
-
-/* =========================
-   App State + Persistence
-   ========================= */
-const tabBar   = document.getElementById('tabBar');
-const content  = document.getElementById('content');
-const siteSel  = document.getElementById('siteSelect');
-const topNav   = document.getElementById('topNav');
-
-let tabs = []; // {id,label}
-let activeTabId = null;
-
-function saveState(){
-  localStorage.setItem('admin.tabs', JSON.stringify(tabs));
-  localStorage.setItem('admin.active', activeTabId || '');
-  localStorage.setItem('admin.site', siteSel.value);
+  tick(); setInterval(tick, 15000);
 }
-function loadState(){
-  const savedSite  = localStorage.getItem('admin.site');
-  if(savedSite) siteSel.value = savedSite;
 
-  const savedTabs  = JSON.parse(localStorage.getItem('admin.tabs')||'[]');
-  const savedActive= localStorage.getItem('admin.active') || null;
-  if(savedTabs.length){
-    tabs = savedTabs;
-    renderTabBar();
-    if(savedActive && tabs.find(t=>t.id===savedActive)){
-      activateTab(savedActive);
-    }else{
-      activateTab(tabs[0].id);
-    }
+/* =============== NAV & PAGE CHIPS =============== */
+const pageChips = $('#pageChips');
+const openPages = []; // {key,title}
+function ensureChip(title){
+  const key = title.toLowerCase().replace(/\s+/g,'-');
+  if(!openPages.find(p=>p.key===key)){
+    openPages.push({key,title});
+    renderChips();
   }
+  setActiveChip(key);
 }
-siteSel.addEventListener('change', ()=>{
-  saveState();
-  if(activeTabId) renderContent(tabs.find(t=>t.id===activeTabId).label);
-});
-
-/* =========================
-   Header clicks -> open tab
-   ========================= */
-topNav.addEventListener('click', (e)=>{
-  const btn = e.target.closest('.nav-btn');
-  if(!btn) return;
-  const label = btn.dataset.tab;
-  addTab(label);
-});
-
-/* =========================
-   Tab creation / render
-   ========================= */
-function addTab(label){
-  // if exists -> focus
-  const exist = tabs.find(t => t.label === label);
-  if(exist){ activateTab(exist.id); return; }
-
-  const id = 'tab_'+Date.now()+'_'+Math.random().toString(16).slice(2,6);
-  tabs.push({id, label});
-  renderTabBar();
-  activateTab(id);
-  saveState();
-}
-
-function renderTabBar(){
-  tabBar.innerHTML = '';
-  tabs.forEach((t,i)=>{
-    const el = document.createElement('div');
-    el.className = 'tab';
-    el.draggable = true;
-    el.dataset.id = t.id;
-    el.innerHTML = `
-      <span class="label">${t.label}</span>
-      <span class="close" title="Close">×</span>
-    `;
-    if(t.id === activeTabId) el.classList.add('active');
-
-    // click to activate
-    el.addEventListener('click', (e)=>{
-      if(e.target.classList.contains('close')) return;
-      activateTab(t.id);
+function renderChips(){
+  pageChips.innerHTML='';
+  openPages.forEach(p=>{
+    const chip = document.createElement('div');
+    chip.className='chip'; chip.draggable=true; chip.dataset.key=p.key;
+    chip.innerHTML = `<span>${p.title}</span><span class="x" title="Close">✕</span>`;
+    chip.addEventListener('click', e=>{
+      if(e.target.classList.contains('x')){
+        closeChip(p.key); e.stopPropagation(); return;
+      }
+      setActiveChip(p.key);
     });
-
-    // close
-    el.querySelector('.close').addEventListener('click', (e)=>{
-      e.stopPropagation();
-      closeTab(t.id);
+    chip.addEventListener('dragstart', e=>{
+      chip.classList.add('dragging'); e.dataTransfer.setData('text/plain', p.key);
     });
-
-    // drag events
-    el.addEventListener('dragstart', (ev)=>{
-      el.classList.add('dragging');
-      ev.dataTransfer.setData('text/plain', t.id);
-    });
-    el.addEventListener('dragend', ()=> el.classList.remove('dragging'));
-    el.addEventListener('dragover', (ev)=> ev.preventDefault());
-    el.addEventListener('drop', (ev)=>{
-      ev.preventDefault();
-      const draggedId = ev.dataTransfer.getData('text/plain');
-      if(!draggedId || draggedId===t.id) return;
-      reorderTabs(draggedId, t.id);
-    });
-
-    tabBar.appendChild(el);
+    chip.addEventListener('dragend', ()=>chip.classList.remove('dragging'));
+    pageChips.appendChild(chip);
   });
 }
-
-function activateTab(id){
-  activeTabId = id;
-  [...tabBar.children].forEach(ch=>{
-    ch.classList.toggle('active', ch.dataset.id === id);
+function closeChip(key){
+  const idx = openPages.findIndex(p=>p.key===key);
+  if(idx>=0){
+    openPages.splice(idx,1);
+    renderChips();
+    if(openPages.length) setActiveChip(openPages[Math.max(0, idx-1)].key);
+  }
+}
+function setActiveChip(key){
+  $$('.chip').forEach(c=>c.classList.toggle('active', c.dataset.key===key));
+  $$('.navbtn').forEach(b=>{
+    const match = b.dataset.page.toLowerCase().replace(/\s+/g,'-')===key;
+    b.classList.toggle('active', match);
   });
-  const label = tabs.find(t=>t.id===id)?.label || '';
-  renderContent(label);
-  saveState();
+  activePageKey = key;
+  onActivePageChanged();
+}
+pageChips.addEventListener('dragover', e=>{
+  e.preventDefault();
+  const dragging = $('.chip.dragging');
+  const after = getDragAfterElement(pageChips, e.clientX);
+  if(after==null) pageChips.appendChild(dragging);
+  else pageChips.insertBefore(dragging, after);
+});
+function getDragAfterElement(container, x){
+  const els = [...container.querySelectorAll('.chip:not(.dragging)')];
+  return els.reduce((closest, child)=>{
+    const box = child.getBoundingClientRect();
+    const offset = x - box.left - box.width/2;
+    if(offset<0 && offset>closest.offset) return {offset, element:child};
+    else return closest;
+  }, {offset: Number.NEGATIVE_INFINITY}).element;
 }
 
-function closeTab(id){
-  const idx = tabs.findIndex(t=>t.id===id);
-  if(idx<0) return;
-  const wasActive = (activeTabId===id);
-  tabs.splice(idx,1);
-  renderTabBar();
-  if(!tabs.length){
-    activeTabId = null;
-    content.innerHTML = `
-      <div class="panel"><h2>Semua tab ditutup</h2>
-      <div class="muted">Klik item di header untuk membuka tab baru.</div></div>`;
-  }else if(wasActive){
-    const newIdx = Math.max(0, idx-1);
-    activateTab(tabs[newIdx].id);
+/* Nav clicks -> open chip */
+$$('.navbtn').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    ensureChip(b.dataset.page);
+  });
+});
+
+/* Default open "Transactions" like screenshot */
+let activePageKey = '';
+ensureChip('Transactions');
+
+/* =============== FILTERS & TABLE =============== */
+const filtersBar = $('#filtersBar');
+const dateFrom = $('#dateFrom');
+const dateTo = $('#dateTo');
+dateFrom.value = todayISO();
+dateTo.value = todayISO();
+
+let sortDesc = true;
+let detailMode = false;
+
+$('#sortBtn').addEventListener('click', ()=>{
+  sortDesc = !sortDesc;
+  $('#sortBtn').textContent = sortDesc? 'Date Descend' : 'Date Ascend';
+  renderTable();
+});
+$('#detailBtn').addEventListener('click', ()=>{
+  detailMode = !detailMode;
+  $('#detailBtn').classList.toggle('gray', !detailMode);
+  renderTable();
+});
+$('#searchInput').addEventListener('input', renderTable);
+$('#statusSelect').addEventListener('change', renderTable);
+$('#promoSelect').addEventListener('change', renderTable);
+$('#creditTypeSelect').addEventListener('change', renderTable);
+dateFrom.addEventListener('change', renderTable);
+dateTo.addEventListener('change', renderTable);
+$('#siteSelectHeader').addEventListener('change', renderTable);
+
+/* Pills on/off */
+$('#typePills').addEventListener('click', (e)=>{
+  const pill = e.target.closest('.pill');
+  if(!pill) return;
+  if(e.target.classList.contains('close')){
+    pill.classList.toggle('active'); // hide/show
+    renderTable();
   }
-  saveState();
+});
+
+/* When active page changes, show/hide filters (Transactions need filters) */
+function onActivePageChanged(){
+  const isTx = activePageKey==='transactions';
+  filtersBar.style.display = isTx ? 'block' : 'none';
+  renderTable();
 }
 
-function reorderTabs(dragId, dropOnId){
-  const from = tabs.findIndex(t=>t.id===dragId);
-  const to   = tabs.findIndex(t=>t.id===dropOnId);
-  if(from<0 || to<0) return;
-  const [moved] = tabs.splice(from,1);
-  tabs.splice(to,0,moved);
-  renderTabBar();
-  saveState();
+/* =============== DATA STORAGE =============== */
+const LS_KEY = 'panel.records.v1';
+function loadRecords(){
+  try{ return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }
+  catch{ return []; }
+}
+function saveRecords(list){
+  localStorage.setItem(LS_KEY, JSON.stringify(list));
+}
+function addRecord(rec){
+  const list = loadRecords();
+  list.push(rec); saveRecords(list); renderTable();
 }
 
-/* =========================
-   Content renderers
-   ========================= */
-function renderContent(label){
-  switch(label){
-    case 'Dashboard': return renderDashboard();
-    case 'Transactions': return renderTransactions();
-    case 'Cash Transfer': return renderTransfers();
-    case 'Player': return renderPlayers();
-    case 'Report': return renderReports();
-    case 'Livechat': return renderLivechat();
-    default:
-      content.innerHTML = `<div class="panel"><h2>${label}</h2><div class="muted">Content not implemented yet.</div></div>`;
-  }
+/* =============== TABLE RENDER =============== */
+function withinDate(d, a, b){
+  if(!a || !b) return true;
+  const x = new Date(d).getTime();
+  const s = new Date(a).setHours(0,0,0,0);
+  const e = new Date(b).setHours(23,59,59,999);
+  return x>=s && x<=e;
 }
+function renderTable(){
+  // Only show table for Transactions tab
+  const tbody = $('#txBody');
+  const emptyRow = $('#emptyRow');
 
-function renderDashboard(){
-  content.innerHTML = `
-    <div class="panel">
-      <h2>Dashboard — <span class="muted">${siteSel.value}</span></h2>
-      <div class="muted">Ringkasan metrik akan diletakkan di sini (grafik, KPI, dll).</div>
-    </div>`;
-}
-
-function renderTransactions(){
-  const site = siteSel.value;
-  const rows = (DATA[site]?.transactions||[]).map(tx => `
-    <tr>
-      <td><span class="tag">${tx.type}</span></td>
-      <td>${tx.id}</td>
-      <td>${tx.player}</td>
-      <td class="right amount ${tx.amount>=0?'pos':'neg'}">${formatMoney(tx.amount)}</td>
-      <td>${badgeStatus(tx.status)}</td>
-      <td>${tx.time}</td>
-    </tr>
-  `).join('');
-
-  content.innerHTML = `
-    <div class="panel">
-      <h2>Transactions — <span class="muted">${site}</span></h2>
-
-      <div class="filters">
-        <input id="txSearch" class="input" placeholder="Search player / id / type..." />
-        <select id="txType" class="input">
-          <option value="">All Types</option>
-          <option>Deposit</option>
-          <option>Withdraw</option>
-          <option>Bonus</option>
-        </select>
-        <button class="button">Today</button>
-        <button class="button">This Week</button>
-        <button class="button gold" id="refreshTx">Refresh</button>
-        <span class="spacer"></span>
-        <span class="badge">Site: ${site}</span>
-      </div>
-
-      <div class="table-wrap">
-        <table id="txTable">
-          <thead>
-            <tr>
-              <th>Type</th><th>Txn ID</th><th>Player</th>
-              <th class="right">Amount</th><th>Status</th><th>Time</th>
-            </tr>
-          </thead>
-          <tbody>${rows || `<tr><td colspan="6" class="muted">No data</td></tr>`}</tbody>
-        </table>
-      </div>
-    </div>
-  `;
-
-  // simple filters
-  const search = document.getElementById('txSearch');
-  const typeSel= document.getElementById('txType');
-  document.getElementById('refreshTx').addEventListener('click', ()=> renderTransactions());
-
-  const applyFilter = ()=>{
-    const term = (search.value||'').toLowerCase();
-    const type = typeSel.value;
-    const all  = (DATA[site]?.transactions||[]);
-    const filtered = all.filter(tx=>{
-      const hitTerm = !term || [tx.id, tx.player, tx.type].join(' ').toLowerCase().includes(term);
-      const hitType = !type || tx.type===type;
-      return hitTerm && hitType;
-    });
-    const body = document.querySelector('#txTable tbody');
-    body.innerHTML = filtered.map(tx => `
+  if(activePageKey!=='transactions'){
+    // Show placeholder matching screenshot style
+    tbody.innerHTML = `
       <tr>
-        <td><span class="tag">${tx.type}</span></td>
-        <td>${tx.id}</td>
-        <td>${tx.player}</td>
-        <td class="right amount ${tx.amount>=0?'pos':'neg'}">${formatMoney(tx.amount)}</td>
-        <td>${badgeStatus(tx.status)}</td>
-        <td>${tx.time}</td>
-      </tr>
-    `).join('') || `<tr><td colspan="6" class="muted">No data</td></tr>`;
+        <td colspan="5">
+          <div class="empty">
+            <div class="box">📄</div>
+            <div>Select a tab above. Content for "<b>${activePageKey.replace('-',' ')}</b>" will appear here.</div>
+          </div>
+        </td>
+      </tr>`;
+    return;
+  }
+
+  let rows = loadRecords();
+
+  /* FILTERS */
+  const siteFilter = $('#siteSelectHeader').value; // all / 5g88 / spm888
+  if(siteFilter!=='all') rows = rows.filter(r=>r.site===siteFilter);
+
+  const status = $('#statusSelect').value;
+  if(status!=='all') rows = rows.filter(r=>r.status===status);
+
+  const q = $('#searchInput').value.trim().toLowerCase();
+  if(q){
+    rows = rows.filter(r=>{
+      return (r.note||'').toLowerCase().includes(q) ||
+             (r.site||'').toLowerCase().includes(q);
+    });
+  }
+
+  // Type pills (simply treat as category presence)
+  const typesOn = new Set([...$('#typePills').querySelectorAll('.pill.active')].map(p=>p.dataset.type));
+  if(typesOn.size){
+    rows = rows.filter(r=> typesOn.has(r.category));
+  }
+
+  // Promotion/Credit Type kept for demo (no-op unless set in record)
+  const promo = $('#promoSelect').value;
+  if(promo!=='all') rows = rows.filter(r=>r.promo===promo);
+  const creditType = $('#creditTypeSelect').value;
+  if(creditType!=='all') rows = rows.filter(r=>r.creditType===creditType);
+
+  // Date range
+  const f = dateFrom.value, t = dateTo.value;
+  rows = rows.filter(r=> withinDate(r.date, f, t));
+
+  // Sort
+  rows.sort((a,b)=> sortDesc ? (new Date(b.date)-new Date(a.date)) : (new Date(a.date)-new Date(b.date)));
+
+  // Render
+  if(!rows.length){
+    tbody.innerHTML = `
+      <tr id="emptyRow"><td colspan="5">
+        <div class="empty"><div class="box">📦</div><div>No data</div></div>
+      </td></tr>`;
+    return;
+  }
+
+  const showDetail = detailMode;
+  let html='';
+  for(const r of rows){
+    html += `
+      <tr>
+        <td>
+          <div><b>${r.title}</b></div>
+          ${showDetail ? `
+            <div class="muted" style="margin-top:6px; font-size:12px">
+              Deposit: <b>${fmt(r.deposit)}</b> &nbsp;•&nbsp;
+              Withdrawal: <b>${fmt(r.withdraw)}</b> &nbsp;•&nbsp;
+              Bonus: <b>${fmt(r.bonus)}</b> &nbsp;•&nbsp;
+              Forfeit: <b>${fmt(r.forfeit)}</b> &nbsp;•&nbsp;
+              Resit: <b>${fmt(r.resit)}</b> &nbsp;•&nbsp;
+              Active: <b>${r.active}</b> &nbsp;•&nbsp;
+              Sales: <b>${fmt(r.sales)}</b>
+            </div>` : ''}
+        </td>
+        <td class="right nowrap">${r.site.toUpperCase()}</td>
+        <td class="right nowrap">${new Date(r.date).toLocaleString()}</td>
+        <td class="right nowrap">${r.status[0].toUpperCase()+r.status.slice(1)}</td>
+        <td class="right nowrap">
+          <button class="btn small ghost" data-view="${r.id}">View</button>
+          <button class="btn small outline" data-del="${r.id}">Delete</button>
+        </td>
+      </tr>`;
+  }
+  tbody.innerHTML = html;
+
+  // actions
+  tbody.querySelectorAll('button[data-del]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const id = b.dataset.del;
+      const list = loadRecords().filter(x=>x.id!==id);
+      saveRecords(list); renderTable();
+    });
+  });
+  tbody.querySelectorAll('button[data-view]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const rec = loadRecords().find(x=>x.id===b.dataset.view);
+      if(!rec) return;
+      alert(
+`Site: ${rec.site.toUpperCase()}
+Date: ${new Date(rec.date).toLocaleString()}
+Status: ${rec.status}
+
+Deposit: ${fmt(rec.deposit)}
+Withdrawal: ${fmt(rec.withdraw)}
+Bonus: ${fmt(rec.bonus)}
+Forfeit: ${fmt(rec.forfeit)}
+Resit: ${fmt(rec.resit)}
+Active: ${rec.active}
+Sales: ${fmt(rec.sales)}`
+      );
+    });
+  });
+}
+
+/* =============== MODAL CREATE =============== */
+const modal = $('#createModal');
+$('#openCreate').addEventListener('click', ()=>{
+  // default site = current header filter if not 'all'
+  const headerSite = $('#siteSelectHeader').value;
+  if(headerSite!=='all') $('#mSite').value = headerSite;
+  if(!$('#mDate').value){
+    const dt = new Date();
+    dt.setSeconds(0,0);
+    $('#mDate').value = new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  }
+  modal.style.display='flex';
+});
+$('#closeCreate').addEventListener('click', ()=> modal.style.display='none');
+modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.style.display='none'; });
+
+const inputs = ['#mDeposit','#mWithdraw','#mBonus','#mForfeit','#mResit'].map(s=>$(s));
+function recalcSales(){
+  if($('#overrideSales').checked) return;
+  const dep = parseNum($('#mDeposit').value);
+  const wd  = parseNum($('#mWithdraw').value);
+  const bon = parseNum($('#mBonus').value);
+  const ff  = parseNum($('#mForfeit').value);
+  const rs  = parseNum($('#mResit').value);
+  const sales = dep - wd + bon - ff + rs;
+  $('#mSales').value = sales.toFixed(2);
+}
+inputs.forEach(i=> i.addEventListener('input', recalcSales));
+$('#overrideSales').addEventListener('change', e=>{
+  $('#mSales').readOnly = !e.target.checked;
+  if(!e.target.checked) recalcSales();
+});
+$('#resetForm').addEventListener('click', ()=>{
+  ['#mDeposit','#mWithdraw','#mBonus','#mForfeit','#mResit','#mActive','#mSales'].forEach(s=>$(s).value='0');
+  $('#overrideSales').checked=false; $('#mSales').readOnly=true; recalcSales();
+});
+
+$('#saveCreate').addEventListener('click', ()=>{
+  const site = $('#mSite').value;
+  const date = $('#mDate').value ? new Date($('#mDate').value) : new Date();
+  const deposit = parseNum($('#mDeposit').value);
+  const withdraw = parseNum($('#mWithdraw').value);
+  const bonus = parseNum($('#mBonus').value);
+  const forfeit = parseNum($('#mForfeit').value);
+  const resit = parseNum($('#mResit').value);
+  const active = Math.max(0, parseInt($('#mActive').value||'0',10));
+  const sales = parseNum($('#mSales').value);
+
+  const rec = {
+    id: crypto.randomUUID(),
+    site, date: date.toISOString(),
+    status:'pending',
+    category:'bonus', // for demo mapping with pill
+    title:`Totals — ${site.toUpperCase()} (Sales ${fmt(sales)})`,
+    note:'',
+    promo:'all', creditType:'all',
+    deposit, withdraw, bonus, forfeit, resit, active, sales
   };
-  search.addEventListener('input', applyFilter);
-  typeSel.addEventListener('change', applyFilter);
-}
+  addRecord(rec);
+  modal.style.display='none';
+});
 
-function renderTransfers(){
-  const site = siteSel.value;
-  const rows = (DATA[site]?.transfers||[]).map(r=>`
-    <tr>
-      <td>${r.from}</td><td>→</td><td>${r.to}</td>
-      <td class="right amount pos">${formatMoney(r.amount)}</td>
-      <td>${r.by}</td><td>${r.time}</td>
-    </tr>
-  `).join('');
-
-  content.innerHTML = `
-    <div class="panel">
-      <h2>Cash Transfer — <span class="muted">${site}</span></h2>
-      <table>
-        <thead><tr><th>From</th><th></th><th>To</th><th class="right">Amount</th><th>By</th><th>Time</th></tr></thead>
-        <tbody>${rows || `<tr><td colspan="6" class="muted">No data</td></tr>`}</tbody>
-      </table>
-    </div>
-  `;
-}
-
-function renderPlayers(){
-  const site = siteSel.value;
-  const rows = (DATA[site]?.players||[]).map(p=>`
-    <tr>
-      <td>${p.user}</td>
-      <td><span class="tag">${p.vip}</span></td>
-      <td class="right">${formatMoney(p.balance)}</td>
-      <td>${p.last}</td>
-    </tr>
-  `).join('');
-  content.innerHTML = `
-    <div class="panel">
-      <h2>Player — <span class="muted">${site}</span></h2>
-      <table>
-        <thead><tr><th>User</th><th>VIP</th><th class="right">Balance</th><th>Last Active</th></tr></thead>
-        <tbody>${rows || `<tr><td colspan="4" class="muted">No data</td></tr>`}</tbody>
-      </table>
-    </div>
-  `;
-}
-
-function renderReports(){
-  content.innerHTML = `
-    <div class="panel">
-      <h2>Report</h2>
-      <div class="muted">Tempat untuk report & grafik. (Boleh tambah kemudian)</div>
-    </div>
-  `;
-}
-
-function renderLivechat(){
-  content.innerHTML = `
-    <div class="panel">
-      <h2>Livechat</h2>
-      <div class="muted">Embed / iframe livechat kamu boleh dimasukkan di sini.</div>
-    </div>
-  `;
-}
-
-/* =========================
-   Helpers
-   ========================= */
-function formatMoney(v){
-  const sign = v<0 ? '-' : '';
-  const n = Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
-  return sign + n;
-}
-function badgeStatus(s){
-  const color = s==='Success' ? 'style="color:#8bf59d"' :
-                s==='Pending' ? 'style="color:#ffd073"' :
-                'style="color:#ff9b9b"';
-  return `<span ${color}>${s}</span>`;
-}
-
-/* =========================
-   Boot
-   ========================= */
-loadState();
-
-// Convenience: open default tabs first time
-if(!tabs.length){
-  ['Dashboard','Transactions','Cash Transfer','Player','Livechat'].forEach(addTab);
-}
-
+/* =============== INIT =============== */
+startClock();
+renderChips(); // show initial
+renderTable();
 </script>
 </body>
 </html>
