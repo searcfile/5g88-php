@@ -492,44 +492,39 @@ body{
   }
 
   function renderSummaryRows(t, count, site, month){
-    // Set mini-cards di toolbar
-    $('#miniMonth').textContent = prettyMonth(month);
-    $('#miniSite').textContent  = (site === 'ALL' ? 'All Sites' : site);
+  // Set mini-cards di toolbar
+  $('#miniMonth').textContent = prettyMonth(month);
+  $('#miniSite').textContent  = (site === 'ALL' ? 'All Sites' : site);
 
-    // Row 1 (tanpa Month & Site)
-    const top=$('#summaryRowTop'); top.innerHTML='';
-    [
-      {title:'Total Deposit',  val: fmtNum(t.d), cls:'green'},
-      {title:'Total Withdrawal', val: fmtNum(t.w), cls:'red'},
-      {title:'Total Bonus',    val: fmtNum(t.b), cls:'cyan'},
-      {title:'Total Sales',    val: fmtNum(t.s), cls: t.s<0?'red':'green'},
-      {title:'Total Forfeit',  val: fmtNum(t.f)},
-      {title:'Total Resit In', val: fmtNum(t.r)},
-      {title:'Total Member',   val: fmtInt(t.m)},
-      {title:'Records',        val: count.toLocaleString()},
-    ].forEach(c=>{
-      const d=document.createElement('div');
-      d.className='card';
-      d.innerHTML=`<h4>${c.title}</h4><div class="val ${c.cls||''}">${c.val}</div>`;
-      top.appendChild(d);
-    });
+  // Row 1 (tanpa Month & Site)
+  const top = $('#summaryRowTop'); 
+  top.innerHTML = '';
+  [
+    {title:'Total Deposit',    val: fmtNum(t.d), cls:'green'},
+    {title:'Total Withdrawal', val: fmtNum(t.w), cls:'red'},
+    {title:'Total Bonus',      val: fmtNum(t.b), cls:'cyan'},
+    {title:'Total Sales',      val: fmtNum(t.s), cls: t.s<0?'red':'green'},
+    {title:'Total Forfeit',    val: fmtNum(t.f)},
+    {title:'Total Resit In',   val: fmtNum(t.r)},
+    {title:'Total Member',     val: fmtInt(t.m)},
+    {title:'Records',          val: count.toLocaleString()},
+  ].forEach(c=>{
+    const d=document.createElement('div');
+    d.className='card';
+    d.innerHTML=`<h4>${c.title}</h4><div class="val ${c.cls||''}">${c.val}</div>`;
+    top.appendChild(d);
+  });
 
-    // Row 2 (bonus)
-    const bottom=$('#summaryRowBottom'); bottom.innerHTML='';
-    const halfDep = t.bd/2;
-    const halfRes = t.br/2;
-    const salesTotal = t.bsBase + halfDep + halfRes;
-    [
-      {title:'Bonus Deposit ½ Σ', val: halfDep.toLocaleString()},
-      {title:'Bonus Resit ½ Σ',   val: halfRes.toLocaleString()},
-      {title:'Bonus Sales Σ',     val: salesTotal.toLocaleString()},
-    ].forEach(c=>{
-      const d=document.createElement('div');
-      d.className='card';
-      d.innerHTML=`<h4>${c.title}</h4><div class="val">${c.val}</div>`;
-      bottom.appendChild(d);
-    });
-  }
+  // Row 2 — hanya total Bonus Sales (tanpa bonus deposit/resit)
+  const bottom = $('#summaryRowBottom'); 
+  bottom.innerHTML = '';
+
+  const salesOnly = t.bsBase; // total dari tier sales saja
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `<h4>Bonus Sales Σ</h4><div class="val">${salesOnly.toLocaleString()}</div>`;
+  bottom.appendChild(card);
+}
 
   function delRecord(id){
     if(!confirm('Delete this record?')) return;
