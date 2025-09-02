@@ -98,27 +98,49 @@ body{
 }
 
 /* Table */
-.table{background:#101010; border:1px solid #222; border-radius:14px; overflow:hidden}
+.table{
+  background:#101010; border:1px solid #222; border-radius:14px;
+  overflow:auto;                 /* scroll X bila sempit, bukan pecah baris */
+}
 .table thead{background:linear-gradient(180deg,#161616,#131313)}
-.table th,.table td{padding:10px; border-bottom:1px dashed #222; text-align:right; white-space:nowrap}
-.table th:first-child,.table td:first-child{text-align:left}
-.table th:nth-child(2),.table td:nth-child(2){text-align:center}
+.table table{table-layout:fixed; width:100%; border-collapse:collapse;}
+
+.table th,.table td{
+  padding:10px;
+  border-bottom:1px dashed #222;
+  text-align:right;
+  white-space:nowrap;            /* jangan bungkus baris */
+  overflow:hidden;               /* potong jika kepanjangan */
+  text-overflow:ellipsis;        /* tampilkan ... */
+  vertical-align:middle;         /* rata tengah vertikal */
+  min-width:0;                   /* penting untuk fixed layout */
+}
+
+/* Alignment khusus kolom 1 & 2 */
+.table th:first-child,.table td:first-child{ text-align:left; }
+.table th:nth-child(2),.table td:nth-child(2){ text-align:center; }
+
 .table tfoot td{background:#0f0f0f; font-weight:800}
 
-/* Table layout fixed + batas kolom */
-.table table{table-layout:fixed; width:100%;}
-.table th, .table td{max-width:140px;}
-.table th:first-child, .table td:first-child{max-width:180px;} /* Date/Time */
-.table th:last-child,  .table td:last-child {max-width:180px;} /* Actions */
+/* Batas lebar kolom (boleh disesuaikan) */
+.table th, .table td{ max-width:140px; }
+.table th:first-child, .table td:first-child{ max-width:180px; } /* Date/Time */
+.table th:last-child,  .table td:last-child { max-width:180px; } /* Actions */
 
-.pill{padding:2px 8px; border-radius:999px; border:1px solid #2d2d2d; background:#121212; font-weight:700}
-.pill.site-5g88{color:#111; background:var(--gold); border-color:#8a6b1a}
-.pill.site-spm888{color:#eee; background:#273142; border-color:#3a4b66}
-.num.red{color:var(--red)} .num.green{color:var(--green)} .num.cyan{color:var(--cyan)}
-.actions{display:flex; gap:8px; justify-content:flex-end}
-.iconbtn{height:28px; padding:0 10px; border-radius:8px; border:1px solid #2a2a2a; background:#151515; color:#ddd; cursor:pointer; font-weight:600}
-.iconbtn:hover{border-color:#3a3a3a} .iconbtn.del{border-color:#3a2222; background:#191111; color:#ffb4b4}
-.empty{padding:24px; text-align:center; color:#9f9f9f; border-top:1px dashed #222; background:repeating-linear-gradient(45deg,#0e0e0e 0 8px,#0c0c0c 8px 16px)}
+/* Badge & angka tidak memaksa baris tinggi/pecah */
+.pill{ padding:2px 8px; border-radius:999px; border:1px solid #2d2d2d; background:#121212; font-weight:700; white-space:nowrap; }
+.pill.site-5g88{ color:#111; background:var(--gold); border-color:#8a6b1a }
+.pill.site-spm888{ color:#eee; background:#273142; border-color:#3a4b66 }
+
+.num{ display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.num.red{ color:var(--red) } .num.green{ color:var(--green) } .num.cyan{ color:var(--cyan) }
+
+/* Tombol aksi tetap di satu baris */
+.actions{ display:flex; gap:8px; justify-content:flex-end; white-space:nowrap; flex-wrap:nowrap; }
+.iconbtn{ height:28px; padding:0 10px; border-radius:8px; border:1px solid #2a2a2a; background:#151515; color:#ddd; cursor:pointer; font-weight:600 }
+.iconbtn:hover{ border-color:#3a3a3a } .iconbtn.del{ border-color:#3a2222; background:#191111; color:#ffb4b4 }
+
+.empty{ padding:24px; text-align:center; color:#9f9f9f; border-top:1px dashed #222; background:repeating-linear-gradient(45deg,#0e0e0e 0 8px,#0c0c0c 8px 16px) }
 
 /* Modal */
 .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; backdrop-filter:blur(3px)}
@@ -201,38 +223,36 @@ body{
     <!-- Table -->
     <div class="table">
       <table id="dataTable" style="width:100%; border-collapse:collapse">
-        <thead>
-          <tr>
-            <th style="width:150px">Date/Time</th>
-            <th style="width:92px">Site</th>
-            <th>Deposit</th>
-            <th>Withdrawal</th>
-            <th>Bonus</th>
-            <th>Forfeit</th>
-            <th>Member</th>
-            <th>Resit In</th>
-            <th>Sales</th>
-            <th>Bonus Deposit</th>
-            <th>Bonus Resit</th>
-            <th style="width:180px; text-align:right">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-        <tfoot>
-          <tr>
-            <td colspan="2">TOTAL (Filtered)</td>
-            <td id="ft_deposit" style="text-align:right">0</td>
-            <td id="ft_withdrawal" style="text-align:right">0</td>
-            <td id="ft_resit" style="text-align:right">0</td>
-            <td id="ft_bonus" style="text-align:right">0</td>
-            <td id="ft_forfeit" style="text-align:right">0</td>
-            <td id="ft_member" style="text-align:right">0</td>
-            <td id="ft_sales" style="text-align:right">0</td>
-            <td id="ft_bonDep" style="text-align:right">0</td>
-            <td id="ft_bonRes" style="text-align:right">0</td>
-            <td></td>
-          </tr>
-        </tfoot>
+  <colgroup>
+    <col style="width:150px"><!-- Date/Time -->
+    <col style="width:92px"><!-- Site -->
+    <col style="width:120px"><!-- Deposit -->
+    <col style="width:120px"><!-- Withdrawal -->
+    <col style="width:120px"><!-- Bonus -->
+    <col style="width:110px"><!-- Forfeit -->
+    <col style="width:110px"><!-- Member -->
+    <col style="width:120px"><!-- Resit In -->
+    <col style="width:120px"><!-- Sales -->
+    <col style="width:120px"><!-- Bonus Deposit -->
+    <col style="width:120px"><!-- Bonus Resit -->
+    <col style="width:180px"><!-- Actions -->
+  </colgroup>
+  <thead><tbody id="tbody"></tbody>
+<tfoot>
+  <tr>
+    <td colspan="2">TOTAL (Filtered)</td>
+    <td id="ft_deposit"    style="text-align:right">0</td> <!-- Deposit -->
+    <td id="ft_withdrawal" style="text-align:right">0</td> <!-- Withdrawal -->
+    <td id="ft_bonus"      style="text-align:right">0</td> <!-- Bonus -->
+    <td id="ft_forfeit"    style="text-align:right">0</td> <!-- Forfeit -->
+    <td id="ft_member"     style="text-align:right">0</td> <!-- Member -->
+    <td id="ft_resit"      style="text-align:right">0</td> <!-- Resit In -->
+    <td id="ft_sales"      style="text-align:right">0</td> <!-- Sales -->
+    <td id="ft_bonDep"     style="text-align:right">0</td> <!-- Bonus Deposit -->
+    <td id="ft_bonRes"     style="text-align:right">0</td> <!-- Bonus Resit -->
+    <td></td>                                                     <!-- Actions -->
+  </tr>
+</tfoot>
       </table>
       <div id="emptyState" class="empty" style="display:none">Belum ada data. Klik <b>Create</b> untuk tambah data.</div>
     </div>
