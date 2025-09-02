@@ -1,577 +1,574 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Control Panel</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>5G88 Admin Panel — Tabs</title>
 <style>
   :root{
-    --nav:#0b2130; --nav2:#0a1b26; --panel:#0c141a; --panel2:#0b1217;
-    --line:#173445; --muted:#a9b4bd; --text:#eaf1f5;
-    --gold:#ffd24d; --gold2:#ffea9a;
-    --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444;
+    --bg:#0b1220;
+    --bg-soft:#0f1a2b;
+    --panel:#0e1626;
+    --line:#1d2a3f;
+    --text:#e6e8ee;
+    --muted:#a9b0c0;
+    --gold:#f5c84b;
+    --gold-2:#ffe34d;
+    --green:#6adf77;
+    --red:#ff6b6b;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:#0a1216;color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
-  a{color:inherit;text-decoration:none}
+  html,body{height:100%}
+  body{
+    margin:0;background:#030712;color:var(--text);
+    font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  }
 
-  /* ===== Top Nav ===== */
-  .nav{position:sticky;top:0;z-index:40;background:linear-gradient(180deg,var(--nav),var(--nav2));border-bottom:1px solid #0e2a3a}
-  .nav-inner{width:100%;max-width:100%;padding:10px 18px;display:flex;align-items:center;gap:12px}
-  .brand{display:flex;align-items:center;gap:10px}
-  .logo{width:30px;height:18px;border-radius:999px;background:linear-gradient(90deg,var(--gold2),var(--gold));box-shadow:0 0 16px 3px rgba(255,210,77,.35)}
-  .brand b{letter-spacing:.3px}
+  /* Top header */
+  .header{
+    position:fixed; inset:0 0 auto 0; height:56px; z-index:50;
+    display:flex; align-items:center; gap:10px;
+    padding:0 12px; background:#071120; border-bottom:1px solid var(--line);
+  }
+  .site-select{
+    display:flex; align-items:center; gap:6px; margin-right:8px;
+  }
+  .select{
+    appearance:none; -webkit-appearance:none; -moz-appearance:none;
+    height:34px; padding:0 30px 0 12px; border-radius:8px;
+    background:var(--panel); color:var(--text);
+    border:1px solid #22314c; cursor:pointer; position:relative;
+  }
+  .select:focus{outline:none; border-color:var(--gold)}
+  .select-wrap{position:relative}
+  .select-wrap:after{
+    content:""; position:absolute; right:10px; top:50%; margin-top:-2px;
+    border:5px solid transparent; border-top-color:#cfd6e6;
+    pointer-events:none;
+  }
 
-  .site-select{appearance:none;background:#0e2330;border:1px solid #173242;color:#d9e7ef;border-radius:8px;padding:8px 12px;font-weight:600;min-width:160px}
-  .site-select:focus{outline:none;box-shadow:0 0 0 3px rgba(255,210,77,.15);border-color:#1e5166}
+  .nav{
+    display:flex; align-items:center; gap:6px; flex:1; overflow:hidden;
+  }
+  .nav-btn{
+    display:flex; align-items:center; gap:8px;
+    padding:8px 12px; border-radius:8px; color:#cfd6e6;
+    border:1px solid transparent; background:transparent;
+    cursor:pointer; white-space:nowrap;
+  }
+  .nav-btn:hover{background:#0c1a2f; border-color:#1e2e4b}
+  .nav-btn.active{background:#123; border-color:#2b3f62; color:#fff}
+  .nav-btn svg{opacity:.9}
 
-  .tabs{display:flex;gap:6px;margin-left:12px}
-  .tab{padding:8px 12px;border-radius:8px;border:1px solid #1a3a4b;background:transparent;color:#b9c9d4;cursor:pointer;font-weight:700}
-  .tab.active{background:#133243;color:#fff}
-  .right{margin-left:auto;display:flex;gap:10px;align-items:center}
-  .pill{padding:6px 10px;border-radius:999px;background:#0e2430;border:1px solid #143243;color:#9cd2ef;font-weight:700}
-  .menu{font-size:18px;opacity:.8;cursor:pointer}
+  /* Right info chips (dummy meters) */
+  .chip{
+    height:32px; display:inline-flex; align-items:center; gap:8px;
+    padding:0 10px; border-radius:8px; background:#0c1729; color:#cfe7d5;
+    border:1px solid #20324f; white-space:nowrap;
+  }
+  .chip.green{color:#baf3c0}
+  .chip .dot{width:9px;height:9px;border-radius:50%; background:var(--green)}
 
-  /* ===== Opened Tabs (chips) ===== */
-  .chipbar{background:#0a141a;border-bottom:1px solid var(--line)}
-  .chipbar-inner{padding:8px 18px;display:flex;gap:8px;flex-wrap:wrap}
-  .chip{display:flex;align-items:center;gap:8px;background:#10212a;border:1px solid #1c3a4a;color:#cfe6f1;padding:6px 10px;border-radius:9px;cursor:move}
-  .chip.active{background:#153442}
-  .chip .close{background:#1c2f39;border:1px solid #2b4b5d;color:#c8d7df;border-radius:6px;padding:0 6px;height:22px;cursor:pointer}
-  .chip .close:hover{background:#273f4c}
+  /* Tab bar under header */
+  .tabbar-wrap{
+    position:fixed; top:56px; left:0; right:0; height:44px; z-index:40;
+    background:#050b14; border-bottom:1px solid var(--line);
+  }
+  .tabbar{
+    height:44px; display:flex; align-items:center; gap:8px;
+    overflow:auto; scrollbar-width:none; padding:0 10px;
+  }
+  .tabbar::-webkit-scrollbar{display:none}
 
-  /* ===== Filter bar ===== */
-  .bar{background:#0b161c;border-bottom:1px solid var(--line)}
-  .bar-inner{padding:12px 18px;display:grid;grid-template-columns: 1fr 280px 200px 200px 1fr auto auto auto;gap:10px;align-items:center}
-  .search{display:flex;align-items:center;gap:8px;background:#0f1f27;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
-  .search input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:14px}
-  .chips{display:flex;gap:6px}
-  .chipf{padding:7px 10px;border:1px solid var(--line);background:#0f1f27;border-radius:999px;cursor:pointer;color:#d4dde4;font-weight:600}
-  .chipf.active{background:#14333f;border-color:#1f4b5c}
-  .select,.input,.btn{appearance:none;background:#0f1f27;border:1px solid var(--line);color:var(--text);border-radius:8px;padding:8px 10px;font-size:14px}
-  .btn{cursor:pointer;font-weight:800}
-  .btn:hover{border-color:var(--gold)}
-  .btn.primary{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#111;border-color:#b98e00}
-  .btn.blue{background:#1857d6;border-color:#1a4fb6}
+  .tab{
+    display:flex; align-items:center; gap:10px;
+    height:30px; padding:0 10px; border-radius:8px;
+    background:#0e192a; color:#cfd6e6; border:1px solid #1d2a3f;
+    user-select:none; cursor:pointer; white-space:nowrap;
+  }
+  .tab.active{background:#13223a; color:#fff; border-color:#2a3d60}
+  .tab .close{
+    width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center;
+    border-radius:6px; color:#b8c0d2; font-weight:700;
+  }
+  .tab .close:hover{background:#1a2a46; color:#fff}
+  .tab.dragging{opacity:.5}
 
-  /* ===== Content wrapper ===== */
-  .wrap{padding:14px 18px}
+  /* Content area */
+  .content{
+    position:fixed; top:100px; left:0; right:0; bottom:0; overflow:auto;
+    background:var(--bg); padding:16px;
+  }
+  .panel{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:14px; box-shadow:0 6px 20px rgba(0,0,0,.25);
+  }
+  .panel h2{margin:0 0 12px 0; font-size:18px; font-weight:600}
+  .muted{color:var(--muted)}
 
-  /* ===== Transactions Table ===== */
-  .thead{background:#0f1a20;border:1px solid var(--line);border-radius:10px}
-  .thead .th{display:grid;grid-template-columns: 180px 130px repeat(6, minmax(120px,1fr)) 120px 130px 140px;gap:0}
-  .th > div{padding:10px 12px;font-weight:800;border-bottom:1px solid #12232c}
-  .row{background:linear-gradient(180deg,#101b21,#0a1216);border:1px solid var(--line);border-radius:10px;margin-top:8px;display:grid;grid-template-columns: 180px 130px repeat(6, minmax(120px,1fr)) 120px 130px 140px}
-  .td{padding:10px 12px;font-size:13px}
-  .td.num{text-align:right;font-variant-numeric:tabular-nums}
-  .td.site{font-weight:800}
-  .badge{padding:2px 8px;border-radius:999px;background:#11242e;border:1px solid #1d3b4a;color:#9fd3ec;font-size:11px}
-  .actions{display:flex;gap:6px}
-  .btn.small{padding:6px 8px;font-size:12px}
-  .btn.danger{border-color:#7b2a2a;background:#1a0f0f;color:#f7c6c6}
-  .empty{display:flex;gap:10px;align-items:center;justify-content:center;color:#90a1ab;height:220px;background:#0b1216;border:1px dashed var(--line);border-radius:12px;margin-top:10px}
+  /* Transactions table */
+  .filters{
+    display:flex; flex-wrap:wrap; gap:10px; margin-bottom:12px;
+  }
+  .input, .button, .badge{
+    height:34px; padding:0 10px; border-radius:8px; border:1px solid #22314c;
+    background:#0c1729; color:#e7ecf7;
+  }
+  .input::placeholder{color:#8ea0be}
+  .button{
+    cursor:pointer; background:linear-gradient(180deg,#132644,#0c1729);
+  }
+  .button:hover{border-color:var(--gold); box-shadow:0 0 0 2px rgba(245,200,75,.15) inset}
+  .button.gold{background:#2a2008; border-color:#3a2c09}
+  .button.gold:hover{border-color:var(--gold-2)}
+  .badge{display:inline-flex; align-items:center; gap:6px}
 
-  /* ===== Dashboard ===== */
-  .cards{display:grid;grid-template-columns:repeat(6, minmax(140px,1fr));gap:12px}
-  .card{background:#0e171d;border:1px solid var(--line);border-radius:12px;padding:12px}
-  .card h4{margin:0 0 6px 0;color:#cfe6f1;font-size:13px;font-weight:800}
-  .card .val{font-size:20px;font-weight:900}
-  .recent{margin-top:14px}
-  .recent h3{margin:0 0 8px 0}
-  .recent .mini{font-size:12px;color:#b9cbd6}
+  table{width:100%; border-collapse:collapse; overflow:hidden; border-radius:10px}
+  th,td{padding:10px 12px; border-bottom:1px solid #1b2740}
+  th{background:#0f1c32; text-align:left; color:#d9e2f5; font-weight:600}
+  tr:hover td{background:#0d1830}
+  .amount.pos{color:#87f59b}
+  .amount.neg{color:#ff9b9b}
+  .tag{padding:2px 8px; border-radius:20px; border:1px solid #2a3c60; background:#101e36; font-size:12px}
+  .right{text-align:right}
 
-  /* ===== Dialog Create ===== */
-  dialog{border:none;border-radius:14px;padding:0;background:#0f1f27;color:var(--text);max-width:580px;width:calc(100% - 24px)}
-  dialog::backdrop{background:rgba(2,6,8,.6)}
-  .dlg-h{padding:14px 16px;border-bottom:1px solid var(--line);font-weight:800}
-  .dlg-b{padding:14px;display:grid;gap:10px}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .rowx{display:grid;gap:6px}
-  .dlg-f{display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--line);padding:12px 16px}
-  .hint{font-size:12px;color:var(--muted)}
+  /* Tiny helpers */
+  .hidden{display:none}
+  .spacer{flex:1}
+
+  @media (max-width:720px){
+    .nav{display:none}
+    .chip{display:none}
+  }
 </style>
 </head>
 <body>
 
-<!-- ===== NAV BAR ===== -->
-<div class="nav">
-  <div class="nav-inner">
-    <div class="brand">
-      <div class="logo"></div>
-      <b>Control Panel</b>
-    </div>
-
-    <select id="siteSelect" class="site-select" title="Select Site">
-      <option value="ALL">ALL Sites</option>
-      <option value="5g88">5g88</option>
-      <option value="spm888">spm888</option>
-    </select>
-
-    <div class="tabs">
-      <button class="tab" data-tab="dashboard">Dashboard</button>
-      <button class="tab active" data-tab="transactions">Transactions</button>
-      <button class="tab" data-tab="player">Player</button>
-      <button class="tab" data-tab="report">Report</button>
-      <button class="tab" data-tab="livechat">Livechat</button>
-      <button class="tab" data-tab="kiosk">Kiosk Access</button>
-    </div>
-
-    <div class="right">
-      <div class="pill" id="bankMeter">Bank Meter: 0.00</div>
-      <div class="pill" id="balance">536.00</div>
-      <div class="pill">support2</div>
-      <div class="menu">☰</div>
+<!-- HEADER -->
+<header class="header">
+  <div class="site-select">
+    <div class="select-wrap">
+      <select id="siteSelect" class="select">
+        <option value="5G88">5G88</option>
+        <option value="SPM888">SPM888</option>
+      </select>
     </div>
   </div>
-</div>
 
-<!-- ===== OPENED TABS (DRAGGABLE CHIPS) ===== -->
-<div class="chipbar">
-  <div class="chipbar-inner" id="chipbar"></div>
-</div>
+  <nav class="nav" id="topNav">
+    <button class="nav-btn" data-tab="Dashboard">
+      <!-- icon -->
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-btn" data-tab="Transactions">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3V6zm0 5h12v2H3v-2zm0 5h18v2H3v-2z"/></svg>
+      Transactions
+    </button>
+    <button class="nav-btn" data-tab="Cash Transfer">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 5h14v14H5z" opacity=".25"/><path d="M7 12h10M12 7v10" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+      Cash Transfer
+    </button>
+    <button class="nav-btn" data-tab="Player">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5 0-9 2.5-9 5v1h18v-1c0-2.5-4-5-9-5Z"/></svg>
+      Player
+    </button>
+    <button class="nav-btn" data-tab="Report">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v16H4z" opacity=".2"/><path d="M8 16V8M12 16V6m4 10V10" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+      Report
+    </button>
+    <button class="nav-btn" data-tab="Livechat">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v11H7l-3 3V4z"/></svg>
+      Livechat
+    </button>
+  </nav>
 
-<!-- ===== FILTER BAR ===== -->
-<div class="bar">
-  <div class="bar-inner">
-    <div class="search">
-      <span>🔎</span>
-      <input id="searchInput" placeholder="Search"/>
-    </div>
+  <div class="spacer"></div>
 
-    <div class="chips" id="typeChips">
-      <div class="chipf active" data-type="deposit">1. Deposit</div>
-      <div class="chipf active" data-type="withdrawal">2. Withdrawal</div>
-      <div class="chipf active" data-type="bonus">3. Bonus</div>
-    </div>
-
-    <select id="statusSel" class="select">
-      <option value="">Pending/Approved/Rejected</option>
-      <option>Pending</option>
-      <option>Approved</option>
-      <option>Rejected</option>
-    </select>
-
-    <select id="categorySel" class="select">
-      <option value="">Category</option>
-      <option>Promotion</option>
-      <option>System</option>
-      <option>Manual</option>
-    </select>
-
-    <input id="dateFrom" type="date" class="input"/>
-    <div class="righty" style="text-align:center;opacity:.7">→</div>
-    <input id="dateTo" type="date" class="input"/>
-
-    <button id="sortBtn" class="btn blue">Date Descend</button>
-    <button id="detailBtn" class="btn">Detail View</button>
-    <button id="createBtn" class="btn primary">Create</button>
+  <div class="chip green">
+    <span class="dot"></span> Bank Meter
   </div>
+</header>
+
+<!-- TAB BAR -->
+<div class="tabbar-wrap">
+  <div id="tabBar" class="tabbar"></div>
 </div>
 
-<!-- ===== CONTENT AREA ===== -->
-<div class="wrap" id="content"></div>
-
-<!-- ===== CREATE DIALOG ===== -->
-<dialog id="dlg">
-  <div class="dlg-h">Create Record</div>
-  <form method="dialog" id="form">
-    <div class="dlg-b">
-      <div class="grid2">
-        <div class="rowx">
-          <label>Site</label>
-          <select id="fSite" class="select">
-            <option value="5g88">5g88</option>
-            <option value="spm888">spm888</option>
-          </select>
-        </div>
-        <div class="rowx">
-          <label>Date & Time</label>
-          <input id="fDT" type="datetime-local" class="input" required/>
-        </div>
-      </div>
-
-      <div class="grid2">
-        <div class="rowx"><label>Total Deposit</label><input id="fDeposit" type="number" step="0.01" class="input" placeholder="0.00"/></div>
-        <div class="rowx"><label>Total Withdrawal</label><input id="fWithdrawal" type="number" step="0.01" class="input" placeholder="0.00"/></div>
-      </div>
-
-      <div class="grid2">
-        <div class="rowx"><label>Total Bonus</label><input id="fBonus" type="number" step="0.01" class="input" placeholder="0.00"/></div>
-        <div class="rowx"><label>Total Forfeit</label><input id="fForfeit" type="number" step="0.01" class="input" placeholder="0.00"/></div>
-      </div>
-
-      <div class="grid2">
-        <div class="rowx"><label>Total Resit In</label><input id="fResit" type="number" step="0.01" class="input" placeholder="0.00"/></div>
-        <div class="rowx"><label>Total Active Member</label><input id="fActive" type="number" step="1" class="input" placeholder="0"/></div>
-      </div>
-
-      <div class="grid2">
-        <div class="rowx"><label>Status</label>
-          <select id="fStatus" class="select"><option>Approved</option><option>Pending</option><option>Rejected</option></select>
-        </div>
-        <div class="rowx"><label>Category</label>
-          <select id="fCategory" class="select"><option>Promotion</option><option>System</option><option>Manual</option></select>
-        </div>
-      </div>
-
-      <div class="hint">Semua nilai kosong dianggap 0.</div>
-    </div>
-    <div class="dlg-f">
-      <button class="btn" value="cancel">Cancel</button>
-      <button id="saveBtn" class="btn primary" value="default">Save</button>
-    </div>
-  </form>
-</dialog>
+<!-- CONTENT -->
+<main id="content" class="content">
+  <div class="panel">
+    <h2>Selamat datang 👋</h2>
+    <div class="muted">Klik item di header (contoh <b>Transactions</b>) untuk buka tab. Tab boleh di-<i>drag</i> susun ikut suka dan boleh ditutup (×). Pilih <b>Site</b> di kiri untuk tukar data.</div>
+  </div>
+</main>
 
 <script>
-/* ========= STATE & STORAGE ========= */
-const LS_KEY = 'panel.records.v1';
-const TABS_KEY = 'panel.tabs.v1';
-let data = load(); // array of records
-let selectedSite = 'ALL';
-let activeTab = 'transactions';
-let sortDesc = true;
-let filters = {
-  q: '',
-  types: new Set(['deposit','withdrawal','bonus']),
-  status: '',
-  category: '',
-  from: '',
-  to: ''
-};
-let openTabs = loadTabs(); // array of tab ids
-
-/* ========= ELEMENTS ========= */
-const content = document.getElementById('content');
-const chipbar = document.getElementById('chipbar');
-const siteSelect = document.getElementById('siteSelect');
-const tabs = document.querySelectorAll('.tab');
-const searchInput = document.getElementById('searchInput');
-const typeChips = document.getElementById('typeChips');
-const statusSel = document.getElementById('statusSel');
-const categorySel = document.getElementById('categorySel');
-const dateFrom = document.getElementById('dateFrom');
-const dateTo = document.getElementById('dateTo');
-const sortBtn = document.getElementById('sortBtn');
-const detailBtn = document.getElementById('detailBtn');
-const createBtn = document.getElementById('createBtn');
-
-const dlg = document.getElementById('dlg');
-const fSite = document.getElementById('fSite');
-const fDT = document.getElementById('fDT');
-const fDeposit = document.getElementById('fDeposit');
-const fWithdrawal = document.getElementById('fWithdrawal');
-const fBonus = document.getElementById('fBonus');
-const fForfeit = document.getElementById('fForfeit');
-const fResit = document.getElementById('fResit');
-const fActive = document.getElementById('fActive');
-const fStatus = document.getElementById('fStatus');
-const fCategory = document.getElementById('fCategory');
-
-/* ========= INIT ========= */
-init();
-function init(){
-  // default date range = today
-  const today = new Date();
-  dateFrom.value = toDateInput(today);
-  dateTo.value = toDateInput(today);
-
-  // default opened tabs
-  if(openTabs.length === 0){ openTabs = ['dashboard','transactions']; saveTabs(); }
-
-  // site select
-  siteSelect.onchange = ()=>{ selectedSite = siteSelect.value; render(); };
-
-  // tabs click
-  tabs.forEach(t=>{
-    t.addEventListener('click', ()=>{
-      const id = t.dataset.tab;
-      activeTab = id;
-      addTabIfMissing(id);
-      render();
-    });
-  });
-
-  // chip filters
-  typeChips.addEventListener('click', e=>{
-    const c=e.target.closest('.chipf'); if(!c) return;
-    c.classList.toggle('active');
-    const t=c.dataset.type;
-    c.classList.contains('active') ? filters.types.add(t) : filters.types.delete(t);
-    render();
-  });
-
-  searchInput.oninput = ()=>{ filters.q = searchInput.value.trim().toLowerCase(); render(); };
-  statusSel.onchange = ()=>{ filters.status = statusSel.value; render(); };
-  categorySel.onchange = ()=>{ filters.category = categorySel.value; render(); };
-  dateFrom.onchange = ()=>{ filters.from = dateFrom.value; render(); };
-  dateTo.onchange = ()=>{ filters.to = dateTo.value; render(); };
-  sortBtn.onclick = ()=>{ sortDesc=!sortDesc; sortBtn.textContent = sortDesc?'Date Descend':'Date Ascend'; render(); };
-  detailBtn.onclick = ()=> alert('Detail View placeholder (boleh diubah sesuai kebutuhan)');
-
-  createBtn.onclick = openCreate;
-
-  render();
-}
-
-/* ========= RENDER ========= */
-function render(){
-  renderChipbar();
-  setTabActive();
-  if(activeTab === 'dashboard') renderDashboard();
-  else if(activeTab === 'transactions') renderTransactions();
-  else renderPlaceholder(activeTab);
-}
-
-function renderChipbar(){
-  chipbar.innerHTML='';
-  openTabs.forEach(id=>{
-    const chip=document.createElement('div');
-    chip.className='chip'+(id===activeTab?' active':'');
-    chip.draggable=true;
-    chip.dataset.id=id;
-    chip.addEventListener('dragstart',onDragStart);
-    chip.addEventListener('dragover',onDragOver);
-    chip.addEventListener('drop',onDrop);
-    chip.addEventListener('click', e=>{ if(e.target.classList.contains('close')) return; activeTab=id; render(); });
-
-    chip.innerHTML=`<span>${tabLabel(id)}</span><button class="close" title="Close" data-x="${id}">✕</button>`;
-    chip.querySelector('.close').onclick = (e)=>{ e.stopPropagation(); closeTab(id); };
-    chipbar.appendChild(chip);
-  });
-}
-function setTabActive(){
-  document.querySelectorAll('.tab').forEach(el=>{
-    el.classList.toggle('active', el.dataset.tab===activeTab);
-  });
-}
-
-function renderTransactions(){
-  const wrap=document.createElement('div');
-
-  // header
-  const thead=document.createElement('div');
-  thead.className='thead';
-  thead.innerHTML=`
-    <div class="th">
-      <div>Date & Time</div><div>Site</div>
-      <div class="righty">Deposit</div><div class="righty">Withdrawal</div>
-      <div class="righty">FOC</div><div class="righty">Total Bonus</div>
-      <div class="righty">Total Forfeit</div><div class="righty">Active</div>
-      <div class="righty">Resit In</div><div>Status</div><div>Action</div>
-    </div>`;
-  wrap.appendChild(thead);
-
-  const rows = getFilteredSorted();
-  if(rows.length===0){
-    const empty=document.createElement('div');
-    empty.className='empty'; empty.innerHTML=`<div>📭</div><div>No data</div>`;
-    wrap.appendChild(empty);
-  }else{
-    rows.forEach(item=>{
-      const row=document.createElement('div');
-      row.className='row';
-      row.innerHTML=`
-        <div class="td">${fmtDT(item.dt)}</div>
-        <div class="td site">${item.site}</div>
-        <div class="td num">${fmtNum(item.deposit)}</div>
-        <div class="td num">${fmtNum(item.withdrawal)}</div>
-        <div class="td num">${fmtNum(item.foc)}</div>
-        <div class="td num">${fmtNum(item.bonus)}</div>
-        <div class="td num">${fmtNum(item.forfeit)}</div>
-        <div class="td num">${item.active||0}</div>
-        <div class="td num">${fmtNum(item.resit)}</div>
-        <div class="td"><span class="badge">${item.status||'-'}</span></div>
-        <div class="td">
-          <div class="actions">
-            <button class="btn small" onclick='alert(${JSON.stringify(JSON.stringify(item))})'>View</button>
-            <button class="btn small danger" onclick="deleteRecord('${item.id}')">Delete</button>
-          </div>
-        </div>`;
-      wrap.appendChild(row);
-    });
+/* =========================
+   Demo data per SITE
+   ========================= */
+const DATA = {
+  "5G88": {
+    transactions: [
+      { id:"TX-10021", type:"Deposit",  player:"adam88", amount: 1200,  status:"Success", time:"2025-09-02 14:05" },
+      { id:"TX-10022", type:"Withdraw", player:"mimi77", amount:-500,  status:"Pending", time:"2025-09-02 14:16" },
+      { id:"TX-10023", type:"Bonus",    player:"jack",   amount: 150,   status:"Success", time:"2025-09-02 14:37" },
+      { id:"TX-10024", type:"Deposit",  player:"neo55",  amount: 300,   status:"Failed",  time:"2025-09-02 15:02" },
+    ],
+    transfers: [
+      { from:"Bank A", to:"Bank B", amount: 20000, by:"support2", time:"2025-09-02 13:40" },
+      { from:"Bank B", to:"Bank A", amount: 12000, by:"support2", time:"2025-09-02 15:05" },
+    ],
+    players: [
+      { user:"adam88", vip:"Gold", balance: 356.20, last:"2025-09-02 15:11" },
+      { user:"mimi77", vip:"Silver", balance: 82.00, last:"2025-09-02 15:06" },
+      { user:"neo55",  vip:"Bronze", balance: 0.00, last:"2025-09-02 12:50" },
+    ]
+  },
+  "SPM888": {
+    transactions: [
+      { id:"TX-20031", type:"Deposit",  player:"raya", amount: 800, status:"Success", time:"2025-09-02 12:09" },
+      { id:"TX-20032", type:"Withdraw", player:"ken", amount:-1200, status:"Pending", time:"2025-09-02 13:01" },
+      { id:"TX-20033", type:"Bonus",    player:"nina", amount: 70, status:"Success", time:"2025-09-02 13:44" },
+    ],
+    transfers: [
+      { from:"Vault", to:"Bank C", amount: 5000, by:"support1", time:"2025-09-02 11:10" },
+    ],
+    players: [
+      { user:"raya", vip:"Silver", balance: 142.00, last:"2025-09-02 12:30" },
+      { user:"ken",  vip:"Gold", balance: 9.50, last:"2025-09-02 13:09" },
+    ]
   }
-  content.innerHTML=''; content.appendChild(wrap);
+};
+
+/* =========================
+   App State + Persistence
+   ========================= */
+const tabBar   = document.getElementById('tabBar');
+const content  = document.getElementById('content');
+const siteSel  = document.getElementById('siteSelect');
+const topNav   = document.getElementById('topNav');
+
+let tabs = []; // {id,label}
+let activeTabId = null;
+
+function saveState(){
+  localStorage.setItem('admin.tabs', JSON.stringify(tabs));
+  localStorage.setItem('admin.active', activeTabId || '');
+  localStorage.setItem('admin.site', siteSel.value);
+}
+function loadState(){
+  const savedSite  = localStorage.getItem('admin.site');
+  if(savedSite) siteSel.value = savedSite;
+
+  const savedTabs  = JSON.parse(localStorage.getItem('admin.tabs')||'[]');
+  const savedActive= localStorage.getItem('admin.active') || null;
+  if(savedTabs.length){
+    tabs = savedTabs;
+    renderTabBar();
+    if(savedActive && tabs.find(t=>t.id===savedActive)){
+      activateTab(savedActive);
+    }else{
+      activateTab(tabs[0].id);
+    }
+  }
+}
+siteSel.addEventListener('change', ()=>{
+  saveState();
+  if(activeTabId) renderContent(tabs.find(t=>t.id===activeTabId).label);
+});
+
+/* =========================
+   Header clicks -> open tab
+   ========================= */
+topNav.addEventListener('click', (e)=>{
+  const btn = e.target.closest('.nav-btn');
+  if(!btn) return;
+  const label = btn.dataset.tab;
+  addTab(label);
+});
+
+/* =========================
+   Tab creation / render
+   ========================= */
+function addTab(label){
+  // if exists -> focus
+  const exist = tabs.find(t => t.label === label);
+  if(exist){ activateTab(exist.id); return; }
+
+  const id = 'tab_'+Date.now()+'_'+Math.random().toString(16).slice(2,6);
+  tabs.push({id, label});
+  renderTabBar();
+  activateTab(id);
+  saveState();
+}
+
+function renderTabBar(){
+  tabBar.innerHTML = '';
+  tabs.forEach((t,i)=>{
+    const el = document.createElement('div');
+    el.className = 'tab';
+    el.draggable = true;
+    el.dataset.id = t.id;
+    el.innerHTML = `
+      <span class="label">${t.label}</span>
+      <span class="close" title="Close">×</span>
+    `;
+    if(t.id === activeTabId) el.classList.add('active');
+
+    // click to activate
+    el.addEventListener('click', (e)=>{
+      if(e.target.classList.contains('close')) return;
+      activateTab(t.id);
+    });
+
+    // close
+    el.querySelector('.close').addEventListener('click', (e)=>{
+      e.stopPropagation();
+      closeTab(t.id);
+    });
+
+    // drag events
+    el.addEventListener('dragstart', (ev)=>{
+      el.classList.add('dragging');
+      ev.dataTransfer.setData('text/plain', t.id);
+    });
+    el.addEventListener('dragend', ()=> el.classList.remove('dragging'));
+    el.addEventListener('dragover', (ev)=> ev.preventDefault());
+    el.addEventListener('drop', (ev)=>{
+      ev.preventDefault();
+      const draggedId = ev.dataTransfer.getData('text/plain');
+      if(!draggedId || draggedId===t.id) return;
+      reorderTabs(draggedId, t.id);
+    });
+
+    tabBar.appendChild(el);
+  });
+}
+
+function activateTab(id){
+  activeTabId = id;
+  [...tabBar.children].forEach(ch=>{
+    ch.classList.toggle('active', ch.dataset.id === id);
+  });
+  const label = tabs.find(t=>t.id===id)?.label || '';
+  renderContent(label);
+  saveState();
+}
+
+function closeTab(id){
+  const idx = tabs.findIndex(t=>t.id===id);
+  if(idx<0) return;
+  const wasActive = (activeTabId===id);
+  tabs.splice(idx,1);
+  renderTabBar();
+  if(!tabs.length){
+    activeTabId = null;
+    content.innerHTML = `
+      <div class="panel"><h2>Semua tab ditutup</h2>
+      <div class="muted">Klik item di header untuk membuka tab baru.</div></div>`;
+  }else if(wasActive){
+    const newIdx = Math.max(0, idx-1);
+    activateTab(tabs[newIdx].id);
+  }
+  saveState();
+}
+
+function reorderTabs(dragId, dropOnId){
+  const from = tabs.findIndex(t=>t.id===dragId);
+  const to   = tabs.findIndex(t=>t.id===dropOnId);
+  if(from<0 || to<0) return;
+  const [moved] = tabs.splice(from,1);
+  tabs.splice(to,0,moved);
+  renderTabBar();
+  saveState();
+}
+
+/* =========================
+   Content renderers
+   ========================= */
+function renderContent(label){
+  switch(label){
+    case 'Dashboard': return renderDashboard();
+    case 'Transactions': return renderTransactions();
+    case 'Cash Transfer': return renderTransfers();
+    case 'Player': return renderPlayers();
+    case 'Report': return renderReports();
+    case 'Livechat': return renderLivechat();
+    default:
+      content.innerHTML = `<div class="panel"><h2>${label}</h2><div class="muted">Content not implemented yet.</div></div>`;
+  }
 }
 
 function renderDashboard(){
-  const rows = getFilteredSorted();
-  // aggregate
-  const sum = rows.reduce((a,r)=>({
-    deposit:a.deposit+r.deposit, withdrawal:a.withdrawal+r.withdrawal, bonus:a.bonus+r.bonus,
-    forfeit:a.forfeit+r.forfeit, resit:a.resit+r.resit, active:a.active+(r.active||0)
-  }), {deposit:0,withdrawal:0,bonus:0,forfeit:0,resit:0,active:0});
+  content.innerHTML = `
+    <div class="panel">
+      <h2>Dashboard — <span class="muted">${siteSel.value}</span></h2>
+      <div class="muted">Ringkasan metrik akan diletakkan di sini (grafik, KPI, dll).</div>
+    </div>`;
+}
 
-  const box=document.createElement('div');
-  box.innerHTML=`
-    <div class="cards">
-      <div class="card"><h4>Total Deposit</h4><div class="val">${fmtNum(sum.deposit)}</div></div>
-      <div class="card"><h4>Total Withdrawal</h4><div class="val">${fmtNum(sum.withdrawal)}</div></div>
-      <div class="card"><h4>Total Bonus</h4><div class="val">${fmtNum(sum.bonus)}</div></div>
-      <div class="card"><h4>Total Forfeit</h4><div class="val">${fmtNum(sum.forfeit)}</div></div>
-      <div class="card"><h4>Resit In</h4><div class="val">${fmtNum(sum.resit)}</div></div>
-      <div class="card"><h4>Active Member</h4><div class="val">${fmtNum(sum.active)}</div></div>
-    </div>
-    <div class="recent">
-      <h3>Recent (latest 10)</h3>
-      <div class="thead" style="margin-top:6px">
-        <div class="th" style="grid-template-columns: 180px 130px repeat(6, minmax(120px,1fr)) 120px 130px 0;">
-          <div>Date & Time</div><div>Site</div>
-          <div class="righty">Deposit</div><div class="righty">Withdrawal</div>
-          <div class="righty">FOC</div><div class="righty">Bonus</div>
-          <div class="righty">Forfeit</div><div class="righty">Active</div>
-          <div class="righty">Resit In</div><div>Status</div><div style="display:none"></div>
-        </div>
+function renderTransactions(){
+  const site = siteSel.value;
+  const rows = (DATA[site]?.transactions||[]).map(tx => `
+    <tr>
+      <td><span class="tag">${tx.type}</span></td>
+      <td>${tx.id}</td>
+      <td>${tx.player}</td>
+      <td class="right amount ${tx.amount>=0?'pos':'neg'}">${formatMoney(tx.amount)}</td>
+      <td>${badgeStatus(tx.status)}</td>
+      <td>${tx.time}</td>
+    </tr>
+  `).join('');
+
+  content.innerHTML = `
+    <div class="panel">
+      <h2>Transactions — <span class="muted">${site}</span></h2>
+
+      <div class="filters">
+        <input id="txSearch" class="input" placeholder="Search player / id / type..." />
+        <select id="txType" class="input">
+          <option value="">All Types</option>
+          <option>Deposit</option>
+          <option>Withdraw</option>
+          <option>Bonus</option>
+        </select>
+        <button class="button">Today</button>
+        <button class="button">This Week</button>
+        <button class="button gold" id="refreshTx">Refresh</button>
+        <span class="spacer"></span>
+        <span class="badge">Site: ${site}</span>
+      </div>
+
+      <div class="table-wrap">
+        <table id="txTable">
+          <thead>
+            <tr>
+              <th>Type</th><th>Txn ID</th><th>Player</th>
+              <th class="right">Amount</th><th>Status</th><th>Time</th>
+            </tr>
+          </thead>
+          <tbody>${rows || `<tr><td colspan="6" class="muted">No data</td></tr>`}</tbody>
+        </table>
       </div>
     </div>
   `;
-  const list = rows.slice(0,10);
-  list.forEach(item=>{
-    const r=document.createElement('div'); r.className='row';
-    r.style.gridTemplateColumns='180px 130px repeat(6, minmax(120px,1fr)) 120px 130px 0';
-    r.innerHTML=`
-      <div class="td">${fmtDT(item.dt)}</div>
-      <div class="td site">${item.site}</div>
-      <div class="td num">${fmtNum(item.deposit)}</div>
-      <div class="td num">${fmtNum(item.withdrawal)}</div>
-      <div class="td num">${fmtNum(item.foc)}</div>
-      <div class="td num">${fmtNum(item.bonus)}</div>
-      <div class="td num">${fmtNum(item.forfeit)}</div>
-      <div class="td num">${item.active||0}</div>
-      <div class="td num">${fmtNum(item.resit)}</div>
-      <div class="td"><span class="badge">${item.status||'-'}</span></div>
-      <div class="td" style="display:none"></div>`;
-    box.appendChild(r);
-  });
 
-  content.innerHTML=''; content.appendChild(box);
-}
+  // simple filters
+  const search = document.getElementById('txSearch');
+  const typeSel= document.getElementById('txType');
+  document.getElementById('refreshTx').addEventListener('click', ()=> renderTransactions());
 
-function renderPlaceholder(id){
-  const w=document.createElement('div');
-  w.innerHTML=`<div class="empty" style="height:140px"><div>ℹ️</div><div>${tabLabel(id)} area (placeholder)</div></div>`;
-  content.innerHTML=''; content.appendChild(w);
-}
-
-/* ========= FILTERING & SORT ========= */
-function getFilteredSorted(){
-  let arr = data.slice();
-
-  // site
-  if(selectedSite!=='ALL') arr = arr.filter(x => (x.site||'').toLowerCase()===selectedSite.toLowerCase());
-
-  // search
-  if(filters.q){
-    const q=filters.q;
-    arr = arr.filter(x => (x.site||'').toLowerCase().includes(q));
-  }
-  // status/category
-  if(filters.status) arr = arr.filter(x => (x.status||'')===filters.status);
-  if(filters.category) arr = arr.filter(x => (x.category||'')===filters.category);
-
-  // date range inclusive
-  const f = filters.from || dateFrom.value;
-  const t = filters.to || dateTo.value;
-  if(f) arr = arr.filter(x => x.dt >= toISODateStart(f));
-  if(t) arr = arr.filter(x => x.dt <= toISODateEnd(t));
-
-  // type chips
-  if(filters.types.size && filters.types.size<3){
-    arr = arr.filter(x=>{
-      const present=[];
-      if(x.deposit>0) present.push('deposit');
-      if(x.withdrawal>0) present.push('withdrawal');
-      if(x.bonus>0) present.push('bonus');
-      return present.some(t=>filters.types.has(t));
+  const applyFilter = ()=>{
+    const term = (search.value||'').toLowerCase();
+    const type = typeSel.value;
+    const all  = (DATA[site]?.transactions||[]);
+    const filtered = all.filter(tx=>{
+      const hitTerm = !term || [tx.id, tx.player, tx.type].join(' ').toLowerCase().includes(term);
+      const hitType = !type || tx.type===type;
+      return hitTerm && hitType;
     });
-  }
-  // sort
-  arr.sort((a,b)=> sortDesc ? (b.dt-a.dt) : (a.dt-b.dt));
-  return arr;
-}
-
-/* ========= CREATE ========= */
-function openCreate(){
-  // default site: siteSelect (if ALL -> 5g88)
-  fSite.value = (siteSelect.value==='ALL'?'5g88':siteSelect.value);
-  fDT.value = toDatetimeLocalInput(new Date());
-  [fDeposit,fWithdrawal,fBonus,fForfeit,fResit,fActive].forEach(el=> el.value='');
-  fStatus.value='Approved'; fCategory.value='Promotion';
-  dlg.showModal();
-}
-document.getElementById('form').addEventListener('submit', (e)=>{
-  e.preventDefault();
-  const item = {
-    id: rid(),
-    site: fSite.value.trim(),
-    dt: new Date(fDT.value).getTime(),
-    deposit: num(fDeposit.value),
-    withdrawal: num(fWithdrawal.value),
-    foc: 0, // opsional kolom FOC (tak diminta di form utama), biar 0
-    bonus: num(fBonus.value),
-    forfeit: num(fForfeit.value),
-    active: parseInt(fActive.value||'0',10) || 0,
-    resit: num(fResit.value),
-    status: fStatus.value,
-    category: fCategory.value
+    const body = document.querySelector('#txTable tbody');
+    body.innerHTML = filtered.map(tx => `
+      <tr>
+        <td><span class="tag">${tx.type}</span></td>
+        <td>${tx.id}</td>
+        <td>${tx.player}</td>
+        <td class="right amount ${tx.amount>=0?'pos':'neg'}">${formatMoney(tx.amount)}</td>
+        <td>${badgeStatus(tx.status)}</td>
+        <td>${tx.time}</td>
+      </tr>
+    `).join('') || `<tr><td colspan="6" class="muted">No data</td></tr>`;
   };
-  if(!item.site || !item.dt){ alert('Isi Site & Date Time'); return; }
-  data.push(item); save();
-  dlg.close();
-  render();
-});
-
-/* ========= ACTIONS ========= */
-function deleteRecord(id){
-  if(!confirm('Delete record ini?')) return;
-  data = data.filter(x=> x.id!==id); save(); render();
+  search.addEventListener('input', applyFilter);
+  typeSel.addEventListener('change', applyFilter);
 }
 
-/* ========= Tabs helpers (chips) ========= */
-function tabLabel(id){
-  return ({
-    dashboard:'Dashboard',
-    transactions:'Transactions',
-    player:'Player',
-    report:'Report',
-    livechat:'Livechat',
-    kiosk:'Kiosk Access'
-  })[id] || id;
-}
-function addTabIfMissing(id){
-  if(!openTabs.includes(id)){ openTabs.push(id); saveTabs(); }
-}
-function closeTab(id){
-  openTabs = openTabs.filter(x=>x!==id);
-  if(activeTab===id) activeTab = openTabs[0] || 'transactions';
-  saveTabs(); render();
-}
-function onDragStart(e){ e.dataTransfer.setData('text/plain', e.currentTarget.dataset.id); }
-function onDragOver(e){ e.preventDefault(); }
-function onDrop(e){
-  e.preventDefault();
-  const fromId = e.dataTransfer.getData('text/plain');
-  const toId = e.currentTarget.dataset.id;
-  const fromIdx = openTabs.indexOf(fromId);
-  const toIdx = openTabs.indexOf(toId);
-  if(fromIdx<0 || toIdx<0 || fromIdx===toIdx) return;
-  openTabs.splice(toIdx,0, ...openTabs.splice(fromIdx,1));
-  saveTabs(); renderChipbar();
+function renderTransfers(){
+  const site = siteSel.value;
+  const rows = (DATA[site]?.transfers||[]).map(r=>`
+    <tr>
+      <td>${r.from}</td><td>→</td><td>${r.to}</td>
+      <td class="right amount pos">${formatMoney(r.amount)}</td>
+      <td>${r.by}</td><td>${r.time}</td>
+    </tr>
+  `).join('');
+
+  content.innerHTML = `
+    <div class="panel">
+      <h2>Cash Transfer — <span class="muted">${site}</span></h2>
+      <table>
+        <thead><tr><th>From</th><th></th><th>To</th><th class="right">Amount</th><th>By</th><th>Time</th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="6" class="muted">No data</td></tr>`}</tbody>
+      </table>
+    </div>
+  `;
 }
 
-/* ========= UTIL ========= */
-function load(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]')}catch{return[]} }
-function save(){ localStorage.setItem(LS_KEY, JSON.stringify(data)); }
-function loadTabs(){ try{return JSON.parse(localStorage.getItem(TABS_KEY)||'[]')}catch{return[]} }
-function saveTabs(){ localStorage.setItem(TABS_KEY, JSON.stringify(openTabs)); }
-function num(v){ const n=parseFloat(v); return isFinite(n)? n : 0; }
-function rid(){ return Math.random().toString(36).slice(2)+Date.now().toString(36); }
-function fmtNum(n){ if(n===undefined||n===null) return '0'; return Number(n).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2}); }
-function fmtDT(ts){ const d=new Date(ts); const dd=String(d.getDate()).padStart(2,'0'); const mm=String(d.getMonth()+1).padStart(2,'0'); const yyyy=d.getFullYear(); const hh=String(d.getHours()).padStart(2,'0'); const mi=String(d.getMinutes()).padStart(2,'0'); return `${yyyy}-${mm}-${dd} ${hh}:${mi}`; }
-function toDateInput(d){ const x=new Date(d); const yyyy=x.getFullYear(); const mm=String(x.getMonth()+1).padStart(2,'0'); const dd=String(x.getDate()).padStart(2,'0'); return `${yyyy}-${mm}-${dd}`; }
-function toDatetimeLocalInput(d){ const x=new Date(d); const yyyy=x.getFullYear(); const mm=String(x.getMonth()+1).padStart(2,'0'); const dd=String(x.getDate()).padStart(2,'0'); const hh=String(x.getHours()).padStart(2,'0'); const mi=String(x.getMinutes()).padStart(2,'0'); return `${yyyy}-${mm}-${dd}T${hh}:${mi}`; }
-function toISODateStart(s){ return new Date(s+'T00:00:00').getTime(); }
-function toISODateEnd(s){ return new Date(s+'T23:59:59').getTime(); }
+function renderPlayers(){
+  const site = siteSel.value;
+  const rows = (DATA[site]?.players||[]).map(p=>`
+    <tr>
+      <td>${p.user}</td>
+      <td><span class="tag">${p.vip}</span></td>
+      <td class="right">${formatMoney(p.balance)}</td>
+      <td>${p.last}</td>
+    </tr>
+  `).join('');
+  content.innerHTML = `
+    <div class="panel">
+      <h2>Player — <span class="muted">${site}</span></h2>
+      <table>
+        <thead><tr><th>User</th><th>VIP</th><th class="right">Balance</th><th>Last Active</th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="4" class="muted">No data</td></tr>`}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderReports(){
+  content.innerHTML = `
+    <div class="panel">
+      <h2>Report</h2>
+      <div class="muted">Tempat untuk report & grafik. (Boleh tambah kemudian)</div>
+    </div>
+  `;
+}
+
+function renderLivechat(){
+  content.innerHTML = `
+    <div class="panel">
+      <h2>Livechat</h2>
+      <div class="muted">Embed / iframe livechat kamu boleh dimasukkan di sini.</div>
+    </div>
+  `;
+}
+
+/* =========================
+   Helpers
+   ========================= */
+function formatMoney(v){
+  const sign = v<0 ? '-' : '';
+  const n = Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  return sign + n;
+}
+function badgeStatus(s){
+  const color = s==='Success' ? 'style="color:#8bf59d"' :
+                s==='Pending' ? 'style="color:#ffd073"' :
+                'style="color:#ff9b9b"';
+  return `<span ${color}>${s}</span>`;
+}
+
+/* =========================
+   Boot
+   ========================= */
+loadState();
+
+// Convenience: open default tabs first time
+if(!tabs.length){
+  ['Dashboard','Transactions','Cash Transfer','Player','Livechat'].forEach(addTab);
+}
+
 </script>
 </body>
 </html>
