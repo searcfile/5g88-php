@@ -3,416 +3,567 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Transactions | Bonus Manager</title>
+<title>Control Panel</title>
 <style>
   :root{
-    --bg:#090f12; --panel:#0d1418; --panel-2:#0b1114; --line:#1e2a33;
-    --muted:#a9b4bd; --text:#eaf1f5; --gold:#ffd24d; --gold2:#ffea9a; --accent:#2f4959;
+    --nav:#0b2130; --nav2:#0a1b26; --panel:#0c141a; --panel2:#0b1217;
+    --line:#173445; --muted:#a9b4bd; --text:#eaf1f5;
+    --gold:#ffd24d; --gold2:#ffea9a;
     --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+  body{margin:0;background:#0a1216;color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
   a{color:inherit;text-decoration:none}
-  /* TOP NAV */
-  .nav{background:linear-gradient(180deg,#0b1a24,#0b1620); border-bottom:1px solid #12212a;}
-  .nav-inner{max-width:100%;width:100%;margin:0 auto;padding:8px 14px;display:flex;align-items:center;gap:10px}
-  .brand{display:flex;align-items:center;gap:10px;margin-right:auto}
-  .brand .logo{width:32px;height:20px;border-radius:999px;background:linear-gradient(90deg,var(--gold2),var(--gold));box-shadow:0 0 14px 3px rgba(255,210,77,.35)}
-  .brand .name{font-weight:800;letter-spacing:.3px}
-  .tabs{display:flex;gap:8px}
-  .tab{padding:8px 12px;border-radius:8px;background:transparent;border:1px solid transparent;color:#c5d1da;cursor:pointer;font-weight:600}
-  .tab.active{background:#0f202a;border-color:#1c3340;color:#fff}
+
+  /* ===== Top Nav ===== */
+  .nav{position:sticky;top:0;z-index:40;background:linear-gradient(180deg,var(--nav),var(--nav2));border-bottom:1px solid #0e2a3a}
+  .nav-inner{width:100%;max-width:100%;padding:10px 18px;display:flex;align-items:center;gap:12px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .logo{width:30px;height:18px;border-radius:999px;background:linear-gradient(90deg,var(--gold2),var(--gold));box-shadow:0 0 16px 3px rgba(255,210,77,.35)}
+  .brand b{letter-spacing:.3px}
+
+  .site-select{appearance:none;background:#0e2330;border:1px solid #173242;color:#d9e7ef;border-radius:8px;padding:8px 12px;font-weight:600;min-width:160px}
+  .site-select:focus{outline:none;box-shadow:0 0 0 3px rgba(255,210,77,.15);border-color:#1e5166}
+
+  .tabs{display:flex;gap:6px;margin-left:12px}
+  .tab{padding:8px 12px;border-radius:8px;border:1px solid #1a3a4b;background:transparent;color:#b9c9d4;cursor:pointer;font-weight:700}
+  .tab.active{background:#133243;color:#fff}
   .right{margin-left:auto;display:flex;gap:10px;align-items:center}
   .pill{padding:6px 10px;border-radius:999px;background:#0e2430;border:1px solid #143243;color:#9cd2ef;font-weight:700}
-  /* FILTER BAR */
-  .bar{background:#0b1216;border-bottom:1px solid var(--line)}
-  .bar-inner{max-width:1200px;margin:0 auto;padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  .search{flex:1;display:flex;align-items:center;gap:8px;background:#0f171c;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  .menu{font-size:18px;opacity:.8;cursor:pointer}
+
+  /* ===== Opened Tabs (chips) ===== */
+  .chipbar{background:#0a141a;border-bottom:1px solid var(--line)}
+  .chipbar-inner{padding:8px 18px;display:flex;gap:8px;flex-wrap:wrap}
+  .chip{display:flex;align-items:center;gap:8px;background:#10212a;border:1px solid #1c3a4a;color:#cfe6f1;padding:6px 10px;border-radius:9px;cursor:move}
+  .chip.active{background:#153442}
+  .chip .close{background:#1c2f39;border:1px solid #2b4b5d;color:#c8d7df;border-radius:6px;padding:0 6px;height:22px;cursor:pointer}
+  .chip .close:hover{background:#273f4c}
+
+  /* ===== Filter bar ===== */
+  .bar{background:#0b161c;border-bottom:1px solid var(--line)}
+  .bar-inner{padding:12px 18px;display:grid;grid-template-columns: 1fr 280px 200px 200px 1fr auto auto auto;gap:10px;align-items:center}
+  .search{display:flex;align-items:center;gap:8px;background:#0f1f27;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
   .search input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:14px}
-  .select, .input, .btn{appearance:none;background:#0f171c;border:1px solid var(--line);color:var(--text);border-radius:8px;padding:8px 10px;font-size:14px}
-  .btn{cursor:pointer;font-weight:700}
+  .chips{display:flex;gap:6px}
+  .chipf{padding:7px 10px;border:1px solid var(--line);background:#0f1f27;border-radius:999px;cursor:pointer;color:#d4dde4;font-weight:600}
+  .chipf.active{background:#14333f;border-color:#1f4b5c}
+  .select,.input,.btn{appearance:none;background:#0f1f27;border:1px solid var(--line);color:var(--text);border-radius:8px;padding:8px 10px;font-size:14px}
+  .btn{cursor:pointer;font-weight:800}
   .btn:hover{border-color:var(--gold)}
   .btn.primary{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#111;border-color:#b98e00}
-  .chips{display:flex;gap:6px;align-items:center}
-  .chip{padding:7px 10px;border:1px solid var(--line);background:#0f171c;border-radius:999px;cursor:pointer;color:#d4dde4;font-weight:600}
-  .chip.active{background:#14333f;border-color:#1f4b5c}
-  /* CONTENT */
-  .wrap{max-width:1200px;margin:14px auto;padding:0 14px}
-  .table{width:100%;border-collapse:separate;border-spacing:0 8px}
-  .th, .td{padding:10px 12px;font-size:13px}
-  .thead{background:#0d161b;border:1px solid var(--line);border-radius:10px}
-  .thead .th{font-weight:800;border-bottom:1px solid #0f212b}
-  .row{background:linear-gradient(180deg,#101b21,#0a1216);border:1px solid var(--line);border-radius:10px}
+  .btn.blue{background:#1857d6;border-color:#1a4fb6}
+
+  /* ===== Content wrapper ===== */
+  .wrap{padding:14px 18px}
+
+  /* ===== Transactions Table ===== */
+  .thead{background:#0f1a20;border:1px solid var(--line);border-radius:10px}
+  .thead .th{display:grid;grid-template-columns: 180px 130px repeat(6, minmax(120px,1fr)) 120px 130px 140px;gap:0}
+  .th > div{padding:10px 12px;font-weight:800;border-bottom:1px solid #12232c}
+  .row{background:linear-gradient(180deg,#101b21,#0a1216);border:1px solid var(--line);border-radius:10px;margin-top:8px;display:grid;grid-template-columns: 180px 130px repeat(6, minmax(120px,1fr)) 120px 130px 140px}
+  .td{padding:10px 12px;font-size:13px}
   .td.num{text-align:right;font-variant-numeric:tabular-nums}
   .td.site{font-weight:800}
-  .td .badge{padding:2px 6px;border-radius:999px;background:#11242e;border:1px solid #1d3b4a;color:#9fd3ec;font-size:11px}
-  .empty{display:flex;gap:10px;align-items:center;justify-content:center;color:#90a1ab;height:220px;background:#0b1216;border:1px dashed var(--line);border-radius:12px}
+  .badge{padding:2px 8px;border-radius:999px;background:#11242e;border:1px solid #1d3b4a;color:#9fd3ec;font-size:11px}
   .actions{display:flex;gap:6px}
   .btn.small{padding:6px 8px;font-size:12px}
-  .btn.danger{border-color:#3a1b1b;background:#1a0f0f;color:#f7c6c6}
-  .btn.danger:hover{border-color:#7b2a2a}
-  /* DIALOG */
-  dialog{border:none;border-radius:14px;padding:0;background:#0f171c;color:var(--text);max-width:560px;width:calc(100% - 24px)}
+  .btn.danger{border-color:#7b2a2a;background:#1a0f0f;color:#f7c6c6}
+  .empty{display:flex;gap:10px;align-items:center;justify-content:center;color:#90a1ab;height:220px;background:#0b1216;border:1px dashed var(--line);border-radius:12px;margin-top:10px}
+
+  /* ===== Dashboard ===== */
+  .cards{display:grid;grid-template-columns:repeat(6, minmax(140px,1fr));gap:12px}
+  .card{background:#0e171d;border:1px solid var(--line);border-radius:12px;padding:12px}
+  .card h4{margin:0 0 6px 0;color:#cfe6f1;font-size:13px;font-weight:800}
+  .card .val{font-size:20px;font-weight:900}
+  .recent{margin-top:14px}
+  .recent h3{margin:0 0 8px 0}
+  .recent .mini{font-size:12px;color:#b9cbd6}
+
+  /* ===== Dialog Create ===== */
+  dialog{border:none;border-radius:14px;padding:0;background:#0f1f27;color:var(--text);max-width:580px;width:calc(100% - 24px)}
   dialog::backdrop{background:rgba(2,6,8,.6)}
   .dlg-h{padding:14px 16px;border-bottom:1px solid var(--line);font-weight:800}
   .dlg-b{padding:14px;display:grid;gap:10px}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .row{display:grid;gap:6px}
+  .rowx{display:grid;gap:6px}
   .dlg-f{display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--line);padding:12px 16px}
   .hint{font-size:12px;color:var(--muted)}
-  /* UTIL */
-  .righty{text-align:right}
 </style>
 </head>
 <body>
 
-<!-- NAV -->
+<!-- ===== NAV BAR ===== -->
 <div class="nav">
   <div class="nav-inner">
     <div class="brand">
       <div class="logo"></div>
-      <div class="name">Control Panel</div>
+      <b>Control Panel</b>
     </div>
+
+    <select id="siteSelect" class="site-select" title="Select Site">
+      <option value="ALL">ALL Sites</option>
+      <option value="5g88">5g88</option>
+      <option value="spm888">spm888</option>
+    </select>
+
     <div class="tabs">
-      <button class="tab">Dashboard</button>
-      <button class="tab">Cash Transfer</button>
-      <button class="tab active">Transactions</button>
-      <button class="tab">Player</button>
-      <button class="tab">Report</button>
-      <button class="tab">Livechat</button>
+      <button class="tab" data-tab="dashboard">Dashboard</button>
+      <button class="tab active" data-tab="transactions">Transactions</button>
+      <button class="tab" data-tab="player">Player</button>
+      <button class="tab" data-tab="report">Report</button>
+      <button class="tab" data-tab="livechat">Livechat</button>
+      <button class="tab" data-tab="kiosk">Kiosk Access</button>
     </div>
+
     <div class="right">
       <div class="pill" id="bankMeter">Bank Meter: 0.00</div>
       <div class="pill" id="balance">536.00</div>
       <div class="pill">support2</div>
+      <div class="menu">☰</div>
     </div>
   </div>
 </div>
 
-<!-- FILTER BAR -->
+<!-- ===== OPENED TABS (DRAGGABLE CHIPS) ===== -->
+<div class="chipbar">
+  <div class="chipbar-inner" id="chipbar"></div>
+</div>
+
+<!-- ===== FILTER BAR ===== -->
 <div class="bar">
   <div class="bar-inner">
-    <div class="search" title="Search by site name">
+    <div class="search">
       <span>🔎</span>
-      <input id="q" placeholder="Search site (e.g. 5G88, SPM888, NEPWIN88)"/>
+      <input id="searchInput" placeholder="Search"/>
     </div>
 
     <div class="chips" id="typeChips">
-      <div class="chip active" data-type="deposit">1. Deposit</div>
-      <div class="chip active" data-type="withdrawal">2. Withdrawal</div>
-      <div class="chip active" data-type="bonus">3. Bonus</div>
+      <div class="chipf active" data-type="deposit">1. Deposit</div>
+      <div class="chipf active" data-type="withdrawal">2. Withdrawal</div>
+      <div class="chipf active" data-type="bonus">3. Bonus</div>
     </div>
 
-    <select id="statusSel" class="select" title="Status">
-      <option value="">Status</option>
+    <select id="statusSel" class="select">
+      <option value="">Pending/Approved/Rejected</option>
       <option>Pending</option>
       <option>Approved</option>
       <option>Rejected</option>
     </select>
 
-    <select id="creditSel" class="select" title="Category">
+    <select id="categorySel" class="select">
       <option value="">Category</option>
       <option>Promotion</option>
       <option>System</option>
       <option>Manual</option>
     </select>
 
-    <input id="dateFrom" type="date" class="input" />
-    <span style="opacity:.6">→</span>
-    <input id="dateTo" type="date" class="input" />
-    <button id="sortBtn" class="btn">Date Descend</button>
+    <input id="dateFrom" type="date" class="input"/>
+    <div class="righty" style="text-align:center;opacity:.7">→</div>
+    <input id="dateTo" type="date" class="input"/>
+
+    <button id="sortBtn" class="btn blue">Date Descend</button>
     <button id="detailBtn" class="btn">Detail View</button>
     <button id="createBtn" class="btn primary">Create</button>
   </div>
 </div>
 
-<!-- CONTENT -->
-<div class="wrap">
-  <!-- Header row -->
-  <div class="thead">
-    <div class="th" style="display:grid;grid-template-columns: 160px 120px repeat(6,1fr) 90px 130px 140px;gap:0;border-radius:10px 10px 0 0">
-      <div class="th">Date & Time</div>
-      <div class="th">Site</div>
-      <div class="th righty">Deposit</div>
-      <div class="th righty">Withdrawal</div>
-      <div class="th righty">FOC</div>
-      <div class="th righty">Total Bonus</div>
-      <div class="th righty">Total Forfeit</div>
-      <div class="th righty">Active</div>
-      <div class="th righty">Resit In</div>
-      <div class="th">Status</div>
-      <div class="th">Action</div>
-    </div>
-  </div>
+<!-- ===== CONTENT AREA ===== -->
+<div class="wrap" id="content"></div>
 
-  <div id="tbody"></div>
-
-  <div id="empty" class="empty" style="display:none">
-    <div>📭</div><div>No data</div>
-  </div>
-</div>
-
-<!-- CREATE DIALOG -->
+<!-- ===== CREATE DIALOG ===== -->
 <dialog id="dlg">
-  <div class="dlg-h">Create Transaction</div>
+  <div class="dlg-h">Create Record</div>
   <form method="dialog" id="form">
     <div class="dlg-b">
       <div class="grid2">
-        <div class="row">
-          <label>Site / Sub Account</label>
-          <input id="site" class="input" placeholder="e.g. 5G88, SPM888" required/>
+        <div class="rowx">
+          <label>Site</label>
+          <select id="fSite" class="select">
+            <option value="5g88">5g88</option>
+            <option value="spm888">spm888</option>
+          </select>
         </div>
-        <div class="row">
+        <div class="rowx">
           <label>Date & Time</label>
-          <input id="dt" type="datetime-local" class="input" required/>
+          <input id="fDT" type="datetime-local" class="input" required/>
         </div>
       </div>
 
       <div class="grid2">
-        <div class="row">
-          <label>Deposit</label>
-          <input id="deposit" type="number" step="0.01" class="input" placeholder="0.00"/>
-        </div>
-        <div class="row">
-          <label>Withdrawal</label>
-          <input id="withdrawal" type="number" step="0.01" class="input" placeholder="0.00"/>
-        </div>
+        <div class="rowx"><label>Total Deposit</label><input id="fDeposit" type="number" step="0.01" class="input" placeholder="0.00"/></div>
+        <div class="rowx"><label>Total Withdrawal</label><input id="fWithdrawal" type="number" step="0.01" class="input" placeholder="0.00"/></div>
       </div>
 
       <div class="grid2">
-        <div class="row">
-          <label>FOC</label>
-          <input id="foc" type="number" step="0.01" class="input" placeholder="0.00"/>
-        </div>
-        <div class="row">
-          <label>Total Bonus</label>
-          <input id="bonus" type="number" step="0.01" class="input" placeholder="0.00"/>
-        </div>
+        <div class="rowx"><label>Total Bonus</label><input id="fBonus" type="number" step="0.01" class="input" placeholder="0.00"/></div>
+        <div class="rowx"><label>Total Forfeit</label><input id="fForfeit" type="number" step="0.01" class="input" placeholder="0.00"/></div>
       </div>
 
       <div class="grid2">
-        <div class="row">
-          <label>Total Forfeit</label>
-          <input id="forfeit" type="number" step="0.01" class="input" placeholder="0.00"/>
-        </div>
-        <div class="row">
-          <label>Active Member</label>
-          <input id="active" type="number" step="1" class="input" placeholder="0"/>
-        </div>
-      </div>
-
-      <div class="row">
-        <label>Resit In</label>
-        <input id="resit" type="number" step="0.01" class="input" placeholder="0.00"/>
+        <div class="rowx"><label>Total Resit In</label><input id="fResit" type="number" step="0.01" class="input" placeholder="0.00"/></div>
+        <div class="rowx"><label>Total Active Member</label><input id="fActive" type="number" step="1" class="input" placeholder="0"/></div>
       </div>
 
       <div class="grid2">
-        <div class="row">
-          <label>Status</label>
-          <select id="status" class="select">
-            <option>Pending</option>
-            <option>Approved</option>
-            <option>Rejected</option>
-          </select>
+        <div class="rowx"><label>Status</label>
+          <select id="fStatus" class="select"><option>Approved</option><option>Pending</option><option>Rejected</option></select>
         </div>
-        <div class="row">
-          <label>Category</label>
-          <select id="category" class="select">
-            <option>Promotion</option>
-            <option>System</option>
-            <option>Manual</option>
-          </select>
+        <div class="rowx"><label>Category</label>
+          <select id="fCategory" class="select"><option>Promotion</option><option>System</option><option>Manual</option></select>
         </div>
       </div>
 
-      <div class="hint">Semua angka opsional — kosong akan dianggap 0.</div>
+      <div class="hint">Semua nilai kosong dianggap 0.</div>
     </div>
     <div class="dlg-f">
       <button class="btn" value="cancel">Cancel</button>
-      <button id="saveBtn" class="btn primary" value="default">Create</button>
+      <button id="saveBtn" class="btn primary" value="default">Save</button>
     </div>
   </form>
 </dialog>
 
 <script>
-/* ======= STATE & STORAGE ======= */
-const LS_KEY = 'tx.v1';
+/* ========= STATE & STORAGE ========= */
+const LS_KEY = 'panel.records.v1';
+const TABS_KEY = 'panel.tabs.v1';
+let data = load(); // array of records
+let selectedSite = 'ALL';
+let activeTab = 'transactions';
 let sortDesc = true;
 let filters = {
   q: '',
-  types: new Set(['deposit','withdrawal','bonus']), // for extensibility
+  types: new Set(['deposit','withdrawal','bonus']),
   status: '',
   category: '',
   from: '',
   to: ''
 };
-let data = load();
+let openTabs = loadTabs(); // array of tab ids
 
-/* ======= ELEMENTS ======= */
-const els = {
-  q: document.getElementById('q'),
-  chips: document.getElementById('typeChips'),
-  statusSel: document.getElementById('statusSel'),
-  creditSel: document.getElementById('creditSel'),
-  dateFrom: document.getElementById('dateFrom'),
-  dateTo: document.getElementById('dateTo'),
-  sortBtn: document.getElementById('sortBtn'),
-  createBtn: document.getElementById('createBtn'),
-  tbody: document.getElementById('tbody'),
-  empty: document.getElementById('empty'),
-  dlg: document.getElementById('dlg'),
-  form: document.getElementById('form'),
-  site: document.getElementById('site'),
-  dt: document.getElementById('dt'),
-  deposit: document.getElementById('deposit'),
-  withdrawal: document.getElementById('withdrawal'),
-  foc: document.getElementById('foc'),
-  bonus: document.getElementById('bonus'),
-  forfeit: document.getElementById('forfeit'),
-  active: document.getElementById('active'),
-  resit: document.getElementById('resit'),
-  status: document.getElementById('status'),
-  category: document.getElementById('category'),
-};
+/* ========= ELEMENTS ========= */
+const content = document.getElementById('content');
+const chipbar = document.getElementById('chipbar');
+const siteSelect = document.getElementById('siteSelect');
+const tabs = document.querySelectorAll('.tab');
+const searchInput = document.getElementById('searchInput');
+const typeChips = document.getElementById('typeChips');
+const statusSel = document.getElementById('statusSel');
+const categorySel = document.getElementById('categorySel');
+const dateFrom = document.getElementById('dateFrom');
+const dateTo = document.getElementById('dateTo');
+const sortBtn = document.getElementById('sortBtn');
+const detailBtn = document.getElementById('detailBtn');
+const createBtn = document.getElementById('createBtn');
 
-/* ======= INIT ======= */
+const dlg = document.getElementById('dlg');
+const fSite = document.getElementById('fSite');
+const fDT = document.getElementById('fDT');
+const fDeposit = document.getElementById('fDeposit');
+const fWithdrawal = document.getElementById('fWithdrawal');
+const fBonus = document.getElementById('fBonus');
+const fForfeit = document.getElementById('fForfeit');
+const fResit = document.getElementById('fResit');
+const fActive = document.getElementById('fActive');
+const fStatus = document.getElementById('fStatus');
+const fCategory = document.getElementById('fCategory');
+
+/* ========= INIT ========= */
 init();
 function init(){
   // default date range = today
   const today = new Date();
-  els.dateFrom.value = toDateInput(today);
-  els.dateTo.value = toDateInput(today);
+  dateFrom.value = toDateInput(today);
+  dateTo.value = toDateInput(today);
 
-  // handlers
-  els.q.oninput = ()=>{ filters.q = els.q.value.trim().toLowerCase(); render(); };
-  els.chips.addEventListener('click', (e)=>{
-    const c = e.target.closest('.chip'); if(!c) return;
-    const t = c.dataset.type;
+  // default opened tabs
+  if(openTabs.length === 0){ openTabs = ['dashboard','transactions']; saveTabs(); }
+
+  // site select
+  siteSelect.onchange = ()=>{ selectedSite = siteSelect.value; render(); };
+
+  // tabs click
+  tabs.forEach(t=>{
+    t.addEventListener('click', ()=>{
+      const id = t.dataset.tab;
+      activeTab = id;
+      addTabIfMissing(id);
+      render();
+    });
+  });
+
+  // chip filters
+  typeChips.addEventListener('click', e=>{
+    const c=e.target.closest('.chipf'); if(!c) return;
     c.classList.toggle('active');
+    const t=c.dataset.type;
     c.classList.contains('active') ? filters.types.add(t) : filters.types.delete(t);
     render();
   });
-  els.statusSel.onchange = ()=>{ filters.status = els.statusSel.value; render(); };
-  els.creditSel.onchange = ()=>{ filters.category = els.creditSel.value; render(); };
-  els.dateFrom.onchange = ()=>{ filters.from = els.dateFrom.value; render(); };
-  els.dateTo.onchange = ()=>{ filters.to = els.dateTo.value; render(); };
-  els.sortBtn.onclick = ()=>{ sortDesc = !sortDesc; els.sortBtn.textContent = sortDesc ? 'Date Descend' : 'Date Ascend'; render(); };
-  els.createBtn.onclick = openCreate;
+
+  searchInput.oninput = ()=>{ filters.q = searchInput.value.trim().toLowerCase(); render(); };
+  statusSel.onchange = ()=>{ filters.status = statusSel.value; render(); };
+  categorySel.onchange = ()=>{ filters.category = categorySel.value; render(); };
+  dateFrom.onchange = ()=>{ filters.from = dateFrom.value; render(); };
+  dateTo.onchange = ()=>{ filters.to = dateTo.value; render(); };
+  sortBtn.onclick = ()=>{ sortDesc=!sortDesc; sortBtn.textContent = sortDesc?'Date Descend':'Date Ascend'; render(); };
+  detailBtn.onclick = ()=> alert('Detail View placeholder (boleh diubah sesuai kebutuhan)');
+
+  createBtn.onclick = openCreate;
 
   render();
 }
 
-/* ======= RENDER TABLE ======= */
+/* ========= RENDER ========= */
 function render(){
-  const rows = getFilteredSorted();
-  els.tbody.innerHTML = '';
-  if(rows.length === 0){ els.empty.style.display = 'flex'; return; }
-  els.empty.style.display = 'none';
+  renderChipbar();
+  setTabActive();
+  if(activeTab === 'dashboard') renderDashboard();
+  else if(activeTab === 'transactions') renderTransactions();
+  else renderPlaceholder(activeTab);
+}
 
-  rows.forEach(item => {
-    const row = document.createElement('div');
-    row.className = 'row';
-    row.style.display = 'grid';
-    row.style.gridTemplateColumns = '160px 120px repeat(6,1fr) 90px 130px 140px';
+function renderChipbar(){
+  chipbar.innerHTML='';
+  openTabs.forEach(id=>{
+    const chip=document.createElement('div');
+    chip.className='chip'+(id===activeTab?' active':'');
+    chip.draggable=true;
+    chip.dataset.id=id;
+    chip.addEventListener('dragstart',onDragStart);
+    chip.addEventListener('dragover',onDragOver);
+    chip.addEventListener('drop',onDrop);
+    chip.addEventListener('click', e=>{ if(e.target.classList.contains('close')) return; activeTab=id; render(); });
 
-    const cells = [
-      td(text(fmtDT(item.dt))),
-      td(text(item.site), 'site'),
-      td(text(fmtNum(item.deposit)), 'num'),
-      td(text(fmtNum(item.withdrawal)), 'num'),
-      td(text(fmtNum(item.foc)), 'num'),
-      td(text(fmtNum(item.bonus)), 'num'),
-      td(text(fmtNum(item.forfeit)), 'num'),
-      td(text(item.active ?? 0), 'num'),
-      td(text(fmtNum(item.resit)), 'num'),
-      td(html(`<span class="badge">${item.status||'-'}</span>`)),
-      td(actions(item))
-    ];
-    cells.forEach(c => row.appendChild(c));
-    els.tbody.appendChild(row);
+    chip.innerHTML=`<span>${tabLabel(id)}</span><button class="close" title="Close" data-x="${id}">✕</button>`;
+    chip.querySelector('.close').onclick = (e)=>{ e.stopPropagation(); closeTab(id); };
+    chipbar.appendChild(chip);
   });
 }
-function td(content, cls=''){ const x=document.createElement('div'); x.className='td'+(cls?(' '+cls):''); x.appendChild(content); return x; }
-function text(t){ return document.createTextNode(t); }
-function html(h){ const d=document.createElement('div'); d.innerHTML=h; return d.firstChild || d; }
-function actions(item){
-  const wrap = document.createElement('div'); wrap.className='actions';
-  const view = document.createElement('button'); view.className='btn small'; view.textContent='View';
-  view.onclick = ()=> alert(JSON.stringify(item,null,2));
-  const del = document.createElement('button'); del.className='btn small danger'; del.textContent='Delete';
-  del.onclick = ()=>{ if(confirm('Delete this record?')){ data = data.filter(x=>x.id!==item.id); save(); render(); } };
-  wrap.append(view, del);
-  return wrap;
+function setTabActive(){
+  document.querySelectorAll('.tab').forEach(el=>{
+    el.classList.toggle('active', el.dataset.tab===activeTab);
+  });
 }
 
-/* ======= FILTERING/SORTING ======= */
+function renderTransactions(){
+  const wrap=document.createElement('div');
+
+  // header
+  const thead=document.createElement('div');
+  thead.className='thead';
+  thead.innerHTML=`
+    <div class="th">
+      <div>Date & Time</div><div>Site</div>
+      <div class="righty">Deposit</div><div class="righty">Withdrawal</div>
+      <div class="righty">FOC</div><div class="righty">Total Bonus</div>
+      <div class="righty">Total Forfeit</div><div class="righty">Active</div>
+      <div class="righty">Resit In</div><div>Status</div><div>Action</div>
+    </div>`;
+  wrap.appendChild(thead);
+
+  const rows = getFilteredSorted();
+  if(rows.length===0){
+    const empty=document.createElement('div');
+    empty.className='empty'; empty.innerHTML=`<div>📭</div><div>No data</div>`;
+    wrap.appendChild(empty);
+  }else{
+    rows.forEach(item=>{
+      const row=document.createElement('div');
+      row.className='row';
+      row.innerHTML=`
+        <div class="td">${fmtDT(item.dt)}</div>
+        <div class="td site">${item.site}</div>
+        <div class="td num">${fmtNum(item.deposit)}</div>
+        <div class="td num">${fmtNum(item.withdrawal)}</div>
+        <div class="td num">${fmtNum(item.foc)}</div>
+        <div class="td num">${fmtNum(item.bonus)}</div>
+        <div class="td num">${fmtNum(item.forfeit)}</div>
+        <div class="td num">${item.active||0}</div>
+        <div class="td num">${fmtNum(item.resit)}</div>
+        <div class="td"><span class="badge">${item.status||'-'}</span></div>
+        <div class="td">
+          <div class="actions">
+            <button class="btn small" onclick='alert(${JSON.stringify(JSON.stringify(item))})'>View</button>
+            <button class="btn small danger" onclick="deleteRecord('${item.id}')">Delete</button>
+          </div>
+        </div>`;
+      wrap.appendChild(row);
+    });
+  }
+  content.innerHTML=''; content.appendChild(wrap);
+}
+
+function renderDashboard(){
+  const rows = getFilteredSorted();
+  // aggregate
+  const sum = rows.reduce((a,r)=>({
+    deposit:a.deposit+r.deposit, withdrawal:a.withdrawal+r.withdrawal, bonus:a.bonus+r.bonus,
+    forfeit:a.forfeit+r.forfeit, resit:a.resit+r.resit, active:a.active+(r.active||0)
+  }), {deposit:0,withdrawal:0,bonus:0,forfeit:0,resit:0,active:0});
+
+  const box=document.createElement('div');
+  box.innerHTML=`
+    <div class="cards">
+      <div class="card"><h4>Total Deposit</h4><div class="val">${fmtNum(sum.deposit)}</div></div>
+      <div class="card"><h4>Total Withdrawal</h4><div class="val">${fmtNum(sum.withdrawal)}</div></div>
+      <div class="card"><h4>Total Bonus</h4><div class="val">${fmtNum(sum.bonus)}</div></div>
+      <div class="card"><h4>Total Forfeit</h4><div class="val">${fmtNum(sum.forfeit)}</div></div>
+      <div class="card"><h4>Resit In</h4><div class="val">${fmtNum(sum.resit)}</div></div>
+      <div class="card"><h4>Active Member</h4><div class="val">${fmtNum(sum.active)}</div></div>
+    </div>
+    <div class="recent">
+      <h3>Recent (latest 10)</h3>
+      <div class="thead" style="margin-top:6px">
+        <div class="th" style="grid-template-columns: 180px 130px repeat(6, minmax(120px,1fr)) 120px 130px 0;">
+          <div>Date & Time</div><div>Site</div>
+          <div class="righty">Deposit</div><div class="righty">Withdrawal</div>
+          <div class="righty">FOC</div><div class="righty">Bonus</div>
+          <div class="righty">Forfeit</div><div class="righty">Active</div>
+          <div class="righty">Resit In</div><div>Status</div><div style="display:none"></div>
+        </div>
+      </div>
+    </div>
+  `;
+  const list = rows.slice(0,10);
+  list.forEach(item=>{
+    const r=document.createElement('div'); r.className='row';
+    r.style.gridTemplateColumns='180px 130px repeat(6, minmax(120px,1fr)) 120px 130px 0';
+    r.innerHTML=`
+      <div class="td">${fmtDT(item.dt)}</div>
+      <div class="td site">${item.site}</div>
+      <div class="td num">${fmtNum(item.deposit)}</div>
+      <div class="td num">${fmtNum(item.withdrawal)}</div>
+      <div class="td num">${fmtNum(item.foc)}</div>
+      <div class="td num">${fmtNum(item.bonus)}</div>
+      <div class="td num">${fmtNum(item.forfeit)}</div>
+      <div class="td num">${item.active||0}</div>
+      <div class="td num">${fmtNum(item.resit)}</div>
+      <div class="td"><span class="badge">${item.status||'-'}</span></div>
+      <div class="td" style="display:none"></div>`;
+    box.appendChild(r);
+  });
+
+  content.innerHTML=''; content.appendChild(box);
+}
+
+function renderPlaceholder(id){
+  const w=document.createElement('div');
+  w.innerHTML=`<div class="empty" style="height:140px"><div>ℹ️</div><div>${tabLabel(id)} area (placeholder)</div></div>`;
+  content.innerHTML=''; content.appendChild(w);
+}
+
+/* ========= FILTERING & SORT ========= */
 function getFilteredSorted(){
   let arr = data.slice();
 
-  // site search
+  // site
+  if(selectedSite!=='ALL') arr = arr.filter(x => (x.site||'').toLowerCase()===selectedSite.toLowerCase());
+
+  // search
   if(filters.q){
-    arr = arr.filter(x => (x.site||'').toLowerCase().includes(filters.q));
+    const q=filters.q;
+    arr = arr.filter(x => (x.site||'').toLowerCase().includes(q));
   }
   // status/category
-  if(filters.status) arr = arr.filter(x => (x.status||'') === filters.status);
-  if(filters.category) arr = arr.filter(x => (x.category||'') === filters.category);
+  if(filters.status) arr = arr.filter(x => (x.status||'')===filters.status);
+  if(filters.category) arr = arr.filter(x => (x.category||'')===filters.category);
 
-  // date range (inclusive)
-  const f = filters.from || els.dateFrom.value;
-  const t = filters.to || els.dateTo.value;
+  // date range inclusive
+  const f = filters.from || dateFrom.value;
+  const t = filters.to || dateTo.value;
   if(f) arr = arr.filter(x => x.dt >= toISODateStart(f));
   if(t) arr = arr.filter(x => x.dt <= toISODateEnd(t));
 
-  // chips (types) — here just informative (we keep all; you can wire to business rules if needed)
-  // Example rule: if ONLY 'deposit' selected, show entries where deposit>0, etc.
+  // type chips
   if(filters.types.size && filters.types.size<3){
     arr = arr.filter(x=>{
-      const sel = [];
-      if(x.deposit>0) sel.push('deposit');
-      if(x.withdrawal>0) sel.push('withdrawal');
-      if(x.bonus>0) sel.push('bonus');
-      return sel.some(t => filters.types.has(t));
+      const present=[];
+      if(x.deposit>0) present.push('deposit');
+      if(x.withdrawal>0) present.push('withdrawal');
+      if(x.bonus>0) present.push('bonus');
+      return present.some(t=>filters.types.has(t));
     });
   }
-
   // sort
-  arr.sort((a,b)=> sortDesc ? (b.dt - a.dt) : (a.dt - b.dt));
+  arr.sort((a,b)=> sortDesc ? (b.dt-a.dt) : (a.dt-b.dt));
   return arr;
 }
 
-/* ======= CREATE ======= */
+/* ========= CREATE ========= */
 function openCreate(){
-  // defaults
-  els.site.value = '';
-  els.dt.value = toDatetimeLocalInput(new Date());
-  ['deposit','withdrawal','foc','bonus','forfeit','active','resit'].forEach(id=> els[id].value='');
-  els.status.value = 'Pending';
-  els.category.value = 'Promotion';
-  els.dlg.showModal();
+  // default site: siteSelect (if ALL -> 5g88)
+  fSite.value = (siteSelect.value==='ALL'?'5g88':siteSelect.value);
+  fDT.value = toDatetimeLocalInput(new Date());
+  [fDeposit,fWithdrawal,fBonus,fForfeit,fResit,fActive].forEach(el=> el.value='');
+  fStatus.value='Approved'; fCategory.value='Promotion';
+  dlg.showModal();
 }
-els.form.addEventListener('submit', (e)=>{
+document.getElementById('form').addEventListener('submit', (e)=>{
   e.preventDefault();
   const item = {
     id: rid(),
-    site: els.site.value.trim(),
-    dt: new Date(els.dt.value).getTime(),
-    deposit: num(els.deposit.value),
-    withdrawal: num(els.withdrawal.value),
-    foc: num(els.foc.value),
-    bonus: num(els.bonus.value),
-    forfeit: num(els.forfeit.value),
-    active: Math.max(0, parseInt(els.active.value||'0',10) || 0),
-    resit: num(els.resit.value),
-    status: els.status.value,
-    category: els.category.value
+    site: fSite.value.trim(),
+    dt: new Date(fDT.value).getTime(),
+    deposit: num(fDeposit.value),
+    withdrawal: num(fWithdrawal.value),
+    foc: 0, // opsional kolom FOC (tak diminta di form utama), biar 0
+    bonus: num(fBonus.value),
+    forfeit: num(fForfeit.value),
+    active: parseInt(fActive.value||'0',10) || 0,
+    resit: num(fResit.value),
+    status: fStatus.value,
+    category: fCategory.value
   };
-  if(!item.site || !item.dt){ alert('Isi Site dan Date & Time'); return; }
-  data.push(item); save(); els.dlg.close(); render();
+  if(!item.site || !item.dt){ alert('Isi Site & Date Time'); return; }
+  data.push(item); save();
+  dlg.close();
+  render();
 });
 
-/* ======= UTIL ======= */
+/* ========= ACTIONS ========= */
+function deleteRecord(id){
+  if(!confirm('Delete record ini?')) return;
+  data = data.filter(x=> x.id!==id); save(); render();
+}
+
+/* ========= Tabs helpers (chips) ========= */
+function tabLabel(id){
+  return ({
+    dashboard:'Dashboard',
+    transactions:'Transactions',
+    player:'Player',
+    report:'Report',
+    livechat:'Livechat',
+    kiosk:'Kiosk Access'
+  })[id] || id;
+}
+function addTabIfMissing(id){
+  if(!openTabs.includes(id)){ openTabs.push(id); saveTabs(); }
+}
+function closeTab(id){
+  openTabs = openTabs.filter(x=>x!==id);
+  if(activeTab===id) activeTab = openTabs[0] || 'transactions';
+  saveTabs(); render();
+}
+function onDragStart(e){ e.dataTransfer.setData('text/plain', e.currentTarget.dataset.id); }
+function onDragOver(e){ e.preventDefault(); }
+function onDrop(e){
+  e.preventDefault();
+  const fromId = e.dataTransfer.getData('text/plain');
+  const toId = e.currentTarget.dataset.id;
+  const fromIdx = openTabs.indexOf(fromId);
+  const toIdx = openTabs.indexOf(toId);
+  if(fromIdx<0 || toIdx<0 || fromIdx===toIdx) return;
+  openTabs.splice(toIdx,0, ...openTabs.splice(fromIdx,1));
+  saveTabs(); renderChipbar();
+}
+
+/* ========= UTIL ========= */
 function load(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]')}catch{return[]} }
 function save(){ localStorage.setItem(LS_KEY, JSON.stringify(data)); }
+function loadTabs(){ try{return JSON.parse(localStorage.getItem(TABS_KEY)||'[]')}catch{return[]} }
+function saveTabs(){ localStorage.setItem(TABS_KEY, JSON.stringify(openTabs)); }
 function num(v){ const n=parseFloat(v); return isFinite(n)? n : 0; }
 function rid(){ return Math.random().toString(36).slice(2)+Date.now().toString(36); }
 function fmtNum(n){ if(n===undefined||n===null) return '0'; return Number(n).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2}); }
