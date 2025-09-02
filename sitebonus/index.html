@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bonus Files | Multi Sub-Account Viewer</title>
+<style>
+  :root{
+    --bg:#0a0a0a; --panel:#111; --muted:#a0a0a0; --gold:#ffd24d; --gold-2:#ffea9a;
+    --line:#262626; --chip-bg:#151515; --ok:#22c55e; --warn:#f59e0b;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:#fff; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial;
+  }
+
+  /* Header */
+  .header{
+    position:sticky; top:0; z-index:50;
+    backdrop-filter: blur(6px);
+    background: linear-gradient(180deg, rgba(0,0,0,.75), rgba(0,0,0,.45));
+    border-bottom:1px solid var(--line);
+  }
+  .head-inner{
+    max-width:1100px; margin:0 auto; padding:12px 16px 10px;
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  }
+  .brand{
+    display:flex; align-items:center; gap:10px; margin-right:auto;
+    font-weight:700; letter-spacing:.3px;
+  }
+  .brand .dot{width:12px; height:12px; border-radius:50%; background:var(--gold); box-shadow:0 0 12px 3px rgba(255,210,77,.45)}
+  .brand .title{font-size:18px}
+  .brand .sub{font-size:12px; color:var(--muted)}
+
+  /* Filters */
+  .filters{
+    display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+  }
+  .chip{
+    padding:8px 12px; border:1px solid var(--line); border-radius:999px; background:var(--chip-bg);
+    color:#ddd; cursor:pointer; user-select:none; font-size:14px; transition:.15s;
+  }
+  .chip:hover{border-color:var(--gold)}
+  .chip.active{border-color:var(--gold); color:#000; background:linear-gradient(180deg,var(--gold-2),var(--gold)); box-shadow:0 0 0 3px rgba(255,210,77,.15)}
+  .count{font-size:12px; color:var(--muted); padding-left:2px}
+
+  /* Search */
+  .searchbar{
+    width:100%; display:flex; align-items:center; gap:8px;
+    background: #0e0e0e; border:1px solid var(--line); border-radius:10px; padding:8px 10px;
+  }
+  .searchbar input{
+    flex:1; background:transparent; border:none; outline:none; color:#fff; font-size:14px;
+  }
+  .searchbar .kbd{
+    border:1px solid var(--line); border-bottom-color:#333; border-right-color:#333;
+    border-radius:6px; padding:2px 6px; font-size:12px; color:#bdbdbd;
+  }
+
+  /* Main */
+  .container{max-width:1100px; margin:16px auto 40px; padding:0 16px}
+  .toolbar{display:flex; gap:12px; align-items:center; margin-bottom:14px; flex-wrap:wrap}
+  .right-help{margin-left:auto; font-size:12px; color:var(--muted)}
+
+  /* Grid */
+  .grid{
+    display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px;
+  }
+  @media (max-width:820px){ .grid{grid-template-columns: 1fr;} }
+
+  .card{
+    background:linear-gradient(180deg,#0f0f0f,#0a0a0a); border:1px solid var(--line);
+    border-radius:12px; padding:12px; display:flex; gap:10px; align-items:flex-start;
+  }
+  .bullet{
+    width:8px; height:8px; margin-top:6px; border-radius:50%;
+    background:linear-gradient(180deg,var(--gold),#e1b400);
+    box-shadow:0 0 10px 2px rgba(255,210,77,.35);
+    flex:0 0 auto;
+  }
+  .meta{flex:1 1 auto; min-width:0}
+  .filename{
+    font-weight:600; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .subline{
+    margin-top:3px; font-size:12px; color:#cfcfcf; display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+  }
+  .badge{
+    padding:2px 8px; border-radius:999px; font-size:11px; color:#111; background:linear-gradient(180deg,var(--gold-2),var(--gold));
+    border:1px solid #b98e00; box-shadow:inset 0 0 0 1px rgba(0,0,0,.25);
+  }
+  .host{color:#a6a6a6}
+  .actions{
+    display:flex; gap:8px; flex:0 0 auto;
+  }
+  .btn{
+    appearance:none; border:none; cursor:pointer; font-weight:600; border-radius:9px; padding:8px 10px; font-size:13px;
+    transition:.15s; outline:none;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn.open{ background:#1a1a1a; color:#fff; border:1px solid var(--line)}
+  .btn.open:hover{ border-color:var(--gold)}
+  .btn.copy{ background:linear-gradient(180deg,var(--gold-2),var(--gold)); color:#111; border:1px solid #b98e00}
+  .btn.copy:hover{ filter:saturate(1.05) brightness(1.02)}
+
+  /* Empty */
+  .empty{
+    text-align:center; padding:32px 12px; color:var(--muted); border:1px dashed var(--line); border-radius:12px; background:#0c0c0c;
+  }
+
+  /* Toast */
+  .toast{
+    position:fixed; left:50%; transform:translateX(-50%);
+    bottom:24px; background:#111827; color:#e5e7eb; padding:12px 16px; border-radius:10px;
+    border:1px solid #233044; box-shadow:0 8px 24px rgba(0,0,0,.35);
+    font-size:14px; display:none; z-index:100;
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div class="head-inner">
+      <div class="brand">
+        <div class="dot"></div>
+        <div>
+          <div class="title">Bonus Files</div>
+          <div class="sub">Multi Sub‑Account Viewer</div>
+        </div>
+      </div>
+
+      <!-- Dynamic filters will be injected to .filters -->
+      <div class="filters" id="filters"></div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="toolbar">
+      <div class="searchbar" style="flex:1" id="searchBox">
+        <input id="q" type="text" placeholder="Search file name… (e.g. welcome bonus, turnover, 2025-09)">
+        <span class="kbd">/</span>
+      </div>
+      <div class="count" id="resultCount">0 files</div>
+      <div class="right-help">Tip: gunakan <strong>ALL</strong> untuk gabung semua sub account.</div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" style="display:none;">Tiada hasil. Cuba tukar filter atau carian.</div>
+  </div>
+
+  <div class="toast" id="toast">Copied!</div>
+
+<script>
+/**
+ * ====== DATA ======
+ * Edit di sini. Setiap key = sub account name (huruf bebas).
+ * Tiap file perlu: { name, url }.
+ * Optional: host (untuk info), size (string), updated (string/timestamp).
+ */
+const DATA = {
+  "5G88": [
+    { name:"Welcome Bonus 100% (5G88).pdf", url:"https://example.com/5g88/welcome-bonus.pdf", host:"GitHub", size:"412 KB", updated:"2025-08-12" },
+    { name:"Daily Reload 10% (5G88).png", url:"https://example.com/5g88/daily-reload.png", host:"CDN", size:"210 KB", updated:"2025-08-28" },
+    { name:"Turnover Requirement (5G88).pdf", url:"https://example.com/5g88/turnover.pdf", size:"355 KB" }
+  ],
+  "SPM888": [
+    { name:"Welcome Bonus 120% (SPM888).pdf", url:"https://example.com/spm888/welcome-120.pdf", host:"GitHub", size:"508 KB", updated:"2025-07-30" },
+    { name:"Weekly Cashback 8% (SPM888).jpg", url:"https://example.com/spm888/cashback-8.jpg", host:"Drive", size:"1.2 MB" },
+    { name:"Event September (SPM888).pdf", url:"https://example.com/spm888/event-sept.pdf", size:"640 KB", updated:"2025-09-01" }
+  ],
+  // Contoh tambah sub account lain:
+  // "NEPWIN88": [
+  //   { name:"Welcome 100% (NEPWIN88).pdf", url:"https://example.com/nepwin/welcome.pdf" }
+  // ]
+};
+
+// ====== STATE ======
+const els = {
+  filters: document.getElementById('filters'),
+  grid: document.getElementById('grid'),
+  empty: document.getElementById('empty'),
+  q: document.getElementById('q'),
+  resultCount: document.getElementById('resultCount'),
+  toast: document.getElementById('toast'),
+};
+const ALL = '_ALL_';
+let activeSite = ALL;
+let query = "";
+
+// ====== INIT ======
+init();
+
+function init(){
+  const sites = Object.keys(DATA).sort((a,b)=>a.localeCompare(b));
+  renderFilterChips(sites);
+
+  // Deep-link: ?site=spm888 atau #spm888
+  const urlSite = (new URLSearchParams(location.search).get('site') || location.hash.replace('#','') || '').trim();
+  const saved = localStorage.getItem('bonusSite') || '';
+  const initial = normalizeSite(urlSite) || normalizeSite(saved) || ALL;
+  setActiveSite(initial);
+
+  // Search shortcuts
+  els.q.addEventListener('input', () => { query = els.q.value.trim().toLowerCase(); render(); });
+  window.addEventListener('keydown', (e)=>{ if(e.key === '/' && !isTypingInInput()){ e.preventDefault(); els.q.focus(); }});
+
+  render();
+}
+
+function normalizeSite(s){
+  if(!s) return '';
+  const key = Object.keys(DATA).find(k => k.toLowerCase() === s.toLowerCase());
+  return key || '';
+}
+
+function isTypingInInput(){
+  const a = document.activeElement;
+  return a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable);
+}
+
+// ====== UI RENDER ======
+function renderFilterChips(sites){
+  els.filters.innerHTML = '';
+  const makeChip = (id,label) => {
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.dataset.id = id;
+    chip.textContent = label;
+    chip.addEventListener('click', () => setActiveSite(id));
+    return chip;
+  };
+
+  els.filters.appendChild(makeChip(ALL, 'ALL'));
+  sites.forEach(s => els.filters.appendChild(makeChip(s, s)));
+
+  // search box beside filters in header (optional): keeping as is since toolbar has search.
+}
+
+function setActiveSite(id){
+  activeSite = id;
+  localStorage.setItem('bonusSite', id === ALL ? '' : id);
+  updateChipActive();
+  updateUrlHash();
+  render();
+}
+
+function updateChipActive(){
+  [...els.filters.children].forEach(ch => {
+    ch.classList.toggle('active', ch.dataset.id === activeSite);
+  });
+}
+
+function updateUrlHash(){
+  if(activeSite === ALL){
+    history.replaceState(null, '', location.pathname); // remove query/hash
+  } else {
+    // both query and hash supported; use hash for brevity
+    history.replaceState(null, '', `${location.pathname}#${encodeURIComponent(activeSite)}`);
+  }
+}
+
+function collectFiles(){
+  if(activeSite === ALL){
+    // gabung semua, dengan field site
+    const all = [];
+    Object.entries(DATA).forEach(([site, files])=>{
+      files.forEach(f => all.push({...f, site}));
+    });
+    return all;
+  }
+  // single site
+  return (DATA[activeSite] || []).map(f => ({...f, site: activeSite}));
+}
+
+function filterFiles(files){
+  if(!query) return files;
+  return files.filter(f => (f.name||'').toLowerCase().includes(query));
+}
+
+function render(){
+  const files = filterFiles(collectFiles());
+  els.grid.innerHTML = '';
+  els.resultCount.textContent = `${files.length} file${files.length!==1?'s':''}`;
+
+  if(files.length === 0){
+    els.grid.style.display = 'none';
+    els.empty.style.display = 'block';
+    return;
+  }
+  els.grid.style.display = 'grid';
+  els.empty.style.display = 'none';
+
+  for(const f of files){
+    els.grid.appendChild(cardFor(f));
+  }
+}
+
+function cardFor(file){
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const dot = document.createElement('div');
+  dot.className = 'bullet';
+
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+
+  const title = document.createElement('div');
+  title.className = 'filename';
+  title.title = file.name || '';
+  title.textContent = file.name || '(no name)';
+
+  const sub = document.createElement('div');
+  sub.className = 'subline';
+
+  const badge = document.createElement('span');
+  badge.className = 'badge';
+  badge.textContent = file.site || '-';
+
+  const host = document.createElement('span');
+  host.className = 'host';
+  host.textContent = file.host ? `• ${file.host}` : '';
+
+  const extra = document.createElement('span');
+  extra.className = 'host';
+  const bits = [];
+  if(file.size) bits.push(file.size);
+  if(file.updated) bits.push(formatDateShort(file.updated));
+  extra.textContent = bits.length ? `• ${bits.join(' · ')}` : '';
+
+  sub.append(badge);
+  if(host.textContent) sub.append(host);
+  if(extra.textContent) sub.append(extra);
+
+  meta.append(title, sub);
+
+  const actions = document.createElement('div');
+  actions.className = 'actions';
+
+  const openBtn = document.createElement('button');
+  openBtn.className = 'btn open';
+  openBtn.textContent = 'Open';
+  openBtn.addEventListener('click', () => {
+    if(file.url) window.open(file.url, '_blank', 'noopener');
+  });
+
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'btn copy';
+  copyBtn.textContent = 'Copy link';
+  copyBtn.addEventListener('click', async () => {
+    try{
+      await navigator.clipboard.writeText(file.url || '');
+      showToast('Link copied');
+    }catch(err){
+      showToast('Copy failed');
+    }
+  });
+
+  actions.append(openBtn, copyBtn);
+  card.append(dot, meta, actions);
+  return card;
+}
+
+function formatDateShort(d){
+  // accept YYYY-MM-DD or Date
+  try{
+    const dt = (typeof d === 'string') ? new Date(d) : d;
+    if(!dt || isNaN(+dt)) return d;
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth()+1).padStart(2,'0');
+    const dd = String(dt.getDate()).padStart(2,'0');
+    return `${y}-${m}-${dd}`;
+  }catch{ return d; }
+}
+
+// ====== TOAST ======
+let toastTimer=null;
+function showToast(msg){
+  const t = els.toast;
+  t.textContent = msg;
+  t.style.display = 'block';
+  t.style.opacity = '0';
+  requestAnimationFrame(()=>{ t.style.transition='opacity .2s ease'; t.style.opacity='1'; });
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{
+    t.style.opacity='0';
+    setTimeout(()=>{ t.style.display='none'; }, 220);
+  }, 1300);
+}
+</script>
+</body>
+</html>
