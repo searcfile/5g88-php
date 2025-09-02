@@ -1,532 +1,501 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>5G88 | Transactions</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monthly Bonus Recorder | 5G88</title>
 <style>
   :root{
-    --bg:#0b0b0b;
-    --panel:#121212;
-    --panel-2:#151515;
-    --text:#eaeaea;
-    --muted:#9aa0a6;
-    --line:#262626;
-    --gold:#f1c232;
-    --gold-2:#ffd54d;
-    --blue:#2b6cb0;
-    --danger:#f87171;
-    --ok:#22c55e;
+    --bg:#0a0a0a; --card:#121212; --muted:#1d1d1d;
+    --text:#e6e6e6; --sub:#a7a7a7; --gold:#ffd166; --gold-2:#ffcf4d;
+    --red:#f87171; --green:#22c55e; --cyan:#60a5fa;
+    --ring:rgba(255,209,102,.55);
   }
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
-    margin:0;background:var(--bg);color:var(--text);
-    font-family: ui-sans-serif,system-ui,"Segoe UI",Roboto,Arial,"Apple Color Emoji","Segoe UI Emoji";
-    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    margin:0; background:var(--bg); color:var(--text);
+    font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial;
+    letter-spacing:.2px;
   }
-
   /* Header */
-  .app-header{
-    height:56px; background:#0f172a; color:#fff;
-    display:flex; align-items:center; justify-content:space-between;
-    padding:0 14px; position:sticky; top:0; z-index:50; border-bottom:1px solid #111827;
+  .header{
+    position:sticky; top:0; z-index:50;
+    background:linear-gradient(180deg,#111 0%, #0c0c0c 100%);
+    border-bottom:1px solid #242424;
+    padding:12px 14px;
+    display:flex; gap:10px; align-items:center; flex-wrap:wrap;
   }
-  .brand{display:flex;gap:10px;align-items:center;font-weight:700}
-  .brand .dot{width:8px;height:8px;border-radius:50%;background:var(--gold)}
-  .tabs{display:flex;gap:8px;align-items:center}
-  .tab{
-    padding:8px 12px; border-radius:8px; cursor:pointer; user-select:none;
-    color:#c7d2fe; border:1px solid transparent;
+  .brand{
+    display:flex; align-items:center; gap:10px; font-weight:700;
+    padding:6px 10px; border-radius:10px; background:#0f0f0f; border:1px solid #222;
   }
-  .tab.active{background:#111827;border-color:#1f2937;color:#fff}
-  .meter{display:flex;gap:8px;align-items:center;font-size:12px;color:#cbd5e1}
-  .pill{padding:3px 8px;border-radius:999px;background:#0b1220;border:1px solid #1f2937}
-
-  /* Toolbar under header */
-  .toolbar{
-    position:sticky; top:56px; z-index:45;
-    background:var(--panel); border-bottom:1px solid var(--line);
-    padding:10px 12px; display:grid; gap:10px;
-    grid-template-columns: 1fr auto auto auto;
+  .brand .dot{width:8px; height:8px; border-radius:50%; background:var(--gold); box-shadow:0 0 12px var(--gold);}
+  .spacer{flex:1}
+  .select, .input, .btn{
+    height:36px; border-radius:8px; border:1px solid #2a2a2a; background:#121212; color:var(--text);
+    padding:0 10px; outline:none; transition:border .15s ease, box-shadow .2s ease;
   }
-  @media (max-width:980px){
-    .toolbar{grid-template-columns: 1fr 1fr}
-  }
-  .search-wrap{display:flex; gap:8px; align-items:center}
-  .search{
-    height:36px; background:#0f0f0f; border:1px solid #303030; color:#fff;
-    border-radius:8px; padding:0 10px; width:260px; outline:none;
-  }
-  .search:focus{border-color:var(--gold)}
-  .daterange{display:flex; gap:8px}
-  .date{
-    height:36px; background:#0f0f0f; border:1px solid #303030; color:#fff;
-    border-radius:8px; padding:0 10px; outline:none; width:175px;
-  }
-  .select{
-    height:36px; background:#0f0f0f; border:1px solid #303030; color:#fff;
-    border-radius:8px; padding:0 10px; outline:none;
-  }
+  .select:hover,.input:hover{border-color:#3a3a3a}
+  .select:focus,.input:focus{border-color:var(--gold); box-shadow:0 0 0 4px var(--ring)}
   .btn{
-    height:36px; padding:0 14px; border-radius:8px; border:1px solid #1f2937;
-    background:#0d1b2a; color:#cbd5e1; cursor:pointer; transition:.18s;
+    background:linear-gradient(180deg,var(--gold) 0%,var(--gold-2) 100%);
+    border:1px solid #8a6b1a; color:#000; font-weight:700; cursor:pointer;
+    box-shadow:0 6px 18px rgba(255,209,102,.25);
   }
-  .btn:hover{filter:brightness(1.15)}
-  .btn.gold{background:linear-gradient(180deg,var(--gold-2),var(--gold)); color:#1b1b1b; border-color:#8f6f00; font-weight:700}
-  .btn.ghost{background:#111827;color:#e5e7eb}
-  .btn.danger{background:#2a0f10;color:#fecaca;border-color:#7f1d1d}
-  .toolbar .right{display:flex; gap:8px; align-items:center; justify-self:end}
+  .btn:hover{filter:brightness(1.04)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{
+    background:#141414; color:var(--text); border:1px solid #2d2d2d; box-shadow:none;
+  }
+  .btn.ghost:hover{border-color:#3a3a3a}
+  .hint{color:var(--sub); font-size:12px}
 
-  /* Content */
-  .content{padding:12px}
+  /* Summary cards */
+  .wrap{max-width:1200px; margin:16px auto; padding:0 14px 60px}
+  .cards{display:grid; grid-template-columns:repeat(6,1fr); gap:10px}
+  @media (max-width:1100px){ .cards{grid-template-columns:repeat(3,1fr)} }
+  @media (max-width:640px){ .cards{grid-template-columns:repeat(2,1fr)} }
   .card{
-    background:var(--panel-2); border:1px solid var(--line); border-radius:12px; overflow:hidden;
+    background:linear-gradient(180deg,#141414 0%, #0e0e0e 100%);
+    border:1px solid #232323; border-radius:14px; padding:12px;
   }
+  .card h4{margin:0 0 2px; font-size:12px; color:#cfcfcf; font-weight:600}
+  .card .val{font-size:18px; font-weight:800}
+  .val.red{color:var(--red)} .val.green{color:var(--green)} .val.cyan{color:var(--cyan)}
+  .badge{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:2px 8px; border-radius:999px; border:1px solid #2a2a2a; background:#111; color:#ccc; font-size:12px;
+  }
+
+  /* Table */
   .table{
-    width:100%; border-collapse:separate; border-spacing:0;
+    margin-top:14px; background:#101010; border:1px solid #222; border-radius:14px; overflow:hidden;
   }
-  .thead{background:#0f0f0f; color:#cbd5e1}
-  .thead th{font-size:12px; text-transform:uppercase; letter-spacing:.04em}
-  th, td{padding:10px 12px; border-bottom:1px solid #1f1f1f; vertical-align:top}
-  tr:hover td{background:#121820}
-  .empty{padding:40px; text-align:center; color:#8a8f98}
-  .badge{padding:2px 8px; border-radius:999px; font-size:12px; background:#0b1220; border:1px solid #1f2937; color:#cbd5e1}
-  .muted{color:var(--muted); font-size:12px}
-  .num{font-variant-numeric:tabular-nums}
-  .actions{display:flex; gap:6px}
-  .link{color:#93c5fd; cursor:pointer}
-  .detail-on td:nth-child(n+5){white-space:nowrap}
+  .table thead{background:linear-gradient(180deg,#161616,#131313)}
+  .table th, .table td{padding:10px 10px; border-bottom:1px dashed #222; text-align:right; white-space:nowrap}
+  .table th:first-child,.table td:first-child{text-align:left}
+  .table th:nth-child(2), .table td:nth-child(2){text-align:center}
+  .table tfoot td{background:#0f0f0f; font-weight:800}
+  .pill{padding:2px 8px; border-radius:999px; border:1px solid #2d2d2d; background:#121212; font-weight:700}
+  .pill.site-5g88{color:#111; background:var(--gold); border-color:#8a6b1a}
+  .pill.site-spm888{color:#eee; background:#273142; border-color:#3a4b66}
+  .num.red{color:var(--red)} .num.green{color:var(--green)}
+
+  .actions{display:flex; gap:8px; justify-content:flex-end}
+  .iconbtn{
+    height:28px; padding:0 10px; border-radius:8px; border:1px solid #2a2a2a;
+    background:#151515; color:#ddd; cursor:pointer; font-weight:600;
+  }
+  .iconbtn:hover{border-color:#3a3a3a}
+  .iconbtn.del{border-color:#3a2222; background:#191111; color:#ffb4b4}
+  .empty{
+    padding:24px; text-align:center; color:#9f9f9f; border-top:1px dashed #222;
+    background:repeating-linear-gradient(45deg,#0e0e0e 0 8px,#0c0c0c 8px 16px);
+  }
 
   /* Modal */
-  .modal-backdrop{
-    position:fixed; inset:0; background:rgba(0,0,0,.6);
-    display:none; align-items:center; justify-content:center; z-index:60;
+  .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; backdrop-filter:blur(3px)}
+  .modal.show{display:flex}
+  .overlay{position:absolute; inset:0; background:rgba(0,0,0,.55)}
+  .dialog{
+    position:relative; z-index:1; width:min(920px,calc(100% - 24px));
+    background:#111; border:1px solid #2a2a2a; border-radius:16px; padding:14px;
+    box-shadow:0 30px 80px rgba(0,0,0,.55);
   }
-  .modal{width:min(860px,96vw); background:#0e0e0e; border:1px solid var(--line); border-radius:14px; overflow:hidden}
-  .modal header{display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:#111827; border-bottom:1px solid #1f2937}
-  .modal h3{margin:0; font-size:16px}
-  .modal .body{padding:14px}
-  .grid{
-    display:grid; gap:10px;
-    grid-template-columns: repeat(3,minmax(0,1fr));
-  }
-  @media (max-width:860px){ .grid{grid-template-columns:1fr 1fr} }
-  @media (max-width:560px){ .grid{grid-template-columns:1fr} }
-  .field{display:flex; flex-direction:column; gap:6px}
-  .label{font-size:12px; color:#cbd5e1}
-  .input,.number{
-    height:36px; background:#0f0f0f; border:1px solid #303030; color:#fff;
-    border-radius:8px; padding:0 10px; outline:none;
-  }
-  .input:focus,.number:focus{border-color:var(--gold)}
-  .modal footer{display:flex; gap:10px; justify-content:flex-end; padding:12px 14px; border-top:1px solid #1f2937; background:#0f0f0f}
-  .hint{font-size:12px; color:#9aa0a6}
+  .dialog h3{margin:0 0 10px; font-size:18px}
+  .grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
+  @media (max-width:680px){ .grid{grid-template-columns:1fr} }
+  .group{display:flex; flex-direction:column; gap:6px}
+  .group label{font-size:12px; color:#cfcfcf}
+  .input[type="number"]{text-align:right}
+  .dialog .foot{display:flex; gap:8px; justify-content:flex-end; margin-top:12px}
 
-  /* Toast */
-  .toast{
-    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
-    background:#111827; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px;
-    padding:10px 14px; font-size:14px; display:none; z-index:70;
+  /* Archive banner */
+  .banner{
+    margin:12px 0 -2px; padding:10px; border:1px dashed #2a2a2a; border-radius:10px;
+    background:#0e0e0e; color:#cfcfcf; display:flex; align-items:center; gap:10px;
   }
 </style>
 </head>
 <body>
+  <div class="header">
+    <div class="brand"><span class="dot"></span> <span>Bonus Recorder</span></div>
 
-  <!-- Header -->
-  <div class="app-header">
-    <div class="brand"><span class="dot"></span> <span>5G88 Admin</span></div>
-    <div class="tabs">
-      <div class="tab">Dashboard</div>
-      <div class="tab active">Transactions</div>
-      <div class="tab">Cash Transfer</div>
-      <div class="tab">Player</div>
-      <div class="tab">Livechat</div>
-    </div>
-    <div class="meter">
-      <span class="pill">Kuala_Lumpur</span>
-      <span class="pill">Bank Meter: <b class="num" id="meterTotal">4,775,613.48</b></span>
-      <span class="pill">Online: <b id="onlineCount">536</b></span>
-    </div>
+    <select id="siteFilter" class="select" title="Site">
+      <option value="ALL">All Sites</option>
+      <option value="5G88">5G88</option>
+      <option value="SPM888">SPM888</option>
+    </select>
+
+    <select id="monthFilter" class="select" title="Month"></select>
+
+    <div class="spacer"></div>
+
+    <button id="createBtn" class="btn">Create</button>
+    <button id="exportBtn" class="btn ghost">Export CSV</button>
   </div>
 
-  <!-- Toolbar -->
-  <div class="toolbar" id="toolbar">
-    <div class="search-wrap">
-      <input id="siteSearch" class="search" placeholder="Search Site (e.g. 5g88, spm888)" autocomplete="off" />
-      <button class="btn ghost" id="clearSiteBtn">Clear</button>
+  <div class="wrap">
+    <div id="archiveBanner" class="banner" style="display:none">
+      <span class="badge">Archive</span>
+      <span>Anda sedang melihat bulan <b id="bannerMonth"></b>. Data default selalu otomatis pindah ke bulan berjalan.</span>
     </div>
 
-    <div class="daterange">
-      <input type="datetime-local" id="fromDate" class="date" />
-      <input type="datetime-local" id="toDate" class="date" />
+    <div class="cards" id="summaryRow">
+      <!-- summary cards generated by JS -->
     </div>
 
-    <div class="right">
-      <button class="btn" id="sortBtn" title="Toggle Date Desc/Asc">Date Descend</button>
-      <button class="btn" id="detailBtn">Detail View</button>
-    </div>
-
-    <div class="right">
-      <button class="btn gold" id="createBtn">Create</button>
-    </div>
-  </div>
-
-  <!-- Content -->
-  <div class="content">
-    <div class="card">
-      <table class="table" id="txTable">
-        <thead class="thead">
+    <div class="table">
+      <table id="dataTable" style="width:100%; border-collapse:collapse">
+        <thead>
           <tr>
-            <th style="width:160px">Date</th>
-            <th>Site</th>
-            <th>Total Deposit</th>
-            <th>Total Withdrawal</th>
-            <th>Total Bonus</th>
-            <th>Total Forfeit</th>
-            <th>Total Resit In</th>
-            <th>Total Member</th>
-            <th>Total Sales</th>
-            <th style="width:130px">Action</th>
+            <th style="width:150px">Date/Time</th>
+            <th style="width:92px">Site</th>
+            <th>Withdrawal</th>
+            <th>Deposit</th>
+            <th>Bonus</th>
+            <th>Forfeit</th>
+            <th>Member</th>
+            <th>Resit In</th>
+            <th>Sales</th>
+            <th style="width:180px; text-align:right">Actions</th>
           </tr>
         </thead>
-        <tbody id="txBody">
-          <tr><td colspan="10" class="empty">No data</td></tr>
-        </tbody>
+        <tbody id="tbody"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2">TOTAL (Filtered)</td>
+            <td id="ft_withdrawal" style="text-align:right">0</td>
+            <td id="ft_deposit" style="text-align:right">0</td>
+            <td id="ft_bonus" style="text-align:right">0</td>
+            <td id="ft_forfeit" style="text-align:right">0</td>
+            <td id="ft_member" style="text-align:right">0</td>
+            <td id="ft_resit" style="text-align:right">0</td>
+            <td id="ft_sales" style="text-align:right">0</td>
+            <td></td>
+          </tr>
+        </tfoot>
       </table>
+      <div id="emptyState" class="empty" style="display:none">Belum ada data untuk filter ini. Klik <b>Create</b> untuk tambah data baru.</div>
     </div>
+    <div class="hint" style="margin-top:8px">Semua data disimpan lokal di browser (localStorage). Silakan eksport CSV untuk backup.</div>
   </div>
 
   <!-- Modal -->
-  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true">
-    <div class="modal" role="document">
-      <header>
-        <h3 id="modalTitle">Create Transaction</h3>
-        <button class="btn danger" id="closeModal">Close</button>
-      </header>
-      <div class="body">
-        <div class="grid">
-          <div class="field">
-            <label class="label">Site <span class="hint">(contoh: 5g88, spm888)</span></label>
-            <input id="mSite" class="input" placeholder="5g88" />
-          </div>
-          <div class="field">
-            <label class="label">Date & Time</label>
-            <input id="mDate" type="datetime-local" class="input" />
-          </div>
-          <div class="field">
-            <label class="label">Total Deposit</label>
-            <input id="mDeposit" type="number" step="0.01" class="number" value="0">
-          </div>
-
-          <div class="field">
-            <label class="label">Total Withdrawal</label>
-            <input id="mWithdrawal" type="number" step="0.01" class="number" value="0">
-          </div>
-          <div class="field">
-            <label class="label">Total Bonus</label>
-            <input id="mBonus" type="number" step="0.01" class="number" value="0">
-          </div>
-          <div class="field">
-            <label class="label">Total Forfeit</label>
-            <input id="mForfeit" type="number" step="0.01" class="number" value="0">
-          </div>
-
-          <div class="field">
-            <label class="label">Total Resit In</label>
-            <input id="mResit" type="number" step="0.01" class="number" value="0">
-          </div>
-          <div class="field">
-            <label class="label">Total Member</label>
-            <input id="mMember" type="number" step="1" class="number" value="0">
-          </div>
-          <div class="field">
-            <label class="label">Total Sales <span class="hint">(boleh diisi manual)</span></label>
-            <input id="mSales" type="number" step="0.01" class="number" value="0">
-          </div>
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="overlay" onclick="closeModal()"></div>
+    <div class="dialog" role="dialog" aria-modal="true">
+      <h3 id="modalTitle">Create Record</h3>
+      <div class="grid">
+        <div class="group">
+          <label for="m_site">Site</label>
+          <select id="m_site" class="select">
+            <option value="5G88">5G88</option>
+            <option value="SPM888">SPM888</option>
+          </select>
+        </div>
+        <div class="group">
+          <label for="m_dt">Date & Time</label>
+          <input id="m_dt" class="input" type="datetime-local">
         </div>
 
-        <div style="margin-top:8px" class="hint">
-          Tip: Kalau mau auto hitung <b>Total Sales</b>, klik tombol <i>Auto-calc</i> sebelum Save.
-          Rumus standar: <code>Deposit - Withdrawal + Bonus - Forfeit + Resit In</code>
+        <div class="group"><label for="m_withdrawal">Total Withdrawal</label>
+          <input id="m_withdrawal" class="input" type="number" step="0.01" min="0" placeholder="0.00">
+        </div>
+        <div class="group"><label for="m_deposit">Total Deposit</label>
+          <input id="m_deposit" class="input" type="number" step="0.01" min="0" placeholder="0.00">
+        </div>
+
+        <div class="group"><label for="m_bonus">Total Bonus</label>
+          <input id="m_bonus" class="input" type="number" step="0.01" min="0" placeholder="0.00">
+        </div>
+        <div class="group"><label for="m_forfeit">Total Forfeit</label>
+          <input id="m_forfeit" class="input" type="number" step="0.01" min="0" placeholder="0.00">
+        </div>
+
+        <div class="group"><label for="m_member">Total Member</label>
+          <input id="m_member" class="input" type="number" step="1" min="0" placeholder="0">
+        </div>
+        <div class="group"><label for="m_resit">Total Resit In</label>
+          <input id="m_resit" class="input" type="number" step="0.01" min="0" placeholder="0.00">
+        </div>
+
+        <div class="group"><label for="m_sales">Total Sales</label>
+          <input id="m_sales" class="input" type="number" step="0.01" min="0" placeholder="0.00">
+        </div>
+        <div class="group">
+          <label>&nbsp;</label>
+          <div class="hint">Tips: tekan Tab antar input; semua angka boleh 2 decimal.</div>
         </div>
       </div>
-      <footer>
-        <button class="btn" id="autoCalc">Auto-calc Sales</button>
-        <span style="flex:1"></span>
-        <button class="btn ghost" id="resetForm">Reset</button>
-        <button class="btn gold" id="saveModal">Save</button>
-      </footer>
+      <div class="foot">
+        <button class="btn ghost" onclick="closeModal()">Cancel</button>
+        <button id="saveBtn" class="btn">Save</button>
+      </div>
     </div>
   </div>
 
-  <div class="toast" id="toast"></div>
-
 <script>
-(function(){
-  const KEY = 'tx_records_v1';
+  // -------- Utilities
+  const $ = sel => document.querySelector(sel);
+  const fmtNum = (n) => {
+    const num = Number.isFinite(n) ? n : parseFloat(n||0);
+    return num.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+  };
+  const fmtInt = (n) => (parseInt(n||0,10)).toLocaleString();
+  const pad2 = (n)=> String(n).padStart(2,'0');
+  const toYYYYMM = (d)=> `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
+  const parseLocalDT = (value) => value? new Date(value.replace('T',' ') ): new Date();
 
-  const qs = s => document.querySelector(s);
-  const qsa = s => Array.from(document.querySelectorAll(s));
-  const fmt = n => Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
-  const byId = id => document.getElementById(id);
+  // -------- Storage
+  const LS_KEY = 'bonusRecords.v1';
+  const LS_LAST_MONTH = 'bonusRecords.lastOpenedMonth';
+  const readStore = () => {
+    try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; }
+    catch{ return []; }
+  };
+  const writeStore = (arr) => localStorage.setItem(LS_KEY, JSON.stringify(arr));
 
-  const txBody = byId('txBody');
-  const siteSearch = byId('siteSearch');
-  const clearSiteBtn = byId('clearSiteBtn');
-  const sortBtn = byId('sortBtn');
-  const detailBtn = byId('detailBtn');
-  const fromDate = byId('fromDate');
-  const toDate = byId('toDate');
-
-  const modalBackdrop = byId('modalBackdrop');
-  const closeModal = byId('closeModal');
-  const createBtn = byId('createBtn');
-  const saveModal = byId('saveModal');
-  const resetForm = byId('resetForm');
-  const autoCalc = byId('autoCalc');
-  const modalTitle = byId('modalTitle');
-
-  const mSite = byId('mSite');
-  const mDate = byId('mDate');
-  const mDeposit = byId('mDeposit');
-  const mWithdrawal = byId('mWithdrawal');
-  const mBonus = byId('mBonus');
-  const mForfeit = byId('mForfeit');
-  const mResit = byId('mResit');
-  const mMember = byId('mMember');
-  const mSales = byId('mSales');
-
-  const toast = byId('toast');
-  let sortDesc = true;
-  let detailOn = false;
+  // -------- State
   let editingId = null;
-  let records = load();
 
-  // Seed example if empty
-  if (!records.length){
-    const now = new Date();
-    records = [
-      seed('5g88', now, 12000, 8000, 500, 200, 300, 122, 4500),
-      seed('spm888', new Date(now.getTime()-86400000), 9000, 7000, 200, 0, 150, 97, 2350),
-      seed('5g88', new Date(now.getTime()-3600_000*6), 15000, 6000, 1000, 100, 200, 140, 10200),
-    ];
-    persist();
+  // -------- Init
+  window.addEventListener('DOMContentLoaded', () => {
+    buildMonthOptions();
+    applyAutoMonthSwitch();
+    render();
+    $('#createBtn').addEventListener('click', () => openModal());
+    $('#exportBtn').addEventListener('click', exportCSV);
+    $('#siteFilter').addEventListener('change', render);
+    $('#monthFilter').addEventListener('change', ()=>{ saveLastOpenedMonth(); render(); });
+  });
+
+  function buildMonthOptions(){
+    const sel = $('#monthFilter');
+    sel.innerHTML = '';
+    const data = readStore();
+    const months = new Set(data.map(r => r.month));
+    // Always include current month
+    months.add(toYYYYMM(new Date()));
+    // Sort desc (latest first)
+    const sorted = Array.from(months).sort().reverse();
+    for(const m of sorted){
+      const opt = document.createElement('option');
+      opt.value = m; opt.textContent = prettyMonth(m);
+      sel.appendChild(opt);
+    }
+    // Default selected from storage or current
+    const last = localStorage.getItem(LS_LAST_MONTH);
+    sel.value = (last && [...months].includes(last)) ? last : toYYYYMM(new Date());
   }
 
-  render();
+  function saveLastOpenedMonth(){
+    localStorage.setItem(LS_LAST_MONTH, $('#monthFilter').value);
+  }
 
-  function seed(site, dt, dep, wdw, bon, forf, resit, mem, sales){
+  function applyAutoMonthSwitch(){
+    const curMonth = toYYYYMM(new Date());
+    const last = localStorage.getItem(LS_LAST_MONTH);
+    if (last !== curMonth){
+      // Auto move to current month; keeps previous months hidden unless user selects manually
+      $('#monthFilter').value = curMonth;
+      localStorage.setItem(LS_LAST_MONTH, curMonth);
+    }
+  }
+
+  function prettyMonth(yyyyMM){
+    const [y,m] = yyyyMM.split('-').map(Number);
+    const d = new Date(y, m-1, 1);
+    return d.toLocaleDateString(undefined,{month:'long', year:'numeric'});
+  }
+
+  // -------- Modal
+  function openModal(record=null){
+    editingId = record?.id ?? null;
+    $('#modalTitle').textContent = editingId? 'Edit Record' : 'Create Record';
+    $('#m_site').value = record?.site || ($('#siteFilter').value === 'ALL' ? '5G88' : $('#siteFilter').value);
+    const dt = record ? new Date(record.datetime) : new Date();
+    $('#m_dt').value = `${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}T${pad2(dt.getHours())}:${pad2(dt.getMinutes())}`;
+    $('#m_withdrawal').value = record?.withdrawal ?? '';
+    $('#m_deposit').value = record?.deposit ?? '';
+    $('#m_bonus').value = record?.bonus ?? '';
+    $('#m_forfeit').value = record?.forfeit ?? '';
+    $('#m_member').value = record?.member ?? '';
+    $('#m_resit').value = record?.resit ?? '';
+    $('#m_sales').value = record?.sales ?? '';
+    $('#modal').classList.add('show');
+    $('#saveBtn').onclick = saveModal;
+  }
+  function closeModal(){ $('#modal').classList.remove('show'); }
+
+  function collectModal(){
+    const dt = parseLocalDT($('#m_dt').value);
     return {
-      id: cryptoRandom(),
-      site,
-      date: toInputValue(dt),
-      deposit: +dep, withdrawal: +wdw,
-      bonus: +bon, forfeit: +forf, resit: +resit,
-      member: +mem, sales: +sales
+      id: editingId ?? ('id_'+Date.now()+Math.random().toString(36).slice(2,7)),
+      site: $('#m_site').value,
+      datetime: dt.toISOString(),
+      month: toYYYYMM(dt),
+      withdrawal: parseFloat($('#m_withdrawal').value||0),
+      deposit: parseFloat($('#m_deposit').value||0),
+      bonus: parseFloat($('#m_bonus').value||0),
+      forfeit: parseFloat($('#m_forfeit').value||0),
+      member: parseInt($('#m_member').value||0,10),
+      resit: parseFloat($('#m_resit').value||0),
+      sales: parseFloat($('#m_sales').value||0),
     };
   }
 
-  function cryptoRandom(){
-    if (window.crypto?.getRandomValues){
-      const a = new Uint32Array(4); crypto.getRandomValues(a);
-      return [...a].map(x=>x.toString(16)).join('');
+  function saveModal(){
+    const rec = collectModal();
+    const store = readStore();
+    const idx = store.findIndex(x => x.id === rec.id);
+    if (idx >= 0) store[idx] = rec; else store.push(rec);
+    writeStore(store);
+
+    // ensure month list includes this month
+    buildMonthOptions();
+    // if user sedang lihat bulan lain, auto switch kalau rec bulan saat ini
+    const cur = toYYYYMM(new Date());
+    if (rec.month === cur) {
+      $('#monthFilter').value = cur;
+      saveLastOpenedMonth();
     }
-    return String(Date.now())+Math.random().toString(16).slice(2);
-  }
-
-  function toInputValue(d){
-    const pad=n=>String(n).padStart(2,'0');
-    const dt = new Date(d);
-    const y=dt.getFullYear(), m=pad(dt.getMonth()+1), da=pad(dt.getDate());
-    const h=pad(dt.getHours()), mi=pad(dt.getMinutes());
-    return `${y}-${m}-${da}T${h}:${mi}`;
-  }
-
-  function load(){
-    try{
-      const raw = localStorage.getItem(KEY);
-      return raw ? JSON.parse(raw) : [];
-    }catch{ return [] }
-  }
-  function persist(){ localStorage.setItem(KEY, JSON.stringify(records)); }
-
-  function showToast(msg){
-    toast.textContent = msg;
-    toast.style.display='block';
-    clearTimeout(showToast._t);
-    showToast._t = setTimeout(()=> toast.style.display='none', 1800);
-  }
-
-  function openModal(editId=null){
-    editingId = editId;
-    modalTitle.textContent = editId ? 'Edit Transaction' : 'Create Transaction';
-    modalBackdrop.style.display='flex';
-    if (!editId){
-      // default values
-      mSite.value = siteSearch.value.trim();
-      mDate.value = toInputValue(new Date());
-      mDeposit.value = mWithdrawal.value = mBonus.value =
-      mForfeit.value = mResit.value = mSales.value = 0;
-      mMember.value = 0;
-    }
-  }
-  function closeModalFn(){
-    modalBackdrop.style.display='none';
-  }
-
-  function readForm(){
-    return {
-      site: mSite.value.trim(),
-      date: mDate.value || toInputValue(new Date()),
-      deposit: +mDeposit.value||0,
-      withdrawal: +mWithdrawal.value||0,
-      bonus: +mBonus.value||0,
-      forfeit: +mForfeit.value||0,
-      resit: +mResit.value||0,
-      member: +mMember.value||0,
-      sales: +mSales.value||0,
-    };
-  }
-
-  function autoCalcSales(){
-    const d = +mDeposit.value||0;
-    const w = +mWithdrawal.value||0;
-    const b = +mBonus.value||0;
-    const f = +mForfeit.value||0;
-    const r = +mResit.value||0;
-    mSales.value = (d - w + b - f + r).toFixed(2);
-    showToast('Total Sales auto-calculated');
-  }
-
-  function saveRecord(){
-    const v = readForm();
-    if (!v.site){
-      showToast('Site wajib diisi');
-      mSite.focus(); return;
-    }
-    if (editingId){
-      const idx = records.findIndex(r=>r.id===editingId);
-      if (idx>=0){ records[idx] = {...records[idx], ...v}; }
-      showToast('Transaction updated');
-    }else{
-      records.push({ id: cryptoRandom(), ...v });
-      showToast('Transaction saved');
-    }
-    persist();
-    closeModalFn();
+    closeModal();
     render();
   }
 
-  function editRecord(id){
-    const r = records.find(x=>x.id===id);
-    if (!r) return;
-    mSite.value = r.site;
-    mDate.value = r.date;
-    mDeposit.value = r.deposit;
-    mWithdrawal.value = r.withdrawal;
-    mBonus.value = r.bonus;
-    mForfeit.value = r.forfeit;
-    mResit.value = r.resit;
-    mMember.value = r.member;
-    mSales.value = r.sales;
-    openModal(id);
-  }
-
-  function deleteRecord(id){
-    if (!confirm('Delete this record?')) return;
-    records = records.filter(r=>r.id!==id);
-    persist();
-    render();
-  }
-
+  // -------- Render
   function render(){
-    // filters
-    const site = siteSearch.value.trim().toLowerCase();
-    const from = fromDate.value ? new Date(fromDate.value).getTime() : null;
-    const to = toDate.value ? new Date(toDate.value).getTime() : null;
+    const site = $('#siteFilter').value;
+    const month = $('#monthFilter').value;
+    const data = readStore()
+      .filter(r => r.month === month)
+      .filter(r => site === 'ALL' ? true : r.site === site)
+      .sort((a,b)=> new Date(b.datetime) - new Date(a.datetime)); // latest first
 
-    let list = records.slice();
-    if (site) list = list.filter(r=> r.site.toLowerCase().includes(site));
-    if (from!=null) list = list.filter(r=> new Date(r.date).getTime() >= from);
-    if (to!=null) list = list.filter(r=> new Date(r.date).getTime() <= to);
+    // Archive banner
+    const curMonth = toYYYYMM(new Date());
+    const isArchive = month !== curMonth;
+    $('#archiveBanner').style.display = isArchive? 'flex':'none';
+    $('#bannerMonth').textContent = prettyMonth(month);
 
-    list.sort((a,b)=>{
-      const ta = new Date(a.date).getTime(), tb = new Date(b.date).getTime();
-      return sortDesc ? tb-ta : ta-tb;
-    });
+    // Empty
+    const empty = data.length === 0;
+    $('#emptyState').style.display = empty? 'block':'none';
 
-    txBody.innerHTML = '';
-    if (!list.length){
-      txBody.innerHTML = `<tr><td colspan="10" class="empty">No data</td></tr>`;
-      return;
-    }
-
-    for (const r of list){
+    // Table
+    const tb = $('#tbody');
+    tb.innerHTML = '';
+    for(const r of data){
       const tr = document.createElement('tr');
+
+      const dt = new Date(r.datetime);
+      const dtTxt = dt.toLocaleString(undefined,{
+        year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'
+      });
+
       tr.innerHTML = `
-        <td class="num">
-          <div>${r.date.replace('T',' ')}</div>
-          <div class="muted">${new Date(r.date).toDateString()}</div>
+        <td>${dtTxt}</td>
+        <td style="text-align:center">
+          <span class="pill ${r.site==='5G88'?'site-5g88':'site-spm888'}">${r.site}</span>
         </td>
-        <td><span class="badge">${r.site}</span></td>
-        <td class="num">${fmt(r.deposit)}</td>
-        <td class="num">${fmt(r.withdrawal)}</td>
-        <td class="num">${fmt(r.bonus)}</td>
-        <td class="num">${fmt(r.forfeit)}</td>
-        <td class="num">${fmt(r.resit)}</td>
-        <td class="num">${r.member}</td>
-        <td class="num"><b>${fmt(r.sales)}</b></td>
-        <td class="actions">
-          <span class="link" data-act="edit" data-id="${r.id}">Edit</span>
-          <span class="link" data-act="delete" data-id="${r.id}">Delete</span>
+        <td class="num red">${fmtNum(r.withdrawal)}</td>
+        <td class="num green">${fmtNum(r.deposit)}</td>
+        <td class="num cyan">${fmtNum(r.bonus)}</td>
+        <td>${fmtNum(r.forfeit)}</td>
+        <td>${fmtInt(r.member)}</td>
+        <td>${fmtNum(r.resit)}</td>
+        <td>${fmtNum(r.sales)}</td>
+        <td>
+          <div class="actions">
+            <button class="iconbtn" onclick='openModal(${JSON.stringify(r)})'>Edit</button>
+            <button class="iconbtn del" onclick='delRecord("${r.id}")'>Delete</button>
+          </div>
         </td>
       `;
-      txBody.appendChild(tr);
+      tb.appendChild(tr);
     }
-    document.getElementById('txTable').classList.toggle('detail-on', detailOn);
 
-    // delegate actions
-    qsa('[data-act="edit"]').forEach(a=> a.onclick = ()=> editRecord(a.dataset.id));
-    qsa('[data-act="delete"]').forEach(a=> a.onclick = ()=> deleteRecord(a.dataset.id));
+    // Summary
+    const totals = data.reduce((a,r)=>({
+      w:a.w + r.withdrawal, d:a.d + r.deposit, b:a.b + r.bonus, f:a.f + r.forfeit,
+      m:a.m + r.member, rsi:a.rsi + r.resit, s:a.s + r.sales
+    }),{w:0,d:0,b:0,f:0,m:0,rsi:0,s:0});
+    updateFooter(totals);
+    renderSummary(totals, data.length, site, month);
   }
 
-  // events
-  siteSearch.addEventListener('input', render);
-  clearSiteBtn.addEventListener('click', ()=>{ siteSearch.value=''; render(); });
-  fromDate.addEventListener('change', render);
-  toDate.addEventListener('change', render);
+  function updateFooter(t){
+    $('#ft_withdrawal').textContent = fmtNum(t.w);
+    $('#ft_deposit').textContent = fmtNum(t.d);
+    $('#ft_bonus').textContent = fmtNum(t.b);
+    $('#ft_forfeit').textContent = fmtNum(t.f);
+    $('#ft_member').textContent = fmtInt(t.m);
+    $('#ft_resit').textContent = fmtNum(t.rsi);
+    $('#ft_sales').textContent = fmtNum(t.s);
+  }
 
-  sortBtn.addEventListener('click', ()=>{
-    sortDesc = !sortDesc;
-    sortBtn.textContent = sortDesc ? 'Date Descend' : 'Date Ascend';
+  function renderSummary(t, count, site, month){
+    const row = $('#summaryRow');
+    row.innerHTML = '';
+    const cards = [
+      {title:'Month', val: prettyMonth(month), cls:''},
+      {title:'Site', val: site==='ALL'?'All Sites':site, cls:''},
+      {title:'Total Withdrawal', val: fmtNum(t.w), cls:'red'},
+      {title:'Total Deposit', val: fmtNum(t.d), cls:'green'},
+      {title:'Total Bonus', val: fmtNum(t.b), cls:'cyan'},
+      {title:'Total Sales', val: fmtNum(t.s), cls:'green'},
+      {title:'Total Forfeit', val: fmtNum(t.f)},
+      {title:'Total Resit In', val: fmtNum(t.rsi)},
+      {title:'Total Member', val: fmtInt(t.m)},
+      {title:'Records', val: fmtInt(count)},
+    ];
+    for(const c of cards){
+      const div = document.createElement('div'); div.className='card';
+      div.innerHTML = `<h4>${c.title}</h4><div class="val ${c.cls||''}">${c.val}</div>`;
+      row.appendChild(div);
+    }
+  }
+
+  // -------- Delete
+  function delRecord(id){
+    if (!confirm('Delete this record?')) return;
+    const store = readStore().filter(r => r.id !== id);
+    writeStore(store);
     render();
-  });
+  }
 
-  detailBtn.addEventListener('click', ()=>{
-    detailOn = !detailOn;
-    detailBtn.textContent = detailOn ? 'Detail View: ON' : 'Detail View';
-    render();
-  });
+  // -------- CSV Export
+  function exportCSV(){
+    const site = $('#siteFilter').value;
+    const month = $('#monthFilter').value;
+    const data = readStore()
+      .filter(r => r.month === month)
+      .filter(r => site === 'ALL' ? true : r.site === site)
+      .sort((a,b)=> new Date(a.datetime) - new Date(b.datetime));
 
-  createBtn.addEventListener('click', ()=> openModal());
-  closeModal.addEventListener('click', closeModalFn);
-  modalBackdrop.addEventListener('click', (e)=>{ if (e.target===modalBackdrop) closeModalFn(); });
+    const header = ['datetime','site','withdrawal','deposit','bonus','forfeit','member','resit_in','sales'];
+    const rows = [header.join(',')];
+    for(const r of data){
+      rows.push([
+        new Date(r.datetime).toISOString(),
+        r.site,
+        r.withdrawal, r.deposit, r.bonus, r.forfeit, r.member, r.resit, r.sales
+      ].join(','));
+    }
+    const blob = new Blob([rows.join('\n')], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `bonus-${month}-${site}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
 
-  saveModal.addEventListener('click', saveRecord);
-  resetForm.addEventListener('click', ()=>{
-    mSite.value=''; mDate.value=toInputValue(new Date());
-    mDeposit.value=mWithdrawal.value=mBonus.value=mForfeit.value=mResit.value=mSales.value=0;
-    mMember.value=0;
-  });
-  autoCalc.addEventListener('click', autoCalcSales);
-
-  // helper: press Enter in site search focuses create (biar cepat input)
-  siteSearch.addEventListener('keydown', e=>{
-    if (e.key==='Enter'){ openModal(); setTimeout(()=> mSite.focus(), 50); }
-  });
-
-})();
+  // Expose for inline onclick
+  window.openModal = openModal;
+  window.closeModal = closeModal;
+  window.delRecord = delRecord;
 </script>
 </body>
 </html>
