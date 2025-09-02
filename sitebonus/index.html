@@ -1,710 +1,532 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Admin Panel — 5G88 Style</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>5G88 | Transactions</title>
 <style>
   :root{
-    --bg:#0b0f14;           /* page */
-    --nav:#0d1b2a;          /* header/nav bar */
-    --pane:#0f1620;         /* panels */
-    --muted:#9aa4b2;        /* muted text */
-    --text:#e6edf3;         /* main text */
-    --line:#1f2a37;         /* borders */
-    --blue:#1f6feb;         /* primary button */
-    --blue-2:#2b7bff;
-    --chip:#0f2236;
-    --chip-on:#16324b;
-    --green:#22c55e;
-    --red:#ef4444;
-    --gold:#ffd166;
+    --bg:#0b0b0b;
+    --panel:#121212;
+    --panel-2:#151515;
+    --text:#eaeaea;
+    --muted:#9aa0a6;
+    --line:#262626;
+    --gold:#f1c232;
+    --gold-2:#ffd54d;
+    --blue:#2b6cb0;
+    --danger:#f87171;
+    --ok:#22c55e;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
-    margin:0;
-    background:var(--bg);
-    color:var(--text);
-    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+    margin:0;background:var(--bg);color:var(--text);
+    font-family: ui-sans-serif,system-ui,"Segoe UI",Roboto,Arial,"Apple Color Emoji","Segoe UI Emoji";
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
   }
 
-  /* Top header */
-  .topbar{
-    position:sticky; top:0; z-index:1000;
-    background:var(--nav);
-    border-bottom:1px solid var(--line);
+  /* Header */
+  .app-header{
+    height:56px; background:#0f172a; color:#fff;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 14px; position:sticky; top:0; z-index:50; border-bottom:1px solid #111827;
   }
-  .topbar-inner{
-    display:flex; align-items:center; gap:12px;
-    padding:10px 14px;
+  .brand{display:flex;gap:10px;align-items:center;font-weight:700}
+  .brand .dot{width:8px;height:8px;border-radius:50%;background:var(--gold)}
+  .tabs{display:flex;gap:8px;align-items:center}
+  .tab{
+    padding:8px 12px; border-radius:8px; cursor:pointer; user-select:none;
+    color:#c7d2fe; border:1px solid transparent;
   }
-  .select-site{
-    display:flex; align-items:center; gap:8px;
-    background:#0b1725; border:1px solid var(--line); color:var(--text);
-    height:36px; padding:0 10px; border-radius:8px;
-  }
-  .select-site select{
-    background:transparent; color:var(--text); border:none; outline:none; height:34px
-  }
-  .spacer{flex:1}
-  .badge{
-    display:inline-flex; align-items:center; gap:8px; height:30px;
-    padding:0 10px; border-radius:8px; background:#0b1725; border:1px solid var(--line); font-size:12px; color:var(--muted)
-  }
-  .badge .green{color:#67e8f9}
-  .userbox{
-    display:flex; align-items:center; gap:8px; height:32px; padding:0 10px;
-    border-radius:8px; background:#0b1725; border:1px solid var(--line)
-  }
+  .tab.active{background:#111827;border-color:#1f2937;color:#fff}
+  .meter{display:flex;gap:8px;align-items:center;font-size:12px;color:#cbd5e1}
+  .pill{padding:3px 8px;border-radius:999px;background:#0b1220;border:1px solid #1f2937}
 
-  /* Main nav */
-  .mainnav{
-    display:flex; gap:6px; padding:8px 10px 10px; border-top:1px solid rgba(255,255,255,0.04);
+  /* Toolbar under header */
+  .toolbar{
+    position:sticky; top:56px; z-index:45;
+    background:var(--panel); border-bottom:1px solid var(--line);
+    padding:10px 12px; display:grid; gap:10px;
+    grid-template-columns: 1fr auto auto auto;
   }
-  .navbtn{
-    display:flex; align-items:center; gap:8px;
-    height:36px; padding:0 12px; border-radius:8px;
-    background:transparent; border:1px solid transparent; color:var(--text);
-    cursor:pointer; user-select:none;
+  @media (max-width:980px){
+    .toolbar{grid-template-columns: 1fr 1fr}
   }
-  .navbtn.active, .navbtn:hover{ background:#0b1725; border-color:var(--line) }
-  .navbtn .dot{ width:8px; height:8px; background:#2dd4bf; border-radius:999px }
-
-  /* Under-header chip tabs (opened pages) */
-  .pagechips{
-    position:sticky; top:84px; z-index:900;
-    background:var(--bg); border-bottom:1px solid var(--line);
-    padding:8px 10px; display:flex; gap:6px; flex-wrap:wrap;
-  }
-  .chip{
-    display:flex; align-items:center; gap:8px;
-    background:var(--chip); border:1px solid var(--line);
-    padding:6px 10px; border-radius:10px; cursor:pointer; user-select:none;
-  }
-  .chip.active{ background:var(--chip-on); border-color:#264a73 }
-  .chip .x{ font-size:12px; opacity:.7; padding:2px 6px; border-radius:6px; }
-  .chip .x:hover{ background:#1b2b40; opacity:1 }
-
-  /* Filters bar */
-  .filters{
-    position:sticky; top:130px; z-index:800;
-    background:var(--bg);
-    padding:10px; border-bottom:1px solid var(--line);
-    display:grid; grid-template-columns: 1fr; gap:8px;
-  }
-  .row{ display:flex; gap:8px; flex-wrap:wrap }
+  .search-wrap{display:flex; gap:8px; align-items:center}
   .search{
-    flex:1; display:flex; align-items:center; gap:8px;
-    background:var(--pane); border:1px solid var(--line); height:36px; padding:0 10px; border-radius:8px;
+    height:36px; background:#0f0f0f; border:1px solid #303030; color:#fff;
+    border-radius:8px; padding:0 10px; width:260px; outline:none;
   }
-  .search input{ flex:1; background:transparent; border:none; outline:none; color:var(--text) }
-
-  .pills{ display:flex; gap:6px; flex-wrap:wrap }
-  .pill{
-    display:flex; align-items:center; gap:6px; height:32px; padding:0 10px;
-    background:var(--chip); border:1px solid var(--line); border-radius:999px; font-size:13px; cursor:pointer
-  }
-  .pill.active{ background:#0c2a45; border-color:#1f3f66 }
-  .pill .close{ opacity:.6 }
-  .pill .close:hover{ opacity:1 }
-
-  .select{
-    display:flex; align-items:center; gap:8px; height:36px; padding:0 10px;
-    background:var(--pane); border:1px solid var(--line); border-radius:8px;
-  }
-  .select select{ background:transparent; border:none; color:var(--text); outline:none; height:34px }
-
-  .datebox{ display:flex; align-items:center; gap:8px }
+  .search:focus{border-color:var(--gold)}
+  .daterange{display:flex; gap:8px}
   .date{
-    background:var(--pane); border:1px solid var(--line); color:var(--text);
-    height:36px; padding:0 10px; border-radius:8px;
+    height:36px; background:#0f0f0f; border:1px solid #303030; color:#fff;
+    border-radius:8px; padding:0 10px; outline:none; width:175px;
   }
-
+  .select{
+    height:36px; background:#0f0f0f; border:1px solid #303030; color:#fff;
+    border-radius:8px; padding:0 10px; outline:none;
+  }
   .btn{
-    height:36px; padding:0 14px; border-radius:8px; border:1px solid transparent; cursor:pointer; color:#fff;
-    background:var(--blue);
+    height:36px; padding:0 14px; border-radius:8px; border:1px solid #1f2937;
+    background:#0d1b2a; color:#cbd5e1; cursor:pointer; transition:.18s;
   }
-  .btn:hover{ background:var(--blue-2) }
-  .btn.ghost{ background:#152232; border-color:#243448 }
-  .btn.gray{ background:#223043 }
-  .btn.success{ background:#1d8f4d }
-  .btn.warning{ background:#a16207 }
-  .btn.outline{ background:transparent; color:var(--text); border-color:#2a3c52 }
-  .btn.small{ height:30px; padding:0 10px; font-size:12px }
+  .btn:hover{filter:brightness(1.15)}
+  .btn.gold{background:linear-gradient(180deg,var(--gold-2),var(--gold)); color:#1b1b1b; border-color:#8f6f00; font-weight:700}
+  .btn.ghost{background:#111827;color:#e5e7eb}
+  .btn.danger{background:#2a0f10;color:#fecaca;border-color:#7f1d1d}
+  .toolbar .right{display:flex; gap:8px; align-items:center; justify-self:end}
 
   /* Content */
-  .content{ padding:12px 10px 40px }
+  .content{padding:12px}
   .card{
-    background:var(--pane); border:1px solid var(--line); border-radius:10px; overflow:hidden;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:12px; overflow:hidden;
   }
   .table{
-    width:100%; border-collapse:collapse;
+    width:100%; border-collapse:separate; border-spacing:0;
   }
-  .table th, .table td{
-    border-bottom:1px solid var(--line); padding:12px; text-align:left; font-size:14px;
-  }
-  .table th{ background:#0f1c2a; color:#c7d2de }
-  .empty{
-    text-align:center; padding:40px 16px; color:#7b8794;
-    display:flex; flex-direction:column; align-items:center; gap:10px
-  }
-  .empty .box{
-    width:56px; height:40px; border:2px dashed #2c3b52; border-radius:10px; display:flex; align-items:center; justify-content:center; opacity:.7
-  }
+  .thead{background:#0f0f0f; color:#cbd5e1}
+  .thead th{font-size:12px; text-transform:uppercase; letter-spacing:.04em}
+  th, td{padding:10px 12px; border-bottom:1px solid #1f1f1f; vertical-align:top}
+  tr:hover td{background:#121820}
+  .empty{padding:40px; text-align:center; color:#8a8f98}
+  .badge{padding:2px 8px; border-radius:999px; font-size:12px; background:#0b1220; border:1px solid #1f2937; color:#cbd5e1}
+  .muted{color:var(--muted); font-size:12px}
+  .num{font-variant-numeric:tabular-nums}
+  .actions{display:flex; gap:6px}
+  .link{color:#93c5fd; cursor:pointer}
+  .detail-on td:nth-child(n+5){white-space:nowrap}
 
   /* Modal */
-  .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:2000 }
-  .modal{ width:min(920px,95vw); background:var(--pane); border:1px solid var(--line); border-radius:12px; overflow:hidden }
-  .modal header{ padding:14px 16px; background:#132030; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between }
-  .modal .body{ padding:16px }
-  .grid{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px }
-  .field{ display:flex; flex-direction:column; gap:6px }
-  .field label{ font-size:12px; color:#aab6c2 }
-  .field input, .field select, .field textarea{
-    height:38px; border-radius:8px; border:1px solid var(--line); background:#0e1926; color:var(--text); padding:0 10px; outline:none;
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(0,0,0,.6);
+    display:none; align-items:center; justify-content:center; z-index:60;
   }
-  .field input[type="datetime-local"]{ padding:6px 10px; height:38px }
-  .modal footer{ padding:12px 16px; display:flex; gap:8px; justify-content:flex-end; border-top:1px solid var(--line); background:#0f1c22 }
+  .modal{width:min(860px,96vw); background:#0e0e0e; border:1px solid var(--line); border-radius:14px; overflow:hidden}
+  .modal header{display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:#111827; border-bottom:1px solid #1f2937}
+  .modal h3{margin:0; font-size:16px}
+  .modal .body{padding:14px}
+  .grid{
+    display:grid; gap:10px;
+    grid-template-columns: repeat(3,minmax(0,1fr));
+  }
+  @media (max-width:860px){ .grid{grid-template-columns:1fr 1fr} }
+  @media (max-width:560px){ .grid{grid-template-columns:1fr} }
+  .field{display:flex; flex-direction:column; gap:6px}
+  .label{font-size:12px; color:#cbd5e1}
+  .input,.number{
+    height:36px; background:#0f0f0f; border:1px solid #303030; color:#fff;
+    border-radius:8px; padding:0 10px; outline:none;
+  }
+  .input:focus,.number:focus{border-color:var(--gold)}
+  .modal footer{display:flex; gap:10px; justify-content:flex-end; padding:12px 14px; border-top:1px solid #1f2937; background:#0f0f0f}
+  .hint{font-size:12px; color:#9aa0a6}
 
-  /* Drag ghost */
-  .chip.dragging{ opacity:.6; outline:1px dashed #335a86 }
-
-  /* Small helpers */
-  .muted{ color:var(--muted) }
-  .right{ text-align:right }
-  .nowrap{ white-space:nowrap }
-  .w-100{ width:100% }
-  .hidden{ display:none !important }
+  /* Toast */
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:#111827; color:#e5e7eb; border:1px solid #1f2937; border-radius:10px;
+    padding:10px 14px; font-size:14px; display:none; z-index:70;
+  }
 </style>
 </head>
 <body>
 
-  <!-- ======= TOP HEADER ======= -->
-  <div class="topbar">
-    <div class="topbar-inner">
-      <div class="select-site">
-        <span>Select Site</span>
-        <select id="siteSelectHeader">
-          <option value="all">All</option>
-          <option value="5g88">5G88</option>
-          <option value="spm888">SPM888</option>
-        </select>
-      </div>
-
-      <button class="navbtn active" data-page="Dashboard"><span class="dot"></span>Dashboard</button>
-      <button class="navbtn" data-page="Transactions"><span class="dot"></span>Transactions</button>
-      <button class="navbtn" data-page="Cash Transfer"><span class="dot"></span>Cash Transfer</button>
-      <button class="navbtn" data-page="Player"><span class="dot"></span>Player</button>
-      <button class="navbtn" data-page="Report"><span class="dot"></span>Report</button>
-      <button class="navbtn" data-page="Livechat"><span class="dot"></span>Livechat</button>
-
-      <div class="spacer"></div>
-
-      <div class="badge" id="klTime">Kuala_Lumpur: --:--</div>
-      <div class="badge"><span>🏦 Bank Meter</span></div>
-      <div class="badge"><span class="green">4,775,580.50</span></div>
-      <div class="badge"><span class="green">536.00</span></div>
-      <div class="userbox">support2</div>
+  <!-- Header -->
+  <div class="app-header">
+    <div class="brand"><span class="dot"></span> <span>5G88 Admin</span></div>
+    <div class="tabs">
+      <div class="tab">Dashboard</div>
+      <div class="tab active">Transactions</div>
+      <div class="tab">Cash Transfer</div>
+      <div class="tab">Player</div>
+      <div class="tab">Livechat</div>
     </div>
-
-    <!-- opened pages chips -->
-    <div class="pagechips" id="pageChips"></div>
-  </div>
-
-  <!-- ======= FILTERS ======= -->
-  <div class="filters" id="filtersBar">
-    <div class="row">
-      <div class="search w-100">
-        <svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M10 18a8 8 0 1 1 5.293-14.293A8 8 0 0 1 10 18m11.707 2.293l-5.388-5.388a10 10 0 1 0-1.414 1.414l5.388 5.388z"/></svg>
-        <input id="searchInput" placeholder="Search" />
-      </div>
-      <div class="pills" id="typePills">
-        <div class="pill active" data-type="deposit"><span>1. Deposit</span><span class="close">✕</span></div>
-        <div class="pill active" data-type="withdrawal"><span>2. Withdrawal</span><span class="close">✕</span></div>
-        <div class="pill active" data-type="bonus"><span>3. Bonus</span><span class="close">✕</span></div>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="select">
-        <select id="statusSelect">
-          <option value="all">All Status</option>
-          <option selected value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-        </select>
-      </div>
-
-      <div class="select">
-        <select id="promoSelect">
-          <option value="all" selected>Promotion</option>
-          <option value="welcome">Welcome Bonus</option>
-          <option value="rebate">Rebate</option>
-          <option value="cashback">Cashback</option>
-        </select>
-      </div>
-
-      <div class="select">
-        <select id="creditTypeSelect">
-          <option value="all" selected>Credit Type</option>
-          <option value="bank">Bank Transfer</option>
-          <option value="ewallet">E‑Wallet</option>
-          <option value="cash">Cash</option>
-        </select>
-      </div>
-
-      <div class="datebox">
-        <input type="date" id="dateFrom" class="date">
-        <span class="muted">→</span>
-        <input type="date" id="dateTo" class="date">
-      </div>
-
-      <button class="btn gray" id="sortBtn">Date Descend</button>
-      <button class="btn outline" id="detailBtn">Detail View</button>
-      <button class="btn" id="openCreate">Create</button>
+    <div class="meter">
+      <span class="pill">Kuala_Lumpur</span>
+      <span class="pill">Bank Meter: <b class="num" id="meterTotal">4,775,613.48</b></span>
+      <span class="pill">Online: <b id="onlineCount">536</b></span>
     </div>
   </div>
 
-  <!-- ======= CONTENT ======= -->
+  <!-- Toolbar -->
+  <div class="toolbar" id="toolbar">
+    <div class="search-wrap">
+      <input id="siteSearch" class="search" placeholder="Search Site (e.g. 5g88, spm888)" autocomplete="off" />
+      <button class="btn ghost" id="clearSiteBtn">Clear</button>
+    </div>
+
+    <div class="daterange">
+      <input type="datetime-local" id="fromDate" class="date" />
+      <input type="datetime-local" id="toDate" class="date" />
+    </div>
+
+    <div class="right">
+      <button class="btn" id="sortBtn" title="Toggle Date Desc/Asc">Date Descend</button>
+      <button class="btn" id="detailBtn">Detail View</button>
+    </div>
+
+    <div class="right">
+      <button class="btn gold" id="createBtn">Create</button>
+    </div>
+  </div>
+
+  <!-- Content -->
   <div class="content">
     <div class="card">
       <table class="table" id="txTable">
-        <thead>
+        <thead class="thead">
           <tr>
-            <th>Transaction</th>
-            <th class="right nowrap">Site</th>
-            <th class="right nowrap">Date</th>
-            <th class="right nowrap">Status</th>
-            <th class="right nowrap">Action</th>
+            <th style="width:160px">Date</th>
+            <th>Site</th>
+            <th>Total Deposit</th>
+            <th>Total Withdrawal</th>
+            <th>Total Bonus</th>
+            <th>Total Forfeit</th>
+            <th>Total Resit In</th>
+            <th>Total Member</th>
+            <th>Total Sales</th>
+            <th style="width:130px">Action</th>
           </tr>
         </thead>
         <tbody id="txBody">
-          <tr id="emptyRow">
-            <td colspan="5">
-              <div class="empty">
-                <div class="box">📦</div>
-                <div>No data</div>
-              </div>
-            </td>
-          </tr>
+          <tr><td colspan="10" class="empty">No data</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- ======= CREATE MODAL ======= -->
-  <div class="modal-backdrop" id="createModal">
-    <div class="modal">
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true">
+    <div class="modal" role="document">
       <header>
-        <strong>Create — Save Totals</strong>
-        <button class="btn small outline" id="closeCreate">Close</button>
+        <h3 id="modalTitle">Create Transaction</h3>
+        <button class="btn danger" id="closeModal">Close</button>
       </header>
       <div class="body">
         <div class="grid">
-          <div class="field"><label>Site</label>
-            <select id="mSite">
-              <option value="5g88">5G88</option>
-              <option value="spm888">SPM888</option>
-            </select>
+          <div class="field">
+            <label class="label">Site <span class="hint">(contoh: 5g88, spm888)</span></label>
+            <input id="mSite" class="input" placeholder="5g88" />
+          </div>
+          <div class="field">
+            <label class="label">Date & Time</label>
+            <input id="mDate" type="datetime-local" class="input" />
+          </div>
+          <div class="field">
+            <label class="label">Total Deposit</label>
+            <input id="mDeposit" type="number" step="0.01" class="number" value="0">
           </div>
 
-          <div class="field"><label>Date & Time</label>
-            <input id="mDate" type="datetime-local">
+          <div class="field">
+            <label class="label">Total Withdrawal</label>
+            <input id="mWithdrawal" type="number" step="0.01" class="number" value="0">
+          </div>
+          <div class="field">
+            <label class="label">Total Bonus</label>
+            <input id="mBonus" type="number" step="0.01" class="number" value="0">
+          </div>
+          <div class="field">
+            <label class="label">Total Forfeit</label>
+            <input id="mForfeit" type="number" step="0.01" class="number" value="0">
           </div>
 
-          <div class="field"><label>Total Deposit</label>
-            <input id="mDeposit" type="number" step="0.01" min="0" value="0">
+          <div class="field">
+            <label class="label">Total Resit In</label>
+            <input id="mResit" type="number" step="0.01" class="number" value="0">
           </div>
-          <div class="field"><label>Total Withdrawal</label>
-            <input id="mWithdraw" type="number" step="0.01" min="0" value="0">
+          <div class="field">
+            <label class="label">Total Member</label>
+            <input id="mMember" type="number" step="1" class="number" value="0">
           </div>
-          <div class="field"><label>Total Bonus</label>
-            <input id="mBonus" type="number" step="0.01" min="0" value="0">
+          <div class="field">
+            <label class="label">Total Sales <span class="hint">(boleh diisi manual)</span></label>
+            <input id="mSales" type="number" step="0.01" class="number" value="0">
           </div>
-          <div class="field"><label>Total Forfeit</label>
-            <input id="mForfeit" type="number" step="0.01" min="0" value="0">
-          </div>
-          <div class="field"><label>Total Resit</label>
-            <input id="mResit" type="number" step="0.01" min="0" value="0">
-          </div>
-          <div class="field"><label>Active Member</label>
-            <input id="mActive" type="number" step="1" min="0" value="0">
-          </div>
+        </div>
 
-          <div class="field"><label>Total Sales
-            <span class="muted">(auto = Dep - Wd + Bonus - Forfeit + Resit)</span></label>
-            <input id="mSales" type="number" step="0.01" value="0">
-          </div>
-
-          <div class="field" style="align-items:flex-start">
-            <label>&nbsp;</label>
-            <label style="display:flex; gap:8px; align-items:center; font-size:13px">
-              <input id="overrideSales" type="checkbox"> Manual override Total Sales
-            </label>
-          </div>
+        <div style="margin-top:8px" class="hint">
+          Tip: Kalau mau auto hitung <b>Total Sales</b>, klik tombol <i>Auto-calc</i> sebelum Save.
+          Rumus standar: <code>Deposit - Withdrawal + Bonus - Forfeit + Resit In</code>
         </div>
       </div>
       <footer>
-        <button class="btn outline" id="resetForm">Reset</button>
-        <button class="btn success" id="saveCreate">Save</button>
+        <button class="btn" id="autoCalc">Auto-calc Sales</button>
+        <span style="flex:1"></span>
+        <button class="btn ghost" id="resetForm">Reset</button>
+        <button class="btn gold" id="saveModal">Save</button>
       </footer>
     </div>
   </div>
 
+  <div class="toast" id="toast"></div>
+
 <script>
-/* =============== UTIL =============== */
-const $ = s => document.querySelector(s);
-const $$ = s => Array.from(document.querySelectorAll(s));
-const fmt = n => Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
-const todayISO = () => new Date().toISOString().slice(0,10);
-function parseNum(v){ const n = parseFloat(v); return isNaN(n)?0:n }
+(function(){
+  const KEY = 'tx_records_v1';
 
-/* Clock (KL) */
-function startClock(){
-  const el = $('#klTime');
-  function tick(){
+  const qs = s => document.querySelector(s);
+  const qsa = s => Array.from(document.querySelectorAll(s));
+  const fmt = n => Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  const byId = id => document.getElementById(id);
+
+  const txBody = byId('txBody');
+  const siteSearch = byId('siteSearch');
+  const clearSiteBtn = byId('clearSiteBtn');
+  const sortBtn = byId('sortBtn');
+  const detailBtn = byId('detailBtn');
+  const fromDate = byId('fromDate');
+  const toDate = byId('toDate');
+
+  const modalBackdrop = byId('modalBackdrop');
+  const closeModal = byId('closeModal');
+  const createBtn = byId('createBtn');
+  const saveModal = byId('saveModal');
+  const resetForm = byId('resetForm');
+  const autoCalc = byId('autoCalc');
+  const modalTitle = byId('modalTitle');
+
+  const mSite = byId('mSite');
+  const mDate = byId('mDate');
+  const mDeposit = byId('mDeposit');
+  const mWithdrawal = byId('mWithdrawal');
+  const mBonus = byId('mBonus');
+  const mForfeit = byId('mForfeit');
+  const mResit = byId('mResit');
+  const mMember = byId('mMember');
+  const mSales = byId('mSales');
+
+  const toast = byId('toast');
+  let sortDesc = true;
+  let detailOn = false;
+  let editingId = null;
+  let records = load();
+
+  // Seed example if empty
+  if (!records.length){
     const now = new Date();
-    // KL = UTC+8 -> assume local = user TZ; show HH:mm & short date
-    const fmtOpt = { hour:'2-digit', minute:'2-digit' };
-    const time = new Intl.DateTimeFormat('en-GB', fmtOpt).format(now);
-    const dopt = { day:'2-digit', month:'short' };
-    const d = new Intl.DateTimeFormat('en-GB', dopt).format(now);
-    el.textContent = `Kuala_Lumpur: ${time} ${d}`;
+    records = [
+      seed('5g88', now, 12000, 8000, 500, 200, 300, 122, 4500),
+      seed('spm888', new Date(now.getTime()-86400000), 9000, 7000, 200, 0, 150, 97, 2350),
+      seed('5g88', new Date(now.getTime()-3600_000*6), 15000, 6000, 1000, 100, 200, 140, 10200),
+    ];
+    persist();
   }
-  tick(); setInterval(tick, 15000);
-}
 
-/* =============== NAV & PAGE CHIPS =============== */
-const pageChips = $('#pageChips');
-const openPages = []; // {key,title}
-function ensureChip(title){
-  const key = title.toLowerCase().replace(/\s+/g,'-');
-  if(!openPages.find(p=>p.key===key)){
-    openPages.push({key,title});
-    renderChips();
+  render();
+
+  function seed(site, dt, dep, wdw, bon, forf, resit, mem, sales){
+    return {
+      id: cryptoRandom(),
+      site,
+      date: toInputValue(dt),
+      deposit: +dep, withdrawal: +wdw,
+      bonus: +bon, forfeit: +forf, resit: +resit,
+      member: +mem, sales: +sales
+    };
   }
-  setActiveChip(key);
-}
-function renderChips(){
-  pageChips.innerHTML='';
-  openPages.forEach(p=>{
-    const chip = document.createElement('div');
-    chip.className='chip'; chip.draggable=true; chip.dataset.key=p.key;
-    chip.innerHTML = `<span>${p.title}</span><span class="x" title="Close">✕</span>`;
-    chip.addEventListener('click', e=>{
-      if(e.target.classList.contains('x')){
-        closeChip(p.key); e.stopPropagation(); return;
-      }
-      setActiveChip(p.key);
+
+  function cryptoRandom(){
+    if (window.crypto?.getRandomValues){
+      const a = new Uint32Array(4); crypto.getRandomValues(a);
+      return [...a].map(x=>x.toString(16)).join('');
+    }
+    return String(Date.now())+Math.random().toString(16).slice(2);
+  }
+
+  function toInputValue(d){
+    const pad=n=>String(n).padStart(2,'0');
+    const dt = new Date(d);
+    const y=dt.getFullYear(), m=pad(dt.getMonth()+1), da=pad(dt.getDate());
+    const h=pad(dt.getHours()), mi=pad(dt.getMinutes());
+    return `${y}-${m}-${da}T${h}:${mi}`;
+  }
+
+  function load(){
+    try{
+      const raw = localStorage.getItem(KEY);
+      return raw ? JSON.parse(raw) : [];
+    }catch{ return [] }
+  }
+  function persist(){ localStorage.setItem(KEY, JSON.stringify(records)); }
+
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.style.display='block';
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(()=> toast.style.display='none', 1800);
+  }
+
+  function openModal(editId=null){
+    editingId = editId;
+    modalTitle.textContent = editId ? 'Edit Transaction' : 'Create Transaction';
+    modalBackdrop.style.display='flex';
+    if (!editId){
+      // default values
+      mSite.value = siteSearch.value.trim();
+      mDate.value = toInputValue(new Date());
+      mDeposit.value = mWithdrawal.value = mBonus.value =
+      mForfeit.value = mResit.value = mSales.value = 0;
+      mMember.value = 0;
+    }
+  }
+  function closeModalFn(){
+    modalBackdrop.style.display='none';
+  }
+
+  function readForm(){
+    return {
+      site: mSite.value.trim(),
+      date: mDate.value || toInputValue(new Date()),
+      deposit: +mDeposit.value||0,
+      withdrawal: +mWithdrawal.value||0,
+      bonus: +mBonus.value||0,
+      forfeit: +mForfeit.value||0,
+      resit: +mResit.value||0,
+      member: +mMember.value||0,
+      sales: +mSales.value||0,
+    };
+  }
+
+  function autoCalcSales(){
+    const d = +mDeposit.value||0;
+    const w = +mWithdrawal.value||0;
+    const b = +mBonus.value||0;
+    const f = +mForfeit.value||0;
+    const r = +mResit.value||0;
+    mSales.value = (d - w + b - f + r).toFixed(2);
+    showToast('Total Sales auto-calculated');
+  }
+
+  function saveRecord(){
+    const v = readForm();
+    if (!v.site){
+      showToast('Site wajib diisi');
+      mSite.focus(); return;
+    }
+    if (editingId){
+      const idx = records.findIndex(r=>r.id===editingId);
+      if (idx>=0){ records[idx] = {...records[idx], ...v}; }
+      showToast('Transaction updated');
+    }else{
+      records.push({ id: cryptoRandom(), ...v });
+      showToast('Transaction saved');
+    }
+    persist();
+    closeModalFn();
+    render();
+  }
+
+  function editRecord(id){
+    const r = records.find(x=>x.id===id);
+    if (!r) return;
+    mSite.value = r.site;
+    mDate.value = r.date;
+    mDeposit.value = r.deposit;
+    mWithdrawal.value = r.withdrawal;
+    mBonus.value = r.bonus;
+    mForfeit.value = r.forfeit;
+    mResit.value = r.resit;
+    mMember.value = r.member;
+    mSales.value = r.sales;
+    openModal(id);
+  }
+
+  function deleteRecord(id){
+    if (!confirm('Delete this record?')) return;
+    records = records.filter(r=>r.id!==id);
+    persist();
+    render();
+  }
+
+  function render(){
+    // filters
+    const site = siteSearch.value.trim().toLowerCase();
+    const from = fromDate.value ? new Date(fromDate.value).getTime() : null;
+    const to = toDate.value ? new Date(toDate.value).getTime() : null;
+
+    let list = records.slice();
+    if (site) list = list.filter(r=> r.site.toLowerCase().includes(site));
+    if (from!=null) list = list.filter(r=> new Date(r.date).getTime() >= from);
+    if (to!=null) list = list.filter(r=> new Date(r.date).getTime() <= to);
+
+    list.sort((a,b)=>{
+      const ta = new Date(a.date).getTime(), tb = new Date(b.date).getTime();
+      return sortDesc ? tb-ta : ta-tb;
     });
-    chip.addEventListener('dragstart', e=>{
-      chip.classList.add('dragging'); e.dataTransfer.setData('text/plain', p.key);
-    });
-    chip.addEventListener('dragend', ()=>chip.classList.remove('dragging'));
-    pageChips.appendChild(chip);
-  });
-}
-function closeChip(key){
-  const idx = openPages.findIndex(p=>p.key===key);
-  if(idx>=0){
-    openPages.splice(idx,1);
-    renderChips();
-    if(openPages.length) setActiveChip(openPages[Math.max(0, idx-1)].key);
-  }
-}
-function setActiveChip(key){
-  $$('.chip').forEach(c=>c.classList.toggle('active', c.dataset.key===key));
-  $$('.navbtn').forEach(b=>{
-    const match = b.dataset.page.toLowerCase().replace(/\s+/g,'-')===key;
-    b.classList.toggle('active', match);
-  });
-  activePageKey = key;
-  onActivePageChanged();
-}
-pageChips.addEventListener('dragover', e=>{
-  e.preventDefault();
-  const dragging = $('.chip.dragging');
-  const after = getDragAfterElement(pageChips, e.clientX);
-  if(after==null) pageChips.appendChild(dragging);
-  else pageChips.insertBefore(dragging, after);
-});
-function getDragAfterElement(container, x){
-  const els = [...container.querySelectorAll('.chip:not(.dragging)')];
-  return els.reduce((closest, child)=>{
-    const box = child.getBoundingClientRect();
-    const offset = x - box.left - box.width/2;
-    if(offset<0 && offset>closest.offset) return {offset, element:child};
-    else return closest;
-  }, {offset: Number.NEGATIVE_INFINITY}).element;
-}
 
-/* Nav clicks -> open chip */
-$$('.navbtn').forEach(b=>{
-  b.addEventListener('click', ()=>{
-    ensureChip(b.dataset.page);
-  });
-});
+    txBody.innerHTML = '';
+    if (!list.length){
+      txBody.innerHTML = `<tr><td colspan="10" class="empty">No data</td></tr>`;
+      return;
+    }
 
-/* Default open "Transactions" like screenshot */
-let activePageKey = '';
-ensureChip('Transactions');
-
-/* =============== FILTERS & TABLE =============== */
-const filtersBar = $('#filtersBar');
-const dateFrom = $('#dateFrom');
-const dateTo = $('#dateTo');
-dateFrom.value = todayISO();
-dateTo.value = todayISO();
-
-let sortDesc = true;
-let detailMode = false;
-
-$('#sortBtn').addEventListener('click', ()=>{
-  sortDesc = !sortDesc;
-  $('#sortBtn').textContent = sortDesc? 'Date Descend' : 'Date Ascend';
-  renderTable();
-});
-$('#detailBtn').addEventListener('click', ()=>{
-  detailMode = !detailMode;
-  $('#detailBtn').classList.toggle('gray', !detailMode);
-  renderTable();
-});
-$('#searchInput').addEventListener('input', renderTable);
-$('#statusSelect').addEventListener('change', renderTable);
-$('#promoSelect').addEventListener('change', renderTable);
-$('#creditTypeSelect').addEventListener('change', renderTable);
-dateFrom.addEventListener('change', renderTable);
-dateTo.addEventListener('change', renderTable);
-$('#siteSelectHeader').addEventListener('change', renderTable);
-
-/* Pills on/off */
-$('#typePills').addEventListener('click', (e)=>{
-  const pill = e.target.closest('.pill');
-  if(!pill) return;
-  if(e.target.classList.contains('close')){
-    pill.classList.toggle('active'); // hide/show
-    renderTable();
-  }
-});
-
-/* When active page changes, show/hide filters (Transactions need filters) */
-function onActivePageChanged(){
-  const isTx = activePageKey==='transactions';
-  filtersBar.style.display = isTx ? 'block' : 'none';
-  renderTable();
-}
-
-/* =============== DATA STORAGE =============== */
-const LS_KEY = 'panel.records.v1';
-function loadRecords(){
-  try{ return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }
-  catch{ return []; }
-}
-function saveRecords(list){
-  localStorage.setItem(LS_KEY, JSON.stringify(list));
-}
-function addRecord(rec){
-  const list = loadRecords();
-  list.push(rec); saveRecords(list); renderTable();
-}
-
-/* =============== TABLE RENDER =============== */
-function withinDate(d, a, b){
-  if(!a || !b) return true;
-  const x = new Date(d).getTime();
-  const s = new Date(a).setHours(0,0,0,0);
-  const e = new Date(b).setHours(23,59,59,999);
-  return x>=s && x<=e;
-}
-function renderTable(){
-  // Only show table for Transactions tab
-  const tbody = $('#txBody');
-  const emptyRow = $('#emptyRow');
-
-  if(activePageKey!=='transactions'){
-    // Show placeholder matching screenshot style
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="5">
-          <div class="empty">
-            <div class="box">📄</div>
-            <div>Select a tab above. Content for "<b>${activePageKey.replace('-',' ')}</b>" will appear here.</div>
-          </div>
+    for (const r of list){
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="num">
+          <div>${r.date.replace('T',' ')}</div>
+          <div class="muted">${new Date(r.date).toDateString()}</div>
         </td>
-      </tr>`;
-    return;
-  }
-
-  let rows = loadRecords();
-
-  /* FILTERS */
-  const siteFilter = $('#siteSelectHeader').value; // all / 5g88 / spm888
-  if(siteFilter!=='all') rows = rows.filter(r=>r.site===siteFilter);
-
-  const status = $('#statusSelect').value;
-  if(status!=='all') rows = rows.filter(r=>r.status===status);
-
-  const q = $('#searchInput').value.trim().toLowerCase();
-  if(q){
-    rows = rows.filter(r=>{
-      return (r.note||'').toLowerCase().includes(q) ||
-             (r.site||'').toLowerCase().includes(q);
-    });
-  }
-
-  // Type pills (simply treat as category presence)
-  const typesOn = new Set([...$('#typePills').querySelectorAll('.pill.active')].map(p=>p.dataset.type));
-  if(typesOn.size){
-    rows = rows.filter(r=> typesOn.has(r.category));
-  }
-
-  // Promotion/Credit Type kept for demo (no-op unless set in record)
-  const promo = $('#promoSelect').value;
-  if(promo!=='all') rows = rows.filter(r=>r.promo===promo);
-  const creditType = $('#creditTypeSelect').value;
-  if(creditType!=='all') rows = rows.filter(r=>r.creditType===creditType);
-
-  // Date range
-  const f = dateFrom.value, t = dateTo.value;
-  rows = rows.filter(r=> withinDate(r.date, f, t));
-
-  // Sort
-  rows.sort((a,b)=> sortDesc ? (new Date(b.date)-new Date(a.date)) : (new Date(a.date)-new Date(b.date)));
-
-  // Render
-  if(!rows.length){
-    tbody.innerHTML = `
-      <tr id="emptyRow"><td colspan="5">
-        <div class="empty"><div class="box">📦</div><div>No data</div></div>
-      </td></tr>`;
-    return;
-  }
-
-  const showDetail = detailMode;
-  let html='';
-  for(const r of rows){
-    html += `
-      <tr>
-        <td>
-          <div><b>${r.title}</b></div>
-          ${showDetail ? `
-            <div class="muted" style="margin-top:6px; font-size:12px">
-              Deposit: <b>${fmt(r.deposit)}</b> &nbsp;•&nbsp;
-              Withdrawal: <b>${fmt(r.withdraw)}</b> &nbsp;•&nbsp;
-              Bonus: <b>${fmt(r.bonus)}</b> &nbsp;•&nbsp;
-              Forfeit: <b>${fmt(r.forfeit)}</b> &nbsp;•&nbsp;
-              Resit: <b>${fmt(r.resit)}</b> &nbsp;•&nbsp;
-              Active: <b>${r.active}</b> &nbsp;•&nbsp;
-              Sales: <b>${fmt(r.sales)}</b>
-            </div>` : ''}
+        <td><span class="badge">${r.site}</span></td>
+        <td class="num">${fmt(r.deposit)}</td>
+        <td class="num">${fmt(r.withdrawal)}</td>
+        <td class="num">${fmt(r.bonus)}</td>
+        <td class="num">${fmt(r.forfeit)}</td>
+        <td class="num">${fmt(r.resit)}</td>
+        <td class="num">${r.member}</td>
+        <td class="num"><b>${fmt(r.sales)}</b></td>
+        <td class="actions">
+          <span class="link" data-act="edit" data-id="${r.id}">Edit</span>
+          <span class="link" data-act="delete" data-id="${r.id}">Delete</span>
         </td>
-        <td class="right nowrap">${r.site.toUpperCase()}</td>
-        <td class="right nowrap">${new Date(r.date).toLocaleString()}</td>
-        <td class="right nowrap">${r.status[0].toUpperCase()+r.status.slice(1)}</td>
-        <td class="right nowrap">
-          <button class="btn small ghost" data-view="${r.id}">View</button>
-          <button class="btn small outline" data-del="${r.id}">Delete</button>
-        </td>
-      </tr>`;
+      `;
+      txBody.appendChild(tr);
+    }
+    document.getElementById('txTable').classList.toggle('detail-on', detailOn);
+
+    // delegate actions
+    qsa('[data-act="edit"]').forEach(a=> a.onclick = ()=> editRecord(a.dataset.id));
+    qsa('[data-act="delete"]').forEach(a=> a.onclick = ()=> deleteRecord(a.dataset.id));
   }
-  tbody.innerHTML = html;
 
-  // actions
-  tbody.querySelectorAll('button[data-del]').forEach(b=>{
-    b.addEventListener('click', ()=>{
-      const id = b.dataset.del;
-      const list = loadRecords().filter(x=>x.id!==id);
-      saveRecords(list); renderTable();
-    });
+  // events
+  siteSearch.addEventListener('input', render);
+  clearSiteBtn.addEventListener('click', ()=>{ siteSearch.value=''; render(); });
+  fromDate.addEventListener('change', render);
+  toDate.addEventListener('change', render);
+
+  sortBtn.addEventListener('click', ()=>{
+    sortDesc = !sortDesc;
+    sortBtn.textContent = sortDesc ? 'Date Descend' : 'Date Ascend';
+    render();
   });
-  tbody.querySelectorAll('button[data-view]').forEach(b=>{
-    b.addEventListener('click', ()=>{
-      const rec = loadRecords().find(x=>x.id===b.dataset.view);
-      if(!rec) return;
-      alert(
-`Site: ${rec.site.toUpperCase()}
-Date: ${new Date(rec.date).toLocaleString()}
-Status: ${rec.status}
 
-Deposit: ${fmt(rec.deposit)}
-Withdrawal: ${fmt(rec.withdraw)}
-Bonus: ${fmt(rec.bonus)}
-Forfeit: ${fmt(rec.forfeit)}
-Resit: ${fmt(rec.resit)}
-Active: ${rec.active}
-Sales: ${fmt(rec.sales)}`
-      );
-    });
+  detailBtn.addEventListener('click', ()=>{
+    detailOn = !detailOn;
+    detailBtn.textContent = detailOn ? 'Detail View: ON' : 'Detail View';
+    render();
   });
-}
 
-/* =============== MODAL CREATE =============== */
-const modal = $('#createModal');
-$('#openCreate').addEventListener('click', ()=>{
-  // default site = current header filter if not 'all'
-  const headerSite = $('#siteSelectHeader').value;
-  if(headerSite!=='all') $('#mSite').value = headerSite;
-  if(!$('#mDate').value){
-    const dt = new Date();
-    dt.setSeconds(0,0);
-    $('#mDate').value = new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,16);
-  }
-  modal.style.display='flex';
-});
-$('#closeCreate').addEventListener('click', ()=> modal.style.display='none');
-modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.style.display='none'; });
+  createBtn.addEventListener('click', ()=> openModal());
+  closeModal.addEventListener('click', closeModalFn);
+  modalBackdrop.addEventListener('click', (e)=>{ if (e.target===modalBackdrop) closeModalFn(); });
 
-const inputs = ['#mDeposit','#mWithdraw','#mBonus','#mForfeit','#mResit'].map(s=>$(s));
-function recalcSales(){
-  if($('#overrideSales').checked) return;
-  const dep = parseNum($('#mDeposit').value);
-  const wd  = parseNum($('#mWithdraw').value);
-  const bon = parseNum($('#mBonus').value);
-  const ff  = parseNum($('#mForfeit').value);
-  const rs  = parseNum($('#mResit').value);
-  const sales = dep - wd + bon - ff + rs;
-  $('#mSales').value = sales.toFixed(2);
-}
-inputs.forEach(i=> i.addEventListener('input', recalcSales));
-$('#overrideSales').addEventListener('change', e=>{
-  $('#mSales').readOnly = !e.target.checked;
-  if(!e.target.checked) recalcSales();
-});
-$('#resetForm').addEventListener('click', ()=>{
-  ['#mDeposit','#mWithdraw','#mBonus','#mForfeit','#mResit','#mActive','#mSales'].forEach(s=>$(s).value='0');
-  $('#overrideSales').checked=false; $('#mSales').readOnly=true; recalcSales();
-});
+  saveModal.addEventListener('click', saveRecord);
+  resetForm.addEventListener('click', ()=>{
+    mSite.value=''; mDate.value=toInputValue(new Date());
+    mDeposit.value=mWithdrawal.value=mBonus.value=mForfeit.value=mResit.value=mSales.value=0;
+    mMember.value=0;
+  });
+  autoCalc.addEventListener('click', autoCalcSales);
 
-$('#saveCreate').addEventListener('click', ()=>{
-  const site = $('#mSite').value;
-  const date = $('#mDate').value ? new Date($('#mDate').value) : new Date();
-  const deposit = parseNum($('#mDeposit').value);
-  const withdraw = parseNum($('#mWithdraw').value);
-  const bonus = parseNum($('#mBonus').value);
-  const forfeit = parseNum($('#mForfeit').value);
-  const resit = parseNum($('#mResit').value);
-  const active = Math.max(0, parseInt($('#mActive').value||'0',10));
-  const sales = parseNum($('#mSales').value);
+  // helper: press Enter in site search focuses create (biar cepat input)
+  siteSearch.addEventListener('keydown', e=>{
+    if (e.key==='Enter'){ openModal(); setTimeout(()=> mSite.focus(), 50); }
+  });
 
-  const rec = {
-    id: crypto.randomUUID(),
-    site, date: date.toISOString(),
-    status:'pending',
-    category:'bonus', // for demo mapping with pill
-    title:`Totals — ${site.toUpperCase()} (Sales ${fmt(sales)})`,
-    note:'',
-    promo:'all', creditType:'all',
-    deposit, withdraw, bonus, forfeit, resit, active, sales
-  };
-  addRecord(rec);
-  modal.style.display='none';
-});
-
-/* =============== INIT =============== */
-startClock();
-renderChips(); // show initial
-renderTable();
+})();
 </script>
 </body>
 </html>
