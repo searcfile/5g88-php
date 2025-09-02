@@ -6,7 +6,7 @@
 <title>Monthly Bonus Recorder | 5G88</title>
 <style>
   :root{
-    --bg:#0a0a0a; --card:#121212; --muted:#1d1d1d;
+    --bg:#0a0a0a; --card:#121212;
     --text:#e6e6e6; --sub:#a7a7a7; --gold:#ffd166; --gold-2:#ffcf4d;
     --red:#f87171; --green:#22c55e; --cyan:#60a5fa; --ring:rgba(255,209,102,.55);
   }
@@ -15,18 +15,27 @@
   body{margin:0; background:var(--bg); color:var(--text);
     font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial;}
 
-  .header{position:sticky; top:0; z-index:50; background:linear-gradient(180deg,#111,#0c0c0c);
-    border-bottom:1px solid #242424; padding:12px 14px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+  /* Header: filter & export */
+  .header{
+    position:sticky; top:0; z-index:50;
+    background:linear-gradient(180deg,#111,#0c0c0c);
+    border-bottom:1px solid #242424; padding:12px 14px;
+    display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+  }
   .brand{display:flex; align-items:center; gap:10px; font-weight:700; padding:6px 10px; border-radius:10px;
     background:#0f0f0f; border:1px solid #222;}
   .brand .dot{width:8px; height:8px; border-radius:50%; background:var(--gold); box-shadow:0 0 12px var(--gold);}
   .spacer{flex:1}
-  .select,.input,.btn{height:36px; border-radius:8px; border:1px solid #2a2a2a; background:#121212; color:var(--text);
-    padding:0 10px; outline:none; transition:border .15s ease, box-shadow .2s ease;}
+  .select,.input,.btn{
+    height:36px; border-radius:8px; border:1px solid #2a2a2a; background:#121212; color:var(--text);
+    padding:0 10px; outline:none; transition:border .15s, box-shadow .2s;
+  }
   .select:hover,.input:hover{border-color:#3a3a3a}
   .select:focus,.input:focus{border-color:var(--gold); box-shadow:0 0 0 4px var(--ring)}
-  .btn{background:linear-gradient(180deg,var(--gold),var(--gold-2)); border:1px solid #8a6b1a; color:#000; font-weight:700;
-    cursor:pointer; box-shadow:0 6px 18px rgba(255,209,102,.25);}
+  .btn{
+    background:linear-gradient(180deg,var(--gold),var(--gold-2)); border:1px solid #8a6b1a;
+    color:#000; font-weight:700; cursor:pointer; box-shadow:0 6px 18px rgba(255,209,102,.25);
+  }
   .btn:hover{filter:brightness(1.04)} .btn:active{transform:translateY(1px)}
   .btn.ghost{background:#141414; color:var(--text); border:1px solid #2d2d2d; box-shadow:none;}
   .btn.ghost:hover{border-color:#3a3a3a}
@@ -34,34 +43,43 @@
 
   .wrap{max-width:1200px; margin:16px auto; padding:0 14px 60px}
 
-  .toolbar{display:flex; gap:8px; align-items:center; margin:8px 0 6px}
-  .badge{display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px; border:1px solid #2a2a2a;
-    background:#111; color:#ccc; font-size:12px;}
-
-  .cards{display:grid; grid-template-columns:repeat(6,1fr); gap:10px}
-  @media (max-width:1100px){ .cards{grid-template-columns:repeat(3,1fr)} }
-  @media (max-width:640px){ .cards{grid-template-columns:repeat(2,1fr)} }
-  .card{background:linear-gradient(180deg,#141414,#0e0e0e); border:1px solid #232323; border-radius:14px; padding:12px;}
+  /* summary rows */
+  .cards-row{
+    display:flex; gap:10px; overflow-x:auto; padding-bottom:4px;
+    scrollbar-width: thin;
+  }
+  .card{
+    background:linear-gradient(180deg,#141414,#0e0e0e);
+    border:1px solid #232323; border-radius:14px; padding:12px;
+    min-width:200px; /* biar 1 baris scroll kalau tak muat */
+  }
   .card h4{margin:0 0 2px; font-size:12px; color:#cfcfcf; font-weight:600}
   .card .val{font-size:18px; font-weight:800}
   .val.red{color:var(--red)} .val.green{color:var(--green)} .val.cyan{color:var(--cyan)}
 
-  .table{margin-top:8px; background:#101010; border:1px solid #222; border-radius:14px; overflow:hidden;}
+  /* toolbar di atas tabel (kiri) */
+  .toolbar{display:flex; gap:8px; align-items:center; margin:10px 0 6px}
+
+  .badge{display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px;
+    border:1px solid #2a2a2a; background:#111; color:#ccc; font-size:12px;}
+
+  /* table */
+  .table{background:#101010; border:1px solid #222; border-radius:14px; overflow:hidden;}
   .table thead{background:linear-gradient(180deg,#161616,#131313)}
-  .table th,.table td{padding:10px 10px; border-bottom:1px dashed #222; text-align:right; white-space:nowrap}
+  .table th,.table td{padding:10px; border-bottom:1px dashed #222; text-align:right; white-space:nowrap}
   .table th:first-child,.table td:first-child{text-align:left}
-  .table th:nth-child(2), .table td:nth-child(2){text-align:center}
+  .table th:nth-child(2),.table td:nth-child(2){text-align:center}
   .table tfoot td{background:#0f0f0f; font-weight:800}
   .pill{padding:2px 8px; border-radius:999px; border:1px solid #2d2d2d; background:#121212; font-weight:700}
   .pill.site-5g88{color:#111; background:var(--gold); border-color:#8a6b1a}
   .pill.site-spm888{color:#eee; background:#273142; border-color:#3a4b66}
   .num.red{color:var(--red)} .num.green{color:var(--green)} .num.cyan{color:var(--cyan)}
-
   .actions{display:flex; gap:8px; justify-content:flex-end}
   .iconbtn{height:28px; padding:0 10px; border-radius:8px; border:1px solid #2a2a2a; background:#151515; color:#ddd; cursor:pointer; font-weight:600;}
   .iconbtn:hover{border-color:#3a3a3a} .iconbtn.del{border-color:#3a2222; background:#191111; color:#ffb4b4}
   .empty{padding:24px; text-align:center; color:#9f9f9f; border-top:1px dashed #222; background:repeating-linear-gradient(45deg,#0e0e0e 0 8px,#0c0c0c 8px 16px);}
 
+  /* modal generik */
   .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; backdrop-filter:blur(3px)}
   .modal.show{display:flex}
   .overlay{position:absolute; inset:0; background:rgba(0,0,0,.55)}
@@ -85,6 +103,7 @@
 </style>
 </head>
 <body>
+  <!-- Header (filters & export) -->
   <div class="header">
     <div class="brand"><span class="dot"></span> <span>Bonus Recorder</span></div>
 
@@ -97,23 +116,28 @@
     <select id="monthFilter" class="select" title="Month"></select>
 
     <div class="spacer"></div>
-
-    <button id="createBtn" class="btn">Create</button>
     <button id="exportBtn" class="btn ghost">Export CSV</button>
   </div>
 
   <div class="wrap">
+    <!-- ROW 1: semua kartu ringkasan dalam 1 baris (scroll bila tak muat) -->
+    <div class="cards-row" id="summaryRowTop"></div>
+    <!-- ROW 2: khusus Bonus Deposit Σ & Bonus Resit Σ -->
+    <div class="cards-row" id="summaryRowBottom" style="margin-top:8px;"></div>
+
+    <!-- Toolbar: Set Target + Create (di atas tabel) -->
     <div class="toolbar">
       <button id="targetBtn" class="btn ghost">Set Target</button>
+      <button id="createBtn" class="btn">Create</button>
       <span id="targetBadge" class="badge" style="display:none"></span>
     </div>
 
+    <!-- Info bulan arsip (opsional) -->
     <div id="archiveBanner" class="badge" style="display:none; margin:8px 0">
       Anda sedang melihat bulan <b id="bannerMonth" style="margin-left:6px"></b>
     </div>
 
-    <div class="cards" id="summaryRow"></div>
-
+    <!-- Table -->
     <div class="table">
       <table id="dataTable" style="width:100%; border-collapse:collapse">
         <thead>
@@ -151,6 +175,7 @@
       </table>
       <div id="emptyState" class="empty" style="display:none">Belum ada data untuk filter ini. Klik <b>Create</b> untuk tambah data baru.</div>
     </div>
+
     <div class="hint" style="margin-top:8px">Semua data disimpan lokal di browser (localStorage). Silakan export CSV untuk backup.</div>
   </div>
 
@@ -230,48 +255,30 @@
   </div>
 
 <script>
-  const $ = sel => document.querySelector(sel);
-  const fmtNum = (n) => (Number.isFinite(n)?n:parseFloat(n||0)).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
-  const fmtInt = (n) => (parseInt(n||0,10)).toLocaleString();
-  const pad2 = (n)=> String(n).padStart(2,'0');
-  const toYYYYMM = (d)=> `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
-  const parseLocalDT = (v)=> v? new Date(v.replace('T',' ')) : new Date();
+  const $ = s => document.querySelector(s);
+  const fmtNum = n => (Number.isFinite(n)?n:parseFloat(n||0)).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+  const fmtInt = n => (parseInt(n||0,10)).toLocaleString();
+  const pad2 = n => String(n).padStart(2,'0');
+  const toYYYYMM = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
+  const parseLocalDT = v => v? new Date(v.replace('T',' ')) : new Date();
 
   const LS_KEY='bonusRecords.v1';
   const LS_LAST_MONTH='bonusRecords.lastOpenedMonth';
-  const LS_TARGET='bonusTargets.v2'; // versi baru (multi-tier)
+  const LS_TARGET='bonusTargets.v2';
 
   const readStore=()=>{try{return JSON.parse(localStorage.getItem(LS_KEY))||[]}catch{return[]}};
-  const writeStore=(arr)=>localStorage.setItem(LS_KEY,JSON.stringify(arr));
+  const writeStore=a=>localStorage.setItem(LS_KEY,JSON.stringify(a));
 
-  // Back-compat: if old single-target exists, convert to tiers
   function readTarget(){
-    let t;
-    try{ t = JSON.parse(localStorage.getItem(LS_TARGET)); }catch{ t = null; }
-    if (t && t.depositTiers && t.resitTiers) return t;
-
-    // check very old v1
-    try{
-      const v1 = JSON.parse(localStorage.getItem('bonusTargets.v1'));
-      if (v1 && ('depTarget' in v1)) {
-        const converted = {
-          depositTiers: [{threshold: Number(v1.depTarget||0), bonus: Number(v1.depBonus||0)}],
-          resitTiers:   [{threshold: Number(v1.resTarget||0), bonus: Number(v1.resBonus||0)}],
-        };
-        localStorage.setItem(LS_TARGET, JSON.stringify(converted));
-        return converted;
-      }
-    }catch{}
-
+    let t; try{ t=JSON.parse(localStorage.getItem(LS_TARGET)); }catch{ t=null; }
+    if(t && t.depositTiers && t.resitTiers) return t;
     // default tiers
-    const def = {
-      depositTiers: [{threshold:8000, bonus:20},{threshold:10000, bonus:25}],
-      resitTiers:   [{threshold:250,  bonus:30},{threshold:500,   bonus:60}],
-    };
-    localStorage.setItem(LS_TARGET, JSON.stringify(def));
-    return def;
+    t={depositTiers:[{threshold:8000,bonus:20},{threshold:10000,bonus:25}],
+       resitTiers:[{threshold:250,bonus:30},{threshold:500,bonus:60}]};
+    localStorage.setItem(LS_TARGET,JSON.stringify(t)); return t;
   }
-  const writeTarget=(t)=>localStorage.setItem(LS_TARGET, JSON.stringify(t));
+  const writeTarget=t=>localStorage.setItem(LS_TARGET,JSON.stringify(t));
+  const pickTierBonus=(v,tiers)=>Array.isArray(tiers)?tiers.reduce((m,t)=>v>=+t.threshold?Math.max(m,+t.bonus||0):m,0):0;
 
   let editingId=null;
 
@@ -279,12 +286,12 @@
     buildMonthOptions();
     autoSwitchToCurrentMonth();
     render();
+
     $('#createBtn').addEventListener('click',()=>openModal());
     $('#exportBtn').addEventListener('click', exportCSV);
     $('#siteFilter').addEventListener('change', render);
     $('#monthFilter').addEventListener('change', ()=>{localStorage.setItem(LS_LAST_MONTH,$('#monthFilter').value); render();});
 
-    // target modal
     $('#targetBtn').addEventListener('click', openTargetModal);
     updateTargetBadge();
   });
@@ -292,8 +299,7 @@
   function buildMonthOptions(){
     const sel=$('#monthFilter'); sel.innerHTML='';
     const months=new Set(readStore().map(r=>r.month)); months.add(toYYYYMM(new Date()));
-    const sorted=[...months].sort().reverse();
-    for(const m of sorted){ const o=document.createElement('option'); o.value=m; o.textContent=prettyMonth(m); sel.appendChild(o); }
+    [...months].sort().reverse().forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=prettyMonth(m);sel.appendChild(o);});
     const last=localStorage.getItem(LS_LAST_MONTH);
     sel.value=(last && months.has(last))? last : toYYYYMM(new Date());
   }
@@ -301,49 +307,41 @@
     const cur=toYYYYMM(new Date()); const last=localStorage.getItem(LS_LAST_MONTH);
     if(last!==cur){ $('#monthFilter').value=cur; localStorage.setItem(LS_LAST_MONTH,cur); }
   }
-  function prettyMonth(yyyyMM){ const [y,m]=yyyyMM.split('-').map(Number); return new Date(y,m-1,1).toLocaleDateString(undefined,{month:'long',year:'numeric'}); }
+  const prettyMonth=yyyyMM=>{const [y,m]=yyyyMM.split('-').map(Number);return new Date(y,m-1,1).toLocaleDateString(undefined,{month:'long',year:'numeric'});};
 
-  /* ===== Create/Edit Modal ===== */
+  /* ---------- Create/Edit ---------- */
   function openModal(rec=null){
     editingId=rec?.id ?? null;
-    $('#modalTitle').textContent = editingId? 'Edit Record' : 'Create Record';
-    $('#m_site').value = rec?.site || ($('#siteFilter').value==='ALL'?'5G88':$('#siteFilter').value);
-    const dt = rec? new Date(rec.datetime) : new Date();
+    $('#modalTitle').textContent=editingId?'Edit Record':'Create Record';
+    $('#m_site').value=rec?.site || ($('#siteFilter').value==='ALL'?'5G88':$('#siteFilter').value);
+    const dt=rec?new Date(rec.datetime):new Date();
     $('#m_dt').value=`${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}T${pad2(dt.getHours())}:${pad2(dt.getMinutes())}`;
-    $('#m_deposit').value    = rec?.deposit ?? '';
-    $('#m_withdrawal').value = rec?.withdrawal ?? '';
-    $('#m_bonus').value      = rec?.bonus ?? '';
-    $('#m_forfeit').value    = rec?.forfeit ?? '';
-    $('#m_member').value     = rec?.member ?? '';
-    $('#m_resit').value      = rec?.resit ?? '';
+    $('#m_deposit').value=rec?.deposit ?? '';
+    $('#m_withdrawal').value=rec?.withdrawal ?? '';
+    $('#m_bonus').value=rec?.bonus ?? '';
+    $('#m_forfeit').value=rec?.forfeit ?? '';
+    $('#m_member').value=rec?.member ?? '';
+    $('#m_resit').value=rec?.resit ?? '';
 
-    const autoCalc=()=>{
-      const dep=parseFloat($('#m_deposit').value||0);
-      const wit=parseFloat($('#m_withdrawal').value||0);
-      $('#m_sales').value=(dep-wit).toFixed(2);
-    };
-    $('#m_deposit').oninput=autoCalc;
-    $('#m_withdrawal').oninput=autoCalc;
-    autoCalc();
+    const autoCalc=()=>{$('#m_sales').value=(parseFloat($('#m_deposit').value||0)-parseFloat($('#m_withdrawal').value||0)).toFixed(2);};
+    $('#m_deposit').oninput=autoCalc; $('#m_withdrawal').oninput=autoCalc; autoCalc();
 
-    $('#modal').classList.add('show');
-    $('#saveBtn').onclick = saveModal;
+    $('#modal').classList.add('show'); $('#saveBtn').onclick=saveModal;
   }
-  function closeModal(){ $('#modal').classList.remove('show'); }
+  const closeModal=()=>$('#modal').classList.remove('show');
   function collectModal(){
     const dt=parseLocalDT($('#m_dt').value);
     return{
       id: editingId ?? ('id_'+Date.now()+Math.random().toString(36).slice(2,7)),
       site: $('#m_site').value,
-      datetime: dt.toISOString(),
-      month: toYYYYMM(dt),
-      deposit: parseFloat($('#m_deposit').value||0),
-      withdrawal: parseFloat($('#m_withdrawal').value||0),
-      bonus: parseFloat($('#m_bonus').value||0),
-      forfeit: parseFloat($('#m_forfeit').value||0),
+      datetime: dt.toISOString(), month: toYYYYMM(dt),
+      deposit: +($('#m_deposit').value||0),
+      withdrawal: +($('#m_withdrawal').value||0),
+      bonus: +($('#m_bonus').value||0),
+      forfeit: +($('#m_forfeit').value||0),
       member: parseInt($('#m_member').value||0,10),
-      resit: parseFloat($('#m_resit').value||0),
-      sales: parseFloat($('#m_sales').value||0),
+      resit: +($('#m_resit').value||0),
+      sales: +($('#m_sales').value||0),
     };
   }
   function saveModal(){
@@ -355,103 +353,67 @@
     closeModal(); render();
   }
 
-  /* ===== Target Modal (Multi-Tier) ===== */
+  /* ---------- Target Modal (multi-tier) ---------- */
   function openTargetModal(){
     const t=readTarget();
     renderTierEditor('#depTierList', t.depositTiers, true);
     renderTierEditor('#resTierList', t.resitTiers, false);
     $('#targetModal').classList.add('show');
-
     $('#addDepTier').onclick=()=>addTierRow('#depTierList');
     $('#addResTier').onclick=()=>addTierRow('#resTierList');
     $('#saveTargetBtn').onclick=saveTarget;
   }
-  function closeTargetModal(){ $('#targetModal').classList.remove('show'); }
-
-  function renderTierEditor(containerSel, tiers, isDeposit){
-    const box=$(containerSel); box.innerHTML='';
-    const headerRow=document.createElement('div');
-    headerRow.className='tier-row';
-    headerRow.innerHTML=`
-      <div class="hint" style="align-self:center">Threshold (≥)</div>
-      <div class="hint" style="align-self:center">${isDeposit?'Bonus Deposit':'Bonus Resit'}</div>
-      <div></div>`;
-    box.appendChild(headerRow);
-
-    (tiers && tiers.length? tiers:[]).forEach(t=> addTierRow(containerSel, t.threshold, t.bonus));
+  const closeTargetModal=()=>$('#targetModal').classList.remove('show');
+  function renderTierEditor(sel, tiers, isDep){
+    const box=$(sel); box.innerHTML='';
+    const head=document.createElement('div'); head.className='tier-row';
+    head.innerHTML=`<div class="hint" style="align-self:center">Threshold (≥)</div><div class="hint" style="align-self:center">${isDep?'Bonus Deposit':'Bonus Resit'}</div><div></div>`;
+    box.appendChild(head);
+    (tiers||[]).forEach(t=>addTierRow(sel,t.threshold,t.bonus));
   }
-  function addTierRow(containerSel, threshold='', bonus=''){
-    const box=$(containerSel);
-    const row=document.createElement('div'); row.className='tier-row';
-    row.innerHTML=`
-      <input type="number" min="0" step="0.01" class="input" placeholder="e.g. 8000" value="${threshold}">
-      <input type="number" min="0" step="1" class="input" placeholder="e.g. 20" value="${bonus}">
-      <button class="rm">Remove</button>`;
-    row.querySelector('.rm').onclick=()=> row.remove();
-    box.appendChild(row);
+  function addTierRow(sel, threshold='', bonus=''){
+    const box=$(sel); const row=document.createElement('div'); row.className='tier-row';
+    row.innerHTML=`<input type="number" min="0" step="0.01" class="input" placeholder="e.g. 8000" value="${threshold}">
+                   <input type="number" min="0" step="1" class="input" placeholder="e.g. 20" value="${bonus}">
+                   <button class="rm">Remove</button>`;
+    row.querySelector('.rm').onclick=()=>row.remove(); box.appendChild(row);
   }
   function saveTarget(){
-    const readRows=(sel)=>{
-      const rows=[...document.querySelectorAll(sel+' .tier-row')].slice(1); // skip header
-      const out=[];
-      for(const r of rows){
-        const [th,bo]=r.querySelectorAll('input');
-        const thr=parseFloat(th.value||0); const bon=parseInt(bo.value||0,10);
-        if (thr>0 && bon>0) out.push({threshold:thr, bonus:bon});
-      }
-      // sort by threshold asc
-      out.sort((a,b)=>a.threshold-b.threshold);
-      return out;
+    const readRows=sel=>{
+      const rows=[...document.querySelectorAll(sel+' .tier-row')].slice(1);
+      const out=[]; for(const r of rows){ const [th,bo]=r.querySelectorAll('input'); const thr=+th.value||0; const bon=+bo.value||0; if(thr>0&&bon>0) out.push({threshold:thr,bonus:bon}); }
+      out.sort((a,b)=>a.threshold-b.threshold); return out;
     };
-    const t={ depositTiers: readRows('#depTierList'), resitTiers: readRows('#resTierList') };
-    // if empty, keep at least one default to avoid confusion
-    if (t.depositTiers.length===0) t.depositTiers=[{threshold:8000, bonus:20}];
-    if (t.resitTiers.length===0)   t.resitTiers=[{threshold:250,  bonus:30}];
-    writeTarget(t);
-    updateTargetBadge();
-    closeTargetModal();
-    render();
-  }
-
-  function pickTierBonus(value, tiers){
-    if (!Array.isArray(tiers)) return 0;
-    let best=0;
-    for(const t of tiers){ if (value>=Number(t.threshold)) best=Math.max(best, Number(t.bonus||0)); }
-    return best;
+    const t={depositTiers:readRows('#depTierList'), resitTiers:readRows('#resTierList')};
+    if(!t.depositTiers.length) t.depositTiers=[{threshold:8000,bonus:20}];
+    if(!t.resitTiers.length)   t.resitTiers=[{threshold:250, bonus:30}];
+    writeTarget(t); updateTargetBadge(); closeTargetModal(); render();
   }
   function updateTargetBadge(){
     const t=readTarget();
-    const fmtTiers=(arr)=>arr.map(x=>`≥ ${Number(x.threshold).toLocaleString()} → +${x.bonus}`).join('; ');
-    const el=$('#targetBadge');
-    el.textContent=`Dep: ${fmtTiers(t.depositTiers)} | Resit: ${fmtTiers(t.resitTiers)}`;
-    el.style.display='inline-flex';
+    const fmt=arr=>arr.map(x=>`≥ ${Number(x.threshold).toLocaleString()} → +${x.bonus}`).join('; ');
+    const el=$('#targetBadge'); el.textContent=`Dep: ${fmt(t.depositTiers)} | Resit: ${fmt(t.resitTiers)}`; el.style.display='inline-flex';
   }
 
-  /* ===== Render ===== */
+  /* ---------- Render ---------- */
   function render(){
-    const site=$('#siteFilter').value;
-    const month=$('#monthFilter').value;
-    const targets=readTarget();
+    const site=$('#siteFilter').value, month=$('#monthFilter').value, targets=readTarget();
+    const data=readStore().filter(r=>r.month===month).filter(r=>site==='ALL'?true:r.site===site)
+      .sort((a,b)=>new Date(b.datetime)-new Date(a.datetime));
 
-    const data=readStore()
-      .filter(r=>r.month===month)
-      .filter(r=> site==='ALL' ? true : r.site===site)
-      .sort((a,b)=> new Date(b.datetime)-new Date(a.datetime));
-
-    const curMonth=toYYYYMM(new Date());
-    const isArchive=month!==curMonth;
+    // archive info
+    const cur=toYYYYMM(new Date()); const isArchive=month!==cur;
     $('#archiveBanner').style.display=isArchive?'inline-flex':'none';
     $('#bannerMonth').textContent=prettyMonth(month);
 
-    $('#emptyState').style.display=data.length?'none':'block';
-
+    // table body
     const tb=$('#tbody'); tb.innerHTML='';
     let totals={d:0,w:0,b:0,f:0,m:0,r:0,s:0, bd:0, br:0};
 
     for(const r of data){
       const dt=new Date(r.datetime).toLocaleString(undefined,{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
       const bonusDep=pickTierBonus(r.deposit, targets.depositTiers);
-      const bonusRes=pickTierBonus(r.resit,   targets.resitTiers);
+      const bonusRes=pickTierBonus(r.resit, targets.resitTiers);
 
       const tr=document.createElement('tr');
       tr.innerHTML=`
@@ -477,7 +439,9 @@
       totals.d+=r.deposit; totals.w+=r.withdrawal; totals.b+=r.bonus; totals.f+=r.forfeit;
       totals.m+=r.member; totals.r+=r.resit; totals.s+=r.sales; totals.bd+=bonusDep; totals.br+=bonusRes;
     }
+    $('#emptyState').style.display=data.length?'none':'block';
 
+    // footer totals
     $('#ft_deposit').textContent=fmtNum(totals.d);
     $('#ft_withdrawal').textContent=fmtNum(totals.w);
     $('#ft_bonus').textContent=fmtNum(totals.b);
@@ -488,12 +452,13 @@
     $('#ft_bonDep').textContent=totals.bd.toLocaleString();
     $('#ft_bonRes').textContent=totals.br.toLocaleString();
 
-    renderSummary(totals, data.length, site, month);
+    renderSummaryRows(totals, data.length, site, month);
   }
 
-  function renderSummary(t, count, site, month){
-    const row=$('#summaryRow'); row.innerHTML='';
-    const cards=[
+  function renderSummaryRows(t, count, site, month){
+    // ROW 1
+    const top=$('#summaryRowTop'); top.innerHTML='';
+    const mainCards=[
       {title:'Month', val: prettyMonth(month)},
       {title:'Site', val: site==='ALL'?'All Sites':site},
       {title:'Total Deposit', val: fmtNum(t.d), cls:'green'},
@@ -503,15 +468,25 @@
       {title:'Total Forfeit', val: fmtNum(t.f)},
       {title:'Total Resit In', val: fmtNum(t.r)},
       {title:'Total Member', val: fmtInt(t.m)},
-      {title:'Bonus Deposit Σ', val: t.bd.toLocaleString()},
-      {title:'Bonus Resit Σ', val: t.br.toLocaleString()},
       {title:'Records', val: count.toLocaleString()},
     ];
-    for(const c of cards){
+    mainCards.forEach(c=>{
       const div=document.createElement('div'); div.className='card';
       div.innerHTML=`<h4>${c.title}</h4><div class="val ${c.cls||''}">${c.val}</div>`;
-      row.appendChild(div);
-    }
+      top.appendChild(div);
+    });
+
+    // ROW 2
+    const bottom=$('#summaryRowBottom'); bottom.innerHTML='';
+    const subCards=[
+      {title:'Bonus Deposit Σ', val: t.bd.toLocaleString()},
+      {title:'Bonus Resit Σ',   val: t.br.toLocaleString()},
+    ];
+    subCards.forEach(c=>{
+      const div=document.createElement('div'); div.className='card';
+      div.innerHTML=`<h4>${c.title}</h4><div class="val">${c.val}</div>`;
+      bottom.appendChild(div);
+    });
   }
 
   function delRecord(id){
@@ -520,30 +495,20 @@
     render();
   }
 
-  /* ===== CSV export (with tier bonuses) ===== */
   function exportCSV(){
-    const site=$('#siteFilter').value;
-    const month=$('#monthFilter').value;
-    const targets=readTarget();
-    const data=readStore()
-      .filter(r=>r.month===month)
-      .filter(r=> site==='ALL'? true : r.site===site)
-      .sort((a,b)=> new Date(a.datetime)-new Date(b.datetime));
-
+    const site=$('#siteFilter').value, month=$('#monthFilter').value, t=readTarget();
+    const data=readStore().filter(r=>r.month===month).filter(r=>site==='ALL'?true:r.site===site)
+      .sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
     const header=['datetime','site','deposit','withdrawal','bonus','forfeit','member','resit_in','sales','bonus_deposit','bonus_resit'];
     const rows=[header.join(',')];
     for(const r of data){
-      const bDep=pickTierBonus(r.deposit, targets.depositTiers);
-      const bRes=pickTierBonus(r.resit, targets.resitTiers);
-      rows.push([
-        new Date(r.datetime).toISOString(), r.site, r.deposit, r.withdrawal, r.bonus, r.forfeit, r.member, r.resit, r.sales,
-        bDep, bRes
-      ].join(','));
+      const bDep=pickTierBonus(r.deposit, t.depositTiers);
+      const bRes=pickTierBonus(r.resit,   t.resitTiers);
+      rows.push([new Date(r.datetime).toISOString(), r.site, r.deposit, r.withdrawal, r.bonus, r.forfeit, r.member, r.resit, r.sales, bDep, bRes].join(','));
     }
     const blob=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8;'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a'); a.href=url; a.download=`bonus-${month}-${site}.csv`; document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
+    const url=URL.createObjectURL(blob); const a=document.createElement('a');
+    a.href=url; a.download=`bonus-${month}-${site}.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
   }
 
   // expose
