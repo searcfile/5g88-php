@@ -99,8 +99,9 @@ body{
 .table{
   background:#101010; border:1px solid #222; border-radius:14px;
   position: relative;
-  overflow: auto;          /* ⬅️ bisa scroll vertikal & horizontal */
-  max-height: 560px;       /* ⬅️ fallback; nanti diatur JS pas >10 baris */
+  overflow: auto;     
+  max-height: 560px;
+  z-index: -1;
 }
 .table thead{background:linear-gradient(180deg,#161616,#131313)}
 .table th,.table td{
