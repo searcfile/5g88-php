@@ -160,6 +160,25 @@ body{
 #dataTable th, #dataTable td { padding: 10px 12px; }
 #dataTable td:last-child .actions { justify-content:center !important; }
 #dataTable tfoot td { text-align:center !important; }
+/* --- Sejajarkan kolom Actions (header + body) --- */
+#dataTable thead th:last-child { 
+  text-align: center !important;   /* override inline style */
+}
+#dataTable tbody td:last-child {
+  text-align: center !important;
+}
+#dataTable td:last-child .actions{
+  display:flex;
+  width:100%;                      /* flex container isi selebar sel */
+  justify-content:center !important;
+  align-items:center;
+}
+
+/* --- Center-kan teks TOTAL (Filtered) di tfoot --- */
+#dataTable tfoot td:first-child {
+  text-align: center !important;   /* kolom yang berisi TOTAL (Filtered) */
+  vertical-align: middle !important;
+}
 
 /* Modal */
 .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; backdrop-filter:blur(3px)}
@@ -271,7 +290,7 @@ body{
         <th>Sales</th>
         <th>Bonus Deposit</th>
         <th>Bonus Resit</th>
-        <th style="text-align:right">Actions</th>
+        <th>Actions</th>
       </tr>
     </thead>
 
