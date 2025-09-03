@@ -169,36 +169,29 @@ body{
   background:repeating-linear-gradient(45deg,#0e0e0e 0 8px,#0c0c0c 8px 16px)
 }
 
-/* Lock layout & padding */
+/* Kunci layout & padding konsisten */
 #dataTable { table-layout: fixed; width: 100%; }
 #dataTable th, #dataTable td { padding: 10px 12px; }
 
-/* Center ALL headers & cells (incl. Date/Time, numbers, Actions) */
+/* Pusatkan SEMUA header & sel (termasuk Date/Time, angka, dan Actions) */
 #dataTable th,
 #dataTable td {
-  text-align: center !important;
-  vertical-align: middle !important;
+  text-align: center !important;      /* menang melawan rule lama 'text-align:right' */
+  vertical-align: middle !important;  /* tengah vertikal */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Make .num inside table follow cell alignment (center) */
-#dataTable td .num,
-#dataTable td.num,
-#dataTable tfoot td .num {
-  display: inline !important;
-  text-align: inherit !important;
-}
-
-/* Actions column: title & buttons centered */
-#dataTable th:last-child { text-align: center !important; }
-#dataTable td:last-child .actions { justify-content: center !important; }
-
-/* Footer TOTAL centered */
+/* Footer TOTAL juga center full */
 #dataTable tfoot td { text-align: center !important; }
 
-/* Monospaced digits for numeric columns (3–11) */
+/* Tombol di kolom Actions tepat di tengah */
+#dataTable td:last-child .actions {
+  justify-content: center !important;
+}
+
+/* Digit angka tetap rapih (monospasi) untuk kolom 3–11 */
 #dataTable td:nth-child(n+3):nth-child(-n+11),
 #dataTable th:nth-child(n+3):nth-child(-n+11) {
   font-variant-numeric: tabular-nums;
