@@ -593,56 +593,58 @@ body{
     const tb=$('#tbody'); tb.innerHTML='';
     let totals = {d:0,w:0,b:0,f:0,m:0,r:0,s:0,bd:0, br:0, bsBase:0,uDisp:0, uPending:0, uClaimed:0, uAll:0};
 
-    for(const r of data){
-      const dt = dt24(r.datetime);
-      const bonusRes=pickTierBonus(r.resit,   targets.resitTiers);
-      const bonusSalesBase=pickTierBonus(r.sales, targets.salesTiers);
+for (const r of data){
+  const dt = dt24(r.datetime);
 
-      const ucs = ucByRecord[r.id] || {pending:0, claimed:0};
-      // Nilai yang ditampilkan di kolom Unclaim:
-      //  - jika ada claimed -> tampil "-amount" (merah)
-      //  - else jika ada pending -> tampil "amount"
-      const unclaimDisplay = safe(ucs.claimed) > 0 ? -safe(ucs.claimed) : safe(ucs.pending);
+  // HITUNG BONUS DULU
+  const bonusDep       = pickTierBonus(safe(r.deposit), targets.depositTiers);
+  const bonusRes       = pickTierBonus(safe(r.resit),   targets.resitTiers);
+  const bonusSalesBase = pickTierBonus(safe(r.sales),   targets.salesTiers);
 
-const tr=document.createElement('tr');
-tr.innerHTML = `
-  <td>${dt}</td>
-  <td style="text-align:center"><span class="pill ${r.site==='5G88'?'site-5g88':'site-spm888'}">${r.site}</span></td>
-  <td class="${r.deposit < 0 ? 'num red' : 'num green'}">${fmtNum(r.deposit)}</td>
-  <td class="num ${r.withdrawal === 0 ? '' : 'red'}">
-    ${ r.withdrawal === 0 ? fmtNum(0) : ('-' + fmtNum(Math.abs(r.withdrawal))) }
-  </td>
-  <td>${fmtNum(r.resit)}</td>
-  <td class="num cyan">${fmtNum(r.bonus)}</td>
-  <td>${fmtNum(r.forfeit)}</td>
-  <td>${fmtInt(r.member)}</td>
-  <td class="${r.sales < 0 ? 'num red' : 'num green'}">${fmtNum(r.sales)}</td>
-  <td class="num ${unclaimDisplay<0?'red':''}">${fmtNum(unclaimDisplay)}</td>
-  <td>${bonusDep.toLocaleString()}</td>
-  <td>${bonusRes.toLocaleString()}</td>
-  <td>
-    <div class="actions">
-      <button class="iconbtn" onclick="window.__edit('${r.id}')">Edit</button>
-      <button class="iconbtn del" onclick="window.__del('${r.id}')">Delete</button>
-    </div>
-  </td>`;
-  // SESUDAH (claimed disimpan positif)
-totals.uPending += safe(ucs.pending);
-totals.uClaimed += safe(ucs.claimed);
-totals.uAll     += safe(ucs.pending) + safe(ucs.claimed);
-      tb.appendChild(tr);
+  const ucs = ucByRecord[r.id] || {pending:0, claimed:0};
+  const unclaimDisplay = safe(ucs.claimed) > 0 ? -safe(ucs.claimed) : safe(ucs.pending);
+
+  const tr=document.createElement('tr');
+  tr.innerHTML = `
+    <td>${dt}</td>
+    <td style="text-align:center"><span class="pill ${r.site==='5G88'?'site-5g88':'site-spm888'}">${r.site}</span></td>
+    <td class="${r.deposit < 0 ? 'num red' : 'num green'}">${fmtNum(r.deposit)}</td>
+    <td class="num ${r.withdrawal === 0 ? '' : 'red'}">
+      ${ r.withdrawal === 0 ? fmtNum(0) : ('-' + fmtNum(Math.abs(r.withdrawal))) }
+    </td>
+    <td>${fmtNum(r.resit)}</td>
+    <td class="num cyan">${fmtNum(r.bonus)}</td>
+    <td>${fmtNum(r.forfeit)}</td>
+    <td>${fmtInt(r.member)}</td>
+    <td class="${r.sales < 0 ? 'num red' : 'num green'}">${fmtNum(r.sales)}</td>
+    <td class="num ${unclaimDisplay<0?'red':''}">${fmtNum(unclaimDisplay)}</td>
+    <td>${bonusDep.toLocaleString()}</td>
+    <td>${bonusRes.toLocaleString()}</td>
+    <td>
+      <div class="actions">
+        <button class="iconbtn" onclick="window.__edit('${r.id}')">Edit</button>
+        <button class="iconbtn del" onclick="window.__del('${r.id}')">Delete</button>
+      </div>
+    </td>`;
+  tb.appendChild(tr);
+
+  // totals
+  totals.uPending += safe(ucs.pending);
+  totals.uClaimed += safe(ucs.claimed);
+  totals.uAll     += safe(ucs.pending) + safe(ucs.claimed);
 
   totals.d  += safe(r.deposit);
-totals.w  += safe(r.withdrawal);
-totals.b  += safe(r.bonus);
-totals.f  += safe(r.forfeit);
-totals.m  += safe(r.member);
-totals.r  += safe(r.resit);
-totals.s  += safe(r.sales);
-totals.bd += safe(bonusDep);
-totals.br += safe(bonusRes);
-totals.bsBase += safe(bonusSalesBase);
-    }
+  totals.w  += safe(r.withdrawal);
+  totals.b  += safe(r.bonus);
+  totals.f  += safe(r.forfeit);
+  totals.m  += safe(r.member);
+  totals.r  += safe(r.resit);
+  totals.s  += safe(r.sales);
+
+  totals.bd += safe(bonusDep);
+  totals.br += safe(bonusRes);
+  totals.bsBase += safe(bonusSalesBase);
+}
     $('#emptyState').style.display=data.length?'none':'block';
     totals.uDisp = safe(totals.uPending);
     // footer totals
