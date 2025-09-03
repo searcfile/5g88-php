@@ -228,7 +228,31 @@ body{
 .clipnum[data-state="short"]{
   border-bottom: 1px dotted rgba(255,255,255,.15); /* hint halus bisa diklik */
 }
+/* buang spinner number input (Chrome/Edge/Safari) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button{
+  -webkit-appearance: none;
+  margin: 0;
+}
+/* buang spinner number input (Firefox & generic) */
+input[type="number"]{
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
 
+/* tombol Edit di baris tier */
+.tier-row .edit{
+  border:1px solid #2a2a2a; background:#151515; color:#ddd;
+  border-radius:8px; height:36px; padding:0 10px; cursor:pointer;
+  transition:filter .2s, border-color .2s;
+  margin-right:6px;  /* supaya nempel di kiri tombol Remove */
+}
+.tier-row .edit:hover{ border-color:#3a3a3a }
+.tier-row .edit.active{
+  border-color:var(--gold);
+  background:linear-gradient(180deg,var(--gold),var(--gold-2));
+  color:#000;
+}
 </style>
 </head>
 <body>
@@ -576,13 +600,37 @@ const fmtDMY = d => {
     box.appendChild(head);
     (tiers||[]).forEach(t=>addTierRow(sel,t.threshold,t.bonus));
   }
-  function addTierRow(sel, threshold='', bonus=''){
-    const box=$(sel); const row=document.createElement('div'); row.className='tier-row';
-    row.innerHTML=`<input type="number" min="0" step="0.01" class="input" placeholder="e.g. 30000" value="${threshold}">
-                   <input type="number" min="0" step="1" class="input" placeholder="e.g. 300" value="${bonus}">
-                   <button class="rm">Remove</button>`;
-    row.querySelector('.rm').onclick=()=>row.remove(); box.appendChild(row);
-  }
+function addTierRow(sel, threshold='', bonus=''){
+  const box = $(sel);
+  const row = document.createElement('div');
+  row.className = 'tier-row';
+
+  row.innerHTML = `
+    <input type="number" min="0" step="0.01" class="input" placeholder="e.g. 30000" value="${threshold}" disabled>
+    <input type="number" min="0" step="1"    class="input" placeholder="e.g. 300"    value="${bonus}"     disabled>
+    <div style="display:flex; gap:6px; justify-content:flex-end">
+      <button type="button" class="edit">Edit</button>
+      <button type="button" class="rm">Remove</button>
+    </div>
+  `;
+
+  const [th, bo] = row.querySelectorAll('input');
+  const btnEdit  = row.querySelector('.edit');
+  const btnRm    = row.querySelector('.rm');
+
+  // toggle edit ↔ read-only
+  btnEdit.onclick = () => {
+    const willEnable = th.disabled;   // kalau tadinya disabled, sekarang enable
+    th.disabled = bo.disabled = !willEnable;
+    btnEdit.classList.toggle('active', willEnable);
+    if (willEnable) th.focus();
+  };
+
+  // hapus baris
+  btnRm.onclick = () => row.remove();
+
+  box.appendChild(row);
+}
   function saveTarget(){
     const readRows=sel=>{
       const rows=[...document.querySelectorAll(sel+' .tier-row')].slice(1);
