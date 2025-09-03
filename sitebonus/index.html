@@ -432,7 +432,8 @@ body{
   const writeTarget=t=>localStorage.setItem(LS_TARGET, JSON.stringify(t));
   const pickTierBonus=(v,tiers)=>Array.isArray(tiers)?tiers.reduce((m,t)=>v>=+t.threshold?Math.max(m,+t.bonus||0):m,0):0;
 
-  let editingId=null;
+  let editingId = null;
+  let ucActiveTab = 'pending';
 
   window.addEventListener('DOMContentLoaded',()=>{
     buildMonthOptions();
@@ -630,18 +631,18 @@ tr.innerHTML = `
       tb.appendChild(tr);
 
   totals.d  += safe(r.deposit);
-  totals.w  += safe(r.withdrawal);
-  totals.b  += safe(r.bonus);
-  totals.f  += safe(r.forfeit);
-  totals.m  += safe(r.member);
-  totals.r  += safe(r.resit);
-  totals.s  += safe(r.sales);
-  totals.bd += safe(bonusDep);
-  totals.br += safe(bonusRes);
-  totals.bsBase += safe(bonusSalesBase);
+totals.w  += safe(r.withdrawal);
+totals.b  += safe(r.bonus);
+totals.f  += safe(r.forfeit);
+totals.m  += safe(r.member);
+totals.r  += safe(r.resit);
+totals.s  += safe(r.sales);
+totals.bd += safe(bonusDep);
+totals.br += safe(bonusRes);
+totals.bsBase += safe(bonusSalesBase);
     }
     $('#emptyState').style.display=data.length?'none':'block';
-    totals.uDisp = totals.uPending + totals.uClaimed;
+    totals.uDisp = safe(totals.uPending) + safe(totals.uClaimed);
     // footer totals
     $('#ft_deposit').textContent   = fmtNum(totals.d);
     const wdTotalAbs = Math.abs(totals.w);
@@ -699,17 +700,15 @@ function renderSummaryRows(t, count, site, month){
   const salesOnly = t.bsBase;
   const totalAmt  = halfDep + halfRes + salesOnly;
 
-  const items = [
-    // 🆕 Tambahan 2 kartu unclaim di kiri
-    { title: 'Unclaim Σ', val: fmtNum(t.uAll), cls: t.uAll > 0 ? 'green' : '' },
-    { title: 'Claimed Σ', val: fmtNum(t.uClaimed), cls: t.uClaimed < 0 ? 'red' : '' },
+ const items = [
+  { title: 'Unclaim Σ',  val: fmtNum(t.uAll),     cls: t.uAll > 0 ? 'green' : '' },
+  { title: 'Claimed Σ',  val: fmtNum(t.uClaimed), cls: t.uClaimed < 0 ? 'red' : '' },
 
-    // Kartu bonus lama
-    { title: 'Bonus Deposit ½ Σ', val: halfDep.toLocaleString() },
-    { title: 'Bonus Resit ½ Σ',   val: halfRes.toLocaleString() },
-    { title: 'Bonus Sales Σ',     val: salesOnly.toLocaleString() },
-    { title: 'Total Bonus Σ',     val: totalAmt.toLocaleString() },
-  ];
+  { title: 'Bonus Deposit ½ Σ', val: halfDep.toLocaleString() },
+  { title: 'Bonus Resit ½ Σ',   val: halfRes.toLocaleString() },
+  { title: 'Bonus Sales Σ',     val: salesOnly.toLocaleString() },
+  { title: 'Total Bonus Σ',     val: totalAmt.toLocaleString() },
+];
 
   items.forEach(c => {
     const d = document.createElement('div');
@@ -746,11 +745,12 @@ function renderSummaryRows(t, count, site, month){
   /* ---------------- UNCLAIM CENTER ---------------- */
   function openUnclaimModal(){
     $('#unclaimModal').classList.add('show');
-    switchUcTab('pending');
+    switchUcTab(ucActiveTab);
   }
   function closeUnclaimModal(){ $('#unclaimModal').classList.remove('show'); }
 
   function switchUcTab(which){
+    ucActiveTab = which;
     $('#tabPending').classList.toggle('active', which==='pending');
     $('#tabHistory').classList.toggle('active', which==='history');
     renderUnclaimList(which);
@@ -797,33 +797,39 @@ function renderSummaryRows(t, count, site, month){
   }
 
   // Claim logic: tambah ke Deposit record, update Sales, tandai unclaim claimed & timestamp
-  function claimUnclaim(ucId){
-    const ucAll = readUnclaims();
-    const idx = ucAll.findIndex(x=>x.id===ucId);
-    if (idx<0) return;
+function claimUnclaim(ucId){
+  const ucAll = readUnclaims();
+  const idx = ucAll.findIndex(x=>x.id===ucId);
+  if (idx < 0) return;
 
-    const item = ucAll[idx];
-    if (item.claimed) return;
+  const item = ucAll[idx];
+  if (item.claimed) return;
 
-    // update record
-    const recs = readStore();
-    const ri = recs.findIndex(r=>r.id===item.recordId);
-    if (ri>=0){
+  // update record (pakai safe)
+  const recs = readStore();
+  const ri = recs.findIndex(r=>r.id===item.recordId);
+  if (ri >= 0){
     recs[ri].deposit = safe(recs[ri].deposit) + safe(item.amount);
     recs[ri].sales   = safe(recs[ri].deposit) - safe(recs[ri].withdrawal);
     writeStore(recs);
-   }
-
-    // mark claimed
-    item.claimed = true;
-    item.claimedAt = new Date().toISOString();
-    ucAll[idx] = item;
-    writeUnclaims(ucAll);
-
-    // refresh UI
-    render();
-    renderUnclaimList('pending');
   }
+
+  // tandai claimed
+  item.claimed = true;
+  item.claimedAt = new Date().toISOString();
+  ucAll[idx] = item;
+  writeUnclaims(ucAll);
+
+  // refresh ringkasan + list
+  render();
+
+ // ⬇️ Tambahkan blok ini (gantikan blok lama yang cuma switchUcTab('history'))
+  if ($('#unclaimModal').classList.contains('show')) {
+    switchUcTab('history');     // langsung tampil di tab History
+    const list = $('#ucList');  // scroll ke atas biar item baru kelihatan
+    if (list) list.scrollTop = 0;
+  }
+}
   // SAFE edit/delete (hindari JSON di onclick)
 window.__edit = (id) => {
   const rec = readStore().find(x => x.id === id);
