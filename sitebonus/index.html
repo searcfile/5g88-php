@@ -245,7 +245,7 @@ input[type="number"]{
   border:1px solid #2a2a2a; background:#151515; color:#ddd;
   border-radius:8px; height:36px; padding:0 10px; cursor:pointer;
   transition:filter .2s, border-color .2s;
-  margin-right:6px;  /* supaya nempel di kiri tombol Remove */
+  margin-right:6px;
 }
 .tier-row .edit:hover{ border-color:#3a3a3a }
 .tier-row .edit.active{
@@ -618,18 +618,58 @@ function addTierRow(sel, threshold='', bonus=''){
   const btnEdit  = row.querySelector('.edit');
   const btnRm    = row.querySelector('.rm');
 
-  // toggle edit ↔ read-only
+  // Toggle Edit ↔ Save (+ simpan saat kembali ke mode terkunci)
   btnEdit.onclick = () => {
     const willEnable = th.disabled;   // kalau tadinya disabled, sekarang enable
     th.disabled = bo.disabled = !willEnable;
-    btnEdit.classList.toggle('active', willEnable);
-    if (willEnable) th.focus();
+
+    if (willEnable){
+      // Masuk mode edit
+      btnEdit.textContent = 'Save';
+      btnEdit.classList.add('active');
+      th.focus();
+      th.select?.();
+    } else {
+      // Keluar mode edit → simpan
+      btnEdit.textContent = 'Edit';
+      btnEdit.classList.remove('active');
+      saveTiersLive();   // ⬅️ simpan ke localStorage tanpa menutup modal
+    }
   };
 
-  // hapus baris
-  btnRm.onclick = () => row.remove();
+  // Hapus baris + simpan langsung
+  btnRm.onclick = () => {
+    row.remove();
+    saveTiersLive();
+  };
 
   box.appendChild(row);
+}
+function readRowsFromEditor(sel){
+  const rows = [...document.querySelectorAll(sel+' .tier-row')].slice(1); // skip header
+  const out = [];
+  for(const r of rows){
+    const [th, bo] = r.querySelectorAll('input');
+    const thr = +th.value || 0;
+    const bon = +bo.value || 0;
+    if (thr > 0 && bon > 0) out.push({ threshold: thr, bonus: bon });
+  }
+  out.sort((a,b)=>a.threshold - b.threshold);
+  return out;
+}
+
+// Simpan langsung ke localStorage (tanpa tutup modal)
+function saveTiersLive(){
+  const t = {
+    depositTiers: readRowsFromEditor('#depTierList'),
+    resitTiers:   readRowsFromEditor('#resTierList'),
+    salesTiers:   readRowsFromEditor('#salesTierList'),
+  };
+  // fallback minimal agar tidak kosong total
+  if(!t.depositTiers.length) t.depositTiers=[{threshold:8000,bonus:20}];
+  if(!t.resitTiers.length)   t.resitTiers=[{threshold:250, bonus:30}];
+  if(!t.salesTiers.length)   t.salesTiers=[{threshold:30000, bonus:300}];
+  writeTarget(t);
 }
   function saveTarget(){
     const readRows=sel=>{
