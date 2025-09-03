@@ -756,45 +756,61 @@ function renderSummaryRows(t, count, site, month){
     renderUnclaimList(which);
   }
 
-  function renderUnclaimList(which='pending'){
-    const site=$('#siteFilter').value, month=$('#monthFilter').value;
-    const uc = readUnclaims().filter(x=>x.month===month && (site==='ALL'||x.site===site));
-    const records = Object.fromEntries(readStore().map(r=>[r.id,r]));
+function renderUnclaimList(which = 'pending'){
+  const site  = $('#siteFilter').value;
+  const month = $('#monthFilter').value;
 
-    const list = $('#ucList'); list.innerHTML='';
+  const uc      = readUnclaims().filter(x => x.month === month && (site === 'ALL' || x.site === site));
+  const records = Object.fromEntries(readStore().map(r => [r.id, r]));
 
-    const items = uc
-      .filter(x=>which==='pending' ? !x.claimed : x.claimed)
-      .sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt));
+  const list = $('#ucList');
+  list.innerHTML = '';
 
-    if (!items.length){
-      const e=document.createElement('div');
-      e.className='empty';
-      e.textContent= which==='pending' ? 'Belum ada Unclaim pending.' : 'Belum ada riwayat claim.';
-      list.appendChild(e); return;
-    }
+  // Pending: tampilkan SEMUA item (pending + claimed)
+  // History: hanya item yang sudah claimed
+  const items = (which === 'history' ? uc.filter(x => x.claimed) : uc.slice())
+    .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    for (const u of items){
-      const rec = records[u.recordId];
-      const recDt = rec ? new Date(rec.datetime).toLocaleString(undefined,{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-';
-      const created = new Date(u.createdAt).toLocaleString();
-      const claimedAt = u.claimedAt ? new Date(u.claimedAt).toLocaleString() : '-';
-
-      const row = document.createElement('div');
-      row.className='uc-item';
-      row.innerHTML = `
-        <div>${created}</div>
-        <div><span class="pill ${u.site==='5G88'?'site-5g88':'site-spm888'}">${u.site}</span></div>
-        <div>Record Date: ${recDt}</div>
-        <div class="uc-amt ${u.claimed?'red':''}">${u.claimed?('-'+fmtNum(u.amount)):fmtNum(u.amount)}</div>
-        <div>${u.claimed?('Claimed: '+claimedAt):''}</div>
-        <div style="text-align:right">
-          ${u.claimed ? '' : `<button class="btn" style="height:32px" onclick="claimUnclaim('${u.id}')">Claim</button>`}
-        </div>
-      `;
-      list.appendChild(row);
-    }
+  if (!items.length){
+    const e = document.createElement('div');
+    e.className = 'empty';
+    e.textContent = (which === 'history') ? 'Belum ada riwayat claim.' : 'Belum ada Unclaim.';
+    list.appendChild(e);
+    return;
   }
+
+  for (const u of items){
+    const rec      = records[u.recordId];
+    const recDt    = rec ? new Date(rec.datetime).toLocaleString(
+                      undefined, {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-';
+    const created  = new Date(u.createdAt).toLocaleString();
+    const claimedAt= u.claimedAt ? new Date(u.claimedAt).toLocaleString() : '-';
+
+    // 👉 Atur tampilan berdasarkan TAB:
+    // - Di PENDING: item yang sudah claimed TETAP tampil seperti pending (tanpa label "Claimed", amount positif)
+    // - Di HISTORY: item claimed tampil merah & ada label "Claimed: ..."
+    const isHistoryView = (which === 'history');
+    const showClaimBtn  = (!u.claimed && !isHistoryView); // tombol hanya muncul di Pending & belum claimed
+    const showClaimedLine = (u.claimed && isHistoryView);
+
+    const displayAmount = (u.claimed && isHistoryView) ? ('-' + fmtNum(u.amount)) : fmtNum(u.amount);
+    const amtCls = (u.claimed && isHistoryView) ? 'uc-amt red' : 'uc-amt';
+
+    const row = document.createElement('div');
+    row.className = 'uc-item';
+    row.innerHTML = `
+      <div>${created}</div>
+      <div><span class="pill ${u.site==='5G88' ? 'site-5g88' : 'site-spm888'}">${u.site}</span></div>
+      <div>Record Date: ${recDt}</div>
+      <div class="${amtCls}">${displayAmount}</div>
+      <div>${showClaimedLine ? ('Claimed: ' + claimedAt) : ''}</div>
+      <div style="text-align:right">
+        ${showClaimBtn ? `<button class="btn" style="height:32px" onclick="claimUnclaim('${u.id}')">Claim</button>` : ''}
+      </div>
+    `;
+    list.appendChild(row);
+  }
+}
 
   // Claim logic: tambah ke Deposit record, update Sales, tandai unclaim claimed & timestamp
 function claimUnclaim(ucId){
