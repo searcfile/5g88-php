@@ -265,50 +265,50 @@ body{
 <div class="table">
   <table id="dataTable" style="width:100%; border-collapse:collapse">
     <!-- Kunci lebar kolom agar header & isi pas sejajar -->
-    <colgroup>
-      <col style="width:150px"><!-- Date/Time -->
-      <col style="width:92px"><!-- Site -->
-      <col style="width:120px"><!-- Deposit -->
-      <col style="width:120px"><!-- Withdrawal -->
-      <col style="width:120px"><!-- Bonus -->
-      <col style="width:110px"><!-- Forfeit -->
-      <col style="width:110px"><!-- Member -->
-      <col style="width:120px"><!-- Resit In -->
-      <col style="width:120px"><!-- Sales -->
-      <col style="width:120px"><!-- Bonus Deposit -->
-      <col style="width:120px"><!-- Bonus Resit -->
-      <col style="width:180px"><!-- Actions -->
-    </colgroup>
+<colgroup>
+  <col style="width:150px"><!-- Date/Time -->
+  <col style="width:92px"><!-- Site -->
+  <col style="width:120px"><!-- Deposit -->
+  <col style="width:120px"><!-- Withdrawal -->
+  <col style="width:120px"><!-- Resit In -->
+  <col style="width:120px"><!-- Bonus -->
+  <col style="width:110px"><!-- Forfeit -->
+  <col style="width:110px"><!-- Member -->
+  <col style="width:120px"><!-- Sales -->
+  <col style="width:120px"><!-- Bonus Deposit -->
+  <col style="width:120px"><!-- Bonus Resit -->
+  <col style="width:180px"><!-- Actions -->
+</colgroup>
 
-    <thead>
-      <tr>
-        <th>Date/Time</th>
-        <th>Site</th>
-        <th>Deposit</th>
-        <th>Withdrawal</th>
-        <th>Bonus</th>
-        <th>Forfeit</th>
-        <th>Member</th>
-        <th>Resit In</th>
-        <th>Sales</th>
-        <th>Bonus Deposit</th>
-        <th>Bonus Resit</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
+<thead>
+  <tr>
+    <th>Date/Time</th>
+    <th>Site</th>
+    <th>Deposit</th>
+    <th>Withdrawal</th>
+    <th>Resit In</th>
+    <th>Bonus</th>
+    <th>Forfeit</th>
+    <th>Member</th>
+    <th>Sales</th>
+    <th>Bonus Deposit</th>
+    <th>Bonus Resit</th>
+    <th>Actions</th>
+  </tr>
+</thead>
 
     <tbody id="tbody"></tbody>
 
-    <tfoot>
+ <tfoot>
   <tr>
-    <td>TOTAL (Filtered)</td>   <!-- ← tanpa colspan -->
-    <td></td>                   <!-- ← placeholder untuk kolom "Site" -->
+    <td>TOTAL (Filtered)</td>
+    <td></td>
     <td id="ft_deposit">0</td>
     <td id="ft_withdrawal">0</td>
+    <td id="ft_resit">0</td>
     <td id="ft_bonus">0</td>
     <td id="ft_forfeit">0</td>
     <td id="ft_member">0</td>
-    <td id="ft_resit">0</td>
     <td id="ft_sales">0</td>
     <td id="ft_bonDep">0</td>
     <td id="ft_bonRes">0</td>
@@ -333,7 +333,7 @@ body{
         </div>
         <div class="group"><label for="m_dt">Date & Time</label><input id="m_dt" class="input" type="datetime-local"></div>
         <div class="group"><label for="m_deposit">Total Deposit</label><input id="m_deposit" class="input" type="number" step="0.01" min="0"></div>
-        <div class="group"><label for="m_withdrawal">Total Withdrawal</label><input id="m_withdrawal" class="input" type="number" step="0.01" min="0"></div>
+        <div class="group"><label for="m_withdrawal">Total Withdrawal</label><input id="m_withdrawal" class="input" type="number" step="0.01"></div>
         <div class="group"><label for="m_bonus">Total Bonus</label><input id="m_bonus" class="input" type="number" step="0.01" min="0"></div>
         <div class="group"><label for="m_forfeit">Total Forfeit</label><input id="m_forfeit" class="input" type="number" step="0.01" min="0"></div>
         <div class="group"><label for="m_member">Total Member</label><input id="m_member" class="input" type="number" step="1" min="0"></div>
@@ -539,11 +539,11 @@ tr.innerHTML = `
   <td>${dt}</td>
   <td style="text-align:center"><span class="pill ${r.site==='5G88'?'site-5g88':'site-spm888'}">${r.site}</span></td>
   <td class="${r.deposit < 0 ? 'num red' : 'num green'}">${fmtNum(r.deposit)}</td>
-  <td class="${r.withdrawal < 0 ? 'num red' : ''}">${fmtNum(r.withdrawal)}</td>
+  <td class="num ${r.withdrawal < 0 ? 'red' : ''}">${fmtNum(r.withdrawal)}</td>
+  <td>${fmtNum(r.resit)}</td>
   <td class="num cyan">${fmtNum(r.bonus)}</td>
   <td>${fmtNum(r.forfeit)}</td>
   <td>${fmtInt(r.member)}</td>
-  <td>${fmtNum(r.resit)}</td>
   <td class="${r.sales < 0 ? 'num red' : 'num green'}">${fmtNum(r.sales)}</td>
   <td>${bonusDep.toLocaleString()}</td>
   <td>${bonusRes.toLocaleString()}</td>
@@ -561,18 +561,32 @@ tr.innerHTML = `
     }
     $('#emptyState').style.display=data.length?'none':'block';
 
-    // footer totals
-    $('#ft_deposit').textContent=fmtNum(totals.d);
-    $('#ft_withdrawal').textContent=fmtNum(totals.w);
-    $('#ft_bonus').textContent=fmtNum(totals.b);
-    $('#ft_forfeit').textContent=fmtNum(totals.f);
-    $('#ft_member').textContent=fmtInt(totals.m);
-    $('#ft_resit').textContent=fmtNum(totals.r);
-    $('#ft_sales').textContent=fmtNum(totals.s);
-    $('#ft_bonDep').textContent=totals.bd.toLocaleString();
-    $('#ft_bonRes').textContent=totals.br.toLocaleString();
+// footer totals
+$('#ft_deposit').textContent   = fmtNum(totals.d);
+$('#ft_withdrawal').textContent= fmtNum(totals.w);
+$('#ft_bonus').textContent     = fmtNum(totals.b);
+$('#ft_forfeit').textContent   = fmtNum(totals.f);
+$('#ft_member').textContent    = fmtInt(totals.m);
+$('#ft_resit').textContent     = fmtNum(totals.r);
+$('#ft_sales').textContent     = fmtNum(totals.s);
+$('#ft_bonDep').textContent    = totals.bd.toLocaleString();
+$('#ft_bonRes').textContent    = totals.br.toLocaleString();
 
-    renderSummaryRows(totals, data.length, site, month);
+/* --- tambahkan styling merah utk negatif (letakkan DI SINI) --- */
+const ftW = $('#ft_withdrawal');
+ftW.classList.remove('num','red');
+ftW.classList.add('num');
+if (totals.w < 0) ftW.classList.add('red');
+
+/* (opsional) warnai Sales footer juga: hijau/merah */
+const ftS = $('#ft_sales');
+ftS.classList.remove('num','red','green');
+ftS.classList.add('num');
+if (totals.s < 0) ftS.classList.add('red'); else if (totals.s > 0) ftS.classList.add('green');
+
+/* --------------------------------------------------------------- */
+
+renderSummaryRows(totals, data.length, site, month);
   }
 
   function renderSummaryRows(t, count, site, month){
