@@ -206,14 +206,32 @@ body{
 .tier-headrow{
   position: sticky;
   top: 0;
-  z-index: 10;                     /* di atas baris biasa */
-  background: #101010;             /* solid, tidak tembus */
+  z-index: 10;
+  background: transparent;   /* backdrop akan digambar oleh ::before */
   border-bottom: 1px solid #2a2a2a;
-  margin: 0;                       /* hilangkan gap yang bikin “nampak belakang” */
+  margin: 0;
   padding: 6px 8px;
-  box-shadow: 0 2px 0 rgba(42,42,42,.9),
-              0 6px 12px rgba(0,0,0,.35); /* garis/shadow pemisah */
 }
+
+/* ⬇️ ini yang penting */
+.tier-headrow::before{
+  content: "";
+  position: absolute;
+  left: -8px;                /* tutup padding kiri .tier-list */
+  right: -8px;               /* tutup padding kanan .tier-list */
+  top: -8px;                 /* tutup padding atas .tier-list */
+  bottom: -1px;              /* pas di atas border-bottom header */
+  background: #101010;
+  border-top-left-radius: 10px;   /* samakan dgn .tier-list */
+  border-top-right-radius: 10px;
+  box-shadow: 0 2px 0 rgba(42,42,42,.9),
+              0 6px 12px rgba(0,0,0,.35);
+  z-index: -1;               /* di belakang konten header */
+  pointer-events: none;      /* aman untuk klik */
+}
+
+/* Pastikan baris biasa transparan */
+.tier-row{ position: relative; z-index: 1; background: transparent; }
 .tier-row{display:grid; grid-template-columns:1fr 1fr auto; gap:8px; margin-bottom:6px}
 .tier-row:last-child{margin-bottom:0}
 .tier-row .rm{border:1px solid #3a2222; background:#1a1111; color:#ffb4b4; border-radius:8px; height:36px; padding:0 10px; cursor:pointer}
