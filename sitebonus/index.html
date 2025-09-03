@@ -601,12 +601,14 @@ body{
       //  - else jika ada pending -> tampil "amount"
       const unclaimDisplay = ucs.claimed>0 ? -ucs.claimed : ucs.pending;
 
-      const tr=document.createElement('tr');
-      tr.innerHTML = `
+const tr=document.createElement('tr');
+tr.innerHTML = `
   <td>${dt}</td>
   <td style="text-align:center"><span class="pill ${r.site==='5G88'?'site-5g88':'site-spm888'}">${r.site}</span></td>
   <td class="${r.deposit < 0 ? 'num red' : 'num green'}">${fmtNum(r.deposit)}</td>
-  <td class="num ${r.withdrawal === 0 ? '' : 'red'}">${r.withdrawal === 0 ? fmtNum(0) : \`-\${fmtNum(Math.abs(r.withdrawal))}\`}</td>
+  <td class="num ${r.withdrawal === 0 ? '' : 'red'}">
+    ${ r.withdrawal === 0 ? fmtNum(0) : ('-' + fmtNum(Math.abs(r.withdrawal))) }
+  </td>
   <td>${fmtNum(r.resit)}</td>
   <td class="num cyan">${fmtNum(r.bonus)}</td>
   <td>${fmtNum(r.forfeit)}</td>
@@ -617,8 +619,8 @@ body{
   <td>${bonusRes.toLocaleString()}</td>
   <td>
     <div class="actions">
-      <button class="iconbtn" onclick='openModal(${JSON.stringify(r)})'>Edit</button>
-      <button class="iconbtn del" onclick='delRecord("${r.id}")'>Delete</button>
+      <button class="iconbtn" onclick="window.__edit('${r.id}')">Edit</button>
+      <button class="iconbtn del" onclick="window.__del('${r.id}')">Delete</button>
     </div>
   </td>`;
       tb.appendChild(tr);
@@ -803,7 +805,12 @@ body{
     render();
     renderUnclaimList('pending');
   }
-
+  // SAFE edit/delete (hindari JSON di onclick)
+window.__edit = (id) => {
+  const rec = readStore().find(x => x.id === id);
+  if (rec) openModal(rec);
+};
+window.__del  = (id) => delRecord(id);
   // helpers exposed
   window.openModal=openModal; window.closeModal=closeModal; window.delRecord=delRecord;
   window.openTargetModal=openTargetModal; window.closeTargetModal=closeTargetModal;
