@@ -626,9 +626,10 @@ tr.innerHTML = `
       <button class="iconbtn del" onclick="window.__del('${r.id}')">Delete</button>
     </div>
   </td>`;
-  totals.uPending += safe(ucs.pending);        // simpan sebagai POSITIF
-  totals.uClaimed += safe(ucs.claimed);        // simpan sebagai POSITIF
-  totals.uAll     += safe(ucs.pending) + safe(ucs.claimed);
+  // SESUDAH (claimed disimpan positif)
+totals.uPending += safe(ucs.pending);
+totals.uClaimed += safe(ucs.claimed);
+totals.uAll     += safe(ucs.pending) + safe(ucs.claimed);
       tb.appendChild(tr);
 
   totals.d  += safe(r.deposit);
@@ -703,7 +704,7 @@ function renderSummaryRows(t, count, site, month){
 
  const items = [
   { title: 'Unclaim Σ',  val: fmtNum(t.uAll),     cls: t.uAll > 0 ? 'green' : '' },
-  { title: 'Claimed Σ',  val: fmtNum(-t.uClaimed), cls: t.uClaimed > 0 ? '#ff0000' : '' },
+  { title: 'Claimed Σ',  val: fmtNum(t.uClaimed), cls: '' },
 
   { title: 'Bonus Deposit ½ Σ', val: halfDep.toLocaleString() },
   { title: 'Bonus Resit ½ Σ',   val: halfRes.toLocaleString() },
