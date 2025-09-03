@@ -539,7 +539,7 @@ tr.innerHTML = `
   <td>${dt}</td>
   <td style="text-align:center"><span class="pill ${r.site==='5G88'?'site-5g88':'site-spm888'}">${r.site}</span></td>
   <td class="${r.deposit < 0 ? 'num red' : 'num green'}">${fmtNum(r.deposit)}</td>
-  <td class="num ${r.withdrawal < 0 ? 'red' : ''}">${fmtNum(r.withdrawal)}</td>
+  <td class="num ${r.withdrawal === 0 ? '' : 'red'}">${r.withdrawal === 0 ? fmtNum(0) : `-${fmtNum(Math.abs(r.withdrawal))}`}</td>
   <td>${fmtNum(r.resit)}</td>
   <td class="num cyan">${fmtNum(r.bonus)}</td>
   <td>${fmtNum(r.forfeit)}</td>
@@ -563,7 +563,11 @@ tr.innerHTML = `
 
 // footer totals
 $('#ft_deposit').textContent   = fmtNum(totals.d);
-$('#ft_withdrawal').textContent= fmtNum(totals.w);
+
+// Withdrawal: tampilkan selalu dengan tanda minus (UI only)
+const wdTotalAbs = Math.abs(totals.w);
+$('#ft_withdrawal').textContent = wdTotalAbs === 0 ? fmtNum(0) : `-${fmtNum(wdTotalAbs)}`;
+
 $('#ft_bonus').textContent     = fmtNum(totals.b);
 $('#ft_forfeit').textContent   = fmtNum(totals.f);
 $('#ft_member').textContent    = fmtInt(totals.m);
@@ -572,13 +576,13 @@ $('#ft_sales').textContent     = fmtNum(totals.s);
 $('#ft_bonDep').textContent    = totals.bd.toLocaleString();
 $('#ft_bonRes').textContent    = totals.br.toLocaleString();
 
-/* --- tambahkan styling merah utk negatif (letakkan DI SINI) --- */
+// Warnai withdrawal footer merah jika ada nilai
 const ftW = $('#ft_withdrawal');
 ftW.classList.remove('num','red');
 ftW.classList.add('num');
-if (totals.w < 0) ftW.classList.add('red');
+if (wdTotalAbs > 0) ftW.classList.add('red');
 
-/* (opsional) warnai Sales footer juga: hijau/merah */
+// (opsional) warna Sales footer
 const ftS = $('#ft_sales');
 ftS.classList.remove('num','red','green');
 ftS.classList.add('num');
@@ -598,7 +602,7 @@ renderSummaryRows(totals, data.length, site, month);
     const top=$('#summaryRowTop'); top.innerHTML='';
     [
       {title:'Total Deposit',  val: fmtNum(t.d), cls:'green'},
-      {title:'Total Withdrawal', val: fmtNum(t.w), cls:'red'},
+      {title:'Total Withdrawal', val: t.w === 0 ? fmtNum(0) : `-${fmtNum(Math.abs(t.w))}`, cls:'red'},
       {title:'Total Bonus',    val: fmtNum(t.b), cls:'cyan'},
       {title:'Total Sales',    val: fmtNum(t.s), cls: t.s<0?'red':'green'},
       {title:'Total Forfeit',  val: fmtNum(t.f)},
