@@ -117,20 +117,20 @@ body{
 .table th:first-child, .table td:first-child { max-width: 180px } /* Date/Time */
 .table th:last-child,  .table td:last-child  { max-width: 180px } /* Actions */
 
-/* Tengah‑kan spesifik angka (Deposit–Bonus Resit = kolom 3–11) – redundant tapi aman */
-.table thead th:nth-child(n+3):nth-child(-n+11),
-.table tbody td:nth-child(n+3):nth-child(-n+11),
-.table tfoot td:nth-child(n+3):nth-child(-n+11){ text-align:center; }
+/* Tengah-kan angka (sekarang kolom 3..12 krn ada Unclaim) */
+.table thead th:nth-child(n+3):nth-child(-n+12),
+.table tbody td:nth-child(n+3):nth-child(-n+12),
+.table tfoot td:nth-child(n+3):nth-child(-n+12){ text-align:center; }
 
-/* Angka rapi (monospasi) */
-.table td:nth-child(n+3):nth-child(-n+11){
+/* Angka rapi (monospasi) untuk kolom 3..12 */
+.table td:nth-child(n+3):nth-child(-n+12){
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
 
 /* === FIX PENTING: jangan jadikan TD .num menjadi block === */
-.table td.num{ display:table-cell !important; }  /* guard jika class num dipasang di TD */
-.table td .num{ display:inline !important; }     /* kalau <span class="num"> di dalam TD */
+.table td.num{ display:table-cell !important; }
+.table td .num{ display:inline !important; }
 
 /* Warna angka */
 .num.red { color: var(--red) }
@@ -155,32 +155,23 @@ body{
   background:repeating-linear-gradient(45deg,#0e0e0e 0 8px,#0c0c0c 8px 16px)
 }
 
-/* DataTable guard (boleh tetap, tapi sekarang tidak wajib) */
+/* DataTable guard */
 #dataTable { table-layout: fixed; width: 100%; }
 #dataTable th, #dataTable td { padding: 10px 12px; }
 #dataTable td:last-child .actions { justify-content:center !important; }
 #dataTable tfoot td { text-align:center !important; }
-/* --- Sejajarkan kolom Actions (header + body) --- */
-#dataTable thead th:last-child { 
-  text-align: center !important;   /* override inline style */
-}
-#dataTable tbody td:last-child {
-  text-align: center !important;
-}
+#dataTable thead th:last-child { text-align: center !important; }
+#dataTable tbody td:last-child { text-align: center !important; }
 #dataTable td:last-child .actions{
-  display:flex;
-  width:100%;                      /* flex container isi selebar sel */
-  justify-content:center !important;
-  align-items:center;
+  display:flex; width:100%;
+  justify-content:center !important; align-items:center;
 }
 
-/* --- Center-kan teks TOTAL (Filtered) di tfoot --- */
+/* Foot: TOTAL (Filtered) kolom 1 center */
 #dataTable tfoot td:first-child {
   text-align: center !important;
   vertical-align: middle !important;
-  font-weight: bold;
-  letter-spacing: 0.3px;
-  color: white;
+  font-weight: bold; letter-spacing: 0.3px; color: white;
 }
 
 /* Modal */
@@ -216,6 +207,18 @@ body{
 .tier-row .rm{border:1px solid #3a2222; background:#1a1111; color:#ffb4b4; border-radius:8px; height:36px; padding:0 10px; cursor:pointer}
 .addline{margin-top:8px}
 
+/* Unclaim modal list (scrollable) */
+.claim-list{
+  border:1px solid #2a2a2a; border-radius:10px; padding:8px; background:#101010;
+  max-height:320px; overflow:auto; padding-right:6px;
+}
+.claim-row{
+  display:grid; grid-template-columns:1.1fr 0.6fr 0.9fr auto; gap:8px;
+  align-items:center; border-bottom:1px dashed #222; padding:8px 0;
+}
+.claim-row:last-child{ border-bottom:none }
+.claim-info{ color:#cfcfcf; font-size:13px; display:flex; align-items:center; gap:8px }
+
 /* Scrollbar tipis (opsional) */
 .tier-list::-webkit-scrollbar{height:8px; width:8px}
 .tier-list::-webkit-scrollbar-thumb{background:#2a2a2a; border-radius:6px}
@@ -229,6 +232,7 @@ body{
     <div class="brand"><span class="dot"></span><span>Bonus Recorder</span></div>
     <select id="siteFilter" class="select"><option value="ALL">All Sites</option><option value="5G88">5G88</option><option value="SPM888">SPM888</option></select>
     <select id="monthFilter" class="select"></select>
+    <button id="unclaimBtn" class="btn ghost">Unclaim</button>
     <div class="spacer"></div>
     <button id="exportBtn" class="btn ghost">Export CSV</button>
   </div>
@@ -236,12 +240,11 @@ body{
   <div class="wrap">
     <!-- Row 1 summary -->
     <div class="cards-row" id="summaryRowTop"></div>
-    <!-- Row 2 summary (Bonus Deposit ½, Bonus Resit ½, Bonus Sales) -->
+    <!-- Row 2 summary -->
     <div class="cards-row" id="summaryRowBottom" style="margin-top:8px;"></div>
 
     <!-- Toolbar above table -->
     <div class="toolbar">
-      <!-- Mini Month/Site di kiri -->
       <div id="miniInfo" class="mini-cards">
         <div class="mini-card">
           <span class="mini-label">Month</span>
@@ -275,6 +278,7 @@ body{
   <col style="width:110px"><!-- Forfeit -->
   <col style="width:110px"><!-- Member -->
   <col style="width:120px"><!-- Sales -->
+  <col style="width:120px"><!-- Unclaim -->
   <col style="width:120px"><!-- Bonus Deposit -->
   <col style="width:120px"><!-- Bonus Resit -->
   <col style="width:180px"><!-- Actions -->
@@ -291,6 +295,7 @@ body{
     <th>Forfeit</th>
     <th>Member</th>
     <th>Sales</th>
+    <th>Unclaim</th>
     <th>Bonus Deposit</th>
     <th>Bonus Resit</th>
     <th>Actions</th>
@@ -310,6 +315,7 @@ body{
     <td id="ft_forfeit">0</td>
     <td id="ft_member">0</td>
     <td id="ft_sales">0</td>
+    <td id="ft_unclaim">0</td>
     <td id="ft_bonDep">0</td>
     <td id="ft_bonRes">0</td>
     <td></td>
@@ -339,6 +345,7 @@ body{
         <div class="group"><label for="m_member">Total Member</label><input id="m_member" class="input" type="number" step="1" min="0"></div>
         <div class="group"><label for="m_resit">Total Resit In</label><input id="m_resit" class="input" type="number" step="0.01" min="0"></div>
         <div class="group"><label for="m_sales">Total Sales (auto)</label><input id="m_sales" class="input" type="number" step="0.01" readonly title="Auto = Deposit − Withdrawal"></div>
+        <div class="group"><label for="m_unclaim">Unclaim (pending)</label><input id="m_unclaim" class="input" type="number" step="0.01" min="0"></div>
         <div class="group"><label>&nbsp;</label><div class="hint">Sales auto: <b>Deposit − Withdrawal</b></div></div>
       </div>
       <div class="foot"><button class="btn ghost" onclick="closeModal()">Cancel</button><button id="saveBtn" class="btn">Save</button></div>
@@ -364,6 +371,24 @@ body{
       <button class="btn addline" id="addSalesTier">+ Add Sales Tier</button>
 
       <div class="foot"><button class="btn ghost" onclick="closeTargetModal()">Cancel</button><button id="saveTargetBtn" class="btn">Save Target</button></div>
+    </div>
+  </div>
+
+  <!-- Modal Unclaim -->
+  <div id="unclaimModal" class="modal" aria-hidden="true">
+    <div class="overlay" onclick="closeUnclaimModal()"></div>
+    <div class="dialog" role="dialog" aria-modal="true">
+      <h3>Unclaim Queue</h3>
+
+      <div class="tier-head">Pending</div>
+      <div id="unclaimList" class="claim-list"></div>
+
+      <div class="tier-head" style="margin-top:12px">Claimed (History)</div>
+      <div id="claimedList" class="claim-list"></div>
+
+      <div class="foot">
+        <button class="btn ghost" onclick="closeUnclaimModal()">Close</button>
+      </div>
     </div>
   </div>
 
@@ -417,6 +442,7 @@ body{
     $('#siteFilter').addEventListener('change', render);
     $('#monthFilter').addEventListener('change', ()=>{localStorage.setItem(LS_LAST_MONTH,$('#monthFilter').value); render();});
     $('#targetBtn').addEventListener('click', openTargetModal);
+    $('#unclaimBtn').addEventListener('click', openUnclaimModal);
   });
 
   function buildMonthOptions(){
@@ -445,6 +471,7 @@ body{
     $('#m_forfeit').value=rec?.forfeit ?? '';
     $('#m_member').value=rec?.member ?? '';
     $('#m_resit').value=rec?.resit ?? '';
+    $('#m_unclaim').value=rec?.unclaimPending ?? '';
 
     const autoCalc=()=>{$('#m_sales').value=(parseFloat($('#m_deposit').value||0)-parseFloat($('#m_withdrawal').value||0)).toFixed(2);};
     $('#m_deposit').oninput=autoCalc; $('#m_withdrawal').oninput=autoCalc; autoCalc();
@@ -462,12 +489,18 @@ body{
       bonus:+($('#m_bonus').value||0), forfeit:+($('#m_forfeit').value||0),
       member:parseInt($('#m_member').value||0,10), resit:+($('#m_resit').value||0),
       sales:+($('#m_sales').value||0),
+      unclaimPending:+($('#m_unclaim').value||0),
     };
   }
   function saveModal(){
     const rec=collectModal();
     const arr=readStore(); const i=arr.findIndex(x=>x.id===rec.id);
-    if(i>=0) arr[i]=rec; else arr.push(rec);
+    if(i>=0){
+      // merge agar field lama (unclaim, unclaimClaimedAt) tidak hilang
+      arr[i] = { ...arr[i], ...rec };
+    }else{
+      arr.push({ ...rec, unclaim: 0, unclaimClaimedAt: null });
+    }
     writeStore(arr); buildMonthOptions();
     if(rec.month===toYYYYMM(new Date())){ $('#monthFilter').value=rec.month; localStorage.setItem(LS_LAST_MONTH,rec.month); }
     closeModal(); render();
@@ -515,6 +548,100 @@ body{
     render();
   }
 
+  /* ----- Unclaim Modal ----- */
+  function openUnclaimModal(){
+    const site  = $('#siteFilter').value;
+    const month = $('#monthFilter').value;
+    const all = readStore().filter(r=>r.month===month).filter(r=>site==='ALL'?true:r.site===site);
+
+    const pending = all.filter(r => +(+r.unclaimPending||0) > 0);
+    const claimed = all.filter(r => +(r.unclaim||0) < 0);
+
+    // Pending list
+    const box = $('#unclaimList'); box.innerHTML='';
+    if(!pending.length){
+      box.innerHTML = '<div class="empty">Tidak ada unclaim pending untuk filter ini.</div>';
+    }else{
+      for(const r of pending){
+        const dt = new Date(r.datetime).toLocaleString(undefined,{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+        const claimId = 'claimAt_'+r.id;
+        const row = document.createElement('div'); row.className='claim-row';
+        row.innerHTML = `
+          <div class="claim-info">
+            <span>${dt}</span>
+            <span class="pill ${r.site==='5G88'?'site-5g88':'site-spm888'}">${r.site}</span>
+          </div>
+          <div class="num">${fmtNum(Math.abs(r.unclaimPending||0))}</div>
+          <div><input id="${claimId}" type="datetime-local" class="input" style="width:100%"></div>
+          <div><button class="btn" data-id="${r.id}">Claim</button></div>
+        `;
+        box.appendChild(row);
+
+        // default now
+        const now = new Date();
+        document.getElementById(claimId).value =
+          `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}T${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+        row.querySelector('button.btn').onclick = ()=> {
+          const val = document.getElementById(claimId).value;
+          claimUnclaim(r.id, val);
+        };
+      }
+    }
+
+    // Claimed history
+    const box2 = $('#claimedList'); box2.innerHTML='';
+    if(!claimed.length){
+      box2.innerHTML = '<div class="empty">Belum ada history claim pada filter ini.</div>';
+    }else{
+      for(const r of claimed){
+        const dtc = r.unclaimClaimedAt ? new Date(r.unclaimClaimedAt) : null;
+        const at  = dtc ? dtc.toLocaleString(undefined,{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-';
+        const row = document.createElement('div'); row.className='claim-row';
+        row.innerHTML = `
+          <div class="claim-info">
+            <span>Claimed: ${at}</span>
+            <span class="pill ${r.site==='5G88'?'site-5g88':'site-spm888'}">${r.site}</span>
+          </div>
+          <div class="num red">-${fmtNum(Math.abs(r.unclaim||0))}</div>
+          <div></div>
+          <div></div>
+        `;
+        box2.appendChild(row);
+      }
+    }
+
+    $('#unclaimModal').classList.add('show');
+  }
+  function closeUnclaimModal(){ $('#unclaimModal').classList.remove('show'); }
+
+  function claimUnclaim(id, claimAtDT){
+    const arr = readStore();
+    const i = arr.findIndex(x => x.id === id);
+    if(i < 0) return;
+
+    const rec = arr[i];
+    const amt = Math.abs(+rec.unclaimPending || 0);
+    if (amt <= 0) return;
+
+    // set claimed state
+    rec.unclaim = -amt;                              // tampil negatif merah di tabel
+    rec.unclaimPending = 0;
+    rec.unclaimClaimedAt = claimAtDT
+      ? new Date(claimAtDT.replace('T',' ')).toISOString()
+      : new Date().toISOString();
+
+    // pindah ke Deposit & hitung ulang Sales
+    rec.deposit = (+rec.deposit || 0) + amt;
+    rec.sales   = (+rec.deposit || 0) - (+rec.withdrawal || 0);
+
+    arr[i] = rec;
+    writeStore(arr);
+
+    render();
+    openUnclaimModal(); // refresh isi modal tanpa menutup
+  }
+
   /* ----- Render ----- */
   function render(){
     const site=$('#siteFilter').value, month=$('#monthFilter').value, targets=readTarget();
@@ -526,25 +653,27 @@ body{
     $('#bannerMonth').textContent=prettyMonth(month);
 
     const tb=$('#tbody'); tb.innerHTML='';
-    let totals={d:0,w:0,b:0,f:0,m:0,r:0,s:0, bd:0, br:0, bsBase:0};
+    let totals={d:0,w:0,b:0,f:0,m:0,r:0,s:0,u:0, bd:0, br:0, bsBase:0};
 
     for(const r of data){
       const dt=new Date(r.datetime).toLocaleString(undefined,{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
       const bonusDep=pickTierBonus(r.deposit, targets.depositTiers);
       const bonusRes=pickTierBonus(r.resit,   targets.resitTiers);
       const bonusSalesBase=pickTierBonus(r.sales, targets.salesTiers);
+      const rUnclaim = +(r.unclaim || 0);
 
       const tr=document.createElement('tr');
 tr.innerHTML = `
   <td>${dt}</td>
   <td style="text-align:center"><span class="pill ${r.site==='5G88'?'site-5g88':'site-spm888'}">${r.site}</span></td>
   <td class="${r.deposit < 0 ? 'num red' : 'num green'}">${fmtNum(r.deposit)}</td>
-  <td class="num ${r.withdrawal === 0 ? '' : 'red'}">${r.withdrawal === 0 ? fmtNum(0) : `-${fmtNum(Math.abs(r.withdrawal))}`}</td>
+  <td class="num ${r.withdrawal === 0 ? '' : 'red'}">${r.withdrawal === 0 ? fmtNum(0) : \`-\${fmtNum(Math.abs(r.withdrawal))}\`}</td>
   <td>${fmtNum(r.resit)}</td>
   <td class="num cyan">${fmtNum(r.bonus)}</td>
   <td>${fmtNum(r.forfeit)}</td>
   <td>${fmtInt(r.member)}</td>
   <td class="${r.sales < 0 ? 'num red' : 'num green'}">${fmtNum(r.sales)}</td>
+  <td class="num ${rUnclaim < 0 ? 'red' : ''}">${fmtNum(rUnclaim)}</td>
   <td>${bonusDep.toLocaleString()}</td>
   <td>${bonusRes.toLocaleString()}</td>
   <td>
@@ -556,41 +685,46 @@ tr.innerHTML = `
       tb.appendChild(tr);
 
       totals.d+=r.deposit; totals.w+=r.withdrawal; totals.b+=r.bonus; totals.f+=r.forfeit;
-      totals.m+=r.member; totals.r+=r.resit; totals.s+=r.sales;
+      totals.m+=r.member; totals.r+=r.resit; totals.s+=r.sales; totals.u+=rUnclaim;
       totals.bd+=bonusDep; totals.br+=bonusRes; totals.bsBase+=bonusSalesBase;
     }
     $('#emptyState').style.display=data.length?'none':'block';
 
-// footer totals
-$('#ft_deposit').textContent   = fmtNum(totals.d);
+    // footer totals
+    $('#ft_deposit').textContent   = fmtNum(totals.d);
 
-// Withdrawal: tampilkan selalu dengan tanda minus (UI only)
-const wdTotalAbs = Math.abs(totals.w);
-$('#ft_withdrawal').textContent = wdTotalAbs === 0 ? fmtNum(0) : `-${fmtNum(wdTotalAbs)}`;
+    // Withdrawal: tampilkan minus di UI (tanpa mengubah data)
+    const wdTotalAbs = Math.abs(totals.w);
+    $('#ft_withdrawal').textContent = wdTotalAbs === 0 ? fmtNum(0) : `-${fmtNum(wdTotalAbs)}`;
 
-$('#ft_bonus').textContent     = fmtNum(totals.b);
-$('#ft_forfeit').textContent   = fmtNum(totals.f);
-$('#ft_member').textContent    = fmtInt(totals.m);
-$('#ft_resit').textContent     = fmtNum(totals.r);
-$('#ft_sales').textContent     = fmtNum(totals.s);
-$('#ft_bonDep').textContent    = totals.bd.toLocaleString();
-$('#ft_bonRes').textContent    = totals.br.toLocaleString();
+    $('#ft_bonus').textContent     = fmtNum(totals.b);
+    $('#ft_forfeit').textContent   = fmtNum(totals.f);
+    $('#ft_member').textContent    = fmtInt(totals.m);
+    $('#ft_resit').textContent     = fmtNum(totals.r);
+    $('#ft_sales').textContent     = fmtNum(totals.s);
+    $('#ft_unclaim').textContent   = fmtNum(totals.u);
+    $('#ft_bonDep').textContent    = totals.bd.toLocaleString();
+    $('#ft_bonRes').textContent    = totals.br.toLocaleString();
 
-// Warnai withdrawal footer merah jika ada nilai
-const ftW = $('#ft_withdrawal');
-ftW.classList.remove('num','red');
-ftW.classList.add('num');
-if (wdTotalAbs > 0) ftW.classList.add('red');
+    // warna withdrawal footer
+    const ftW = $('#ft_withdrawal');
+    ftW.classList.remove('num','red');
+    ftW.classList.add('num');
+    if (wdTotalAbs > 0) ftW.classList.add('red');
 
-// (opsional) warna Sales footer
-const ftS = $('#ft_sales');
-ftS.classList.remove('num','red','green');
-ftS.classList.add('num');
-if (totals.s < 0) ftS.classList.add('red'); else if (totals.s > 0) ftS.classList.add('green');
+    // warna Sales footer
+    const ftS = $('#ft_sales');
+    ftS.classList.remove('num','red','green');
+    ftS.classList.add('num');
+    if (totals.s < 0) ftS.classList.add('red'); else if (totals.s > 0) ftS.classList.add('green');
 
-/* --------------------------------------------------------------- */
+    // warna Unclaim footer bila negatif
+    const ftU = $('#ft_unclaim');
+    ftU.classList.remove('num','red','green');
+    ftU.classList.add('num');
+    if ((totals.u||0) < 0) ftU.classList.add('red');
 
-renderSummaryRows(totals, data.length, site, month);
+    renderSummaryRows(totals, data.length, site, month);
   }
 
   function renderSummaryRows(t, count, site, month){
@@ -598,7 +732,6 @@ renderSummaryRows(totals, data.length, site, month);
     $('#miniMonth').textContent = prettyMonth(month);
     $('#miniSite').textContent  = (site === 'ALL' ? 'All Sites' : site);
 
-    // Row 1 (tanpa Month & Site)
     const top=$('#summaryRowTop'); top.innerHTML='';
     [
       {title:'Total Deposit',  val: fmtNum(t.d), cls:'green'},
@@ -616,25 +749,25 @@ renderSummaryRows(totals, data.length, site, month);
       top.appendChild(d);
     });
 
-const bottom = $('#summaryRowBottom');
-bottom.innerHTML = '';
+    const bottom = $('#summaryRowBottom');
+    bottom.innerHTML = '';
 
-const halfDep   = t.bd / 2;
-const halfRes   = t.br / 2;
-const salesOnly = t.bsBase;             // hanya bonus dari target sales
-const totalAmt  = halfDep + halfRes + salesOnly;
+    const halfDep   = t.bd / 2;
+    const halfRes   = t.br / 2;
+    const salesOnly = t.bsBase;
+    const totalAmt  = halfDep + halfRes + salesOnly;
 
-[
-  { title: 'Bonus Deposit ½ Σ', val: halfDep.toLocaleString() },
-  { title: 'Bonus Resit ½ Σ',   val: halfRes.toLocaleString() },
-  { title: 'Bonus Sales Σ',     val: salesOnly.toLocaleString() },
-  { title: 'Total Bonus Σ',     val: totalAmt.toLocaleString() }, // <— kartu baru di kanan
-].forEach(c => {
-  const d = document.createElement('div');
-  d.className = 'card';
-  d.innerHTML = `<h4>${c.title}</h4><div class="val">${c.val}</div>`;
-  bottom.appendChild(d);
-});
+    [
+      { title: 'Bonus Deposit ½ Σ', val: halfDep.toLocaleString() },
+      { title: 'Bonus Resit ½ Σ',   val: halfRes.toLocaleString() },
+      { title: 'Bonus Sales Σ',     val: salesOnly.toLocaleString() },
+      { title: 'Total Bonus Σ',     val: totalAmt.toLocaleString() },
+    ].forEach(c => {
+      const d = document.createElement('div');
+      d.className = 'card';
+      d.innerHTML = `<h4>${c.title}</h4><div class="val">${c.val}</div>`;
+      bottom.appendChild(d);
+    });
   }
 
   function delRecord(id){
@@ -646,13 +779,18 @@ const totalAmt  = halfDep + halfRes + salesOnly;
     const site=$('#siteFilter').value, month=$('#monthFilter').value, t=readTarget();
     const data=readStore().filter(r=>r.month===month).filter(r=>site==='ALL'?true:r.site===site)
       .sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
-    const header=['datetime','site','deposit','withdrawal','bonus','forfeit','member','resit_in','sales','bonus_deposit','bonus_resit','bonus_sales_base'];
+    const header=['datetime','site','deposit','withdrawal','bonus','forfeit','member','resit_in','sales','unclaim','unclaim_pending','unclaim_claimed_at','bonus_deposit','bonus_resit','bonus_sales_base'];
     const rows=[header.join(',')];
     for(const r of data){
       const bDep=pickTierBonus(r.deposit, t.depositTiers);
       const bRes=pickTierBonus(r.resit,   t.resitTiers);
       const bSales=pickTierBonus(r.sales, t.salesTiers);
-      rows.push([new Date(r.datetime).toISOString(), r.site, r.deposit, r.withdrawal, r.bonus, r.forfeit, r.member, r.resit, r.sales, bDep, bRes, bSales].join(','));
+      rows.push([
+        new Date(r.datetime).toISOString(),
+        r.site, r.deposit, r.withdrawal, r.bonus, r.forfeit, r.member, r.resit, r.sales,
+        (r.unclaim||0), (r.unclaimPending||0), (r.unclaimClaimedAt||''),
+        bDep, bRes, bSales
+      ].join(','));
     }
     const blob=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8;'});
     const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`bonus-${month}-${site}.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
@@ -661,6 +799,7 @@ const totalAmt  = halfDep + halfRes + salesOnly;
   // helpers exposed
   window.openModal=openModal; window.closeModal=closeModal; window.delRecord=delRecord;
   window.openTargetModal=openTargetModal; window.closeTargetModal=closeTargetModal;
+  window.openUnclaimModal=openUnclaimModal; window.closeUnclaimModal=closeUnclaimModal;
 </script>
 </body>
 </html>
