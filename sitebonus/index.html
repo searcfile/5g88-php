@@ -455,27 +455,38 @@ const fmtDMY = d => {
   const readUnclaims=()=>{try{return JSON.parse(localStorage.getItem(LS_UNCLAIM))||[]}catch{return[]}};
   const writeUnclaims=a=>localStorage.setItem(LS_UNCLAIM,JSON.stringify(a));
 
-  function readTarget(){
-    let t; try{ t=JSON.parse(localStorage.getItem(LS_TARGET)); }catch{ t=null; }
-    if (t && t.depositTiers && t.resitTiers && t.salesTiers) return t;
+function readTarget(){
+  // Kalau sudah ada v3, pakai apa adanya (jangan timpa)
+  try {
+    const t = JSON.parse(localStorage.getItem(LS_TARGET));
+    if (t && Array.isArray(t.depositTiers) && Array.isArray(t.resitTiers) && Array.isArray(t.salesTiers)) {
+      return t;
+    }
+  } catch {}
 
-    try{
-      const old = JSON.parse(localStorage.getItem('bonusTargets.v2'));
-      if (old) {
-        const upgraded = {depositTiers: old.depositTiers||[{threshold:8000,bonus:20}],
-                          resitTiers: old.resitTiers||[{threshold:250,bonus:30}],
-                          salesTiers:[{threshold:30000, bonus:300}]};
-        localStorage.setItem(LS_TARGET, JSON.stringify(upgraded));
-        return upgraded;
-      }
-    }catch{}
+  // (Opsional) migrasi sekali dari v2 -> v3
+  try {
+    const old = JSON.parse(localStorage.getItem('bonusTargets.v2'));
+    if (old) {
+      const upgraded = {
+        depositTiers: old.depositTiers || [{threshold:8000, bonus:20}],
+        resitTiers:   old.resitTiers   || [{threshold:250,  bonus:30}],
+        salesTiers:   old.salesTiers   || [{threshold:30000, bonus:300}],
+      };
+      localStorage.setItem(LS_TARGET, JSON.stringify(upgraded));
+      return upgraded;
+    }
+  } catch {}
 
-    const def={depositTiers:[{threshold:8000,bonus:20},{threshold:10000,bonus:25}],
-               resitTiers:[{threshold:250,bonus:30},{threshold:500,bonus:60}],
-               salesTiers:[{threshold:30000,bonus:300}]};
-    localStorage.setItem(LS_TARGET, JSON.stringify(def));
-    return def;
-  }
+  // First-run default (hanya sekali)
+  const def = {
+    depositTiers:[{threshold:8000, bonus:20},{threshold:10000, bonus:25}],
+    resitTiers:[{threshold:250, bonus:30},{threshold:500, bonus:60}],
+    salesTiers:[{threshold:30000, bonus:300}]
+  };
+  localStorage.setItem(LS_TARGET, JSON.stringify(def));
+  return def;
+}
   const writeTarget=t=>localStorage.setItem(LS_TARGET, JSON.stringify(t));
   const pickTierBonus=(v,tiers)=>Array.isArray(tiers)?tiers.reduce((m,t)=>v>=+t.threshold?Math.max(m,+t.bonus||0):m,0):0;
 
