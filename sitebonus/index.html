@@ -587,7 +587,7 @@ body{
     $('#bannerMonth').textContent=prettyMonth(month);
 
     const tb=$('#tbody'); tb.innerHTML='';
-    let totals={d:0,w:0,b:0,f:0,m:0,r:0,s:0, bd:0, br:0, bsBase:0, uDisp:0};
+    let totals={d:0,w:0,b:0,f:0,m:0,r:0,s:0, bd:0, br:0, bsBase:0, uDisp:0, uPending:0, uClaimed:0};
 
     for(const r of data){
       const dt=new Date(r.datetime).toLocaleString(undefined,{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
@@ -623,15 +623,16 @@ tr.innerHTML = `
       <button class="iconbtn del" onclick="window.__del('${r.id}')">Delete</button>
     </div>
   </td>`;
+  totals.uPending += ucs.pending;   // jumlah unclaim (positif)
+  totals.uClaimed += -ucs.claimed;
       tb.appendChild(tr);
 
       totals.d+=r.deposit; totals.w+=r.withdrawal; totals.b+=r.bonus; totals.f+=r.forfeit;
       totals.m+=r.member; totals.r+=r.resit; totals.s+=r.sales;
       totals.bd+=bonusDep; totals.br+=bonusRes; totals.bsBase+=bonusSalesBase;
-      totals.uDisp += unclaimDisplay;
     }
     $('#emptyState').style.display=data.length?'none':'block';
-
+    totals.uDisp = totals.uPending + totals.uClaimed;
     // footer totals
     $('#ft_deposit').textContent   = fmtNum(totals.d);
     const wdTotalAbs = Math.abs(totals.w);
@@ -657,48 +658,57 @@ tr.innerHTML = `
     renderSummaryRows(totals, data.length, site, month);
   }
 
-  function renderSummaryRows(t, count, site, month){
-    $('#miniMonth').textContent = prettyMonth(month);
-    $('#miniSite').textContent  = (site === 'ALL' ? 'All Sites' : site);
+function renderSummaryRows(t, count, site, month){
+  $('#miniMonth').textContent = prettyMonth(month);
+  $('#miniSite').textContent  = (site === 'ALL' ? 'All Sites' : site);
 
-    const top=$('#summaryRowTop'); top.innerHTML='';
-    [
-      {title:'Total Deposit',  val: fmtNum(t.d), cls:'green'},
-      {title:'Total Withdrawal', val: t.w === 0 ? fmtNum(0) : `-${fmtNum(Math.abs(t.w))}`, cls:'red'},
-      {title:'Total Bonus',    val: fmtNum(t.b), cls:'cyan'},
-      {title:'Total Sales',    val: fmtNum(t.s), cls: t.s<0?'red':'green'},
-      {title:'Total Forfeit',  val: fmtNum(t.f)},
-      {title:'Total Resit In', val: fmtNum(t.r)},
-      {title:'Total Unclaim (Σ)', val: fmtNum(t.uDisp), cls: t.uDisp<0?'red':''},
-      {title:'Total Member',   val: fmtInt(t.m)},
-      {title:'Records',        val: count.toLocaleString()},
-    ].forEach(c=>{
-      const d=document.createElement('div');
-      d.className='card';
-      d.innerHTML=`<h4>${c.title}</h4><div class="val ${c.cls||''}">${c.val}</div>`;
-      top.appendChild(d);
-    });
+  const top = $('#summaryRowTop');
+  top.innerHTML = '';
 
-    const bottom = $('#summaryRowBottom');
-    bottom.innerHTML = '';
+  [
+    { title: 'Total Deposit',  val: fmtNum(t.d), cls: 'green' },
+    { title: 'Total Withdrawal', val: t.w === 0 ? fmtNum(0) : `-${fmtNum(Math.abs(t.w))}`, cls: 'red' },
+    { title: 'Total Bonus',    val: fmtNum(t.b), cls: 'cyan' },
+    { title: 'Total Sales',    val: fmtNum(t.s), cls: t.s < 0 ? 'red' : 'green' },
+    { title: 'Total Forfeit',  val: fmtNum(t.f) },
+    { title: 'Total Resit In', val: fmtNum(t.r) },
+    { title: 'Total Unclaim (Σ)', val: fmtNum(t.uDisp), cls: t.uDisp < 0 ? 'red' : '' },
+    { title: 'Total Member',   val: fmtInt(t.m) },
+    { title: 'Records',        val: count.toLocaleString() },
+  ].forEach(c => {
+    const d = document.createElement('div');
+    d.className = 'card';
+    d.innerHTML = `<h4>${c.title}</h4><div class="val ${c.cls || ''}">${c.val}</div>`;
+    top.appendChild(d);
+  });
 
-    const halfDep   = t.bd / 2;
-    const halfRes   = t.br / 2;
-    const salesOnly = t.bsBase;
-    const totalAmt  = halfDep + halfRes + salesOnly;
+  const bottom = $('#summaryRowBottom');
+  bottom.innerHTML = '';
 
-    [
-      { title: 'Bonus Deposit ½ Σ', val: halfDep.toLocaleString() },
-      { title: 'Bonus Resit ½ Σ',   val: halfRes.toLocaleString() },
-      { title: 'Bonus Sales Σ',     val: salesOnly.toLocaleString() },
-      { title: 'Total Bonus Σ',     val: totalAmt.toLocaleString() },
-    ].forEach(c => {
-      const d = document.createElement('div');
-      d.className = 'card';
-      d.innerHTML = `<h4>${c.title}</h4><div class="val">${c.val}</div>`;
-      bottom.appendChild(d);
-    });
-  }
+  const halfDep   = t.bd / 2;
+  const halfRes   = t.br / 2;
+  const salesOnly = t.bsBase;
+  const totalAmt  = halfDep + halfRes + salesOnly;
+
+  const items = [
+    // 🆕 Tambahan 2 kartu unclaim di kiri
+    { title: 'Unclaim Σ', val: fmtNum(t.uPending) },
+    { title: 'Claimed Σ', val: fmtNum(t.uClaimed), cls: t.uClaimed < 0 ? 'red' : '' },
+
+    // Kartu bonus lama
+    { title: 'Bonus Deposit ½ Σ', val: halfDep.toLocaleString() },
+    { title: 'Bonus Resit ½ Σ',   val: halfRes.toLocaleString() },
+    { title: 'Bonus Sales Σ',     val: salesOnly.toLocaleString() },
+    { title: 'Total Bonus Σ',     val: totalAmt.toLocaleString() },
+  ];
+
+  items.forEach(c => {
+    const d = document.createElement('div');
+    d.className = 'card';
+    d.innerHTML = `<h4>${c.title}</h4><div class="val ${c.cls || ''}">${c.val}</div>`;
+    bottom.appendChild(d);
+  });
+}
 
   function delRecord(id){
     if(!confirm('Delete this record?')) return;
