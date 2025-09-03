@@ -395,6 +395,7 @@ body{
   const pad2 = n => String(n).padStart(2,'0');
   const toYYYYMM = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
   const parseLocalDT = v => v? new Date(v.replace('T',' ')) : new Date();
+  const safe = v => Number.isFinite(+v) ? +v : 0;
 
   const LS_KEY='bonusRecords.v1';
   const LS_LAST_MONTH='bonusRecords.lastOpenedMonth';
@@ -505,7 +506,7 @@ body{
     writeStore(arr);
 
     // NEW: jika user isi Unclaim Amount -> simpan pending item
-    const ucAmt = +($('#m_unclaim').value||0);
+    const ucAmt = safe($('#m_unclaim').value);
     if (ucAmt > 0) {
       const uc = readUnclaims();
       uc.push({
@@ -577,17 +578,17 @@ body{
     const uc = readUnclaims();
     const ucByRecord = {};
     for (const u of uc.filter(x=>x.month===month && (site==='ALL'||x.site===site))) {
-      if (!ucByRecord[u.recordId]) ucByRecord[u.recordId] = {pending:0, claimed:0};
-      if (u.claimed) ucByRecord[u.recordId].claimed += +u.amount||0;
-      else ucByRecord[u.recordId].pending += +u.amount||0;
-    }
+  if (!ucByRecord[u.recordId]) ucByRecord[u.recordId] = {pending:0, claimed:0};
+  if (u.claimed) ucByRecord[u.recordId].claimed += safe(u.amount);
+  else           ucByRecord[u.recordId].pending += safe(u.amount);
+}
 
     const cur=toYYYYMM(new Date()); const isArchive=month!==cur;
     $('#archiveBanner').style.display=isArchive?'inline-flex':'none';
     $('#bannerMonth').textContent=prettyMonth(month);
 
     const tb=$('#tbody'); tb.innerHTML='';
-    let totals={d:0,w:0,b:0,f:0,m:0,r:0,s:0, bd:0, br:0, bsBase:0, uDisp:0, uPending:0, uClaimed:0};
+    let totals = {d:0,w:0,b:0,f:0,m:0,r:0,s:0,bd:0, br:0, bsBase:0,uDisp:0, uPending:0, uClaimed:0, uAll:0};
 
     for(const r of data){
       const dt=new Date(r.datetime).toLocaleString(undefined,{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
@@ -599,7 +600,7 @@ body{
       // Nilai yang ditampilkan di kolom Unclaim:
       //  - jika ada claimed -> tampil "-amount" (merah)
       //  - else jika ada pending -> tampil "amount"
-      const unclaimDisplay = ucs.claimed>0 ? -ucs.claimed : ucs.pending;
+      const unclaimDisplay = safe(ucs.claimed) > 0 ? -safe(ucs.claimed) : safe(ucs.pending);
 
 const tr=document.createElement('tr');
 tr.innerHTML = `
@@ -623,13 +624,21 @@ tr.innerHTML = `
       <button class="iconbtn del" onclick="window.__del('${r.id}')">Delete</button>
     </div>
   </td>`;
-  totals.uPending += ucs.pending;   // jumlah unclaim (positif)
-  totals.uClaimed += -ucs.claimed;
+  totals.uPending += safe(ucs.pending);        // jumlah unclaim dibuat (positif)
+  totals.uClaimed += -safe(ucs.claimed);       // tampil negatif di kartu Claimed
+  totals.uAll     += safe(ucs.pending) + safe(ucs.claimed); // total unclaim dibuat (tetap ada walau sudah claim)
       tb.appendChild(tr);
 
-      totals.d+=r.deposit; totals.w+=r.withdrawal; totals.b+=r.bonus; totals.f+=r.forfeit;
-      totals.m+=r.member; totals.r+=r.resit; totals.s+=r.sales;
-      totals.bd+=bonusDep; totals.br+=bonusRes; totals.bsBase+=bonusSalesBase;
+  totals.d  += safe(r.deposit);
+  totals.w  += safe(r.withdrawal);
+  totals.b  += safe(r.bonus);
+  totals.f  += safe(r.forfeit);
+  totals.m  += safe(r.member);
+  totals.r  += safe(r.resit);
+  totals.s  += safe(r.sales);
+  totals.bd += safe(bonusDep);
+  totals.br += safe(bonusRes);
+  totals.bsBase += safe(bonusSalesBase);
     }
     $('#emptyState').style.display=data.length?'none':'block';
     totals.uDisp = totals.uPending + totals.uClaimed;
@@ -692,7 +701,7 @@ function renderSummaryRows(t, count, site, month){
 
   const items = [
     // 🆕 Tambahan 2 kartu unclaim di kiri
-    { title: 'Unclaim Σ', val: fmtNum(t.uPending) },
+    { title: 'Unclaim Σ', val: fmtNum(t.uAll), cls: t.uAll > 0 ? 'green' : '' },
     { title: 'Claimed Σ', val: fmtNum(t.uClaimed), cls: t.uClaimed < 0 ? 'red' : '' },
 
     // Kartu bonus lama
@@ -800,10 +809,10 @@ function renderSummaryRows(t, count, site, month){
     const recs = readStore();
     const ri = recs.findIndex(r=>r.id===item.recordId);
     if (ri>=0){
-      recs[ri].deposit = (+recs[ri].deposit||0) + (+item.amount||0);
-      recs[ri].sales   = (+recs[ri].deposit||0) - (+recs[ri].withdrawal||0);
-      writeStore(recs);
-    }
+    recs[ri].deposit = safe(recs[ri].deposit) + safe(item.amount);
+    recs[ri].sales   = safe(recs[ri].deposit) - safe(recs[ri].withdrawal);
+    writeStore(recs);
+   }
 
     // mark claimed
     item.claimed = true;
