@@ -879,7 +879,7 @@ function applyNumberTitles() {
   document.querySelectorAll('#dataTable td, #dataTable th, .card .val')
     .forEach(el => { const t = (el.textContent||'').trim(); if (t) el.title = t; });
 }
-const MAX_DISPLAY = 10;
+const MAX_DISPLAY = 12;
 
 // Util kecil
 const makeShort = (text, maxLen = MAX_DISPLAY) => {
