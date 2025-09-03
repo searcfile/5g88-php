@@ -421,6 +421,7 @@ const fmtDMY = d => {
 
   const LS_KEY='bonusRecords.v1';
   const LS_LAST_MONTH='bonusRecords.lastOpenedMonth';
+  const LS_LAST_SITE = 'bonusRecords.lastSite';
   const LS_TARGET='bonusTargets.v3';
   const LS_UNCLAIM='bonusUnclaims.v1';   // NEW
 
@@ -460,10 +461,14 @@ const fmtDMY = d => {
   window.addEventListener('DOMContentLoaded',()=>{
     buildMonthOptions();
     autoSwitchToCurrentMonth();
+    const savedSite = localStorage.getItem(LS_LAST_SITE);
+    $('#siteFilter').value = (savedSite === '5G88' || savedSite === 'SPM888' || savedSite === 'ALL')
+    ? savedSite
+    : 'ALL';
     render();
     $('#createBtn').addEventListener('click',()=>openModal());
     $('#exportBtn').addEventListener('click', exportCSV);
-    $('#siteFilter').addEventListener('change', render);
+    $('#siteFilter').addEventListener('change', () => {localStorage.setItem(LS_LAST_SITE, $('#siteFilter').value);render();});
     $('#monthFilter').addEventListener('change', ()=>{localStorage.setItem(LS_LAST_MONTH,$('#monthFilter').value); render();});
     $('#targetBtn').addEventListener('click', openTargetModal);
 
