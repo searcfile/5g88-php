@@ -396,6 +396,7 @@ body{
   const pad2 = n => String(n).padStart(2,'0');
   const toYYYYMM = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
   const parseLocalDT = v => v? new Date(v.replace('T',' ')) : new Date();
+  const dt24 = d =>new Date(d).toLocaleString(undefined, {year: 'numeric',month: '2-digit',day: '2-digit',hour: '2-digit',minute: '2-digit',hour12: false,hourCycle: 'h23',});
   const safe = v => Number.isFinite(+v) ? +v : 0;
 
   const LS_KEY='bonusRecords.v1';
@@ -593,8 +594,7 @@ body{
     let totals = {d:0,w:0,b:0,f:0,m:0,r:0,s:0,bd:0, br:0, bsBase:0,uDisp:0, uPending:0, uClaimed:0, uAll:0};
 
     for(const r of data){
-      const dt=new Date(r.datetime).toLocaleString(undefined,{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-      const bonusDep=pickTierBonus(r.deposit, targets.depositTiers);
+      const dt = dt24(r.datetime);
       const bonusRes=pickTierBonus(r.resit,   targets.resitTiers);
       const bonusSalesBase=pickTierBonus(r.sales, targets.salesTiers);
 
@@ -783,10 +783,9 @@ function renderUnclaimList(which = 'pending'){
 
   for (const u of items){
     const rec      = records[u.recordId];
-    const recDt    = rec ? new Date(rec.datetime).toLocaleString(
-                      undefined, {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-';
-    const created  = new Date(u.createdAt).toLocaleString();
-    const claimedAt= u.claimedAt ? new Date(u.claimedAt).toLocaleString() : '-';
+    const recDt    = rec ? dt24(rec.datetime) : '-';
+    const created  = dt24(u.createdAt);
+    const claimedAt= u.claimedAt ? dt24(u.claimedAt) : '-';
 
     // 👉 Atur tampilan berdasarkan TAB:
     // - Di PENDING: item yang sudah claimed TETAP tampil seperti pending (tanpa label "Claimed", amount positif)
