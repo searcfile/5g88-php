@@ -196,9 +196,23 @@ body{
   border:1px solid #2a2a2a; border-radius:10px; padding:8px; background:#101010;
   max-height:150px; overflow:auto; padding-right:6px;
 }
-.tier-list .tier-row:first-child{
-  position:sticky; top:0; z-index:1; background:#101010;
-  border-bottom:1px solid #2a2a2a; margin-bottom:6px; padding-top:2px; padding-bottom:6px;
+/* konteks z-index & background solid */
+.tier-list{
+  position: relative;              /* penting untuk konteks sticky */
+  background:#101010;              /* tutup tembus pandang */
+}
+
+/* header sticky yang benar2 menutup area atas */
+.tier-headrow{
+  position: sticky;
+  top: 0;
+  z-index: 10;                     /* di atas baris biasa */
+  background: #101010;             /* solid, tidak tembus */
+  border-bottom: 1px solid #2a2a2a;
+  margin: 0;                       /* hilangkan gap yang bikin “nampak belakang” */
+  padding: 6px 8px;
+  box-shadow: 0 2px 0 rgba(42,42,42,.9),
+              0 6px 12px rgba(0,0,0,.35); /* garis/shadow pemisah */
 }
 .tier-row{display:grid; grid-template-columns:1fr 1fr auto; gap:8px; margin-bottom:6px}
 .tier-row:last-child{margin-bottom:0}
@@ -593,13 +607,18 @@ const fmtDMY = d => {
   }
   const closeTargetModal=()=>$('#targetModal').classList.remove('show');
 
-  function renderTierEditor(sel, tiers, label){
-    const box=$(sel); box.innerHTML='';
-    const head=document.createElement('div'); head.className='tier-row';
-    head.innerHTML=`<div class="hint" style="align-self:center">Threshold (≥)</div><div class="hint" style="align-self:center">${label}</div><div></div>`;
-    box.appendChild(head);
-    (tiers||[]).forEach(t=>addTierRow(sel,t.threshold,t.bonus));
-  }
+function renderTierEditor(sel, tiers, label){
+  const box=$(sel); box.innerHTML='';
+  const head=document.createElement('div');
+  head.className='tier-row tier-headrow'; // ← header khusus
+  head.innerHTML=`
+    <div class="hint" style="align-self:center">Threshold (≥)</div>
+    <div class="hint" style="align-self:center">${label}</div>
+    <div></div>`;
+  box.appendChild(head);
+
+  (tiers||[]).forEach(t=>addTierRow(sel,t.threshold,t.bonus));
+}
 function addTierRow(sel, threshold='', bonus=''){
   const box = $(sel);
   const row = document.createElement('div');
