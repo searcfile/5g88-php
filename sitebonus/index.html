@@ -91,7 +91,9 @@ body{
 /* ====== TABLE ====== */
 .table{
   background:#101010; border:1px solid #222; border-radius:14px;
-  overflow:hidden; overflow-x:auto;
+  position: relative;
+  overflow: auto;          /* ⬅️ bisa scroll vertikal & horizontal */
+  max-height: 560px;       /* ⬅️ fallback; nanti diatur JS pas >10 baris */
 }
 .table thead{background:linear-gradient(180deg,#161616,#131313)}
 .table th,.table td{
@@ -154,23 +156,18 @@ body{
 }
 
 /* DataTable guard */
-#dataTable { table-layout: fixed; width: 100%; }
+#dataTable { table-layout: fixed; width: 100%;border-collapse: separate !important; }
 #dataTable th, #dataTable td { padding: 10px 12px; }
 #dataTable td:last-child .actions { justify-content:center !important; }
-#dataTable tfoot td { text-align:center !important; }
-
+#dataTable tfoot td{position: sticky;bottom: 0;z-index: 1;background:#0f0f0f;text-align:center !important;}
+#dataTable thead th{position: sticky;top: 0;z-index: 2;background: linear-gradient(180deg,#161616,#131313);}
 /* Sejajarkan kolom Actions */
 #dataTable thead th:last-child { text-align: center !important; }
 #dataTable tbody td:last-child { text-align: center !important; }
-#dataTable td:last-child .actions{
-  display:flex; width:100%; justify-content:center !important; align-items:center;
-}
-
-/* Center TOTAL label */
-#dataTable tfoot td:first-child {
-  text-align: center !important; vertical-align: middle !important;
-  font-weight: bold; letter-spacing: 0.3px; color: white;
-}
+#dataTable td:last-child .actions{display:flex; width:100%; justify-content:center !important; align-items:center;}
+#dataTable tfoot td:first-child {text-align: center !important; vertical-align: middle !important;font-weight: bold; letter-spacing: 0.3px; color: white;}
+#dataTable thead th{ box-shadow: 0 2px 0 rgba(0,0,0,.35); }
+#dataTable tfoot td{ box-shadow: 0 -2px 0 rgba(0,0,0,.35); }
 
 /* Modal */
 .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; backdrop-filter:blur(3px)}
@@ -298,7 +295,7 @@ input[type="number"]{
 
 <!-- Table -->
 <div class="table">
-  <table id="dataTable" style="width:100%; border-collapse:collapse">
+  <table id="dataTable">
 <colgroup>
   <col style="width:150px"><!-- Date/Time -->
   <col style="width:92px"><!-- Site -->
@@ -799,7 +796,31 @@ for (const r of data){
     NumberClipper.clip('#dataTable tbody td:nth-child(n+3):nth-child(-n+12)');
     NumberClipper.clip('#dataTable tfoot td:nth-child(n+3):nth-child(-n+12)');
     NumberClipper.clip('.card .val');
+    applyTableScrollLimit();
   }
+function applyTableScrollLimit() {
+  const wrap  = document.querySelector('.table');
+  const head  = document.querySelector('#dataTable thead');
+  const body  = document.querySelectorAll('#dataTable tbody tr');
+  const foot  = document.querySelector('#dataTable tfoot');
+
+  if (!wrap || !head) return;
+
+  // ≤ 10 baris → biarkan tanpa scroll paksa
+  if (body.length <= 10) {
+    wrap.style.maxHeight = '';
+    wrap.style.overflowY = 'visible';
+    return;
+  }
+
+  // Hitung tinggi: header + 10 baris + footer
+  const rowH  = (body[0]?.getBoundingClientRect().height) || 44;
+  const headH = head.getBoundingClientRect().height || 44;
+  const footH = foot?.getBoundingClientRect().height || 0;
+
+  wrap.style.maxHeight = (headH + (rowH * 10) + footH) + 'px';
+  wrap.style.overflowY = 'auto';
+}
 
 function renderSummaryRows(t, count, site, month){
   $('#miniMonth').textContent = prettyMonth(month);
