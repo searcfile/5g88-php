@@ -220,22 +220,15 @@ body{
 .uc-tab{height:32px; padding:0 10px; border-radius:8px; border:1px solid #2a2a2a; background:#151515; color:#ddd; cursor:pointer}
 .uc-tab.active{border-color:var(--gold); color:#000; background:linear-gradient(180deg,var(--gold),var(--gold-2))}
 .dialog .uc-list {flex: 1 1 auto; min-height: 0; }
-td.reveal-open { position: relative; }        /* anchor */
-.cell-reveal {
-  position: absolute;
-  left: 0; top: 100%; transform: translateY(4px);
-  background: #101010;
-  border: 1px solid #2a2a2a;
-  border-radius: 10px;
-  padding: 6px 10px;
-  white-space: nowrap;            /* tampil full dalam satu baris */
-  z-index: 200;
-  font-weight: 800;
-  box-shadow: 0 12px 30px rgba(0,0,0,.45);
+/* === Klik-untuk-toggle angka pendek/full === */
+.clipnum{
+  cursor: pointer;
+  white-space: nowrap;
 }
-.cell-reveal .hint {
-  display: block; font-weight: 600; font-size: 11px; color: #a7a7a7; margin-top: 2px;
+.clipnum[data-state="short"]{
+  border-bottom: 1px dotted rgba(255,255,255,.15); /* hint halus bisa diklik */
 }
+
 </style>
 </head>
 <body>
@@ -699,6 +692,9 @@ for (const r of data){
 
     renderSummaryRows(totals, data.length, site, month);
     applyNumberTitles(); // tooltip hover tetap ada
+    NumberClipper.clip('#dataTable tbody td:nth-child(n+3):nth-child(-n+12)');
+    NumberClipper.clip('#dataTable tfoot td:nth-child(n+3):nth-child(-n+12)');
+    NumberClipper.clip('.card .val');
   }
 
 function renderSummaryRows(t, count, site, month){
@@ -944,6 +940,42 @@ function applyNumberTitles() {
   document.querySelectorAll('#dataTable td, #dataTable th, .card .val')
     .forEach(el => { const t = (el.textContent||'').trim(); if (t) el.title = t; });
 }
+const MAX_DISPLAY = 8;
+
+// Util kecil
+const makeShort = (text, maxLen = MAX_DISPLAY) => {
+  const s = String(text || '').trim();
+  if (s.length <= maxLen) return s;
+  return s.slice(0, maxLen) + '...';
+};
+
+// Terapkan ke satu elemen
+function clipApply(el, raw){
+  const full = String(raw ?? el.textContent ?? '').trim();
+  const short = makeShort(full);
+  el.classList.add('clipnum');
+  el.dataset.full = full;
+  el.dataset.short = short;
+  // mulai dari short jika memang melebihi batas, kalau tidak langsung full
+  el.dataset.state = (full.length > MAX_DISPLAY) ? 'short' : 'full';
+  el.textContent = (el.dataset.state === 'short') ? short : full;
+  el.title = (el.dataset.state === 'short') ? full : '';
+  el.onclick = () => {
+    const state = el.dataset.state === 'short' ? 'full' : 'short';
+    el.dataset.state = state;
+    el.textContent = (state === 'short') ? el.dataset.short : el.dataset.full;
+    el.title = (state === 'short') ? el.dataset.full : '';
+  };
+}
+
+// Terapkan ke NodeList/selector
+function clipMany(selector){
+  const nodes = (typeof selector === 'string') ? document.querySelectorAll(selector) : selector;
+  nodes.forEach(el => clipApply(el));
+}
+
+// Ekspor (kalau mau dipanggil manual sesudah update)
+window.NumberClipper = { clip: clipMany, apply: clipApply };
   // SAFE edit/delete (hindari JSON di onclick)
 window.__edit = (id) => {
   const rec = readStore().find(x => x.id === id);
