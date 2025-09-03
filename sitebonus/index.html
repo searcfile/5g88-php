@@ -59,7 +59,7 @@ body{
 .card h4{margin:0 0 2px; font-size:12px; color:#cfcfcf; font-weight:600}
 .card .val{font-size:15px; font-weight:800}
 
-/* Ellipsis khusus kartu (JANGAN ganggu TD tabel) */
+/* Ellipsis khusus kartu */
 .card .val{
   display:block;
   max-width:100%;
@@ -94,14 +94,12 @@ body{
   overflow:hidden; overflow-x:auto;
 }
 .table thead{background:linear-gradient(180deg,#161616,#131313)}
-
-/* Selaras: no-wrap + ellipsis + padding konsisten */
 .table th,.table td{
   padding:10px 12px;
   border-bottom:1px dashed #222;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   vertical-align:middle;
-  text-align:center;                 /* ← semua center by default */
+  text-align:center;
 }
 
 /* Kolom khusus */
@@ -111,26 +109,26 @@ body{
 /* Footer */
 .table tfoot td { background:#0f0f0f; font-weight:800 }
 
-/* Layout fixed + batas kolom supaya header & isi pas */
+/* Layout fixed + batas kolom */
 .table table { table-layout: fixed; width: 100% }
 .table th, .table td { max-width: 140px }
 .table th:first-child, .table td:first-child { max-width: 180px } /* Date/Time */
 .table th:last-child,  .table td:last-child  { max-width: 180px } /* Actions */
 
-/* Tengah‑kan spesifik angka (Deposit–Bonus Resit = kolom 3–11) – redundant tapi aman */
-.table thead th:nth-child(n+3):nth-child(-n+11),
-.table tbody td:nth-child(n+3):nth-child(-n+11),
-.table tfoot td:nth-child(n+3):nth-child(-n+11){ text-align:center; }
+/* Tengah‑kan angka (kolom 3–12) */
+.table thead th:nth-child(n+3):nth-child(-n+12),
+.table tbody td:nth-child(n+3):nth-child(-n+12),
+.table tfoot td:nth-child(n+3):nth-child(-n+12){ text-align:center; }
 
-/* Angka rapi (monospasi) */
-.table td:nth-child(n+3):nth-child(-n+11){
+/* Angka rapi */
+.table td:nth-child(n+3):nth-child(-n+12){
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
 
-/* === FIX PENTING: jangan jadikan TD .num menjadi block === */
-.table td.num{ display:table-cell !important; }  /* guard jika class num dipasang di TD */
-.table td .num{ display:inline !important; }     /* kalau <span class="num"> di dalam TD */
+/* Guard .num */
+.table td.num{ display:table-cell !important; }
+.table td .num{ display:inline !important; }
 
 /* Warna angka */
 .num.red { color: var(--red) }
@@ -143,7 +141,7 @@ body{
 .iconbtn:hover { border-color:#3a3a3a }
 .iconbtn.del { border-color:#3a2222; background:#191111; color:#ffb4b4 }
 
-/* Pill/Badge */
+/* Pill */
 .pill { padding: 2px 8px; border-radius:999px; border:1px solid #2d2d2d; background:#121212; font-weight:700 }
 .pill.site-5g88 { color:#111; background:var(--gold); border-color:#8a6b1a }
 .pill.site-spm888 { color:#eee; background:#273142; border-color:#3a4b66 }
@@ -155,32 +153,23 @@ body{
   background:repeating-linear-gradient(45deg,#0e0e0e 0 8px,#0c0c0c 8px 16px)
 }
 
-/* DataTable guard (boleh tetap, tapi sekarang tidak wajib) */
+/* DataTable guard */
 #dataTable { table-layout: fixed; width: 100%; }
 #dataTable th, #dataTable td { padding: 10px 12px; }
 #dataTable td:last-child .actions { justify-content:center !important; }
 #dataTable tfoot td { text-align:center !important; }
-/* --- Sejajarkan kolom Actions (header + body) --- */
-#dataTable thead th:last-child { 
-  text-align: center !important;   /* override inline style */
-}
-#dataTable tbody td:last-child {
-  text-align: center !important;
-}
+
+/* Sejajarkan kolom Actions */
+#dataTable thead th:last-child { text-align: center !important; }
+#dataTable tbody td:last-child { text-align: center !important; }
 #dataTable td:last-child .actions{
-  display:flex;
-  width:100%;                      /* flex container isi selebar sel */
-  justify-content:center !important;
-  align-items:center;
+  display:flex; width:100%; justify-content:center !important; align-items:center;
 }
 
-/* --- Center-kan teks TOTAL (Filtered) di tfoot --- */
+/* Center TOTAL label */
 #dataTable tfoot td:first-child {
-  text-align: center !important;
-  vertical-align: middle !important;
-  font-weight: bold;
-  letter-spacing: 0.3px;
-  color: white;
+  text-align: center !important; vertical-align: middle !important;
+  font-weight: bold; letter-spacing: 0.3px; color: white;
 }
 
 /* Modal */
@@ -216,11 +205,20 @@ body{
 .tier-row .rm{border:1px solid #3a2222; background:#1a1111; color:#ffb4b4; border-radius:8px; height:36px; padding:0 10px; cursor:pointer}
 .addline{margin-top:8px}
 
-/* Scrollbar tipis (opsional) */
+/* Scrollbar tipis */
 .tier-list::-webkit-scrollbar{height:8px; width:8px}
 .tier-list::-webkit-scrollbar-thumb{background:#2a2a2a; border-radius:6px}
 .cards-row::-webkit-scrollbar{height:8px}
 .cards-row::-webkit-scrollbar-thumb{background:#2a2a2a; border-radius:6px}
+
+/* Unclaim list styles */
+.uc-list{display:flex; flex-direction:column; gap:8px; overflow:auto; max-height:60vh; padding-right:6px;}
+.uc-item{display:grid; grid-template-columns:150px 90px 1fr 110px 120px auto; gap:8px; align-items:center; border:1px solid #242424; background:#0f0f0f; padding:8px; border-radius:10px}
+.uc-item .uc-amt{font-weight:800}
+.uc-item .uc-amt.red{color:var(--red)}
+.uc-tabs{display:flex; gap:8px; margin:6px 0 10px}
+.uc-tab{height:32px; padding:0 10px; border-radius:8px; border:1px solid #2a2a2a; background:#151515; color:#ddd; cursor:pointer}
+.uc-tab.active{border-color:var(--gold); color:#000; background:linear-gradient(180deg,var(--gold),var(--gold-2))}
 </style>
 </head>
 <body>
@@ -229,6 +227,10 @@ body{
     <div class="brand"><span class="dot"></span><span>Bonus Recorder</span></div>
     <select id="siteFilter" class="select"><option value="ALL">All Sites</option><option value="5G88">5G88</option><option value="SPM888">SPM888</option></select>
     <select id="monthFilter" class="select"></select>
+
+    <!-- NEW: Unclaim button -->
+    <button id="unclaimBtn" class="btn ghost" title="Kelola Unclaim">Unclaim</button>
+
     <div class="spacer"></div>
     <button id="exportBtn" class="btn ghost">Export CSV</button>
   </div>
@@ -236,12 +238,11 @@ body{
   <div class="wrap">
     <!-- Row 1 summary -->
     <div class="cards-row" id="summaryRowTop"></div>
-    <!-- Row 2 summary (Bonus Deposit ½, Bonus Resit ½, Bonus Sales) -->
+    <!-- Row 2 summary -->
     <div class="cards-row" id="summaryRowBottom" style="margin-top:8px;"></div>
 
     <!-- Toolbar above table -->
     <div class="toolbar">
-      <!-- Mini Month/Site di kiri -->
       <div id="miniInfo" class="mini-cards">
         <div class="mini-card">
           <span class="mini-label">Month</span>
@@ -264,7 +265,6 @@ body{
 <!-- Table -->
 <div class="table">
   <table id="dataTable" style="width:100%; border-collapse:collapse">
-    <!-- Kunci lebar kolom agar header & isi pas sejajar -->
 <colgroup>
   <col style="width:150px"><!-- Date/Time -->
   <col style="width:92px"><!-- Site -->
@@ -275,6 +275,7 @@ body{
   <col style="width:110px"><!-- Forfeit -->
   <col style="width:110px"><!-- Member -->
   <col style="width:120px"><!-- Sales -->
+  <col style="width:120px"><!-- Unclaim (NEW) -->
   <col style="width:120px"><!-- Bonus Deposit -->
   <col style="width:120px"><!-- Bonus Resit -->
   <col style="width:180px"><!-- Actions -->
@@ -291,6 +292,7 @@ body{
     <th>Forfeit</th>
     <th>Member</th>
     <th>Sales</th>
+    <th>Unclaim</th>
     <th>Bonus Deposit</th>
     <th>Bonus Resit</th>
     <th>Actions</th>
@@ -310,6 +312,7 @@ body{
     <td id="ft_forfeit">0</td>
     <td id="ft_member">0</td>
     <td id="ft_sales">0</td>
+    <td id="ft_unclaim">0</td>
     <td id="ft_bonDep">0</td>
     <td id="ft_bonRes">0</td>
     <td></td>
@@ -340,12 +343,16 @@ body{
         <div class="group"><label for="m_resit">Total Resit In</label><input id="m_resit" class="input" type="number" step="0.01" min="0"></div>
         <div class="group"><label for="m_sales">Total Sales (auto)</label><input id="m_sales" class="input" type="number" step="0.01" readonly title="Auto = Deposit − Withdrawal"></div>
         <div class="group"><label>&nbsp;</label><div class="hint">Sales auto: <b>Deposit − Withdrawal</b></div></div>
+
+        <!-- NEW: Unclaim Amount (disimpan pending) -->
+        <div class="group"><label for="m_unclaim">Unclaim Amount</label><input id="m_unclaim" class="input" type="number" step="0.01" min="0" placeholder="0.00"></div>
+        <div class="group"><label>&nbsp;</label><div class="hint">Unclaim tidak langsung masuk Deposit; akan tampil di popup Unclaim & kolom Unclaim.</div></div>
       </div>
       <div class="foot"><button class="btn ghost" onclick="closeModal()">Cancel</button><button id="saveBtn" class="btn">Save</button></div>
     </div>
   </div>
 
-  <!-- Modal Set Target (multi-tier: Deposit, Resit, Sales) -->
+  <!-- Modal Set Target -->
   <div id="targetModal" class="modal" aria-hidden="true">
     <div class="overlay" onclick="closeTargetModal()"></div>
     <div class="dialog" role="dialog" aria-modal="true">
@@ -367,6 +374,20 @@ body{
     </div>
   </div>
 
+  <!-- NEW: Modal Unclaim Center -->
+  <div id="unclaimModal" class="modal" aria-hidden="true">
+    <div class="overlay" onclick="closeUnclaimModal()"></div>
+    <div class="dialog" role="dialog" aria-modal="true">
+      <h3>Unclaim Center</h3>
+      <div class="uc-tabs">
+        <button class="uc-tab active" id="tabPending">Pending</button>
+        <button class="uc-tab" id="tabHistory">History</button>
+      </div>
+      <div id="ucList" class="uc-list"></div>
+      <div class="foot"><button class="btn ghost" onclick="closeUnclaimModal()">Close</button></div>
+    </div>
+  </div>
+
 <script>
   const $ = s => document.querySelector(s);
   const fmtNum = n => (Number.isFinite(n)?n:parseFloat(n||0)).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
@@ -378,9 +399,13 @@ body{
   const LS_KEY='bonusRecords.v1';
   const LS_LAST_MONTH='bonusRecords.lastOpenedMonth';
   const LS_TARGET='bonusTargets.v3';
+  const LS_UNCLAIM='bonusUnclaims.v1';   // NEW
 
   const readStore=()=>{try{return JSON.parse(localStorage.getItem(LS_KEY))||[]}catch{return[]}};
   const writeStore=a=>localStorage.setItem(LS_KEY,JSON.stringify(a));
+
+  const readUnclaims=()=>{try{return JSON.parse(localStorage.getItem(LS_UNCLAIM))||[]}catch{return[]}};
+  const writeUnclaims=a=>localStorage.setItem(LS_UNCLAIM,JSON.stringify(a));
 
   function readTarget(){
     let t; try{ t=JSON.parse(localStorage.getItem(LS_TARGET)); }catch{ t=null; }
@@ -417,6 +442,11 @@ body{
     $('#siteFilter').addEventListener('change', render);
     $('#monthFilter').addEventListener('change', ()=>{localStorage.setItem(LS_LAST_MONTH,$('#monthFilter').value); render();});
     $('#targetBtn').addEventListener('click', openTargetModal);
+
+    // NEW: Unclaim center
+    $('#unclaimBtn').addEventListener('click', openUnclaimModal);
+    $('#tabPending').addEventListener('click', ()=>switchUcTab('pending'));
+    $('#tabHistory').addEventListener('click', ()=>switchUcTab('history'));
   });
 
   function buildMonthOptions(){
@@ -445,6 +475,7 @@ body{
     $('#m_forfeit').value=rec?.forfeit ?? '';
     $('#m_member').value=rec?.member ?? '';
     $('#m_resit').value=rec?.resit ?? '';
+    $('#m_unclaim').value='';
 
     const autoCalc=()=>{$('#m_sales').value=(parseFloat($('#m_deposit').value||0)-parseFloat($('#m_withdrawal').value||0)).toFixed(2);};
     $('#m_deposit').oninput=autoCalc; $('#m_withdrawal').oninput=autoCalc; autoCalc();
@@ -452,6 +483,7 @@ body{
     $('#modal').classList.add('show'); $('#saveBtn').onclick=saveModal;
   }
   const closeModal=()=>$('#modal').classList.remove('show');
+
   function collectModal(){
     const dt=parseLocalDT($('#m_dt').value);
     return{
@@ -462,13 +494,34 @@ body{
       bonus:+($('#m_bonus').value||0), forfeit:+($('#m_forfeit').value||0),
       member:parseInt($('#m_member').value||0,10), resit:+($('#m_resit').value||0),
       sales:+($('#m_sales').value||0),
+      // NOTE: unclaim disimpan terpisah di LS_UNCLAIM
     };
   }
+
   function saveModal(){
     const rec=collectModal();
     const arr=readStore(); const i=arr.findIndex(x=>x.id===rec.id);
     if(i>=0) arr[i]=rec; else arr.push(rec);
-    writeStore(arr); buildMonthOptions();
+    writeStore(arr);
+
+    // NEW: jika user isi Unclaim Amount -> simpan pending item
+    const ucAmt = +($('#m_unclaim').value||0);
+    if (ucAmt > 0) {
+      const uc = readUnclaims();
+      uc.push({
+        id: 'uc_'+Date.now()+Math.random().toString(36).slice(2,6),
+        recordId: rec.id,
+        site: rec.site,
+        month: rec.month,
+        createdAt: new Date().toISOString(),
+        amount: ucAmt,
+        claimed: false,
+        claimedAt: null
+      });
+      writeUnclaims(uc);
+    }
+
+    buildMonthOptions();
     if(rec.month===toYYYYMM(new Date())){ $('#monthFilter').value=rec.month; localStorage.setItem(LS_LAST_MONTH,rec.month); }
     closeModal(); render();
   }
@@ -521,12 +574,20 @@ body{
     const data=readStore().filter(r=>r.month===month).filter(r=>site==='ALL'?true:r.site===site)
       .sort((a,b)=>new Date(b.datetime)-new Date(a.datetime));
 
+    const uc = readUnclaims();
+    const ucByRecord = {};
+    for (const u of uc.filter(x=>x.month===month && (site==='ALL'||x.site===site))) {
+      if (!ucByRecord[u.recordId]) ucByRecord[u.recordId] = {pending:0, claimed:0};
+      if (u.claimed) ucByRecord[u.recordId].claimed += +u.amount||0;
+      else ucByRecord[u.recordId].pending += +u.amount||0;
+    }
+
     const cur=toYYYYMM(new Date()); const isArchive=month!==cur;
     $('#archiveBanner').style.display=isArchive?'inline-flex':'none';
     $('#bannerMonth').textContent=prettyMonth(month);
 
     const tb=$('#tbody'); tb.innerHTML='';
-    let totals={d:0,w:0,b:0,f:0,m:0,r:0,s:0, bd:0, br:0, bsBase:0};
+    let totals={d:0,w:0,b:0,f:0,m:0,r:0,s:0, bd:0, br:0, bsBase:0, uDisp:0};
 
     for(const r of data){
       const dt=new Date(r.datetime).toLocaleString(undefined,{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
@@ -534,17 +595,24 @@ body{
       const bonusRes=pickTierBonus(r.resit,   targets.resitTiers);
       const bonusSalesBase=pickTierBonus(r.sales, targets.salesTiers);
 
+      const ucs = ucByRecord[r.id] || {pending:0, claimed:0};
+      // Nilai yang ditampilkan di kolom Unclaim:
+      //  - jika ada claimed -> tampil "-amount" (merah)
+      //  - else jika ada pending -> tampil "amount"
+      const unclaimDisplay = ucs.claimed>0 ? -ucs.claimed : ucs.pending;
+
       const tr=document.createElement('tr');
-tr.innerHTML = `
+      tr.innerHTML = `
   <td>${dt}</td>
   <td style="text-align:center"><span class="pill ${r.site==='5G88'?'site-5g88':'site-spm888'}">${r.site}</span></td>
   <td class="${r.deposit < 0 ? 'num red' : 'num green'}">${fmtNum(r.deposit)}</td>
-  <td class="num ${r.withdrawal === 0 ? '' : 'red'}">${r.withdrawal === 0 ? fmtNum(0) : `-${fmtNum(Math.abs(r.withdrawal))}`}</td>
+  <td class="num ${r.withdrawal === 0 ? '' : 'red'}">${r.withdrawal === 0 ? fmtNum(0) : \`-\${fmtNum(Math.abs(r.withdrawal))}\`}</td>
   <td>${fmtNum(r.resit)}</td>
   <td class="num cyan">${fmtNum(r.bonus)}</td>
   <td>${fmtNum(r.forfeit)}</td>
   <td>${fmtInt(r.member)}</td>
   <td class="${r.sales < 0 ? 'num red' : 'num green'}">${fmtNum(r.sales)}</td>
+  <td class="num ${unclaimDisplay<0?'red':''}">${fmtNum(unclaimDisplay)}</td>
   <td>${bonusDep.toLocaleString()}</td>
   <td>${bonusRes.toLocaleString()}</td>
   <td>
@@ -558,47 +626,39 @@ tr.innerHTML = `
       totals.d+=r.deposit; totals.w+=r.withdrawal; totals.b+=r.bonus; totals.f+=r.forfeit;
       totals.m+=r.member; totals.r+=r.resit; totals.s+=r.sales;
       totals.bd+=bonusDep; totals.br+=bonusRes; totals.bsBase+=bonusSalesBase;
+      totals.uDisp += unclaimDisplay;
     }
     $('#emptyState').style.display=data.length?'none':'block';
 
-// footer totals
-$('#ft_deposit').textContent   = fmtNum(totals.d);
+    // footer totals
+    $('#ft_deposit').textContent   = fmtNum(totals.d);
+    const wdTotalAbs = Math.abs(totals.w);
+    $('#ft_withdrawal').textContent = wdTotalAbs === 0 ? fmtNum(0) : `-${fmtNum(wdTotalAbs)}`;
+    $('#ft_bonus').textContent     = fmtNum(totals.b);
+    $('#ft_forfeit').textContent   = fmtNum(totals.f);
+    $('#ft_member').textContent    = fmtInt(totals.m);
+    $('#ft_resit').textContent     = fmtNum(totals.r);
+    $('#ft_sales').textContent     = fmtNum(totals.s);
+    $('#ft_unclaim').textContent   = fmtNum(totals.uDisp);
+    $('#ft_bonDep').textContent    = totals.bd.toLocaleString();
+    $('#ft_bonRes').textContent    = totals.br.toLocaleString();
 
-// Withdrawal: tampilkan selalu dengan tanda minus (UI only)
-const wdTotalAbs = Math.abs(totals.w);
-$('#ft_withdrawal').textContent = wdTotalAbs === 0 ? fmtNum(0) : `-${fmtNum(wdTotalAbs)}`;
+    const ftW = $('#ft_withdrawal');
+    ftW.className=''; ftW.classList.add('num'); if (wdTotalAbs > 0) ftW.classList.add('red');
 
-$('#ft_bonus').textContent     = fmtNum(totals.b);
-$('#ft_forfeit').textContent   = fmtNum(totals.f);
-$('#ft_member').textContent    = fmtInt(totals.m);
-$('#ft_resit').textContent     = fmtNum(totals.r);
-$('#ft_sales').textContent     = fmtNum(totals.s);
-$('#ft_bonDep').textContent    = totals.bd.toLocaleString();
-$('#ft_bonRes').textContent    = totals.br.toLocaleString();
+    const ftS = $('#ft_sales');
+    ftS.className=''; ftS.classList.add('num'); if (totals.s < 0) ftS.classList.add('red'); else if (totals.s > 0) ftS.classList.add('green');
 
-// Warnai withdrawal footer merah jika ada nilai
-const ftW = $('#ft_withdrawal');
-ftW.classList.remove('num','red');
-ftW.classList.add('num');
-if (wdTotalAbs > 0) ftW.classList.add('red');
+    const ftU = $('#ft_unclaim');
+    ftU.className=''; ftU.classList.add('num'); if (totals.uDisp < 0) ftU.classList.add('red');
 
-// (opsional) warna Sales footer
-const ftS = $('#ft_sales');
-ftS.classList.remove('num','red','green');
-ftS.classList.add('num');
-if (totals.s < 0) ftS.classList.add('red'); else if (totals.s > 0) ftS.classList.add('green');
-
-/* --------------------------------------------------------------- */
-
-renderSummaryRows(totals, data.length, site, month);
+    renderSummaryRows(totals, data.length, site, month);
   }
 
   function renderSummaryRows(t, count, site, month){
-    // Set mini-cards di toolbar
     $('#miniMonth').textContent = prettyMonth(month);
     $('#miniSite').textContent  = (site === 'ALL' ? 'All Sites' : site);
 
-    // Row 1 (tanpa Month & Site)
     const top=$('#summaryRowTop'); top.innerHTML='';
     [
       {title:'Total Deposit',  val: fmtNum(t.d), cls:'green'},
@@ -607,6 +667,7 @@ renderSummaryRows(totals, data.length, site, month);
       {title:'Total Sales',    val: fmtNum(t.s), cls: t.s<0?'red':'green'},
       {title:'Total Forfeit',  val: fmtNum(t.f)},
       {title:'Total Resit In', val: fmtNum(t.r)},
+      {title:'Total Unclaim (Σ)', val: fmtNum(t.uDisp), cls: t.uDisp<0?'red':''},
       {title:'Total Member',   val: fmtInt(t.m)},
       {title:'Records',        val: count.toLocaleString()},
     ].forEach(c=>{
@@ -616,30 +677,33 @@ renderSummaryRows(totals, data.length, site, month);
       top.appendChild(d);
     });
 
-const bottom = $('#summaryRowBottom');
-bottom.innerHTML = '';
+    const bottom = $('#summaryRowBottom');
+    bottom.innerHTML = '';
 
-const halfDep   = t.bd / 2;
-const halfRes   = t.br / 2;
-const salesOnly = t.bsBase;             // hanya bonus dari target sales
-const totalAmt  = halfDep + halfRes + salesOnly;
+    const halfDep   = t.bd / 2;
+    const halfRes   = t.br / 2;
+    const salesOnly = t.bsBase;
+    const totalAmt  = halfDep + halfRes + salesOnly;
 
-[
-  { title: 'Bonus Deposit ½ Σ', val: halfDep.toLocaleString() },
-  { title: 'Bonus Resit ½ Σ',   val: halfRes.toLocaleString() },
-  { title: 'Bonus Sales Σ',     val: salesOnly.toLocaleString() },
-  { title: 'Total Bonus Σ',     val: totalAmt.toLocaleString() }, // <— kartu baru di kanan
-].forEach(c => {
-  const d = document.createElement('div');
-  d.className = 'card';
-  d.innerHTML = `<h4>${c.title}</h4><div class="val">${c.val}</div>`;
-  bottom.appendChild(d);
-});
+    [
+      { title: 'Bonus Deposit ½ Σ', val: halfDep.toLocaleString() },
+      { title: 'Bonus Resit ½ Σ',   val: halfRes.toLocaleString() },
+      { title: 'Bonus Sales Σ',     val: salesOnly.toLocaleString() },
+      { title: 'Total Bonus Σ',     val: totalAmt.toLocaleString() },
+    ].forEach(c => {
+      const d = document.createElement('div');
+      d.className = 'card';
+      d.innerHTML = `<h4>${c.title}</h4><div class="val">${c.val}</div>`;
+      bottom.appendChild(d);
+    });
   }
 
   function delRecord(id){
     if(!confirm('Delete this record?')) return;
-    writeStore(readStore().filter(r=>r.id!==id)); render();
+    writeStore(readStore().filter(r=>r.id!==id));
+    // Hapus unclaim terkait record
+    writeUnclaims(readUnclaims().filter(u=>u.recordId!==id));
+    render();
   }
 
   function exportCSV(){
@@ -658,9 +722,93 @@ const totalAmt  = halfDep + halfRes + salesOnly;
     const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`bonus-${month}-${site}.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
   }
 
+  /* ---------------- UNCLAIM CENTER ---------------- */
+  function openUnclaimModal(){
+    $('#unclaimModal').classList.add('show');
+    switchUcTab('pending');
+  }
+  function closeUnclaimModal(){ $('#unclaimModal').classList.remove('show'); }
+
+  function switchUcTab(which){
+    $('#tabPending').classList.toggle('active', which==='pending');
+    $('#tabHistory').classList.toggle('active', which==='history');
+    renderUnclaimList(which);
+  }
+
+  function renderUnclaimList(which='pending'){
+    const site=$('#siteFilter').value, month=$('#monthFilter').value;
+    const uc = readUnclaims().filter(x=>x.month===month && (site==='ALL'||x.site===site));
+    const records = Object.fromEntries(readStore().map(r=>[r.id,r]));
+
+    const list = $('#ucList'); list.innerHTML='';
+
+    const items = uc
+      .filter(x=>which==='pending' ? !x.claimed : x.claimed)
+      .sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt));
+
+    if (!items.length){
+      const e=document.createElement('div');
+      e.className='empty';
+      e.textContent= which==='pending' ? 'Belum ada Unclaim pending.' : 'Belum ada riwayat claim.';
+      list.appendChild(e); return;
+    }
+
+    for (const u of items){
+      const rec = records[u.recordId];
+      const recDt = rec ? new Date(rec.datetime).toLocaleString(undefined,{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-';
+      const created = new Date(u.createdAt).toLocaleString();
+      const claimedAt = u.claimedAt ? new Date(u.claimedAt).toLocaleString() : '-';
+
+      const row = document.createElement('div');
+      row.className='uc-item';
+      row.innerHTML = `
+        <div>${created}</div>
+        <div><span class="pill ${u.site==='5G88'?'site-5g88':'site-spm888'}">${u.site}</span></div>
+        <div>Record Date: ${recDt}</div>
+        <div class="uc-amt ${u.claimed?'red':''}">${u.claimed?('-'+fmtNum(u.amount)):fmtNum(u.amount)}</div>
+        <div>${u.claimed?('Claimed: '+claimedAt):''}</div>
+        <div style="text-align:right">
+          ${u.claimed ? '' : `<button class="btn" style="height:32px" onclick="claimUnclaim('${u.id}')">Claim</button>`}
+        </div>
+      `;
+      list.appendChild(row);
+    }
+  }
+
+  // Claim logic: tambah ke Deposit record, update Sales, tandai unclaim claimed & timestamp
+  function claimUnclaim(ucId){
+    const ucAll = readUnclaims();
+    const idx = ucAll.findIndex(x=>x.id===ucId);
+    if (idx<0) return;
+
+    const item = ucAll[idx];
+    if (item.claimed) return;
+
+    // update record
+    const recs = readStore();
+    const ri = recs.findIndex(r=>r.id===item.recordId);
+    if (ri>=0){
+      recs[ri].deposit = (+recs[ri].deposit||0) + (+item.amount||0);
+      recs[ri].sales   = (+recs[ri].deposit||0) - (+recs[ri].withdrawal||0);
+      writeStore(recs);
+    }
+
+    // mark claimed
+    item.claimed = true;
+    item.claimedAt = new Date().toISOString();
+    ucAll[idx] = item;
+    writeUnclaims(ucAll);
+
+    // refresh UI
+    render();
+    renderUnclaimList('pending');
+  }
+
   // helpers exposed
   window.openModal=openModal; window.closeModal=closeModal; window.delRecord=delRecord;
   window.openTargetModal=openTargetModal; window.closeTargetModal=closeTargetModal;
+  window.openUnclaimModal=openUnclaimModal; window.closeUnclaimModal=closeUnclaimModal;
+  window.claimUnclaim=claimUnclaim;
 </script>
 </body>
 </html>
