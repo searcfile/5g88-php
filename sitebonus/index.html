@@ -197,9 +197,15 @@ body{
   max-height:150px; overflow:auto; padding-right:6px;
 }
 /* konteks z-index & background solid */
-.tier-list{
-  position: relative;              /* penting untuk konteks sticky */
-  background:#101010;              /* tutup tembus pandang */
+.tier-list {
+  position: relative;
+  background: #101010;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 8px;
+  padding-top: 42px; /* 🟡 Tambah ruang untuk sticky header */
+  max-height: 150px;
+  overflow: auto;
 }
 
 /* header sticky yang benar2 menutup area atas */
