@@ -658,7 +658,7 @@ for (const r of data){
   totals.bsBase += safe(bonusSalesBase);
 }
     $('#emptyState').style.display=data.length?'none':'block';
-    totals.uDisp = safe(totals.uPending) - safe(totals.uClaimed);
+    totals.uDisp = safe(totals.uPending);
     // footer totals
     $('#ft_deposit').textContent   = fmtNum(totals.d);
     const wdTotalAbs = Math.abs(totals.w);
