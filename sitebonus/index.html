@@ -300,21 +300,21 @@ body{
     <tbody id="tbody"></tbody>
 
     <tfoot>
-      <tr>
-        <td colspan="2">TOTAL (Filtered)</td>
-        <!-- urutan total diselaraskan dgn header -->
-        <td id="ft_deposit" style="text-align:right">0</td>
-        <td id="ft_withdrawal" style="text-align:right">0</td>
-        <td id="ft_bonus" style="text-align:right">0</td>
-        <td id="ft_forfeit" style="text-align:right">0</td>
-        <td id="ft_member" style="text-align:right">0</td>
-        <td id="ft_resit" style="text-align:right">0</td>
-        <td id="ft_sales" style="text-align:right">0</td>
-        <td id="ft_bonDep" style="text-align:right">0</td>
-        <td id="ft_bonRes" style="text-align:right">0</td>
-        <td></td>
-      </tr>
-    </tfoot>
+  <tr>
+    <td>TOTAL (Filtered)</td>   <!-- ← tanpa colspan -->
+    <td></td>                   <!-- ← placeholder untuk kolom "Site" -->
+    <td id="ft_deposit">0</td>
+    <td id="ft_withdrawal">0</td>
+    <td id="ft_bonus">0</td>
+    <td id="ft_forfeit">0</td>
+    <td id="ft_member">0</td>
+    <td id="ft_resit">0</td>
+    <td id="ft_sales">0</td>
+    <td id="ft_bonDep">0</td>
+    <td id="ft_bonRes">0</td>
+    <td></td>
+  </tr>
+</tfoot>
   </table>
 
   <div id="emptyState" class="empty" style="display:none">
