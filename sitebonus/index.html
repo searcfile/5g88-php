@@ -203,37 +203,39 @@ body{
   border: 1px solid #2a2a2a;
   border-radius: 10px;
   padding: 8px;
-  padding-top: 42px; /* 🟡 Tambah ruang untuk sticky header */
   max-height: 150px;
   overflow: auto;
 }
 
 /* header sticky yang benar2 menutup area atas */
-.tier-headrow{
+.tier-headrow {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: transparent;   /* backdrop akan digambar oleh ::before */
+  background: transparent;
   border-bottom: 1px solid #2a2a2a;
   margin: 0;
   padding: 6px 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
 }
 
-/* ⬇️ ini yang penting */
-.tier-headrow::before{
+/* Backdrop untuk header */
+.tier-headrow::before {
   content: "";
   position: absolute;
-  left: -8px;                /* tutup padding kiri .tier-list */
-  right: -8px;               /* tutup padding kanan .tier-list */
-  top: -8px;                 /* tutup padding atas .tier-list */
-  bottom: -1px;              /* pas di atas border-bottom header */
+  left: -8px;
+  right: -8px;
+  top: -8px;
+  bottom: -1px;
   background: #101010;
-  border-top-left-radius: 10px;   /* samakan dgn .tier-list */
+  border-top-left-radius: 10px;
   border-top-right-radius: 10px;
   box-shadow: 0 2px 0 rgba(42,42,42,.9),
               0 6px 12px rgba(0,0,0,.35);
-  z-index: -1;               /* di belakang konten header */
-  pointer-events: none;      /* aman untuk klik */
+  z-index: -1;
+  pointer-events: none;
 }
 
 /* Pastikan baris biasa transparan */
@@ -633,12 +635,13 @@ const fmtDMY = d => {
 
 function renderTierEditor(sel, tiers, label){
   const box=$(sel); box.innerHTML='';
-  const head=document.createElement('div');
-  head.className='tier-row tier-headrow'; // ← header khusus
-  head.innerHTML=`
-    <div class="hint" style="align-self:center">Threshold (≥)</div>
-    <div class="hint" style="align-self:center">${label}</div>
-    <div></div>`;
+  const head = document.createElement('div');
+  head.className = 'tier-row tier-headrow'; // penting!
+  head.innerHTML = `
+  <div class="hint" style="align-self:center">Threshold (≥)</div>
+  <div class="hint" style="align-self:center">${label}</div>
+  <div></div>
+  `;
   box.appendChild(head);
 
   (tiers||[]).forEach(t=>addTierRow(sel,t.threshold,t.bonus));
