@@ -219,6 +219,7 @@ body{
 .uc-tabs{display:flex; gap:8px; margin:6px 0 10px}
 .uc-tab{height:32px; padding:0 10px; border-radius:8px; border:1px solid #2a2a2a; background:#151515; color:#ddd; cursor:pointer}
 .uc-tab.active{border-color:var(--gold); color:#000; background:linear-gradient(180deg,var(--gold),var(--gold-2))}
+.dialog .uc-list {flex: 1 1 auto; min-height: 0; }
 </style>
 </head>
 <body>
@@ -625,9 +626,9 @@ tr.innerHTML = `
       <button class="iconbtn del" onclick="window.__del('${r.id}')">Delete</button>
     </div>
   </td>`;
-  totals.uPending += safe(ucs.pending);        // jumlah unclaim dibuat (positif)
-  totals.uClaimed += -safe(ucs.claimed);       // tampil negatif di kartu Claimed
-  totals.uAll     += safe(ucs.pending) + safe(ucs.claimed); // total unclaim dibuat (tetap ada walau sudah claim)
+  totals.uPending += safe(ucs.pending);        // simpan sebagai POSITIF
+  totals.uClaimed += safe(ucs.claimed);        // simpan sebagai POSITIF
+  totals.uAll     += safe(ucs.pending) + safe(ucs.claimed);
       tb.appendChild(tr);
 
   totals.d  += safe(r.deposit);
@@ -642,7 +643,7 @@ totals.br += safe(bonusRes);
 totals.bsBase += safe(bonusSalesBase);
     }
     $('#emptyState').style.display=data.length?'none':'block';
-    totals.uDisp = safe(totals.uPending) + safe(totals.uClaimed);
+    totals.uDisp = safe(totals.uPending) - safe(totals.uClaimed);
     // footer totals
     $('#ft_deposit').textContent   = fmtNum(totals.d);
     const wdTotalAbs = Math.abs(totals.w);
@@ -702,7 +703,7 @@ function renderSummaryRows(t, count, site, month){
 
  const items = [
   { title: 'Unclaim Σ',  val: fmtNum(t.uAll),     cls: t.uAll > 0 ? 'green' : '' },
-  { title: 'Claimed Σ',  val: fmtNum(t.uClaimed), cls: t.uClaimed < 0 ? 'red' : '' },
+  { title: 'Claimed Σ',  val: fmtNum(-t.uClaimed), cls: t.uClaimed > 0 ? '#ff0000' : '' },
 
   { title: 'Bonus Deposit ½ Σ', val: halfDep.toLocaleString() },
   { title: 'Bonus Resit ½ Σ',   val: halfRes.toLocaleString() },
