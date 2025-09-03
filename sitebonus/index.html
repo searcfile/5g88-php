@@ -335,7 +335,7 @@ body{
         <div class="group"><label for="m_site">Site</label>
           <select id="m_site" class="select"><option value="5G88">5G88</option><option value="SPM888">SPM888</option></select>
         </div>
-        <div class="group"><label for="m_dt">Date & Time</label><input id="m_dt" class="input" type="datetime-local"></div>
+        <div class="group"><label for="m_dt">Date & Time</label><input id="m_dt" class="input" type="datetime-local" step="1"></div>
         <div class="group"><label for="m_deposit">Total Deposit</label><input id="m_deposit" class="input" type="number" step="0.01" min="0"></div>
         <div class="group"><label for="m_withdrawal">Total Withdrawal</label><input id="m_withdrawal" class="input" type="number" step="0.01"></div>
         <div class="group"><label for="m_bonus">Total Bonus</label><input id="m_bonus" class="input" type="number" step="0.01" min="0"></div>
@@ -396,8 +396,19 @@ body{
   const pad2 = n => String(n).padStart(2,'0');
   const toYYYYMM = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
   const parseLocalDT = v => v? new Date(v.replace('T',' ')) : new Date();
-  const dt24 = d =>new Date(d).toLocaleString(undefined, {year: 'numeric',month: '2-digit',day: '2-digit',hour: '2-digit',minute: '2-digit',hour12: false,hourCycle: 'h23',});
+  const dt24 = d =>new Date(d).toLocaleString(undefined, {year: 'numeric',month: '2-digit',day: '2-digit',hour: '2-digit',minute: '2-digit',second: '2-digit',hour12: false,hourCycle: 'h23',});
   const safe = v => Number.isFinite(+v) ? +v : 0;
+  const two = n => String(n).padStart(2,'0');
+  const fmtDMYHMS = d => {
+  const x = new Date(d);
+  return `${two(x.getDate())}/${two(x.getMonth()+1)}/${x.getFullYear()} ` +
+         `${two(x.getHours())}:${two(x.getMinutes())}:${two(x.getSeconds())}`;
+};
+// (opsional kalau butuh tanggal saja)
+const fmtDMY = d => {
+  const x = new Date(d);
+  return `${two(x.getDate())}/${two(x.getMonth()+1)}/${x.getFullYear()}`;
+};
 
   const LS_KEY='bonusRecords.v1';
   const LS_LAST_MONTH='bonusRecords.lastOpenedMonth';
@@ -471,8 +482,8 @@ body{
     editingId=rec?.id ?? null;
     $('#modalTitle').textContent=editingId?'Edit Record':'Create Record';
     $('#m_site').value=rec?.site || ($('#siteFilter').value==='ALL'?'5G88':$('#siteFilter').value);
-    const dt=rec?new Date(rec.datetime):new Date();
-    $('#m_dt').value=`${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}T${pad2(dt.getHours())}:${pad2(dt.getMinutes())}`;
+    const dt = rec ? new Date(rec.datetime) : new Date();
+    $('#m_dt').value =`${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}` +`T${pad2(dt.getHours())}:${pad2(dt.getMinutes())}:${pad2(dt.getSeconds())}`;
     $('#m_deposit').value=rec?.deposit ?? '';
     $('#m_withdrawal').value=rec?.withdrawal ?? '';
     $('#m_bonus').value=rec?.bonus ?? '';
@@ -543,6 +554,7 @@ body{
     $('#saveTargetBtn').onclick=saveTarget;
   }
   const closeTargetModal=()=>$('#targetModal').classList.remove('show');
+
   function renderTierEditor(sel, tiers, label){
     const box=$(sel); box.innerHTML='';
     const head=document.createElement('div'); head.className='tier-row';
@@ -594,7 +606,7 @@ body{
     let totals = {d:0,w:0,b:0,f:0,m:0,r:0,s:0,bd:0, br:0, bsBase:0,uDisp:0, uPending:0, uClaimed:0, uAll:0};
 
 for (const r of data){
-  const dt = dt24(r.datetime);
+  const dt = fmtDMYHMS(r.datetime);
 
   // HITUNG BONUS DULU
   const bonusDep       = pickTierBonus(safe(r.deposit), targets.depositTiers);
@@ -646,7 +658,7 @@ for (const r of data){
   totals.bsBase += safe(bonusSalesBase);
 }
     $('#emptyState').style.display=data.length?'none':'block';
-    totals.uDisp = safe(totals.uPending);
+    totals.uDisp = safe(totals.uPending) - safe(totals.uClaimed);
     // footer totals
     $('#ft_deposit').textContent   = fmtNum(totals.d);
     const wdTotalAbs = Math.abs(totals.w);
@@ -785,9 +797,9 @@ function renderUnclaimList(which = 'pending'){
 
   for (const u of items){
     const rec      = records[u.recordId];
-    const recDt    = rec ? dt24(rec.datetime) : '-';
-    const created  = dt24(u.createdAt);
-    const claimedAt= u.claimedAt ? dt24(u.claimedAt) : '-';
+    const recDt     = rec ? fmtDMYHMS(rec.datetime) : '-';
+    const created   = fmtDMYHMS(u.createdAt);
+    const claimedAt = u.claimedAt ? fmtDMYHMS(u.claimedAt) : '-';
 
     // 👉 Atur tampilan berdasarkan TAB:
     // - Di PENDING: item yang sudah claimed TETAP tampil seperti pending (tanpa label "Claimed", amount positif)
