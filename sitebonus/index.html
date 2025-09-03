@@ -874,67 +874,6 @@ function claimUnclaim(ucId){
     if (list) list.scrollTop = 0;
   }
 }
-// ===== Click-to-reveal full number on a single cell =====
-function closeAllReveals() {
-  document.querySelectorAll('#dataTable td.reveal-open').forEach(td => {
-    td.classList.remove('reveal-open');
-    const pop = td.querySelector('.cell-reveal');
-    if (pop) pop.remove();
-  });
-}
-
-// event delegation untuk seluruh tabel
-document.addEventListener('DOMContentLoaded', () => {
-  const table = document.getElementById('dataTable');
-  if (!table) return;
-
-  table.addEventListener('click', (e) => {
-    const td = e.target.closest('td');
-    if (!td || !table.contains(td)) return;
-
-    // Jangan aktif di kolom Actions (ada .actions)
-    if (td.querySelector('.actions')) return;
-
-    // Ambil teks full dari sel
-    const full = (td.textContent || '').trim();
-    if (!full) return;
-
-    // Toggle: jika sudah terbuka, tutup. Kalau belum, buka & tutup yang lain.
-    if (td.classList.contains('reveal-open')) {
-      td.classList.remove('reveal-open');
-      const pop = td.querySelector('.cell-reveal');
-      if (pop) pop.remove();
-      return;
-    }
-
-    // Tutup popover lain
-    closeAllReveals();
-
-    // Buka popover di sel ini
-    td.classList.add('reveal-open');
-    const pop = document.createElement('div');
-    pop.className = 'cell-reveal';
-    pop.innerHTML = `
-      <div>${full}</div>
-      <span class="hint">klik lagi untuk tutup</span>
-    `;
-    td.appendChild(pop);
-  });
-
-  // klik di luar => tutup
-  document.addEventListener('click', (ev) => {
-    const openTd = document.querySelector('#dataTable td.reveal-open');
-    if (!openTd) return;
-    const isInside = ev.target === openTd || openTd.contains(ev.target);
-    const isInsideTable = table.contains(ev.target);
-    if (!isInside && isInsideTable) closeAllReveals();
-    if (!isInsideTable) closeAllReveals();
-  });
-
-  // saat scroll tabel, tutup popover biar rapi
-  table.parentElement?.addEventListener('scroll', closeAllReveals);
-});
-
 // (opsional) tetap pasang title hover untuk quick peek
 function applyNumberTitles() {
   document.querySelectorAll('#dataTable td, #dataTable th, .card .val')
