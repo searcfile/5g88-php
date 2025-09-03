@@ -505,24 +505,24 @@ body{
       const bonusSalesBase=pickTierBonus(r.sales, targets.salesTiers);
 
       const tr=document.createElement('tr');
-      tr.innerHTML=`
-        <td>${dt}</td>
-        <td style="text-align:center"><span class="pill ${r.site==='5G88'?'site-5g88':'site-spm888'}">${r.site}</span></td>
-        <td class="num green">${fmtNum(r.deposit)}</td>
-        <td class="num red">-${fmtNum(Math.abs(r.withdrawal))}</td>
-        <td class="num cyan">${fmtNum(r.bonus)}</td>
-        <td>${fmtNum(r.forfeit)}</td>
-        <td>${fmtInt(r.member)}</td>
-        <td>${fmtNum(r.resit)}</td>
-        <td class="${r.sales<0?'num red':'num green'}">${fmtNum(r.sales)}</td>
-        <td>${bonusDep.toLocaleString()}</td>
-        <td>${bonusRes.toLocaleString()}</td>
-        <td>
-          <div class="actions">
-            <button class="iconbtn" onclick='openModal(${JSON.stringify(r)})'>Edit</button>
-            <button class="iconbtn del" onclick='delRecord("${r.id}")'>Delete</button>
-          </div>
-        </td>`;
+tr.innerHTML = `
+  <td>${dt}</td>
+  <td style="text-align:center"><span class="pill ${r.site==='5G88'?'site-5g88':'site-spm888'}">${r.site}</span></td>
+  <td class="${r.deposit < 0 ? 'num red' : 'num green'}">${fmtNum(r.deposit)}</td>
+  <td class="${r.withdrawal < 0 ? 'num red' : ''}">${fmtNum(r.withdrawal)}</td>
+  <td class="num cyan">${fmtNum(r.bonus)}</td>
+  <td>${fmtNum(r.forfeit)}</td>
+  <td>${fmtInt(r.member)}</td>
+  <td>${fmtNum(r.resit)}</td>
+  <td class="${r.sales < 0 ? 'num red' : 'num green'}">${fmtNum(r.sales)}</td>
+  <td>${bonusDep.toLocaleString()}</td>
+  <td>${bonusRes.toLocaleString()}</td>
+  <td>
+    <div class="actions">
+      <button class="iconbtn" onclick='openModal(${JSON.stringify(r)})'>Edit</button>
+      <button class="iconbtn del" onclick='delRecord("${r.id}")'>Delete</button>
+    </div>
+  </td>`;
       tb.appendChild(tr);
 
       totals.d+=r.deposit; totals.w+=r.withdrawal; totals.b+=r.bonus; totals.f+=r.forfeit;
