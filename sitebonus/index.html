@@ -61,17 +61,11 @@ body{
   min-width:0; flex:1 1 220px;
 }
 .card h4{margin:0 0 2px; font-size:12px; color:#cfcfcf; font-weight:600}
-.card .val{font-size:15px; font-weight:800}
+.card .val{font-size:14px; font-weight:700}
 
 /* Ellipsis khusus kartu */
-.card .val{
-  display:block;
-  max-width:100%;
-  overflow:hidden;
-  white-space:nowrap;
-  text-overflow:ellipsis;
-}
-.val.red{color:var(--red)} .val.green{color:var(--green)} .val.cyan{color:var(--cyan)}
+.card .val{display:block;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#008000;}
+.val.red{color:var(--red)} .val.green{color:var(--green)} .val.cyan{color:#008000;}
 
 /* Toolbar di atas tabel */
 .toolbar{
@@ -222,14 +216,7 @@ body{
 .uc-tab{height:32px; padding:0 10px; border-radius:8px; border:1px solid #2a2a2a; background:#151515; color:#ddd; cursor:pointer}
 .uc-tab.active{border-color:var(--gold); color:#000; background:linear-gradient(180deg,var(--gold),var(--gold-2))}
 .dialog .uc-list {flex: 1 1 auto; min-height: 0; }
-/* === Klik-untuk-toggle angka pendek/full === */
-.clipnum{
-  cursor: pointer;
-  white-space: nowrap;
-}
-.clipnum[data-state="short"]{
-  border-bottom: 1px dotted rgba(255,255,255,.15); /* hint halus bisa diklik */
-}
+.clipnum{cursor: pointer;white-space: nowrap;}
 /* buang spinner number input (Chrome/Edge/Safari) */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button{
@@ -255,6 +242,15 @@ input[type="number"]{
   background:linear-gradient(180deg,var(--gold),var(--gold-2));
   color:#000;
 }
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: transparent;
+  color:rgb(255 255 255 / 45%);
+  font-size: 22px;border: none;cursor: pointer;z-index: 10;transition: all 0.2s;}
+.modal-close:hover {color:white;}
+.modal .dialog {position: relative;}
 </style>
 </head>
 <body>
@@ -363,9 +359,10 @@ input[type="number"]{
 
   <!-- Modal Create/Edit -->
   <div id="modal" class="modal" aria-hidden="true">
-    <div class="overlay" onclick="closeModal()"></div>
-    <div class="dialog" role="dialog" aria-modal="true">
-      <h3 id="modalTitle">Create Record</h3>
+  <div class="overlay" onclick="closeModal()"></div>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1">
+    <button class="modal-close" onclick="closeModal()" aria-label="Close">&times;</button>
+    <h3 id="modalTitle">Create Record</h3>
       <div class="grid">
         <div class="group"><label for="m_site">Site</label>
           <select id="m_site" class="select"><option value="5G88">5G88</option><option value="SPM888">SPM888</option></select>
@@ -389,10 +386,11 @@ input[type="number"]{
   </div>
 
   <!-- Modal Set Target -->
-  <div id="targetModal" class="modal" aria-hidden="true">
-    <div class="overlay" onclick="closeTargetModal()"></div>
-    <div class="dialog" role="dialog" aria-modal="true">
-      <h3>Set Target Bonus (Multi-Tier)</h3>
+ <div id="targetModal" class="modal" aria-hidden="true">
+  <div class="overlay" onclick="closeTargetModal()"></div>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="targetTitle" tabindex="-1">
+    <button class="modal-close" onclick="closeModal()" aria-label="Close">&times;</button>
+    <h3 id="targetTitle">Set Target Bonus (Multi-Tier)</h3>
 
       <div class="tier-head">Deposit Tiers</div>
       <div id="depTierList" class="tier-list"></div>
@@ -412,9 +410,10 @@ input[type="number"]{
 
   <!-- NEW: Modal Unclaim Center -->
   <div id="unclaimModal" class="modal" aria-hidden="true">
-    <div class="overlay" onclick="closeUnclaimModal()"></div>
-    <div class="dialog" role="dialog" aria-modal="true">
-      <h3>Unclaim Center</h3>
+  <div class="overlay" onclick="closeUnclaimModal()"></div>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="unclaimTitle" tabindex="-1">
+    <button class="modal-close" onclick="closeModal()" aria-label="Close">&times;</button>
+    <h3 id="unclaimTitle">Unclaim Center</h3>
       <div class="uc-tabs">
         <button class="uc-tab active" id="tabPending">Pending</button>
         <button class="uc-tab" id="tabHistory">History</button>
@@ -528,27 +527,37 @@ function readTarget(){
   }
   const prettyMonth=yyyyMM=>{const [y,m]=yyyyMM.split('-').map(Number);return new Date(y,m-1,1).toLocaleDateString(undefined,{month:'long',year:'numeric'})};
 
-  /* ----- Create/Edit ----- */
-  function openModal(rec=null){
-    editingId=rec?.id ?? null;
-    $('#modalTitle').textContent=editingId?'Edit Record':'Create Record';
-    $('#m_site').value=rec?.site || ($('#siteFilter').value==='ALL'?'5G88':$('#siteFilter').value);
-    const dt = rec ? new Date(rec.datetime) : new Date();
-    $('#m_dt').value =`${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}` +`T${pad2(dt.getHours())}:${pad2(dt.getMinutes())}:${pad2(dt.getSeconds())}`;
-    $('#m_deposit').value=rec?.deposit ?? '';
-    $('#m_withdrawal').value=rec?.withdrawal ?? '';
-    $('#m_bonus').value=rec?.bonus ?? '';
-    $('#m_forfeit').value=rec?.forfeit ?? '';
-    $('#m_member').value=rec?.member ?? '';
-    $('#m_resit').value=rec?.resit ?? '';
-    $('#m_unclaim').value='';
+// ===== D. Create/Edit Modal (id="modal") =====
+function openModal(rec=null){
+  editingId = rec?.id ?? null;
+  $('#modalTitle').textContent = editingId ? 'Edit Record' : 'Create Record';
+  $('#m_site').value = rec?.site || ($('#siteFilter').value==='ALL'?'5G88':$('#siteFilter').value);
 
-    const autoCalc=()=>{$('#m_sales').value=(parseFloat($('#m_deposit').value||0)-parseFloat($('#m_withdrawal').value||0)).toFixed(2);};
-    $('#m_deposit').oninput=autoCalc; $('#m_withdrawal').oninput=autoCalc; autoCalc();
+  const dt = rec ? new Date(rec.datetime) : new Date();
+  $('#m_dt').value =
+    `${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}` +
+    `T${pad2(dt.getHours())}:${pad2(dt.getMinutes())}:${pad2(dt.getSeconds())}`;
 
-    $('#modal').classList.add('show'); $('#saveBtn').onclick=saveModal;
-  }
-  const closeModal=()=>$('#modal').classList.remove('show');
+  $('#m_deposit').value    = rec?.deposit ?? '';
+  $('#m_withdrawal').value = rec?.withdrawal ?? '';
+  $('#m_bonus').value      = rec?.bonus ?? '';
+  $('#m_forfeit').value    = rec?.forfeit ?? '';
+  $('#m_member').value     = rec?.member ?? '';
+  $('#m_resit').value      = rec?.resit ?? '';
+  $('#m_unclaim').value    = '';
+
+  const autoCalc = ()=>{
+    $('#m_sales').value = (parseFloat($('#m_deposit').value||0) - parseFloat($('#m_withdrawal').value||0)).toFixed(2);
+  };
+  $('#m_deposit').oninput = autoCalc;
+  $('#m_withdrawal').oninput = autoCalc;
+  autoCalc();
+
+  // ⬇️ buka modal create/edit dengan fokus ke site
+  openModalA11y('#modal', '#m_site');
+  $('#saveBtn').onclick = saveModal;
+}
+const closeModal = () => closeModalA11y('#modal', '#createBtn');
 
   function collectModal(){
     const dt=parseLocalDT($('#m_dt').value);
@@ -591,20 +600,71 @@ function readTarget(){
     if(rec.month===toYYYYMM(new Date())){ $('#monthFilter').value=rec.month; localStorage.setItem(LS_LAST_MONTH,rec.month); }
     closeModal(); render();
   }
+// ===== A. Helper inert background + toggle modal =====
+function setBackgroundInert(enable, exceptSelector){
+  const except = document.querySelector(exceptSelector);
+  [...document.body.children].forEach(el => {
+    if (el === except) return;
+    if (enable) el.setAttribute('inert', '');
+    else el.removeAttribute('inert');
+  });
+}
 
-  /* ----- Target Modal (Deposit, Resit, Sales) ----- */
-  function openTargetModal(){
-    const t=readTarget();
-    renderTierEditor('#depTierList', t.depositTiers, 'Bonus Deposit');
-    renderTierEditor('#resTierList', t.resitTiers, 'Bonus Resit');
-    renderTierEditor('#salesTierList', t.salesTiers, 'Bonus Sales');
-    $('#targetModal').classList.add('show');
-    $('#addDepTier').onclick=()=>addTierRow('#depTierList');
-    $('#addResTier').onclick=()=>addTierRow('#resTierList');
-    $('#addSalesTier').onclick=()=>addTierRow('#salesTierList');
-    $('#saveTargetBtn').onclick=saveTarget;
+function openModalA11y(modalSel, focusSel) {
+  const m = document.querySelector(modalSel);
+  if (!m) return;
+  m.classList.add('show');
+  m.setAttribute('aria-hidden', 'false');       // ⬅️ penting
+  setBackgroundInert(true, modalSel);
+  // fokuskan elemen pertama yang logis
+  const first = m.querySelector(focusSel || 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  first?.focus();
+}
+
+function closeModalA11y(modalSel, returnFocusSel) {
+  const m = document.querySelector(modalSel);
+  if (!m) return;
+  m.classList.remove('show');
+  m.setAttribute('aria-hidden', 'true');        // ⬅️ kembali hidden
+  setBackgroundInert(false, modalSel);
+  // kembalikan fokus ke pemicu (kalau ada)
+  if (returnFocusSel) document.querySelector(returnFocusSel)?.focus();
+}
+
+// (opsional) Trap TAB & Esc untuk semua modal yg sedang .show
+document.addEventListener('keydown', (e) => {
+  const openModal = document.querySelector('.modal.show');
+  if (!openModal) return;
+
+  if (e.key === 'Escape') {
+    // tutup modal yang terbuka (tentukan prioritas sesuai id)
+    if (openModal.id === 'targetModal') closeTargetModal();
+    else if (openModal.id === 'unclaimModal') closeUnclaimModal();
+    else if (openModal.id === 'modal') closeModal();
+    return;
   }
-  const closeTargetModal=()=>$('#targetModal').classList.remove('show');
+
+  if (e.key === 'Tab') {
+    const focusables = openModal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    const list = Array.from(focusables).filter(el => !el.disabled && el.offsetParent !== null);
+    if (!list.length) return;
+    const first = list[0], last = list[list.length-1];
+    if (e.shiftKey && document.activeElement === first) { last.focus(); e.preventDefault(); }
+    else if (!e.shiftKey && document.activeElement === last) { first.focus(); e.preventDefault(); }
+  }
+});
+function openTargetModal(){
+  const t = readTarget();
+  renderTierEditor('#depTierList', t.depositTiers, 'Bonus Deposit');
+  renderTierEditor('#resTierList', t.resitTiers, 'Bonus Resit');
+  renderTierEditor('#salesTierList', t.salesTiers, 'Bonus Sales');
+  $('#addDepTier').onclick = () => addTierRow('#depTierList');
+  $('#addResTier').onclick = () => addTierRow('#resTierList');
+  $('#addSalesTier').onclick = () => addTierRow('#salesTierList');
+  $('#saveTargetBtn').onclick = saveTarget;
+  openModalA11y('#targetModal', '#addDepTier');
+}
+const closeTargetModal = () => closeModalA11y('#targetModal', '#targetBtn');
 
   function renderTierEditor(sel, tiers, label){
     const box=$(sel); box.innerHTML='';
@@ -901,12 +961,12 @@ function renderSummaryRows(t, count, site, month){
     const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`bonus-${month}-${site}.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
   }
 
-  /* ---------------- UNCLAIM CENTER ---------------- */
-  function openUnclaimModal(){
-    $('#unclaimModal').classList.add('show');
-    switchUcTab(ucActiveTab);
-  }
-  function closeUnclaimModal(){ $('#unclaimModal').classList.remove('show'); }
+ // ===== C. Unclaim Modal =====
+function openUnclaimModal(){
+  openModalA11y('#unclaimModal', '#tabPending');
+  switchUcTab(ucActiveTab);
+}
+function closeUnclaimModal(){ closeModalA11y('#unclaimModal', '#unclaimBtn'); }
 
   function switchUcTab(which){
     ucActiveTab = which;
