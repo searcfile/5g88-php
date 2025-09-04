@@ -41,7 +41,7 @@ body{margin:0; background:var(--bg); color:var(--text);font:14px/1.45 -apple-sys
 .select:focus,.input:focus{border-color:var(--gold); box-shadow:0 0 0 4px var(--ring)}
 .btn{background:#1668dc;color:white; font-weight:700; cursor:pointer;transition: all 0.2s;border-radius:6px;}
 .btn:hover{background:#3c89e8;} .btn:active{background:#1554ad;}
-.btn ghost{background:red; color:white; border-radius:6px;transition: all 0.2s;}.btn ghost:hover{background:#3c89e8;}.btn ghost:active{background:#1554ad;}
+.btn-cancel{background:red; color:white; border-radius:6px;transition: all 0.2s;}.btn-cancel:hover{background:#3c89e8;}.btn-cancel:active{background:#1554ad;}
 .hint{color:var(--sub); font-size:12px}
 
 /* Full width container */
@@ -401,7 +401,7 @@ input[type="number"]{
         <div class="group"><label for="m_unclaim">Unclaim Amount</label><input id="m_unclaim" class="input" type="number" step="0.01" min="0" placeholder="0.00"></div>
         <div class="group"><label>&nbsp;</label><div class="hint">Unclaim tidak langsung masuk Deposit; akan tampil di popup Unclaim & kolom Unclaim.</div></div>
       </div>
-      <div class="foot"><button class="btn ghost" onclick="closeModal()">Cancel</button><button id="saveBtn" class="btn">Save</button></div>
+      <div class="foot"><button class="btn-cancel" onclick="closeModal()">Cancel</button><button id="saveBtn" class="btn">Save</button></div>
     </div>
   </div>
 
@@ -424,7 +424,7 @@ input[type="number"]{
       <div id="salesTierList" class="tier-list"></div>
       <button class="btn addline" id="addSalesTier">+ Add Sales Tier</button>
 
-      <div class="foot"><button class="btn ghost" onclick="closeTargetModal()">Cancel</button><button id="saveTargetBtn" class="btn">Save Target</button></div>
+      <div class="foot"><button class="btn-cancel" onclick="closeTargetModal()">Cancel</button><button id="saveTargetBtn" class="btn">Save Target</button></div>
     </div>
   </div>
 
@@ -439,7 +439,7 @@ input[type="number"]{
         <button class="uc-tab" id="tabHistory">History</button>
       </div>
       <div id="ucList" class="uc-list"></div>
-      <div class="foot"><button class="btn ghost" onclick="closeUnclaimModal()">Close</button></div>
+      <div class="foot"><button class="btn-cancel" onclick="closeUnclaimModal()">Close</button></div>
     </div>
   </div>
 
