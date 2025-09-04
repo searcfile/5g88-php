@@ -31,36 +31,7 @@ body{margin:0; background:#000; color:var(--text);font:14px/1.45 -apple-system,B
   display:flex; gap:10px; align-items:center; font-weight:700;
   padding:6px 10px; border-radius:10px; background:#0f0f0f; border:1px solid #222;
 }
-#targetModal .tier-row input.input {
-  background: #1668dc;
-  color: rgba(255,255,255,0.85);
-  border: 1px solid #2a2a2a;
-  outline: none;
-}
-
-#targetModal .tier-row input.input:focus,
-#targetModal .tier-row input.input:focus-visible {
-  background: #0f172a;
-  color: #e6f0ff;
-  border-color: #3b82f6 !important;          
-  box-shadow: 0 0 0 3px rgba(59,130,246,.35);
-  outline: none;
-}
-#targetModal .tier-row input.input:hover {border-color: #3c89e8;}
-
-#targetModal .tier-row input.input:disabled {
-  background: #0b1220;
-  color: #9fb4ff;
-  opacity: .9; /* (boleh dihapus kalau tak mau pudar) */
-}
-
-/* Lindungi dari autofill yang suka memutihkan field di Chrome */
-#targetModal .tier-row input.input:-webkit-autofill,
-#targetModal .tier-row input.input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0 30px #0f172a inset !important;
-  -webkit-text-fill-color: #e6f0ff !important;
-}
-.input {height:36px; border-radius:8px; border:1px solid #2a2a2a; background:#121212; color:var(--text);padding:6px 10px; transition: all 0.2s;}
+.input {height:36px; border-radius:8px; outline:none; border:1px solid #2a2a2a; background:#121212; color:var(--text);padding:6px 10px; transition: all 0.2s;}
 .input:hover { border-color:#3c89e8; }
 .input:focus { border-color:#1668dc; }
 .brand .dot{width:8px; height:8px; border-radius:50%; background:var(--gold); box-shadow:0 0 12px var(--gold)}
