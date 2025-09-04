@@ -223,22 +223,70 @@ body{margin:0; background:var(--bg); color:var(--text);font:14px/1.45 -apple-sys
 .cards-row::-webkit-scrollbar{height:8px}
 .cards-row::-webkit-scrollbar-thumb{background:#2a2a2a; border-radius:6px}
 
-/* Unclaim list styles */
-.uc-list{display:flex; flex-direction:column; gap:8px; overflow:auto; max-height:60vh; padding-right:6px;}
+/* Unclaim list */
+.uc-list{
+  display:flex; flex-direction:column; gap:8px;
+  overflow:auto; max-height:60vh; padding-right:6px;
+}
+
+/* Shared row look */
 .uc-item{
-  display:grid;
-  grid-template-columns:150px 90px 110px auto;
-  gap:8px; align-items:center;
-  border:1px solid #242424; background:#0f0f0f; padding:8px; border-radius:10px;
+  display:grid; gap:8px; align-items:center;
+  border:1px solid #242424; background:#0f0f0f;
+  padding:8px; border-radius:10px;
+  transition:border-color .2s, background .2s;
 }
+.uc-item:hover{ border-color:#2f2f2f; background:#111; }
+
+/* === Layout states === */
+/* PENDING: time | site | [amount + button] */
+#ucList.is-pending .uc-item{
+  grid-template-columns:150px 90px auto;
+}
+
+/* HISTORY: time | site | amount | claimed */
 #ucList.is-history .uc-item{
-  grid-template-columns:150px 90px 110px 160px auto;
+  grid-template-columns:150px 90px 110px 160px;
 }
-.uc-item .uc-amt{font-weight:800}
-.uc-item .uc-amt.red{color:var(--red)}
-.uc-tabs{display:flex; gap:8px; margin:6px 0 10px}
-.uc-tab{height:32px; padding:0 10px; border-radius:8px; border:1px solid #2a2a2a; background:#151515; color:#ddd; cursor:pointer}
-.uc-tab.active{border-color:var(--gold); color:#000; background:linear-gradient(180deg,var(--gold),var(--gold-2))}
+
+/* Amount + button wrapper (dipakai di PENDING) */
+.uc-amtwrap{
+  display:inline-flex; align-items:center; gap:10px;
+}
+.uc-amtwrap .btn{ height:32px; padding:0 12px; }
+
+/* Angka rapi */
+.uc-item .uc-amt{
+  font-weight:800;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  text-align:right;
+  min-width:100px;     /* biar rata saat jumlah digit beda */
+}
+.uc-item .uc-amt.red{ color:var(--red) }
+
+/* Tabs */
+.uc-tabs{ display:flex; gap:8px; margin:6px 0 10px }
+.uc-tab{
+  height:32px; padding:0 10px; border-radius:8px;
+  border:1px solid #2a2a2a; background:#151515; color:#ddd; cursor:pointer;
+}
+.uc-tab:hover{ border-color:#3a3a3a }
+.uc-tab.active{
+  border-color:var(--gold); color:#000;
+  background:linear-gradient(180deg,var(--gold),var(--gold-2));
+}
+
+/* Responsive tweaks */
+@media (max-width:640px){
+  #ucList.is-pending .uc-item{
+    grid-template-columns:120px 70px auto;
+  }
+  #ucList.is-history .uc-item{
+    grid-template-columns:120px 70px 100px 1fr;
+  }
+  .uc-item{ padding:10px }
+}
 .dialog .uc-list {flex: 1 1 auto; min-height: 0; }
 .clipnum{cursor: pointer;white-space: nowrap;}
 /* buang spinner number input (Chrome/Edge/Safari) */
@@ -339,7 +387,7 @@ input[type="number"]{
 
 <thead>
   <tr>
-    <th>Date/Time</th>
+    <th>Date & Time</th>
     <th>Site</th>
     <th>Deposit</th>
     <th>Withdrawal</th>
@@ -1033,12 +1081,11 @@ function switchUcTab(which){
   $('#tabHistory').classList.toggle('active', which==='history');
 
   const list = $('#ucList');
-  list.classList.toggle('is-history', which==='history');
   list.classList.toggle('is-pending', which!=='history');
+  list.classList.toggle('is-history', which==='history');
 
   renderUnclaimList(which);
 }
-
 function renderUnclaimList(which = 'pending'){
   const site  = $('#siteFilter').value;
   const month = $('#monthFilter').value;
@@ -1066,38 +1113,35 @@ function renderUnclaimList(which = 'pending'){
   const created   = fmtDMYHMS(u.createdAt);
   const claimedAt = u.claimedAt ? fmtDMYHMS(u.claimedAt) : '-';
 
-  const isHistoryView   = (which === 'history');
-  const showClaimBtn    = (!u.claimed && !isHistoryView);
-  const displayAmount   = (u.claimed && isHistoryView) ? ('-' + fmtNum(u.amount)) : fmtNum(u.amount);
-  const amtCls          = (u.claimed && isHistoryView) ? 'uc-amt red' : 'uc-amt';
+  const isHistoryView = (which === 'history');
+  const showClaimBtn  = (!u.claimed && !isHistoryView);
+
+  const displayAmount = (u.claimed && isHistoryView) ? ('-' + fmtNum(u.amount)) : fmtNum(u.amount);
+  const amtCls = (u.claimed && isHistoryView) ? 'uc-amt red' : 'uc-amt';
 
   const row = document.createElement('div');
   row.className = 'uc-item';
 
-  // ⬇️ SUSUN KOLOM DINAMIS
   const cols = [
     `<div>${created}</div>`,
-    `<div><span class="pill ${u.site==='5G88' ? 'site-5g88' : 'site-spm888'}">${u.site}</span></div>`,
-    `<div class="${amtCls}">${displayAmount}</div>`
+    `<div><span class="pill ${u.site==='5G88' ? 'site-5g88' : 'site-spm888'}">${u.site}</span></div>`
   ];
 
   if (isHistoryView) {
-    cols.push(`<div>Claimed: ${claimedAt}</div>`); // hanya di History
+    // History: amount sendiri + kolom "Claimed"
+    cols.push(`<div class="${amtCls}">${displayAmount}</div>`);
+    cols.push(`<div>Claimed: ${claimedAt}</div>`);
+  } else {
+    // Pending: amount + button dalam SATU kolom
+    cols.push(`
+      <div class="uc-amtwrap">
+        <span class="${amtCls}">${displayAmount}</span>
+        ${showClaimBtn ? `<button class="btn" onclick="claimUnclaim('${u.id}')">Claim</button>` : ''}
+      </div>
+    `);
   }
 
-  cols.push(`
-    <div style="text-align:right">
-      ${showClaimBtn ? `<button class="btn" style="height:32px" onclick="claimUnclaim('${u.id}')">Claim</button>` : ''}
-    </div>
-  `);
-
   row.innerHTML = cols.join('');
-
-  // ⬇️ ATUR GRID: Pending 4 kolom (tombol nempel amount), History 5 kolom
-  row.style.gridTemplateColumns = isHistoryView
-    ? '150px 90px 110px 160px auto'   // time | site | amount | claimed | action
-    : '150px 90px 110px auto';        // time | site | amount | action
-
   list.appendChild(row);
 }
 }
