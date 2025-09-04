@@ -167,7 +167,7 @@ body{margin:0; background:var(--bg); color:var(--text);font:14px/1.45 -apple-sys
 
 /* Modal */
 .modal{
-  position: fixed; inset: 0; z-index: 1000;
+  position: fixed; inset: 0; z-index: 2147483646;
   display: none; align-items: center; justify-content: center;
   backdrop-filter: blur(3px);
   pointer-events: auto!important;
@@ -177,12 +177,12 @@ body{margin:0; background:var(--bg); color:var(--text);font:14px/1.45 -apple-sys
 .modal .overlay{
   position:absolute; inset:0;
   background: rgba(0,0,0,.55);
-  z-index: 1001;                   /* di bawah dialog */
+  z-index: 2147483647 - 1;                   /* di bawah dialog */
   pointer-events: auto;            /* klik di luar dialog -> close */
 }
 .modal .dialog{
   position: relative;
-  z-index: 1002;                   /* di atas overlay */
+  z-index: 2147483647;                   /* di atas overlay */
   width: min(980px, calc(100% - 24px));
   background:#111; border:1px solid #2a2a2a; border-radius:16px; padding:14px;
   box-shadow: 0 30px 80px rgba(0,0,0,.55);
@@ -195,9 +195,10 @@ body{margin:0; background:var(--bg); color:var(--text);font:14px/1.45 -apple-sys
 .modal-close{
   position:absolute; top:10px; right:12px;
   background:transparent; border:none; cursor:pointer;
-  color: rgb(255 255 255 / 45%); font-size:22px; z-index: 1003;
+  color: rgb(255 255 255 / 45%); font-size:22px; z-index: 2147483647;
 }
-.modal-close:hover {color:white;z-index: 1003;}
+.modal.debug-no-overlay .overlay{ pointer-events: none !important; }
+.modal-close:hover {color:white;z-index: 2147483647;}
 .grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
 @media (max-width:680px){ .grid{grid-template-columns:1fr} }
 .group{display:flex; flex-direction:column; gap:6px}
@@ -626,10 +627,27 @@ function setBackgroundInert(enable, exceptTarget){
     else el.removeAttribute('inert');
   });
 }
+(function(){
+  const x = innerWidth/2, y = innerHeight/2;
+  let el = document.elementFromPoint(x, y);
+  console.log('TOP:', el);
+  const chain = [];
+  while (el) {
+    const cs = getComputedStyle(el);
+    chain.push({
+      el, tag: el.tagName.toLowerCase(),
+      id: el.id, cls: el.className,
+      z: cs.zIndex, pe: cs.pointerEvents, pos: cs.position
+    });
+    el = el.parentElement;
+  }
+  console.table(chain);
+})();
 
 function openModalA11y(modalSel, focusSel) {
   const m = document.querySelector(modalSel);
   if (!m) return;
+  m.classList.add('debug-no-overlay');
   m.classList.add('show');
   m.setAttribute('aria-hidden', 'false');
   setBackgroundInert(true, m);       // <— kirim ELEMENT, bukan string
