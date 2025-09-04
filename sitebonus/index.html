@@ -170,28 +170,37 @@ body{
 
 /* Modal */
 .modal{
-  position:fixed; inset:0; z-index:1000;
-  display:none; align-items:center; justify-content:center;
-  backdrop-filter:blur(3px);}
+  position: fixed; inset: 0; z-index: 1000;
+  display: none; align-items: center; justify-content: center;
+  backdrop-filter: blur(3px);
+  /* penting: biar container tidak memblokir klik */
+  pointer-events: none;
+}
 .modal.show{display:flex}
 .modal[aria-hidden="true"]{ display:none !important; }
 .modal .overlay{
-  position:absolute; inset:0; z-index:0;
-  background:rgba(0,0,0,.55);
+  position:absolute; inset:0;
+  background: rgba(0,0,0,.55);
+  z-index: 1;
+  /* overlay bisa diklik untuk close */
+  pointer-events: auto;
 }
 .modal .dialog{
-  position:relative; z-index:1;
-  width:min(980px,calc(100% - 24px));
+  position: relative;
+  z-index: 2;              /* dialog di atas overlay */
+  width: min(980px, calc(100% - 24px));
   background:#111; border:1px solid #2a2a2a; border-radius:16px; padding:14px;
   box-shadow:0 30px 80px rgba(0,0,0,.55);
-  max-height:85vh; overflow:auto;
+  max-height: 85vh; overflow: auto;
   display:flex; flex-direction:column;
+  /* penting: bisa menerima klik */
+  pointer-events: auto;
 }
 .dialog h3{margin:0 0 10px; font-size:18px}
 .modal-close{
   position:absolute; top:10px; right:12px;
   background:transparent; border:none; cursor:pointer;
-  color:rgb(255 255 255 / 45%); font-size:22px; z-index:12;
+  color: rgb(255 255 255 / 45%); font-size:22px; z-index: 3;
 }
 .modal-close:hover {color:white;}
 .modal .dialog {pointer-events: auto;}
