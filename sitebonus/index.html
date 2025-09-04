@@ -173,8 +173,6 @@ body{
   position: fixed; inset: 0; z-index: 1000;
   display: none; align-items: center; justify-content: center;
   backdrop-filter: blur(3px);
-  /* penting: biar container tidak memblokir klik */
-  pointer-events: none;
 }
 .modal.show{display:flex}
 .modal[aria-hidden="true"]{ display:none !important; }
@@ -186,15 +184,13 @@ body{
   pointer-events: auto;
 }
 .modal .dialog{
-  position: relative;
-  z-index: 2;              /* dialog di atas overlay */
+  position: relative; z-index: 2;
   width: min(980px, calc(100% - 24px));
   background:#111; border:1px solid #2a2a2a; border-radius:16px; padding:14px;
-  box-shadow:0 30px 80px rgba(0,0,0,.55);
+  box-shadow: 0 30px 80px rgba(0,0,0,.55);
   max-height: 85vh; overflow: auto;
-  display:flex; flex-direction:column;
-  /* penting: bisa menerima klik */
-  pointer-events: auto;
+  display: flex; flex-direction: column;
+  pointer-events: auto; /* penting */
 }
 .dialog h3{margin:0 0 10px; font-size:18px}
 .modal-close{
@@ -617,9 +613,16 @@ const closeModal = () => closeModalA11y('#modal', '#createBtn');
     closeModal(); render();
   }
 // ===== A. Helper inert background + toggle modal =====
-function setBackgroundInert(enable, exceptSelector){
-  const except = document.querySelector(exceptSelector);
-  [...document.body.children].forEach(el => {
+function setBackgroundInert(enable, exceptTarget){
+  // boleh kirim element langsung ATAU selector string
+  const except = (exceptTarget instanceof Element)
+    ? exceptTarget
+    : document.querySelector(exceptTarget);
+
+  // Jika selector salah / element belum ada → JANGAN inert apa pun
+  if (!except) return;
+
+  document.querySelectorAll('body > *').forEach(el => {
     if (el === except) return;
     if (enable) el.setAttribute('inert', '');
     else el.removeAttribute('inert');
@@ -636,16 +639,15 @@ function openModalA11y(modalSel, focusSel) {
   const first = m.querySelector(focusSel || 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
   first?.focus();
 }
-
 function closeModalA11y(modalSel, returnFocusSel) {
   const m = document.querySelector(modalSel);
   if (!m) return;
   m.classList.remove('show');
-  m.setAttribute('aria-hidden', 'true');        // ⬅️ kembali hidden
-  setBackgroundInert(false, modalSel);
-  // kembalikan fokus ke pemicu (kalau ada)
+  m.setAttribute('aria-hidden', 'true');
+  setBackgroundInert(false, m);         // <— kirim element
   if (returnFocusSel) document.querySelector(returnFocusSel)?.focus();
 }
+
 
 // (opsional) Trap TAB & Esc untuk semua modal yg sedang .show
 document.addEventListener('keydown', (e) => {
