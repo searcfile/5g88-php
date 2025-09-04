@@ -178,12 +178,12 @@ body{margin:0; background:var(--bg); color:var(--text);font:14px/1.45 -apple-sys
 .modal .overlay{
   position:absolute; inset:0;
   background: rgba(0,0,0,.55);
-  z-index: 2147483646;                   /* di bawah dialog */
-  pointer-events: auto;            /* klik di luar dialog -> close */
+  z-index: 2147483646;
+  pointer-events: auto
 }
 .modal .dialog{
   position: relative;
-  z-index: 2147483647;                   /* di atas overlay */
+  z-index: 2147483647;
   width: min(980px, calc(100% - 24px));
   background:#111; border:1px solid #2a2a2a; border-radius:16px; padding:14px;
   box-shadow: 0 30px 80px rgba(0,0,0,.55);
@@ -197,7 +197,6 @@ body{margin:0; background:var(--bg); color:var(--text);font:14px/1.45 -apple-sys
   background:transparent; border:none; cursor:pointer;
   color: rgb(255 255 255 / 45%); font-size:22px; z-index: 2147483647;
 }
-.modal.debug-no-overlay .overlay{ pointer-events: none !important; }
 .modal-close:hover {color:white;z-index: 2147483647;}
 .grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
 @media (max-width:680px){ .grid{grid-template-columns:1fr} }
@@ -625,29 +624,12 @@ function setBackgroundInert(enable, exceptTarget){
     : document.querySelector(exceptTarget);
   if (!except) return;
 
-  // gunakan class biasa, bukan atribut inert
   document.querySelectorAll('body > *').forEach(el => {
     if (el === except) return;
     if (enable) el.classList.add('bg-inert');
     else el.classList.remove('bg-inert');
   });
 }
-(function(){
-  const x = innerWidth/2, y = innerHeight/2;
-  let el = document.elementFromPoint(x, y);
-  console.log('TOP:', el);
-  const chain = [];
-  while (el) {
-    const cs = getComputedStyle(el);
-    chain.push({
-      el, tag: el.tagName.toLowerCase(),
-      id: el.id, cls: el.className,
-      z: cs.zIndex, pe: cs.pointerEvents, pos: cs.position
-    });
-    el = el.parentElement;
-  }
-  console.table(chain);
-})();
 
 function openModalA11y(modalSel, focusSel) {
   const m = document.querySelector(modalSel);
@@ -656,9 +638,6 @@ function openModalA11y(modalSel, focusSel) {
   m.classList.add('show');
   m.setAttribute('aria-hidden', 'false');
   setBackgroundInert(true, m);       // <— kirim ELEMENT, bukan string
-  // jaga-jaga kalau ada inert nyangkut di dalam modal (dari modal lain)
-  m.removeAttribute('inert');
-  m.querySelectorAll('[inert]').forEach(el => el.removeAttribute('inert'));
 
   const first = m.querySelector(
     focusSel || 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
