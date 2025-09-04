@@ -331,7 +331,7 @@ input[type="number"]{
 
 <thead>
   <tr>
-    <th>Date/Time</th>
+    <th>Date & Time</th>
     <th>Site</th>
     <th>Deposit</th>
     <th>Withdrawal</th>
@@ -1152,7 +1152,7 @@ function applyNumberTitles() {
   document.querySelectorAll('#dataTable td, #dataTable th, .card .val')
     .forEach(el => { const t = (el.textContent||'').trim(); if (t) el.title = t; });
 }
-const MAX_DISPLAY = 12;
+const MAX_DISPLAY = 15;
 
 // Util kecil
 const makeShort = (text, maxLen = MAX_DISPLAY) => {
