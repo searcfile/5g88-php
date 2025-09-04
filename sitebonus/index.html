@@ -452,8 +452,8 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   const $ = s => document.querySelector(s);
   const fmtNum = n => (Number.isFinite(n)?n:parseFloat(n||0)).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
   const fmtInt = n => (parseInt(n||0,10)).toLocaleString();
-  const fmtNumNoGroup = (n) => {const v = Number.isFinite(n) ? n : parseFloat(n || 0);if (!Number.isFinite(v)) return '0';const isWhole = Math.abs(v - Math.round(v)) < 1e-10; // toleransi floatreturn v.toLocaleString(undefined, {useGrouping: false,minimumFractionDigits: isWhole ? 0 : 2,maximumFractionDigits: isWhole ? 0 : 2,});};
-  const fmtIntNoGroup = n =>(parseInt(n || 0, 10)).toLocaleString(undefined, { useGrouping: false });
+  const fmtNumNoGroup = (n) => {const v = Number.isFinite(n) ? n : parseFloat(n || 0);if (!Number.isFinite(v)) return '0';const isWhole = Math.abs(v - Math.round(v)) < 1e-10;return v.toLocaleString(undefined, {useGrouping: false,minimumFractionDigits: isWhole ? 0 : 2,maximumFractionDigits: isWhole ? 0 : 2,});};
+  const fmtIntNoGroup = (n) =>(parseInt(n || 0, 10)).toLocaleString(undefined, { useGrouping: false });
   const pad2 = n => String(n).padStart(2,'0');
   const toYYYYMM = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
   const parseLocalDT = v => v? new Date(v.replace('T',' ')) : new Date();
@@ -461,15 +461,8 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   const safe = v => Number.isFinite(+v) ? +v : 0;
   const two = n => String(n).padStart(2,'0');
   const fmtDMYHMS = d => {
-  const x = new Date(d);
-  return `${two(x.getDate())}/${two(x.getMonth()+1)}/${x.getFullYear()} ` +
-         `${two(x.getHours())}:${two(x.getMinutes())}:${two(x.getSeconds())}`;
-};
-// (opsional kalau butuh tanggal saja)
-const fmtDMY = d => {
-  const x = new Date(d);
-  return `${two(x.getDate())}/${two(x.getMonth()+1)}/${x.getFullYear()}`;
-};
+  const x = new Date(d);return `${two(x.getDate())}/${two(x.getMonth()+1)}/${x.getFullYear()} ` +`${two(x.getHours())}:${two(x.getMinutes())}:${two(x.getSeconds())}`;};
+  const fmtDMY = d => {const x = new Date(d);return `${two(x.getDate())}/${two(x.getMonth()+1)}/${x.getFullYear()}`;};
 
   const LS_KEY='bonusRecords.v1';
   const LS_LAST_MONTH='bonusRecords.lastOpenedMonth';
