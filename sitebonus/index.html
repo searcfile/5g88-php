@@ -972,37 +972,69 @@ function renderUnclaimList(which = 'pending'){
   }
 }
 
-  // Claim logic: tambah ke Deposit record, update Sales, tandai unclaim claimed & timestamp
+// Claim logic: BUAT RECORD BARU DI BULAN SEKARANG + pindahkan unclaim ke bulan sekarang
 function claimUnclaim(ucId){
   const ucAll = readUnclaims();
-  const idx = ucAll.findIndex(x=>x.id===ucId);
+  const idx = ucAll.findIndex(x => x.id === ucId);
   if (idx < 0) return;
 
   const item = ucAll[idx];
   if (item.claimed) return;
 
-  // update record (pakai safe)
+  // ambil record asal (buat dapat site asal)
   const recs = readStore();
-  const ri = recs.findIndex(r=>r.id===item.recordId);
-  if (ri >= 0){
-    recs[ri].deposit = safe(recs[ri].deposit) + safe(item.amount);
-    recs[ri].sales   = safe(recs[ri].deposit) - safe(recs[ri].withdrawal);
-    writeStore(recs);
-  }
+  const recOld = recs.find(r => r.id === item.recordId);
 
-  // tandai claimed
-  item.claimed = true;
-  item.claimedAt = new Date().toISOString();
-  ucAll[idx] = item;
+  // waktu sekarang (tanggal & bulan klaim)
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth()+1).padStart(2,'0');
+  const dd = String(now.getDate()).padStart(2,'0');
+  const HH = String(now.getHours()).padStart(2,'0');
+  const MM = String(now.getMinutes()).padStart(2,'0');
+  const SS = String(now.getSeconds()).padStart(2,'0');
+  const nowISO = new Date(`${yyyy}-${mm}-${dd}T${HH}:${MM}:${SS}`).toISOString();
+  const nowMonth = `${yyyy}-${mm}`;
+
+  // 1) BUAT RECORD BARU (masuk bulan sekarang)
+  //    Deposit = amount klaim, Withdrawal = 0, Sales = Deposit - Withdrawal
+  const newRec = {
+    id: 'id_' + Date.now() + Math.random().toString(36).slice(2,7),
+    site: (recOld?.site || item.site || '5G88'),
+    datetime: nowISO,
+    month: nowMonth,
+    deposit: safe(item.amount),
+    withdrawal: 0,
+    bonus: 0,
+    forfeit: 0,
+    member: 0,
+    resit: 0,
+    sales: safe(item.amount) - 0
+  };
+  recs.push(newRec);
+  writeStore(recs);
+
+  // 2) TANDAI UNCLAIM SUDAH DI‑CLAIM & PINDAHKAN KE BULAN SEKARANG
+  //    Link ke record BARU supaya kolom "Unclaim" di baris record baru tampil negatif (-amount)
+  item.claimed   = true;
+  item.claimedAt = nowISO;
+  item.recordId  = newRec.id;
+  item.month     = nowMonth;              // ⬅️ penting agar muncul di bulan sekarang
+  item.site      = newRec.site || item.site;
+  ucAll[idx]     = item;
   writeUnclaims(ucAll);
 
-  // refresh ringkasan + list
+  // 3) Pindahkan tampilan ke bulan sekarang (opsional tapi sesuai permintaan)
+  $('#monthFilter').value = nowMonth;
+  localStorage.setItem(LS_LAST_MONTH, nowMonth);
+
+  // 4) Render ulang
   render();
 
- // ⬇️ Tambahkan blok ini (gantikan blok lama yang cuma switchUcTab('history'))
+  // Jika Unclaim modal lagi terbuka, langsung switch ke History & scroll atas
   if ($('#unclaimModal').classList.contains('show')) {
-    switchUcTab('history');     // langsung tampil di tab History
-    const list = $('#ucList');  // scroll ke atas biar item baru kelihatan
+    switchUcTab('history');
+    const list = $('#ucList');
     if (list) list.scrollTop = 0;
   }
 }
