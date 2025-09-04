@@ -173,6 +173,7 @@ body{
   position: fixed; inset: 0; z-index: 1000;
   display: none; align-items: center; justify-content: center;
   backdrop-filter: blur(3px);
+  pointer-events: auto !important;
 }
 .modal.show{display:flex}
 .modal[aria-hidden="true"]{ display:none !important; }
@@ -180,7 +181,6 @@ body{
   position:absolute; inset:0;
   background: rgba(0,0,0,.55);
   z-index: 1;
-  /* overlay bisa diklik untuk close */
   pointer-events: auto;
 }
 .modal .dialog{
@@ -633,10 +633,15 @@ function openModalA11y(modalSel, focusSel) {
   const m = document.querySelector(modalSel);
   if (!m) return;
   m.classList.add('show');
-  m.setAttribute('aria-hidden', 'false');       // ⬅️ penting
-  setBackgroundInert(true, modalSel);
-  // fokuskan elemen pertama yang logis
-  const first = m.querySelector(focusSel || 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  m.setAttribute('aria-hidden', 'false');
+  setBackgroundInert(true, m);       // <— kirim ELEMENT, bukan string
+  // jaga-jaga kalau ada inert nyangkut di dalam modal (dari modal lain)
+  m.removeAttribute('inert');
+  m.querySelectorAll('[inert]').forEach(el => el.removeAttribute('inert'));
+
+  const first = m.querySelector(
+    focusSel || 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+  );
   first?.focus();
 }
 function closeModalA11y(modalSel, returnFocusSel) {
