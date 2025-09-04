@@ -249,6 +249,11 @@ body{margin:0; background:var(--bg); color:var(--text);font:14px/1.45 -apple-sys
 .uc-tab.active{border-color:var(--gold); color:#000; background:linear-gradient(180deg,var(--gold),var(--gold-2))}
 .dialog .uc-list {flex: 1 1 auto; min-height: 0; }
 .clipnum{cursor: pointer;white-space: nowrap;}
+/* tombol delete di Unclaim Center */
+.btn-del{background:#191111; color:#ffb4b4;border:1px solid #3a2222; border-radius:8px;height:32px; padding:0 10px; cursor:pointer;transition:filter .2s, border-color .2s, background .2s;}
+.btn-del:hover{ background:#210f0f; border-color:#6b3434; }
+.btn-del:active{ background:#160b0b; }
+.uc-actions{ display:flex; gap:8px; justify-content:flex-end; }
 /* buang spinner number input (Chrome/Edge/Safari) */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button{
@@ -1052,8 +1057,6 @@ function renderUnclaimList(which = 'pending'){
   const list = $('#ucList');
   list.innerHTML = '';
 
-  // Pending: tampilkan SEMUA item (pending + claimed)
-  // History: hanya item yang sudah claimed
   const items = (which === 'history' ? uc.filter(x => x.claimed) : uc.slice())
     .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
 
@@ -1089,8 +1092,9 @@ row.innerHTML = `
   <div>Record Date: ${recDt}</div>
   <div class="${amtCls}">${displayAmount}</div>
   <div class="uc-claimed">${showClaimedLine ? ('Claimed: ' + claimedAt) : ''}</div>
-  <div style="text-align:right">
-    ${showClaimBtn ? `<button class="btn" style="height:32px" onclick="claimUnclaim('${u.id}')">Claim</button>` : ''}
+  <div class="uc-actions">
+  ${showClaimBtn? `<button class="btn-del" onclick="deleteUnclaim('${u.id}')">Delete</button>
+  <button class="btn" onclick="claimUnclaim('${u.id}')">Claim</button>`: ''}
   </div>
 `;
     list.appendChild(row);
@@ -1163,7 +1167,30 @@ function claimUnclaim(ucId){
     if (list) list.scrollTop = 0;
   }
 }
-// (opsional) tetap pasang title hover untuk quick peek
+
+function deleteUnclaim(ucId){
+  const ucAll = readUnclaims();
+  const idx = ucAll.findIndex(x => x.id === ucId);
+  if (idx < 0) return;
+
+  const item = ucAll[idx];
+  if (item.claimed) {
+    alert('Item sudah claimed dan tidak bisa dihapus.');
+    return;
+  }
+
+  if (!confirm('Hapus unclaim pending ini?')) return;
+
+  ucAll.splice(idx, 1);
+  writeUnclaims(ucAll);
+
+  // refresh tampilan + tetap di tab Pending
+  render();
+  if ($('#unclaimModal').classList.contains('show')) {
+    switchUcTab('pending');
+  }
+}
+window.deleteUnclaim = deleteUnclaim; // expose ke inline onclick
 function applyNumberTitles() {
   document.querySelectorAll('#dataTable td, #dataTable th, .card .val')
     .forEach(el => { const t = (el.textContent||'').trim(); if (t) el.title = t; });
