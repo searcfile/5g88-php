@@ -37,7 +37,11 @@ body{margin:0; background:#000; color:var(--text);font:14px/1.45 -apple-system,B
 /* saat hover di baris mana pun, semua sel di baris itu ikut menyala */
 #dataTable tbody tr:hover > td{
   background:#1d1d1d;   /* biru samar */
-  border-bottom-color: transparent;       /* opsional: garis bawah sedikit lebih terang */
+  border-color: transparent;
+}
+#dataTable{
+  border-collapse: separate;   /* tetap separate tak apa */
+  border-spacing: 0;           /* ⬅️ hilangkan celah vertikal */
 }
 .input {height:36px; border-radius:8px; outline:none; border:1px solid #424242; background:#141414; color:var(--text);padding:6px 10px; transition: all 0.2s;}
 .input:hover { border-color:#3c89e8; }
