@@ -224,6 +224,8 @@ body{margin:0; background:var(--bg); color:var(--text);font:14px/1.45 -apple-sys
 .cards-row::-webkit-scrollbar-thumb{background:#2a2a2a; border-radius:6px}
 
 /* Unclaim list styles */
+.uc-claimed { white-space: nowrap; }
+.uc-item > * { min-width: 0; } /* tetap bagus saat grid mengecil */
 .uc-list{display:flex; flex-direction:column; gap:8px; overflow:auto; max-height:60vh; padding-right:6px;}
 .uc-item{display:grid; grid-template-columns:150px 90px 1fr 110px 120px auto; gap:8px; align-items:center; border:1px solid #242424; background:#0f0f0f; padding:8px; border-radius:10px}
 .uc-item .uc-amt{font-weight:800}
@@ -1067,16 +1069,16 @@ function renderUnclaimList(which = 'pending'){
 
     const row = document.createElement('div');
     row.className = 'uc-item';
-    row.innerHTML = `
-      <div>${created}</div>
-      <div><span class="pill ${u.site==='5G88' ? 'site-5g88' : 'site-spm888'}">${u.site}</span></div>
-      <div>Record Date: ${recDt}</div>
-      <div class="${amtCls}">${displayAmount}</div>
-      <div>${showClaimedLine ? ('Claimed: ' + claimedAt) : ''}</div>
-      <div style="text-align:right">
-        ${showClaimBtn ? `<button class="btn" style="height:32px" onclick="claimUnclaim('${u.id}')">Claim</button>` : ''}
-      </div>
-    `;
+row.innerHTML = `
+  <div>${created}</div>
+  <div><span class="pill ${u.site==='5G88' ? 'site-5g88' : 'site-spm888'}">${u.site}</span></div>
+  <div>Record Date: ${recDt}</div>
+  <div class="${amtCls}">${displayAmount}</div>
+  <div class="uc-claimed">${showClaimedLine ? ('Claimed: ' + claimedAt) : ''}</div>
+  <div style="text-align:right">
+    ${showClaimBtn ? `<button class="btn" style="height:32px" onclick="claimUnclaim('${u.id}')">Claim</button>` : ''}
+  </div>
+`;
     list.appendChild(row);
   }
 }
