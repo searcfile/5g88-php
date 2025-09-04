@@ -173,8 +173,7 @@ body{
   position: fixed; inset: 0; z-index: 1000;
   display: none; align-items: center; justify-content: center;
   backdrop-filter: blur(3px);
-- pointer-events: none !important;   /* kontainer TIDAK menangkap klik */
-+ pointer-events: auto;              /* kontainer boleh terima event */
+  pointer-events: auto!important;
 }
 .modal.show{display:flex}
 .modal[aria-hidden="true"]{ display:none !important; }
@@ -199,7 +198,7 @@ body{
 .modal-close{
   position:absolute; top:10px; right:12px;
   background:transparent; border:none; cursor:pointer;
-  color: rgb(255 255 255 / 45%); font-size:22px; z-index: 3;
+  color: rgb(255 255 255 / 45%); font-size:22px; z-index: 1003;
 }
 .modal-close:hover {color:white;z-index: 1003;}
 .grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
