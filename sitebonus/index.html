@@ -236,17 +236,16 @@ body{margin:0; background:var(--bg); color:var(--text);font:14px/1.45 -apple-sys
 }
 .uc-item{
   display:grid;
-  /* created | site | record date | amount | claimed | actions */
   grid-template-columns:150px 90px minmax(0,1fr) 110px max-content auto;
   gap:8px; align-items:center;
   border:1px solid #242424; background:#0f0f0f; padding:8px; border-radius:10px;
-  min-height:44px; /* sedikit lebih lega */
+  min-height:44px;
 }
 .uc-item .uc-amt{font-weight:700;color:#008000;}
 .uc-item .uc-amt.red{color:var(--red)}
 .uc-tabs{display:flex; gap:8px; margin:6px 0 10px}
-.uc-tab{height:32px; padding:0 10px; border-radius:8px; border:1px solid #2a2a2a; background:#151515; color:#ddd; cursor:pointer}
-.uc-tab.active{border-color:#1668dc; color:white;}.uc-tab:hover{border:1px solid #3c89e8;color:#3c89e8;}
+.uc-tab{height:32px;transition: all 0.2s;padding:0 10px; border-radius:8px; border:1px solid #2a2a2a; background:#151515; color:#ddd; cursor:pointer}
+.uc-tab.active{border-color:#1668dc; color:#1668dc;}.uc-tab:hover{border:1px solid #3c89e8;color:#3c89e8;}.uc-tab:active{border:1px solid #1554ad;color:#1554ad;}
 .dialog .uc-list {flex: 1 1 auto; min-height: 0; }
 .clipnum{cursor: pointer;white-space: nowrap;}
 /* tombol delete di Unclaim Center */
