@@ -452,6 +452,8 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   const $ = s => document.querySelector(s);
   const fmtNum = n => (Number.isFinite(n)?n:parseFloat(n||0)).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
   const fmtInt = n => (parseInt(n||0,10)).toLocaleString();
+  const fmtNumNoGroup = n =>(Number.isFinite(n) ? n : parseFloat(n || 0)).toLocaleString(undefined, {minimumFractionDigits: 2,maximumFractionDigits: 2,useGrouping: false});
+  const fmtIntNoGroup = n =>(parseInt(n || 0, 10)).toLocaleString(undefined, { useGrouping: false });
   const pad2 = n => String(n).padStart(2,'0');
   const toYYYYMM = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
   const parseLocalDT = v => v? new Date(v.replace('T',' ')) : new Date();
@@ -819,109 +821,121 @@ function saveTiersLive(){
   }
 
   /* ----- Render ----- */
-  function render(){
-    const site=$('#siteFilter').value, month=$('#monthFilter').value, targets=readTarget();
-    const data=readStore().filter(r=>r.month===month).filter(r=>site==='ALL'?true:r.site===site)
-      .sort((a,b)=>new Date(b.datetime)-new Date(a.datetime));
+function render(){
+  const site   = $('#siteFilter').value;
+  const month  = $('#monthFilter').value;
+  const targets= readTarget();
 
-    const uc = readUnclaims();
-    const ucByRecord = {};
-    for (const u of uc.filter(x=>x.month===month && (site==='ALL'||x.site===site))) {
-  if (!ucByRecord[u.recordId]) ucByRecord[u.recordId] = {pending:0, claimed:0};
-  if (u.claimed) ucByRecord[u.recordId].claimed += safe(u.amount);
-  else           ucByRecord[u.recordId].pending += safe(u.amount);
-}
+  const data = readStore()
+    .filter(r => r.month === month)
+    .filter(r => site === 'ALL' ? true : r.site === site)
+    .sort((a,b) => new Date(b.datetime) - new Date(a.datetime));
 
-    const cur=toYYYYMM(new Date()); const isArchive=month!==cur;
-    $('#archiveBanner').style.display=isArchive?'inline-flex':'none';
-    $('#bannerMonth').textContent=prettyMonth(month);
-
-    const tb=$('#tbody'); tb.innerHTML='';
-    let totals = {d:0,w:0,b:0,f:0,m:0,r:0,s:0,bd:0, br:0, bsBase:0,uDisp:0, uPending:0, uClaimed:0, uAll:0};
-
-for (const r of data){
-  const dt = fmtDMYHMS(r.datetime);
-
-  // HITUNG BONUS DULU
-  const bonusDep       = pickTierBonus(safe(r.deposit), targets.depositTiers);
-  const bonusRes       = pickTierBonus(safe(r.resit),   targets.resitTiers);
-  const bonusSalesBase = pickTierBonus(safe(r.sales),   targets.salesTiers);
-
-  const ucs = ucByRecord[r.id] || {pending:0, claimed:0};
-  const unclaimDisplay = safe(ucs.claimed) > 0 ? -safe(ucs.claimed) : safe(ucs.pending);
-
-  const tr=document.createElement('tr');
-  tr.innerHTML = `
-    <td>${dt}</td>
-    <td style="text-align:center"><span class="pill ${r.site==='5G88'?'site-5g88':'site-spm888'}">${r.site}</span></td>
-    <td class="${r.deposit < 0 ? 'num red' : 'num green'}">${fmtNum(r.deposit)}</td>
-    <td class="num ${r.withdrawal === 0 ? '' : 'red'}">
-      ${ r.withdrawal === 0 ? fmtNum(0) : ('-' + fmtNum(Math.abs(r.withdrawal))) }
-    </td>
-    <td>${fmtNum(r.resit)}</td>
-    <td class="num cyan">${fmtNum(r.bonus)}</td>
-    <td>${fmtNum(r.forfeit)}</td>
-    <td>${fmtInt(r.member)}</td>
-    <td class="${r.sales < 0 ? 'num red' : 'num green'}">${fmtNum(r.sales)}</td>
-    <td class="num ${unclaimDisplay<0?'red':''}">${fmtNum(unclaimDisplay)}</td>
-    <td>${bonusDep.toLocaleString()}</td>
-    <td>${bonusRes.toLocaleString()}</td>
-    <td>
-      <div class="actions">
-        <button class="iconbtn" onclick="window.__edit('${r.id}')">Edit</button>
-        <button class="iconbtn del" onclick="window.__del('${r.id}')">Delete</button>
-      </div>
-    </td>`;
-  tb.appendChild(tr);
-
-  // totals
-  totals.uPending += safe(ucs.pending);
-  totals.uClaimed += safe(ucs.claimed);
-  totals.uAll     += safe(ucs.pending) + safe(ucs.claimed);
-
-  totals.d  += safe(r.deposit);
-  totals.w  += safe(r.withdrawal);
-  totals.b  += safe(r.bonus);
-  totals.f  += safe(r.forfeit);
-  totals.m  += safe(r.member);
-  totals.r  += safe(r.resit);
-  totals.s  += safe(r.sales);
-
-  totals.bd += safe(bonusDep);
-  totals.br += safe(bonusRes);
-  totals.bsBase += safe(bonusSalesBase);
-}
-    $('#emptyState').style.display=data.length?'none':'block';
-    totals.uDisp = safe(totals.uPending);
-    // footer totals
-    $('#ft_deposit').textContent   = fmtNum(totals.d);
-    const wdTotalAbs = Math.abs(totals.w);
-    $('#ft_withdrawal').textContent = wdTotalAbs === 0 ? fmtNum(0) : `-${fmtNum(wdTotalAbs)}`;
-    $('#ft_bonus').textContent     = fmtNum(totals.b);
-    $('#ft_forfeit').textContent   = fmtNum(totals.f);
-    $('#ft_member').textContent    = fmtInt(totals.m);
-    $('#ft_resit').textContent     = fmtNum(totals.r);
-    $('#ft_sales').textContent     = fmtNum(totals.s);
-    $('#ft_unclaim').textContent   = fmtNum(totals.uDisp);
-    $('#ft_bonDep').textContent    = totals.bd.toLocaleString();
-    $('#ft_bonRes').textContent    = totals.br.toLocaleString();
-
-    const ftW = $('#ft_withdrawal');
-    ftW.className=''; ftW.classList.add('num'); if (wdTotalAbs > 0) ftW.classList.add('red');
-
-    const ftS = $('#ft_sales');
-    ftS.className=''; ftS.classList.add('num'); if (totals.s < 0) ftS.classList.add('red'); else if (totals.s > 0) ftS.classList.add('green');
-
-    const ftU = $('#ft_unclaim');
-    ftU.className = 'num';
-
-    renderSummaryRows(totals, data.length, site, month);
-    applyNumberTitles(); // tooltip hover tetap ada
-    NumberClipper.clip('#dataTable tbody td:nth-child(n+3):nth-child(-n+12)');
-    NumberClipper.clip('#dataTable tfoot td:nth-child(n+3):nth-child(-n+12)');
-    NumberClipper.clip('.card .val');
-    applyTableScrollLimit();
+  // map unclaim per record
+  const uc = readUnclaims();
+  const ucByRecord = {};
+  for (const u of uc.filter(x => x.month === month && (site === 'ALL' || x.site === site))) {
+    if (!ucByRecord[u.recordId]) ucByRecord[u.recordId] = { pending:0, claimed:0 };
+    if (u.claimed) ucByRecord[u.recordId].claimed += safe(u.amount);
+    else           ucByRecord[u.recordId].pending += safe(u.amount);
   }
+
+  const cur = toYYYYMM(new Date());
+  const isArchive = month !== cur;
+  $('#archiveBanner').style.display = isArchive ? 'inline-flex' : 'none';
+  $('#bannerMonth').textContent = prettyMonth(month);
+
+  const tb = $('#tbody'); tb.innerHTML = '';
+  let totals = { d:0,w:0,b:0,f:0,m:0,r:0,s:0, bd:0, br:0, bsBase:0, uDisp:0, uPending:0, uClaimed:0, uAll:0 };
+
+  for (const r of data){
+    const dt = fmtDMYHMS(r.datetime);
+
+    // bonus
+    const bonusDep       = pickTierBonus(safe(r.deposit), targets.depositTiers);
+    const bonusRes       = pickTierBonus(safe(r.resit),   targets.resitTiers);
+    const bonusSalesBase = pickTierBonus(safe(r.sales),   targets.salesTiers);
+
+    const ucs = ucByRecord[r.id] || { pending:0, claimed:0 };
+    const unclaimDisplay = safe(ucs.claimed) > 0 ? -safe(ucs.claimed) : safe(ucs.pending);
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${dt}</td>
+      <td style="text-align:center"><span class="pill ${r.site==='5G88'?'site-5g88':'site-spm888'}">${r.site}</span></td>
+      <td class="${r.deposit < 0 ? 'num red' : 'num green'}">${fmtNum(r.deposit)}</td>
+      <td class="num ${r.withdrawal === 0 ? '' : 'red'}">
+        ${ r.withdrawal === 0 ? fmtNum(0) : ('-' + fmtNum(Math.abs(r.withdrawal))) }
+      </td>
+      <td>${fmtNumNoGroup(r.resit)}</td>
+      <td class="num cyan">${fmtNum(r.bonus)}</td>
+      <td>${fmtNum(r.forfeit)}</td>
+      <td>${fmtIntNoGroup(r.member)}</td>
+      <td class="${r.sales < 0 ? 'num red' : 'num green'}">${fmtNum(r.sales)}</td>
+      <td class="num ${unclaimDisplay<0?'red':''}">${fmtNum(unclaimDisplay)}</td>
+      <td>${bonusDep.toLocaleString()}</td>
+      <td>${bonusRes.toLocaleString()}</td>
+      <td>
+        <div class="actions">
+          <button class="iconbtn" onclick="window.__edit('${r.id}')">Edit</button>
+          <button class="iconbtn del" onclick="window.__del('${r.id}')">Delete</button>
+        </div>
+      </td>
+    `;
+    tb.appendChild(tr);
+
+    // totals
+    totals.uPending += safe(ucs.pending);
+    totals.uClaimed += safe(ucs.claimed);
+    totals.uAll     += safe(ucs.pending) + safe(ucs.claimed);
+
+    totals.d  += safe(r.deposit);
+    totals.w  += safe(r.withdrawal);
+    totals.b  += safe(r.bonus);
+    totals.f  += safe(r.forfeit);
+    totals.m  += safe(r.member);
+    totals.r  += safe(r.resit);
+    totals.s  += safe(r.sales);
+
+    totals.bd += safe(bonusDep);
+    totals.br += safe(bonusRes);
+    totals.bsBase += safe(bonusSalesBase);
+  }
+
+  $('#emptyState').style.display = data.length ? 'none' : 'block';
+  totals.uDisp = safe(totals.uPending);
+
+  // footer totals
+  $('#ft_deposit').textContent    = fmtNum(totals.d);
+  const wdTotalAbs = Math.abs(totals.w);
+  $('#ft_withdrawal').textContent = wdTotalAbs === 0 ? fmtNum(0) : `-${fmtNum(wdTotalAbs)}`;
+  $('#ft_bonus').textContent      = fmtNum(totals.b);
+  $('#ft_forfeit').textContent    = fmtNum(totals.f);
+  $('#ft_member').textContent     = fmtIntNoGroup(totals.m);
+  $('#ft_resit').textContent      = fmtNumNoGroup(totals.r);
+  $('#ft_sales').textContent      = fmtNum(totals.s);
+  $('#ft_unclaim').textContent    = fmtNum(totals.uDisp);
+  $('#ft_bonDep').textContent     = totals.bd.toLocaleString();
+  $('#ft_bonRes').textContent     = totals.br.toLocaleString();
+
+  const ftW = $('#ft_withdrawal');
+  ftW.className = ''; ftW.classList.add('num');
+  if (wdTotalAbs > 0) ftW.classList.add('red');
+
+  const ftS = $('#ft_sales');
+  ftS.className = ''; ftS.classList.add('num');
+  if (totals.s < 0) ftS.classList.add('red'); else if (totals.s > 0) ftS.classList.add('green');
+
+  const ftU = $('#ft_unclaim');
+  ftU.className = 'num';
+
+  renderSummaryRows(totals, data.length, site, month);
+  applyNumberTitles(); // tooltip hover tetap ada
+  NumberClipper.clip('#dataTable tbody td:nth-child(n+3):nth-child(-n+12)');
+  NumberClipper.clip('#dataTable tfoot td:nth-child(n+3):nth-child(-n+12)');
+  NumberClipper.clip('.card .val');
+  applyTableScrollLimit();
+}
 function applyTableScrollLimit() {
   const wrap  = document.querySelector('.table');
   const head  = document.querySelector('#dataTable thead');
@@ -954,15 +968,15 @@ function renderSummaryRows(t, count, site, month){
   top.innerHTML = '';
 
   [
-    { title: 'Total Deposit',  val: fmtNum(t.d), cls: 'green' },
-    { title: 'Total Withdrawal', val: t.w === 0 ? fmtNum(0) : `-${fmtNum(Math.abs(t.w))}`, cls: 'red' },
-    { title: 'Total Bonus',    val: fmtNum(t.b), cls: 'cyan' },
-    { title: 'Total Sales',    val: fmtNum(t.s), cls: t.s < 0 ? 'red' : 'green' },
-    { title: 'Total Forfeit',  val: fmtNum(t.f) },
-    { title: 'Total Resit In', val: fmtNum(t.r) },
-    { title: 'Total Unclaim (Σ)', val: fmtNum(t.uDisp) },
-    { title: 'Total Member',   val: fmtInt(t.m) },
-    { title: 'Records',        val: count.toLocaleString() },
+    { title: 'Total Deposit',        val: fmtNum(t.d),                                   cls: 'green' },
+    { title: 'Total Withdrawal',     val: t.w === 0 ? fmtNum(0) : `-${fmtNum(Math.abs(t.w))}`, cls: 'red' },
+    { title: 'Total Bonus',          val: fmtNum(t.b),                                   cls: 'cyan' },
+    { title: 'Total Sales',          val: fmtNum(t.s),                                   cls: t.s < 0 ? 'red' : 'green' },
+    { title: 'Total Forfeit',        val: fmtNum(t.f) },
+    { title: 'Total Resit In',       val: fmtNumNoGroup(t.r) },     // ⬅️ no grouping
+    { title: 'Total Unclaim (Σ)',    val: fmtNum(t.uDisp) },
+    { title: 'Total Member',         val: fmtIntNoGroup(t.m) },     // ⬅️ no grouping
+    { title: 'Records',              val: count.toLocaleString() },
   ].forEach(c => {
     const d = document.createElement('div');
     d.className = 'card';
@@ -978,15 +992,14 @@ function renderSummaryRows(t, count, site, month){
   const salesOnly = t.bsBase;
   const totalAmt  = halfDep + halfRes + salesOnly;
 
- const items = [
-  { title: 'Unclaim Σ',  val: fmtNum(t.uAll),     cls: t.uAll > 0 ? 'green' : '' },
-  { title: 'Claimed Σ',  val: fmtNum(t.uClaimed), cls: '' },
-
-  { title: 'Bonus Deposit ½ Σ', val: halfDep.toLocaleString() },
-  { title: 'Bonus Resit ½ Σ',   val: halfRes.toLocaleString() },
-  { title: 'Bonus Sales Σ',     val: salesOnly.toLocaleString() },
-  { title: 'Total Bonus Σ',     val: totalAmt.toLocaleString() },
-];
+  const items = [
+    { title: 'Unclaim Σ',             val: fmtNum(t.uAll),        cls: t.uAll > 0 ? 'green' : '' },
+    { title: 'Claimed Σ',             val: fmtNum(t.uClaimed) },
+    { title: 'Bonus Deposit ½ Σ',     val: halfDep.toLocaleString() },
+    { title: 'Bonus Resit ½ Σ',       val: halfRes.toLocaleString() },
+    { title: 'Bonus Sales Σ',         val: salesOnly.toLocaleString() },
+    { title: 'Total Bonus Σ',         val: totalAmt.toLocaleString() },
+  ];
 
   items.forEach(c => {
     const d = document.createElement('div');
