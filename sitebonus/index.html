@@ -39,10 +39,7 @@ body{margin:0; background:#000; color:var(--text);font:14px/1.45 -apple-system,B
   background:#1d1d1d;   /* biru samar */
   border-color: transparent;
 }
-#dataTable{
-  border-collapse: separate;   /* tetap separate tak apa */
-  border-spacing: 0;           /* ⬅️ hilangkan celah vertikal */
-}
+#dataTable{border-collapse: separate;border-spacing: 0;}
 .input {height:36px; border-radius:8px; outline:none; border:1px solid #424242; background:#141414; color:var(--text);padding:6px 10px; transition: all 0.2s;}
 .input:hover { border-color:#3c89e8; }
 .input:focus { border-color:#1668dc; }
@@ -161,7 +158,7 @@ body{margin:0; background:#000; color:var(--text);font:14px/1.45 -apple-system,B
 }
 
 /* DataTable guard */
-#dataTable { table-layout: fixed; width: 100%;border-collapse: separate !important; }
+#dataTable { table-layout: fixed; width: 100%;border-spacing: 0;border-collapse: separate !important; }
 #dataTable th, #dataTable td { padding: 10px 12px; }
 #dataTable td:last-child .actions { justify-content:center !important; }
 #dataTable tfoot td{position: sticky;bottom: 0;z-index: 1;background:#0f0f0f;text-align:center !important;}
