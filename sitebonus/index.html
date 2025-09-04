@@ -173,7 +173,8 @@ body{
   position: fixed; inset: 0; z-index: 1000;
   display: none; align-items: center; justify-content: center;
   backdrop-filter: blur(3px);
-  pointer-events: none !important;   /* kontainer TIDAK menangkap klik */
+- pointer-events: none !important;   /* kontainer TIDAK menangkap klik */
++ pointer-events: auto;              /* kontainer boleh terima event */
 }
 .modal.show{display:flex}
 .modal[aria-hidden="true"]{ display:none !important; }
