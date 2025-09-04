@@ -224,8 +224,11 @@ body{margin:0; background:var(--bg); color:var(--text);font:14px/1.45 -apple-sys
 .cards-row::-webkit-scrollbar-thumb{background:#2a2a2a; border-radius:6px}
 
 /* Unclaim list styles */
+.uc-item.history{grid-template-columns:150px 90px 1fr 110px auto;}
+.uc-item > div{min-width: 0;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;}
 .uc-list{display:flex; flex-direction:column; gap:8px; overflow:auto; max-height:60vh; padding-right:6px;}
-.uc-item{display:grid; grid-template-columns:150px 90px 1fr 110px 120px auto; gap:8px; align-items:center; border:1px solid #242424; background:#0f0f0f; padding:8px; border-radius:10px}
+.uc-item{display:grid; grid-template-columns:150px 90px 1fr 110px 120px auto; gap:8px; align-items:center;}
+.uc-item .claimed{white-space: nowrap;}
 .uc-item .uc-amt{font-weight:800}
 .uc-item .uc-amt.red{color:var(--red)}
 .uc-tabs{display:flex; gap:8px; margin:6px 0 10px}
@@ -1049,36 +1052,34 @@ function renderUnclaimList(which = 'pending'){
     return;
   }
 
-  for (const u of items){
-    const rec      = records[u.recordId];
-    const recDt     = rec ? fmtDMYHMS(rec.datetime) : '-';
-    const created   = fmtDMYHMS(u.createdAt);
-    const claimedAt = u.claimedAt ? fmtDMYHMS(u.claimedAt) : '-';
+for (const u of items){
+  const rec       = records[u.recordId];
+  const recDt     = rec ? fmtDMYHMS(rec.datetime) : '-';
+  const created   = fmtDMYHMS(u.createdAt);
+  const claimedAt = u.claimedAt ? fmtDMYHMS(u.claimedAt) : '-';
 
-    // 👉 Atur tampilan berdasarkan TAB:
-    // - Di PENDING: item yang sudah claimed TETAP tampil seperti pending (tanpa label "Claimed", amount positif)
-    // - Di HISTORY: item claimed tampil merah & ada label "Claimed: ..."
-    const isHistoryView = (which === 'history');
-    const showClaimBtn  = (!u.claimed && !isHistoryView); // tombol hanya muncul di Pending & belum claimed
-    const showClaimedLine = (u.claimed && isHistoryView);
+  const isHistoryView   = (which === 'history');
+  const showClaimBtn    = (!u.claimed && !isHistoryView);
+  const showClaimedLine = (u.claimed && isHistoryView);
 
-    const displayAmount = (u.claimed && isHistoryView) ? ('-' + fmtNum(u.amount)) : fmtNum(u.amount);
-    const amtCls = (u.claimed && isHistoryView) ? 'uc-amt red' : 'uc-amt';
+  const displayAmount = (u.claimed && isHistoryView) ? ('-' + fmtNum(u.amount)) : fmtNum(u.amount);
+  const amtCls = (u.claimed && isHistoryView) ? 'uc-amt red' : 'uc-amt';
 
-    const row = document.createElement('div');
-    row.className = 'uc-item';
-    row.innerHTML = `
-      <div>${created}</div>
-      <div><span class="pill ${u.site==='5G88' ? 'site-5g88' : 'site-spm888'}">${u.site}</span></div>
-      <div>Record Date: ${recDt}</div>
-      <div class="${amtCls}">${displayAmount}</div>
-      <div>${showClaimedLine ? ('Claimed: ' + claimedAt) : ''}</div>
-      <div style="text-align:right">
-        ${showClaimBtn ? `<button class="btn" style="height:32px" onclick="claimUnclaim('${u.id}')">Claim</button>` : ''}
-      </div>
-    `;
-    list.appendChild(row);
-  }
+  const row = document.createElement('div');
+  row.className = 'uc-item' + (isHistoryView ? ' history' : ''); // <-- class history
+
+  row.innerHTML = `
+    <div>${created}</div>
+    <div><span class="pill ${u.site==='5G88' ? 'site-5g88' : 'site-spm888'}">${u.site}</span></div>
+    ${ isHistoryView ? '' : `<div>Record Date: ${recDt}</div>` }   <!-- sembunyikan di History -->
+    <div class="${amtCls}">${displayAmount}</div>
+    <div class="claimed">${ showClaimedLine ? ('Claimed: ' + claimedAt) : '' }</div>
+    <div style="text-align:right">
+      ${ showClaimBtn ? `<button class="btn" style="height:32px" onclick="claimUnclaim('${u.id}')">Claim</button>` : '' }
+    </div>
+  `;
+  list.appendChild(row);
+}
 }
 
 // Claim logic: BUAT RECORD BARU DI BULAN SEKARANG + pindahkan unclaim ke bulan sekarang
