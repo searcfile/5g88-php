@@ -258,28 +258,14 @@ body{margin:0; background:var(--bg); color:var(--text);font:14px/1.45 -apple-sys
 .uc-actions{ display:flex; gap:8px; justify-content:flex-end; }
 /* buang spinner number input (Chrome/Edge/Safari) */
 input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button{
-  -webkit-appearance: none;
-  margin: 0;
-}
-/* buang spinner number input (Firefox & generic) */
-input[type="number"]{
-  -moz-appearance: textfield;
-  appearance: textfield;
-}
+input[type="number"]::-webkit-inner-spin-button{-webkit-appearance: none;margin: 0;}
+input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 
 /* tombol Edit di baris tier */
-.tier-row .edit{
-  border:1px solid #424242; background:#141414; color:rgba(255,255,255,0.85);
-  border-radius:8px; height:36px; padding:0 10px; cursor:pointer;
-  transition:filter .2s, border-color .2s;
-  margin-right:6px;
-}
+.tier-row .edit{border:1px solid #424242; background:#141414; color:rgba(255,255,255,0.85);border-radius:8px; height:36px; padding:0 10px; cursor:pointer;transition:filter 0.2s, border-color .2s;margin-right:6px;}
 .tier-row .edit:hover{ border-color:#3c89e8;color:#3c89e8;transition:all 0.2s;}
-.tier-row .edit.active{
-  background:#1668dc;
-  color:white;
-}
+.tier-row .edit:active{ border-color:#1554ad;color:white;background:#1554ad;transition:all 0.2s;}
+.tier-row .edit.active{background:#1668dc;color:white;}
 .bg-inert {
   pointer-events: none !important;
   user-select: none !important;
