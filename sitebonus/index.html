@@ -169,16 +169,30 @@ body{
 #dataTable tfoot td{ box-shadow: 0 -2px 0 rgba(0,0,0,.35);}
 
 /* Modal */
-.modal{position:fixed; inset:0;z-index: 1000; display:none; align-items:center; justify-content:center; backdrop-filter:blur(3px)}
+.modal{
+  position:fixed; inset:0; z-index:1000;
+  display:none; align-items:center; justify-content:center;
+  backdrop-filter:blur(3px);
+  pointer-events:none;}
 .modal.show{display:flex}
-.overlay{position:absolute; inset:0;z-index: 1000; background:rgba(0,0,0,.55)}
+.modal[aria-hidden="true"]{ display:none !important; }
+.modal .overlay,.modal .dialog{ pointer-events:auto; }
+.overlay{position:absolute; inset:0; z-index:1000;background:rgba(0,0,0,.55);}
 .dialog{
   position:relative; z-index:1001; width:min(980px,calc(100% - 24px));
   background:#111; border:1px solid #2a2a2a; border-radius:16px; padding:14px;
   box-shadow:0 30px 80px rgba(0,0,0,.55);
-  max-height:85vh; overflow:hidden; display:flex; flex-direction:column;
+  max-height:85vh; overflow:auto;       /* <- auto biar bisa scroll */
+  display:flex; flex-direction:column;
 }
 .dialog h3{margin:0 0 10px; font-size:18px}
+.modal-close{
+  position:absolute; top:10px; right:12px; background:transparent;
+  color:rgb(255 255 255 / 45%); font-size:22px; border:none; cursor:pointer;
+  z-index:12; transition:all .2s;
+}
+.modal-close:hover {color:white;}
+.modal .dialog {pointer-events: auto;}
 .grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
 @media (max-width:680px){ .grid{grid-template-columns:1fr} }
 .group{display:flex; flex-direction:column; gap:6px}
@@ -242,9 +256,6 @@ input[type="number"]{
   background:linear-gradient(180deg,var(--gold),var(--gold-2));
   color:#000;
 }
-.modal-close {position: absolute;top: 10px;right: 12px;background: transparent;color:rgb(255 255 255 / 45%);font-size: 22px;border: none;cursor: pointer;z-index: 12;transition: all 0.2s;}
-.modal-close:hover {color:white;}
-.modal .dialog {position: relative;}
 </style>
 </head>
 <body>
