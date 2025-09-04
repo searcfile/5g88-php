@@ -268,6 +268,8 @@ input[type="number"]{
   touch-action: none !important;
   filter: none !important;          /* jaga-jaga polyfill yang aneh */
 }
+.btn:disabled { opacity:.5; cursor:not-allowed; }
+.input:disabled, .select:disabled { opacity:.7;cursor: not-allowed;}
 </style>
 </head>
 <body>
@@ -382,7 +384,8 @@ input[type="number"]{
     <h3 id="modalTitle">Create Record</h3>
       <div class="grid">
         <div class="group"><label for="m_site">Site</label>
-          <select id="m_site" class="select"><option value="5G88">5G88</option><option value="SPM888">SPM888</option></select>
+          <select id="m_site" class="select"><option value="" selected disabled>Select Site…</option><option value="5G88">5G88</option><option value="SPM888">SPM888</option>
+        </select>
         </div>
         <div class="group"><label for="m_dt">Date & Time</label><input id="m_dt" class="input" type="datetime-local" step="1"></div>
         <div class="group"><label for="m_deposit">Total Deposit</label><input id="m_deposit" class="input" type="number" step="0.01" min="0"></div>
@@ -545,15 +548,19 @@ function readTarget(){
   const prettyMonth=yyyyMM=>{const [y,m]=yyyyMM.split('-').map(Number);return new Date(y,m-1,1).toLocaleDateString(undefined,{month:'long',year:'numeric'})};
 
 // ===== D. Create/Edit Modal (id="modal") =====
-function openModal(rec=null){
+function openModal(rec = null) {
   editingId = rec?.id ?? null;
   $('#modalTitle').textContent = editingId ? 'Edit Record' : 'Create Record';
-  $('#m_site').value = rec?.site || ($('#siteFilter').value==='ALL'?'5G88':$('#siteFilter').value);
+
+  if (editingId) {
+    $('#m_site').value = rec.site;
+  } else {
+    $('#m_site').value = ''; // kosongkan untuk create
+  }
 
   const dt = rec ? new Date(rec.datetime) : new Date();
-  $('#m_dt').value =
-    `${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}` +
-    `T${pad2(dt.getHours())}:${pad2(dt.getMinutes())}:${pad2(dt.getSeconds())}`;
+  $('#m_dt').value = `${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}` +
+                     `T${pad2(dt.getHours())}:${pad2(dt.getMinutes())}:${pad2(dt.getSeconds())}`;
 
   $('#m_deposit').value    = rec?.deposit ?? '';
   $('#m_withdrawal').value = rec?.withdrawal ?? '';
@@ -563,18 +570,41 @@ function openModal(rec=null){
   $('#m_resit').value      = rec?.resit ?? '';
   $('#m_unclaim').value    = '';
 
-  const autoCalc = ()=>{
-    $('#m_sales').value = (parseFloat($('#m_deposit').value||0) - parseFloat($('#m_withdrawal').value||0)).toFixed(2);
+  const autoCalc = () => {
+    $('#m_sales').value = (
+      parseFloat($('#m_deposit').value || 0) -
+      parseFloat($('#m_withdrawal').value || 0)
+    ).toFixed(2);
   };
   $('#m_deposit').oninput = autoCalc;
   $('#m_withdrawal').oninput = autoCalc;
   autoCalc();
 
-  // ⬇️ buka modal create/edit dengan fokus ke site
-  openModalA11y('#modal', '#m_site');
+  // 💡 Pastikan urutan ini tepat
+  lockFormBySite();                       // kunci field dulu
+  $('#m_site').onchange = lockFormBySite; // buka saat dipilih
+
+  openModalA11y('#modal', false);        // buka tanpa auto-focus
   $('#saveBtn').onclick = saveModal;
 }
 const closeModal = () => closeModalA11y('#modal', '#createBtn');
+
+function lockFormBySite() {
+  const hasSite = !!$('#m_site').value;
+  // Ambil semua kontrol dalam modal KECUALI #m_site
+  const ctrls = Array.from(document.querySelectorAll('#modal .dialog input, #modal .dialog select, #modal .dialog textarea'))
+    .filter(el => el.id !== 'm_site');
+
+  // enable/disable
+  ctrls.forEach(el => {
+    // sales readonly tetap readonly; hanya ubah disabled
+    if (el.id !== 'm_sales') el.disabled = !hasSite;
+    else el.disabled = !hasSite; // biar konsisten (dia memang readonly)
+  });
+
+  // tombol Save juga ikut
+  $('#saveBtn').disabled = !hasSite;
+}
 
   function collectModal(){
     const dt=parseLocalDT($('#m_dt').value);
@@ -591,6 +621,7 @@ const closeModal = () => closeModalA11y('#modal', '#createBtn');
   }
 
   function saveModal(){
+    if (!$('#m_site').value) return;
     const rec=collectModal();
     const arr=readStore(); const i=arr.findIndex(x=>x.id===rec.id);
     if(i>=0) arr[i]=rec; else arr.push(rec);
