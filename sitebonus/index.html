@@ -32,14 +32,12 @@ body{margin:0; background:#000; color:var(--text);font:14px/1.45 -apple-system,B
   padding:6px 10px; border-radius:10px; background:#0f0f0f; border:1px solid #222;
 }
 /* efek hover untuk satu baris penuh */
-#dataTable tbody td{
-  transition: background-color .15s ease;
-}
+#dataTable tbody td{transition: background-color .15s ease;}
 
 /* saat hover di baris mana pun, semua sel di baris itu ikut menyala */
 #dataTable tbody tr:hover > td{
-  background: rgba(59,130,246,.10);   /* biru samar */
-  border-bottom-color: #263b59;       /* opsional: garis bawah sedikit lebih terang */
+  background:#d1d1d1;   /* biru samar */
+  border-bottom-color: transparent;       /* opsional: garis bawah sedikit lebih terang */
 }
 
 /* sudut membulat supaya kelihatan seperti 1 pita */
