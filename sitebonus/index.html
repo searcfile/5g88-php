@@ -16,9 +16,9 @@ body{
   font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial;
 }
 ::-webkit-scrollbar { width: 10px; }
-::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-track { background: #141414; }
 ::-webkit-scrollbar-thumb {
-  background: #141414;
+  background: #424242;
   border-radius: 8px;
   border: 2px solid transparent;
   background-clip: content-box;
@@ -105,10 +105,11 @@ body{
 .table thead{background:linear-gradient(180deg,#161616,#131313)}
 .table th,.table td{
   padding:10px 12px;
-  border-bottom:1px dashed #222;
+  border-bottom:1px solid #222;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   vertical-align:middle;
   text-align:center;
+  color:#008000;
 }
 
 /* Kolom khusus */
@@ -142,7 +143,7 @@ body{
 /* Warna angka */
 .num.red { color: var(--red) }
 .num.green { color: var(--green) }
-.num.cyan { color: var(--cyan) }
+.num.cyan { color:#008000;}
 
 /* Aksi */
 .actions { display:flex; gap:8px; justify-content:center }
@@ -158,7 +159,7 @@ body{
 /* Empty state */
 .empty {
   padding:24px; text-align:center; color:#9f9f9f;
-  border-top:1px dashed #222;
+  border-top:1px solid #222;
   background:repeating-linear-gradient(45deg,#0e0e0e 0 8px,#0c0c0c 8px 16px)
 }
 
