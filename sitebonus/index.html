@@ -224,14 +224,23 @@ body{margin:0; background:var(--bg); color:var(--text);font:14px/1.45 -apple-sys
 .cards-row::-webkit-scrollbar-thumb{background:#2a2a2a; border-radius:6px}
 
 /* Unclaim list styles */
-.uc-claimed{ white-space:nowrap; }
-.uc-item > *{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.uc-list{display:flex; flex-direction:column; gap:8px; overflow:auto; max-height:60vh; padding-right:6px;}
+.uc-item > :nth-child(3){
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.uc-claimed{ white-space:nowrap; overflow:visible; }
+.uc-item > *{ min-width:0; }
+.uc-list{
+  display:flex; flex-direction:column; gap:8px;
+  max-height:60vh; padding-right:6px;
+  overflow-y:auto; overflow-x:hidden;
+}
 .uc-item{
   display:grid;
-  grid-template-columns: 150px 90px minmax(0,1fr) 110px max-content auto;
+  /* created | site | record date | amount | claimed | actions */
+  grid-template-columns:150px 90px minmax(0,1fr) 110px max-content auto;
   gap:8px; align-items:center;
-  border:1px solid #242424; background:#0f0f0f; padding:8px; border-radius:10px;min-height: 42px;
+  border:1px solid #242424; background:#0f0f0f; padding:8px; border-radius:10px;
+  min-height:44px; /* sedikit lebih lega */
 }
 .uc-item .uc-amt{font-weight:800}
 .uc-item .uc-amt.red{color:var(--red)}
