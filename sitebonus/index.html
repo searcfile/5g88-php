@@ -171,13 +171,14 @@ body{margin:0; background:var(--bg); color:var(--text);font:14px/1.45 -apple-sys
   display: none; align-items: center; justify-content: center;
   backdrop-filter: blur(3px);
   pointer-events: auto!important;
+  isolation:isolate;
 }
 .modal.show{display:flex}
 .modal[aria-hidden="true"]{ display:none !important; }
 .modal .overlay{
   position:absolute; inset:0;
   background: rgba(0,0,0,.55);
-  z-index: 2147483647 - 1;                   /* di bawah dialog */
+  z-index: 2147483646;                   /* di bawah dialog */
   pointer-events: auto;            /* klik di luar dialog -> close */
 }
 .modal .dialog{
@@ -190,7 +191,6 @@ body{margin:0; background:var(--bg); color:var(--text);font:14px/1.45 -apple-sys
   display: flex; flex-direction: column;
   pointer-events: auto !important; /* isi dialog bisa diklik/fokus */
 }
-[inert]{ pointer-events: none !important; }
 .dialog h3{margin:0 0 10px; font-size:18px}
 .modal-close{
   position:absolute; top:10px; right:12px;
@@ -261,6 +261,13 @@ input[type="number"]{
   border-color:var(--gold);
   background:linear-gradient(180deg,var(--gold),var(--gold-2));
   color:#000;
+}
+.bg-inert {
+  pointer-events: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  touch-action: none !important;
+  filter: none !important;          /* jaga-jaga polyfill yang aneh */
 }
 </style>
 </head>
@@ -613,18 +620,16 @@ const closeModal = () => closeModalA11y('#modal', '#createBtn');
   }
 // ===== A. Helper inert background + toggle modal =====
 function setBackgroundInert(enable, exceptTarget){
-  // boleh kirim element langsung ATAU selector string
   const except = (exceptTarget instanceof Element)
     ? exceptTarget
     : document.querySelector(exceptTarget);
-
-  // Jika selector salah / element belum ada → JANGAN inert apa pun
   if (!except) return;
 
+  // gunakan class biasa, bukan atribut inert
   document.querySelectorAll('body > *').forEach(el => {
     if (el === except) return;
-    if (enable) el.setAttribute('inert', '');
-    else el.removeAttribute('inert');
+    if (enable) el.classList.add('bg-inert');
+    else el.classList.remove('bg-inert');
   });
 }
 (function(){
