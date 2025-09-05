@@ -24,9 +24,6 @@ body{margin:0; background:#000; color:var(--text);font:14px/1.45 -apple-system,B
 .header{position:sticky; top:0; z-index:50;background:linear-gradient(180deg,#0063ab,#001c31);border-bottom:1px solid #242424; padding:12px 14px;display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
 .brand{display:flex; gap:10px; align-items:center; font-weight:700;padding:6px 10px; border-radius:10px; background:#0f0f0f; border:1px solid #222;}
 /* efek hover untuk satu baris penuh */
-#dataTable tbody td{transition: background-color .15s ease;}
-#dataTable tbody tr:hover > td{background:#1d1d1d;border-color: transparent;}
-#dataTable{border-collapse: separate;border-spacing: 0;}
 .input {height:36px; border-radius:8px; outline:none; border:1px solid #424242; background:#141414; color:var(--text);padding:6px 10px; transition: all 0.2s;}
 .input:hover { border-color:#3c89e8; }
 .input:focus { border-color:#1668dc; }
@@ -186,7 +183,9 @@ body{margin:0; background:#000; color:var(--text);font:14px/1.45 -apple-system,B
 #dataTable tfoot td:first-child {text-align: center !important; vertical-align: middle !important;font-weight: bold; letter-spacing: 0.3px; color: white;}
 #dataTable thead th{ box-shadow: 0 2px 0 rgba(0,0,0,.35);color:white;}
 #dataTable tfoot td{ box-shadow: 0 -2px 0 rgba(0,0,0,.35);}
-
+#dataTable tbody td{transition: background-color .15s ease;}
+#dataTable tbody tr:hover > td{background:#1d1d1d;border-color: transparent;}
+#dataTable{border-collapse: separate;border-spacing: 0;}
 /* Modal */
 .modal{
   position: fixed; inset: 0; z-index: 2147483646;
@@ -297,6 +296,36 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 }
 .btn:disabled { opacity:.5; cursor:not-allowed; }
 .input:disabled, .select:disabled { opacity:.7;cursor: not-allowed;}
+/* ==== Date Range styles (kanan "Site") ==== */
+.range-wrap{
+  height:36px;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:0 10px;
+  border:1px solid #2a2a2a;
+  background:#141414;
+  border-radius:8px;
+  flex:0 0 auto;             /* jangan melar */
+  white-space:nowrap;
+}
+
+.range-wrap .range{
+  height:28px;               /* biar pas di dalam 36px */
+  background:#111;
+  border:1px solid #424242;
+  color:var(--text);
+  border-radius:6px;
+  padding:0 8px;
+  outline:none;
+}
+.range-wrap .range:hover { border-color:#3c89e8; }
+.range-wrap .range:focus { border-color:#1668dc; }
+
+.range-sep{
+  color:#7a7a7a;
+  user-select:none;
+}
 </style>
 </head>
 <body>
@@ -331,7 +360,11 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
           <span id="miniSite" class="mini-value"></span>
         </div>
       </div>
-
+     <div id="rangeWrap" class="range-wrap" title="Filter by date">
+  <input id="rangeFrom" class="input range" type="date">
+  <span class="range-sep">→</span>
+  <input id="rangeTo"   class="input range" type="date">
+</div>
       <div class="spacer"></div>
 
       <button id="targetBtn" class="btn">Set Target</button>
@@ -499,6 +532,64 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 
   const readUnclaims=()=>{try{return JSON.parse(localStorage.getItem(LS_UNCLAIM))||[]}catch{return[]}};
   const writeUnclaims=a=>localStorage.setItem(LS_UNCLAIM,JSON.stringify(a));
+  const LS_DR_FROM = 'bonusRecords.rangeFrom';
+const LS_DR_TO   = 'bonusRecords.rangeTo';
+const toISODateLocal = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+
+function monthStartEnd(yyyyMM){
+  const [y,m] = yyyyMM.split('-').map(Number);
+  const start = new Date(y, m-1, 1);
+  const end   = new Date(y, m, 0); // hari terakhir bulan
+  return {start, end};
+}
+
+function initDateRange(){
+  const month = $('#monthFilter').value;
+  const {start, end} = monthStartEnd(month);
+
+  const savedFrom = localStorage.getItem(LS_DR_FROM);
+  const savedTo   = localStorage.getItem(LS_DR_TO);
+
+  // default: 1st day → today (diklem ke akhir bulan)
+  const today = new Date();
+  const defaultFrom = toISODateLocal(start);
+  const defaultTo   = toISODateLocal(new Date(Math.min(today, end)));
+
+  $('#rangeFrom').value = savedFrom || defaultFrom;
+  $('#rangeTo').value   = savedTo   || defaultTo;
+
+  clampRangeToMonth(); // pastikan masih dalam bulan aktif
+
+  $('#rangeFrom').addEventListener('change', onRangeChange);
+  $('#rangeTo').addEventListener('change', onRangeChange);
+}
+
+function clampRangeToMonth(){
+  const month = $('#monthFilter').value;
+  const {start, end} = monthStartEnd(month);
+
+  let f = $('#rangeFrom').value ? new Date($('#rangeFrom').value) : start;
+  let t = $('#rangeTo').value   ? new Date($('#rangeTo').value)   : end;
+
+  // klem ke dalam bulan aktif
+  if (f < start) f = start;
+  if (f > end)   f = end;
+  if (t < start) t = start;
+  if (t > end)   t = end;
+
+  // jika from > to, tukar
+  if (f > t) [f, t] = [t, f];
+
+  $('#rangeFrom').value = toISODateLocal(f);
+  $('#rangeTo').value   = toISODateLocal(t);
+}
+
+function onRangeChange(){
+  clampRangeToMonth();
+  localStorage.setItem(LS_DR_FROM, $('#rangeFrom').value);
+  localStorage.setItem(LS_DR_TO,   $('#rangeTo').value);
+  render();
+}
 
 function readTarget(){
   // Kalau sudah ada v3, pakai apa adanya (jangan timpa)
@@ -541,6 +632,7 @@ function readTarget(){
   window.addEventListener('DOMContentLoaded',()=>{
     buildMonthOptions();
     autoSwitchToCurrentMonth();
+    initDateRange();
     const savedSite = localStorage.getItem(LS_LAST_SITE);
     $('#siteFilter').value = (savedSite === '5G88' || savedSite === 'SPM888' || savedSite === 'ALL')
     ? savedSite
@@ -549,7 +641,7 @@ function readTarget(){
     $('#createBtn').addEventListener('click',()=>openModal());
     $('#exportBtn').addEventListener('click', exportCSV);
     $('#siteFilter').addEventListener('change', () => {localStorage.setItem(LS_LAST_SITE, $('#siteFilter').value);render();});
-    $('#monthFilter').addEventListener('change', ()=>{localStorage.setItem(LS_LAST_MONTH,$('#monthFilter').value); render();});
+    $('#monthFilter').addEventListener('change', ()=>{localStorage.setItem(LS_LAST_MONTH,$('#monthFilter').value);clampRangeToMonth(); render();});
     $('#targetBtn').addEventListener('click', openTargetModal);
 
     // NEW: Unclaim center
@@ -843,9 +935,16 @@ function render(){
   const month  = $('#monthFilter').value;
   const targets= readTarget();
 
+    // batas waktu dari input (00:00:00 sampai 23:59:59)
+  const fromStr = $('#rangeFrom')?.value;
+  const toStr   = $('#rangeTo')?.value;
+  const fromTS  = fromStr ? new Date(fromStr + 'T00:00:00').getTime() : -Infinity;
+  const toTS    = toStr   ? new Date(toStr   + 'T23:59:59').getTime() :  Infinity;
+
   const data = readStore()
     .filter(r => r.month === month)
     .filter(r => site === 'ALL' ? true : r.site === site)
+    .filter(r => {const ts = new Date(r.datetime).getTime();return ts >= fromTS && ts <= toTS;})
     .sort((a,b) => new Date(b.datetime) - new Date(a.datetime));
 
   // map unclaim per record
