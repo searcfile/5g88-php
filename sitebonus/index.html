@@ -26,7 +26,33 @@ body{margin:0; background:#000; color:var(--text);font:14px/1.45 -apple-system,B
   --picker-blue: #1668dc;                    /* biru utama */
   --picker-blue-ghost: rgba(22,104,220,.25); /* isi di antara range */
 }
+/* KECILKAN & GANTI WARNA TEKS JUDUL BULAN/TAHUN */
+.flatpickr-calendar .flatpickr-current-month{
+  font-size: 12px !important;      /* ubah ukuran header (default ~14–16px) */
+  line-height: 1.2 !important;
+}
 
+/* warna untuk tulisan bulan (September, October, dst.) */
+.flatpickr-calendar .flatpickr-current-month .cur-month{
+  color: #9BC2FF !important;       /* ganti dengan warna yang kamu mau */
+  font-weight: 700 !important;     /* 600–700 biar tebal */
+}
+
+/* warna untuk tahun (2025) – ini input, jadi selektornya berbeda */
+.flatpickr-calendar .flatpickr-current-month .numInputWrapper input.cur-year{
+  color: #9BC2FF !important;       /* samakan dengan bulan */
+  font-weight: 700 !important;
+  font-size: 12px !important;      /* samakan ukurannya juga */
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* (opsional) kecilkan & samakan warna label hari (Sun, Mon, …) */
+.flatpickr-calendar .flatpickr-weekday{
+  font-size: 11px !important;
+  color: #B7C7E8 !important;
+}
 /* ==== Panel / container ==== */
 .flatpickr-calendar,
 .flatpickr-calendar .flatpickr-months,
