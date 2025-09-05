@@ -1268,28 +1268,15 @@ function closeUnclaimModal(){ closeModalA11y('#unclaimModal', '#unclaimBtn'); }
   }
 
 function renderUnclaimList(which = 'pending'){
-  const site  = $('#siteFilter').value;
-
-  const fromStr = $('#rangeFrom').value;
-  const toStr   = $('#rangeTo').value;
-  const fromTS  = new Date(fromStr + 'T00:00:00').getTime();
-  const toTS    = new Date(toStr   + 'T23:59:59').getTime();
-
+  const site = $('#siteFilter').value;
+  const ucAll = readUnclaims().filter(x => (site === 'ALL' || x.site === site));
   const records = Object.fromEntries(readStore().map(r => [r.id, r]));
-  const list = $('#ucList'); list.innerHTML = '';
+  const items = (which === 'history' ? ucAll.filter(x => x.claimed) : ucAll.slice())
+  .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-  const all = readUnclaims().filter(x => (site==='ALL' || x.site===site));
-  const items = all.filter(x => {
-    if (which === 'history') {
-      if (!x.claimed || !x.claimedAt) return false;
-      const ts = new Date(x.claimedAt).getTime();
-      return ts >= fromTS && ts <= toTS;
-    } else {
-      if (x.claimed) return false;
-      const ts = new Date(x.createdAt).getTime();
-      return ts >= fromTS && ts <= toTS;
-    }
-  }).sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt));
+  // 3) Render
+  const list = $('#ucList');
+  list.innerHTML = '';
 
   if (!items.length){
     const e = document.createElement('div');
@@ -1305,8 +1292,8 @@ function renderUnclaimList(which = 'pending'){
     const created   = fmtDMYHMS(u.createdAt);
     const claimedAt = u.claimedAt ? fmtDMYHMS(u.claimedAt) : '-';
 
-    const isHistoryView = (which === 'history');
-    const showClaimBtn  = (!u.claimed && !isHistoryView);
+    const isHistoryView   = (which === 'history');
+    const showClaimBtn    = (!u.claimed && !isHistoryView);
     const showClaimedLine = (u.claimed && isHistoryView);
 
     const displayAmount = (u.claimed && isHistoryView) ? ('-' + fmtNum(u.amount)) : fmtNum(u.amount);
@@ -1317,13 +1304,16 @@ function renderUnclaimList(which = 'pending'){
     row.innerHTML = `
       <div>${created}</div>
       <div><span class="pill ${u.site==='5G88' ? 'site-5g88' : 'site-spm888'}">${u.site}</span></div>
-      <div>Record Date: ${recDt}</div>
+      <div>Record Date: ${recDt} <span class="hint" style="margin-left:6px">(Origin: ${prettyMonth(u.month)})</span></div>
       <div class="${amtCls}">${displayAmount}</div>
       <div class="uc-claimed">${showClaimedLine ? ('Claimed: ' + claimedAt) : ''}</div>
       <div class="uc-actions">
-        ${showClaimBtn? `<button class="btn-del" onclick="deleteUnclaim('${u.id}')">Delete</button>
-        <button class="btn" onclick="claimUnclaim('${u.id}')">Claim</button>`: ''}
-      </div>`;
+        ${showClaimBtn ? `
+          <button class="btn-del" onclick="deleteUnclaim('${u.id}')">Delete</button>
+          <button class="btn" onclick="claimUnclaim('${u.id}')">Claim</button>` : ''
+        }
+      </div>
+    `;
     list.appendChild(row);
   }
 }
