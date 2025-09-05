@@ -546,6 +546,11 @@ function monthStartEnd(yyyyMM){
   const end   = new Date(y, m, 0); // hari terakhir bulan
   return {start, end};
 }
+function jumpPickerToMonth(yyyyMM){
+  if (!fpRange) return;
+  const [y,m] = yyyyMM.split('-').map(Number);
+  fpRange.jumpToDate(new Date(y, m-1, 1));
+}
 // — NEW: pastikan container & hidden inputs sentiasa ada —
 function ensureRangeWrapAndInputs(){
   // cari / buat <div id="rangeWrap" class="range-wrap">
@@ -574,12 +579,10 @@ function ensureRangeWrapAndInputs(){
   }
   return wrap;
 }
-let fpRange = null; // biar di global. Kalau sudah ada di file kamu, tak perlu tambah lagi.
+let fpRange = null;
 
 function initDateRangePicker(){
-  const wrap = ensureRangeWrapAndInputs(); // pastikan wrap & hidden ada
-
-  const month = document.querySelector('#monthFilter').value;
+  const month = $('#monthFilter').value;
   const {start, end} = monthStartEnd(month);
 
   const today   = new Date();
@@ -589,66 +592,26 @@ function initDateRangePicker(){
   const savedFrom = localStorage.getItem(LS_DR_FROM) || defFrom;
   const savedTo   = localStorage.getItem(LS_DR_TO)   || defTo;
 
-  // clamp tarikh tersimpan supaya kekal dalam bulan aktif
-  const clampDateString = (d, s, e) => {
-    const t = new Date(d);
-    if (isNaN(+t)) return toISODateLocal(s);
-    const v = new Date(Math.min(Math.max(+t, +s), +e));
-    return toISODateLocal(v);
-  };
-  const fromClamped = clampDateString(savedFrom, start, end);
-  const toClamped   = clampDateString(savedTo,   start, end);
+  $('#rangeFrom').value = savedFrom;
+  $('#rangeTo').value   = savedTo;
+  $('#rangeVis').value  = `${savedFrom} → ${savedTo}`;
 
-  // sync ke hidden inputs
-  document.querySelector('#rangeFrom').value = fromClamped;
-  document.querySelector('#rangeTo').value   = toClamped;
-
-  // pastikan input visual (#rangeVis) ada
-  let visEl = document.querySelector('#rangeVis');
-  if (!visEl){
-    visEl = document.createElement('input');
-    visEl.id = 'rangeVis';
-    visEl.type = 'text';
-    visEl.readOnly = true;
-    visEl.className = 'input range';
-    // taruh sebagai anak pertama dalam rangeWrap (akan duduk kanan "Site")
-    wrap.insertBefore(visEl, wrap.firstChild);
-  }
-  visEl.value = `${fromClamped} → ${toClamped}`;
-
-  // jika pernah init, destroy dulu
   if (fpRange) fpRange.destroy();
 
-  // fallback jika flatpickr tak dimuat
-  if (typeof flatpickr === 'undefined'){
-    console.warn('Flatpickr belum dimuat — fallback 2 input hidden.');
-    // sebagai backup, bila kau nak guna 2 input biasa, sambungkan event ini:
-    visEl.onclick = () => alert('Date picker tidak tersedia. Pastikan script Flatpickr dimuat.');
-    return;
-  }
-
-  // init flatpickr (range)
   fpRange = flatpickr('#rangeVis', {
     mode: 'range',
     dateFormat: 'Y-m-d',
-    showMonths: 2,
-    defaultDate: [fromClamped, toClamped],
-    minDate: toISODateLocal(start),
-    maxDate: toISODateLocal(end),
-    onOpen: (_, __, inst) => {
-      const {start, end} = monthStartEnd(document.querySelector('#monthFilter').value);
-      inst.set('minDate', toISODateLocal(start));
-      inst.set('maxDate', toISODateLocal(end));
-    },
+    showMonths: 2,                  // 2 bulan berdampingan, panah aktif
+    defaultDate: [savedFrom, savedTo],
     onClose: (selectedDates) => {
       if (selectedDates.length === 2){
-        const f = toISODateLocal(selectedDates[0]);
-        const t = toISODateLocal(selectedDates[1]);
-        document.querySelector('#rangeFrom').value = f;
-        document.querySelector('#rangeTo').value   = t;
-        localStorage.setItem(LS_DR_FROM, f);
-        localStorage.setItem(LS_DR_TO,   t);
-        document.querySelector('#rangeVis').value = `${f} → ${t}`;
+        const fs = toISODateLocal(selectedDates[0]);
+        const ts = toISODateLocal(selectedDates[1]);
+        $('#rangeFrom').value = fs;
+        $('#rangeTo').value   = ts;
+        localStorage.setItem(LS_DR_FROM, fs);
+        localStorage.setItem(LS_DR_TO,   ts);
+        $('#rangeVis').value = `${fs} → ${ts}`;
         render();
       }
     }
@@ -751,7 +714,7 @@ function readTarget(){
     $('#createBtn').addEventListener('click',()=>openModal());
     $('#exportBtn').addEventListener('click', exportCSV);
     $('#siteFilter').addEventListener('change', () => {localStorage.setItem(LS_LAST_SITE, $('#siteFilter').value);render();});
-    $('#monthFilter').addEventListener('change', ()=>{localStorage.setItem(LS_LAST_MONTH, $('#monthFilter').value);clampRangeToMonthWithPicker();render();});
+    $('#monthFilter').addEventListener('change', ()=>{const m = $('#monthFilter').value;localStorage.setItem(LS_LAST_MONTH, m);jumpPickerToMonth(m);render();});
     $('#targetBtn').addEventListener('click', openTargetModal);
 
     // NEW: Unclaim center
@@ -1043,36 +1006,49 @@ function saveTiersLive(){
     render();
   }
 
-  /* ----- Render ----- */
+function prettyRange(f, t){
+  if (!f || !t) return '';
+  const fd = new Date(f), td = new Date(t);
+  const same = fd.getFullYear()===td.getFullYear() && fd.getMonth()===td.getMonth();
+  const optD = { day:'2-digit' }, optMY = { month:'short', year:'numeric' };
+  return same
+    ? `${fd.toLocaleDateString(undefined,optD)}–${td.toLocaleDateString(undefined,{...optD,...optMY})}`
+    : `${fd.toLocaleDateString(undefined,{day:'2-digit',month:'short',year:'numeric'})} → ${td.toLocaleDateString(undefined,{day:'2-digit',month:'short',year:'numeric'})}`;
+}
+
 function render(){
   const site   = $('#siteFilter').value;
-  const month  = $('#monthFilter').value;
+  const month  = $('#monthFilter').value;          // hanya untuk jump & label
   const targets= readTarget();
 
-    // batas waktu dari input (00:00:00 sampai 23:59:59)
+  // batas waktu dari input (00:00:00 s/d 23:59:59)
   const fromStr = $('#rangeFrom')?.value;
   const toStr   = $('#rangeTo')?.value;
   const fromTS  = fromStr ? new Date(fromStr + 'T00:00:00').getTime() : -Infinity;
   const toTS    = toStr   ? new Date(toStr   + 'T23:59:59').getTime() :  Infinity;
 
+  // ❗ Hapus filter r.month === month
   const data = readStore()
-    .filter(r => r.month === month)
     .filter(r => site === 'ALL' ? true : r.site === site)
-    .filter(r => {const ts = new Date(r.datetime).getTime();return ts >= fromTS && ts <= toTS;})
+    .filter(r => {
+      const ts = new Date(r.datetime).getTime();
+      return ts >= fromTS && ts <= toTS;
+    })
     .sort((a,b) => new Date(b.datetime) - new Date(a.datetime));
 
-  // map unclaim per record
+  // Map unclaim yang TERKAIT dengan record yang tampil
+  const dataIds = new Set(data.map(r => r.id));
   const uc = readUnclaims();
   const ucByRecord = {};
-  for (const u of uc.filter(x => x.month === month && (site === 'ALL' || x.site === site))) {
+  for (const u of uc) {
+    if (!dataIds.has(u.recordId)) continue;
     if (!ucByRecord[u.recordId]) ucByRecord[u.recordId] = { pending:0, claimed:0 };
     if (u.claimed) ucByRecord[u.recordId].claimed += safe(u.amount);
     else           ucByRecord[u.recordId].pending += safe(u.amount);
   }
 
-  const cur = toYYYYMM(new Date());
-  const isArchive = month !== cur;
-  $('#archiveBanner').style.display = isArchive ? 'inline-flex' : 'none';
+  // archive banner: sembunyikan ketika range lintas bulan
+  $('#archiveBanner').style.display = 'none';
   $('#bannerMonth').textContent = prettyMonth(month);
 
   const tb = $('#tbody'); tb.innerHTML = '';
@@ -1081,7 +1057,6 @@ function render(){
   for (const r of data){
     const dt = fmtDMYHMS(r.datetime);
 
-    // bonus
     const bonusDep       = pickTierBonus(safe(r.deposit), targets.depositTiers);
     const bonusRes       = pickTierBonus(safe(r.resit),   targets.resitTiers);
     const bonusSalesBase = pickTierBonus(safe(r.sales),   targets.salesTiers);
@@ -1114,7 +1089,6 @@ function render(){
     `;
     tb.appendChild(tr);
 
-    // totals
     totals.uPending += safe(ucs.pending);
     totals.uClaimed += safe(ucs.claimed);
     totals.uAll     += safe(ucs.pending) + safe(ucs.claimed);
@@ -1135,7 +1109,7 @@ function render(){
   $('#emptyState').style.display = data.length ? 'none' : 'block';
   totals.uDisp = safe(totals.uPending);
 
-  // footer totals
+  // footer
   $('#ft_deposit').textContent    = fmtNum(totals.d);
   const wdTotalAbs = Math.abs(totals.w);
   $('#ft_withdrawal').textContent = wdTotalAbs === 0 ? fmtNum(0) : `-${fmtNum(wdTotalAbs)}`;
@@ -1149,18 +1123,16 @@ function render(){
   $('#ft_bonRes').textContent     = totals.br.toLocaleString();
 
   const ftW = $('#ft_withdrawal');
-  ftW.className = ''; ftW.classList.add('num');
-  if (wdTotalAbs > 0) ftW.classList.add('red');
-
+  ftW.className = ''; ftW.classList.add('num'); if (wdTotalAbs > 0) ftW.classList.add('red');
   const ftS = $('#ft_sales');
-  ftS.className = ''; ftS.classList.add('num');
-  if (totals.s < 0) ftS.classList.add('red'); else if (totals.s > 0) ftS.classList.add('green');
+  ftS.className = ''; ftS.classList.add('num'); if (totals.s < 0) ftS.classList.add('red'); else if (totals.s > 0) ftS.classList.add('green');
 
-  const ftU = $('#ft_unclaim');
-  ftU.className = 'num';
+  // mini-cards: tampilkan range
+  $('#miniMonth').textContent = prettyRange(fromStr, toStr);
+  $('#miniSite').textContent  = (site === 'ALL' ? 'All Sites' : site);
 
   renderSummaryRows(totals, data.length, site, month);
-  applyNumberTitles(); // tooltip hover tetap ada
+  applyNumberTitles();
   NumberClipper.clip('#dataTable tbody td:nth-child(n+3):nth-child(-n+12)');
   NumberClipper.clip('#dataTable tfoot td:nth-child(n+3):nth-child(-n+12)');
   NumberClipper.clip('.card .val');
@@ -1190,7 +1162,7 @@ function applyTableScrollLimit() {
 }
 
 function renderSummaryRows(t, count, site, month){
-  $('#miniMonth').textContent = prettyMonth(month);
+  $('#miniMonth').textContent = prettyRange($('#rangeFrom').value, $('#rangeTo').value);
   $('#miniSite').textContent  = (site === 'ALL' ? 'All Sites' : site);
 
   const top = $('#summaryRowTop');
@@ -1247,36 +1219,38 @@ function renderSummaryRows(t, count, site, month){
   }
 
   function exportCSV(){
-  const site  = $('#siteFilter').value;
-  const month = $('#monthFilter').value;
-  const t     = readTarget();
+  const site = $('#siteFilter').value;
+  const t    = readTarget();
 
-  // ambil date range yang aktif
-  const fromStr = $('#rangeFrom').value;
-  const toStr   = $('#rangeTo').value;
+  const fromStr = $('#rangeFrom')?.value;
+  const toStr   = $('#rangeTo')?.value;
   const fromTS  = fromStr ? new Date(fromStr + 'T00:00:00').getTime() : -Infinity;
   const toTS    = toStr   ? new Date(toStr   + 'T23:59:59').getTime() :  Infinity;
 
   const data = readStore()
-    .filter(r => r.month === month)
-    .filter(r => site === 'ALL' ? true : r.site === site)
+    .filter(r => site==='ALL' ? true : r.site===site)
     .filter(r => {
       const ts = new Date(r.datetime).getTime();
       return ts >= fromTS && ts <= toTS;
     })
-    .sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
+    .sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
 
   const header=['datetime','site','deposit','withdrawal','bonus','forfeit','member','resit_in','sales','bonus_deposit','bonus_resit','bonus_sales_base'];
   const rows=[header.join(',')];
+
   for(const r of data){
     const bDep=pickTierBonus(r.deposit, t.depositTiers);
     const bRes=pickTierBonus(r.resit,   t.resitTiers);
     const bSales=pickTierBonus(r.sales, t.salesTiers);
-    rows.push([new Date(r.datetime).toISOString(), r.site, r.deposit, r.withdrawal, r.bonus, r.forfeit, r.member, r.resit, r.sales, bDep, bRes, bSales].join(','));
+    rows.push([
+      new Date(r.datetime).toISOString(), r.site, r.deposit, r.withdrawal, r.bonus, r.forfeit,
+      r.member, r.resit, r.sales, bDep, bRes, bSales
+    ].join(','));
   }
   const blob=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8;'});
-  const url=URL.createObjectURL(blob); const a=document.createElement('a');
-  a.href=url; a.download=`bonus-${month}-${site}.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=`bonus-${fromStr}_to_${toStr}-${site}.csv`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
 }
 
  // ===== C. Unclaim Modal =====
@@ -1295,16 +1269,27 @@ function closeUnclaimModal(){ closeModalA11y('#unclaimModal', '#unclaimBtn'); }
 
 function renderUnclaimList(which = 'pending'){
   const site  = $('#siteFilter').value;
-  const month = $('#monthFilter').value;
 
-  const uc      = readUnclaims().filter(x => x.month === month && (site === 'ALL' || x.site === site));
+  const fromStr = $('#rangeFrom').value;
+  const toStr   = $('#rangeTo').value;
+  const fromTS  = new Date(fromStr + 'T00:00:00').getTime();
+  const toTS    = new Date(toStr   + 'T23:59:59').getTime();
+
   const records = Object.fromEntries(readStore().map(r => [r.id, r]));
+  const list = $('#ucList'); list.innerHTML = '';
 
-  const list = $('#ucList');
-  list.innerHTML = '';
-
-  const items = (which === 'history' ? uc.filter(x => x.claimed) : uc.slice())
-    .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const all = readUnclaims().filter(x => (site==='ALL' || x.site===site));
+  const items = all.filter(x => {
+    if (which === 'history') {
+      if (!x.claimed || !x.claimedAt) return false;
+      const ts = new Date(x.claimedAt).getTime();
+      return ts >= fromTS && ts <= toTS;
+    } else {
+      if (x.claimed) return false;
+      const ts = new Date(x.createdAt).getTime();
+      return ts >= fromTS && ts <= toTS;
+    }
+  }).sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt));
 
   if (!items.length){
     const e = document.createElement('div');
@@ -1315,16 +1300,13 @@ function renderUnclaimList(which = 'pending'){
   }
 
   for (const u of items){
-    const rec      = records[u.recordId];
+    const rec       = records[u.recordId];
     const recDt     = rec ? fmtDMYHMS(rec.datetime) : '-';
     const created   = fmtDMYHMS(u.createdAt);
     const claimedAt = u.claimedAt ? fmtDMYHMS(u.claimedAt) : '-';
 
-    // 👉 Atur tampilan berdasarkan TAB:
-    // - Di PENDING: item yang sudah claimed TETAP tampil seperti pending (tanpa label "Claimed", amount positif)
-    // - Di HISTORY: item claimed tampil merah & ada label "Claimed: ..."
     const isHistoryView = (which === 'history');
-    const showClaimBtn  = (!u.claimed && !isHistoryView); // tombol hanya muncul di Pending & belum claimed
+    const showClaimBtn  = (!u.claimed && !isHistoryView);
     const showClaimedLine = (u.claimed && isHistoryView);
 
     const displayAmount = (u.claimed && isHistoryView) ? ('-' + fmtNum(u.amount)) : fmtNum(u.amount);
@@ -1332,17 +1314,16 @@ function renderUnclaimList(which = 'pending'){
 
     const row = document.createElement('div');
     row.className = 'uc-item';
-row.innerHTML = `
-  <div>${created}</div>
-  <div><span class="pill ${u.site==='5G88' ? 'site-5g88' : 'site-spm888'}">${u.site}</span></div>
-  <div>Record Date: ${recDt}</div>
-  <div class="${amtCls}">${displayAmount}</div>
-  <div class="uc-claimed">${showClaimedLine ? ('Claimed: ' + claimedAt) : ''}</div>
-  <div class="uc-actions">
-  ${showClaimBtn? `<button class="btn-del" onclick="deleteUnclaim('${u.id}')">Delete</button>
-  <button class="btn" onclick="claimUnclaim('${u.id}')">Claim</button>`: ''}
-  </div>
-`;
+    row.innerHTML = `
+      <div>${created}</div>
+      <div><span class="pill ${u.site==='5G88' ? 'site-5g88' : 'site-spm888'}">${u.site}</span></div>
+      <div>Record Date: ${recDt}</div>
+      <div class="${amtCls}">${displayAmount}</div>
+      <div class="uc-claimed">${showClaimedLine ? ('Claimed: ' + claimedAt) : ''}</div>
+      <div class="uc-actions">
+        ${showClaimBtn? `<button class="btn-del" onclick="deleteUnclaim('${u.id}')">Delete</button>
+        <button class="btn" onclick="claimUnclaim('${u.id}')">Claim</button>`: ''}
+      </div>`;
     list.appendChild(row);
   }
 }
