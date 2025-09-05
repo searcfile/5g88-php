@@ -237,8 +237,8 @@ span.flatpickr-weekday {
 
 /* 5) Jaga jarak antar tombol */
 .toolbar{
-  display:flex; gap:8px; align-items:center; margin:10px 0 6px;
-  flex-wrap: nowrap !important; overflow-x:auto; padding-bottom:2px;white-space: nowrap;overflow-y: visible;position: relative;
+  display:flex; gap:8px; align-items:center; margin:10px 0 6px;z-index: 100;
+  flex-wrap: nowrap !important; overflow-x:auto; padding-bottom:2px;white-space: nowrap;overflow: visible;position: relative;
 }
 .badge{display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px; border:1px solid #2a2a2a; background:#111; color:#ccc; font-size:12px}
 
@@ -493,7 +493,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   padding:6px;
   min-width:200px;
   display:none;
-  z-index:2147483000;
+  z-index:2147483640;
   box-shadow:0 12px 32px rgba(0,0,0,.45);max-height: 300px; overflow: auto;
 }
 .range-quick-menu.show{ display:block; }
@@ -510,6 +510,14 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 .range-quick-menu button:hover{ background:#1c1c1c; color:#3c89e8; }
 .range-quick-menu hr{
   border:0; height:1px; background:#2a2a2a; margin:6px 0;
+}
+#rangeWrap{
+  position: relative;
+  z-index: 101;
+}
+.range-quick-menu.up{
+  top: auto;
+  bottom: calc(100% + 6px);
 }
 </style>
 </head>
@@ -875,7 +883,6 @@ function applyQuickRange(kind){
 
   setRangeAndRefresh(f, t, true);
 }
-/* ====== QUICK MENU: init & handlers (safe) ====== */
 function initQuickMenu(){
   const quickBtn  = document.getElementById('quickBtn');
   const quickMenu = document.getElementById('quickMenu');
@@ -883,37 +890,30 @@ function initQuickMenu(){
 
   const toggleQuickMenu = (show)=>{
     const willShow = (typeof show === 'boolean') ? show : !quickMenu.classList.contains('show');
+
+    if (willShow) {
+      // cek ruang di bawah tombol; kalau mepet, buka ke atas
+      const r = quickBtn.getBoundingClientRect();
+      const approxMenuH = 240; // kira-kira tinggi menu
+      const spaceBelow = window.innerHeight - r.bottom;
+      quickMenu.classList.toggle('up', spaceBelow < approxMenuH);
+    }
+
     quickMenu.classList.toggle('show', willShow);
     quickBtn.setAttribute('aria-expanded', willShow ? 'true' : 'false');
     quickMenu.setAttribute('aria-hidden',  willShow ? 'false' : 'true');
   };
 
-  quickBtn.addEventListener('click', (e)=>{
-    e.stopPropagation();            // jangan kena handler <document>
-    toggleQuickMenu();
-  });
-
-  // klik di dalam menu jangan menutup
+  quickBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleQuickMenu(); });
   quickMenu.addEventListener('click', (e)=> e.stopPropagation());
-
-  // pilih preset
   quickMenu.querySelectorAll('[data-q]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      const k = btn.dataset.q;
       toggleQuickMenu(false);
-      applyQuickRange(k);           // set range + sync UI + render
+      applyQuickRange(btn.dataset.q);
     });
   });
-
-  // klik di luar → tutup
-  document.addEventListener('click', ()=>{
-    if (quickMenu.classList.contains('show')) toggleQuickMenu(false);
-  });
-
-  // Esc → tutup
-  document.addEventListener('keydown', (e)=>{
-    if (e.key === 'Escape') toggleQuickMenu(false);
-  });
+  document.addEventListener('click', ()=> quickMenu.classList.contains('show') && toggleQuickMenu(false));
+  document.addEventListener('keydown', (e)=> e.key === 'Escape' && toggleQuickMenu(false));
 }
 function setMiniMonthLabel(){
   const m = $('#monthFilter').value;
