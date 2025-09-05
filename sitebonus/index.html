@@ -551,6 +551,21 @@ function jumpPickerToMonth(yyyyMM){
   const [y,m] = yyyyMM.split('-').map(Number);
   fpRange.jumpToDate(new Date(y, m-1, 1));
 }
+function setMiniMonthLabel(){
+  const m = $('#monthFilter').value;
+  const { start, end } = monthStartEnd(m);
+  const f = $('#rangeFrom').value;
+  const t = $('#rangeTo').value;
+
+  const fullStart = toISODateLocal(start);
+  const fullEnd   = toISODateLocal(end);
+
+  const label = (f === fullStart && t === fullEnd)
+    ? prettyMonth(m)            // full bulan → nama bulan
+    : prettyRange(f, t);        // selain itu → rentang tanggal
+
+  $('#miniMonth').textContent = label;
+}
 // — NEW: pastikan container & hidden inputs sentiasa ada —
 function ensureRangeWrapAndInputs(){
   // cari / buat <div id="rangeWrap" class="range-wrap">
@@ -734,11 +749,12 @@ function readTarget(){
     $('#createBtn').addEventListener('click',()=>openModal());
     $('#exportBtn').addEventListener('click', exportCSV);
     $('#siteFilter').addEventListener('change', () => {localStorage.setItem(LS_LAST_SITE, $('#siteFilter').value);render();});
-    $('#monthFilter').addEventListener('change', ()=>{
+$('#monthFilter').addEventListener('change', ()=>{
   const m = $('#monthFilter').value;
   localStorage.setItem(LS_LAST_MONTH, m);
-  jumpPickerToMonth(m);   // cuma geser tampilan picker
-  setMonthAndRange(m);    // ⬅️ range jadi full bulan terpilih
+  jumpPickerToMonth(m);
+  setMonthAndRange(m);      // ini sudah set range 1..akhir bulan + render()
+  setMiniMonthLabel();      // pastikan label “Month” ikut update
 });
     $('#targetBtn').addEventListener('click', openTargetModal);
 
@@ -1153,7 +1169,7 @@ function render(){
   ftS.className = ''; ftS.classList.add('num'); if (totals.s < 0) ftS.classList.add('red'); else if (totals.s > 0) ftS.classList.add('green');
 
   // mini-cards: tampilkan range
-  $('#miniMonth').textContent = prettyRange(fromStr, toStr);
+  setMiniMonthLabel();
   $('#miniSite').textContent  = (site === 'ALL' ? 'All Sites' : site);
 
   renderSummaryRows(totals, data.length, site, month);
@@ -1187,7 +1203,7 @@ function applyTableScrollLimit() {
 }
 
 function renderSummaryRows(t, count, site, month){
-  $('#miniMonth').textContent = prettyRange($('#rangeFrom').value, $('#rangeTo').value);
+  setMiniMonthLabel();
   $('#miniSite').textContent  = (site === 'ALL' ? 'All Sites' : site);
 
   const top = $('#summaryRowTop');
