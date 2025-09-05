@@ -23,43 +23,59 @@ body{margin:0; background:#000; color:var(--text);font:14px/1.45 -apple-system,B
 }
   /* ===== Flatpickr color override (letak SETELAH theme dark.css) ===== */
   :root{
-    --picker-blue: #1668dc;               /* biru utama */
-    --picker-blue-ghost: rgba(22,104,220,.25); /* isi di antara range */
-  }
+  --picker-blue: #1668dc;                    /* biru utama */
+  --picker-blue-ghost: rgba(22,104,220,.25); /* isi di antara range */
+}
 
-  /* titik awal/akhir & tanggal terpilih */
-  .flatpickr-calendar .flatpickr-day.selected,
-  .flatpickr-calendar .flatpickr-day.startRange,
-  .flatpickr-calendar .flatpickr-day.endRange,
-  .flatpickr-calendar .flatpickr-day.selected:hover,
-  .flatpickr-calendar .flatpickr-day.startRange:hover,
-  .flatpickr-calendar .flatpickr-day.endRange:hover {
-    background: var(--picker-blue) !important;
-    border-color: var(--picker-blue) !important;
-    color: #fff !important;
-  }
+/* Titik awal/akhir & tanggal terpilih */
+.flatpickr-calendar .flatpickr-day.selected,
+.flatpickr-calendar .flatpickr-day.startRange,
+.flatpickr-calendar .flatpickr-day.endRange,
+.flatpickr-calendar .flatpickr-day.selected:hover,
+.flatpickr-calendar .flatpickr-day.startRange:hover,
+.flatpickr-calendar .flatpickr-day.endRange:hover{
+  background: var(--picker-blue) !important;
+  border-color: var(--picker-blue) !important;
+  color: #fff !important;
+}
 
-  /* area di antara start ↔ end */
-  .flatpickr-calendar .flatpickr-day.inRange {
-    background: var(--picker-blue-ghost) !important;
-    border-color: transparent !important;
-    box-shadow:
-      -5px 0 0 var(--picker-blue-ghost) inset,
-       5px 0 0 var(--picker-blue-ghost) inset !important;
-    color: #fff;
-  }
+/* Hapus efek bawaan yang bikin “garis”/seam */
+.flatpickr-calendar .flatpickr-day.startRange,
+.flatpickr-calendar .flatpickr-day.endRange{
+  box-shadow: none !important;
+}
 
-  /* border untuk 'today' (kalau tidak dipilih) */
-  .flatpickr-calendar .flatpickr-day.today:not(.selected):not(.startRange):not(.endRange){
-    border-color: var(--picker-blue) !important;
-  }
+/* Kalau start & end berdempetan, ratakan warnanya full biru */
+.flatpickr-calendar .flatpickr-day.startRange + .flatpickr-day.endRange,
+.flatpickr-calendar .flatpickr-day.startRange + .flatpickr-day.endRange:hover{
+  background: var(--picker-blue) !important;
+  border-color: var(--picker-blue) !important;
+  box-shadow: none !important;
+  color: #fff !important;
+}
 
-  /* (opsional) warna ikon panah bulan */
-  .flatpickr-calendar .flatpickr-prev-month,
-  .flatpickr-calendar .flatpickr-next-month{
-    color: var(--picker-blue) !important;
-    fill: var(--picker-blue) !important;
-  }
+/* Area di antara start ↔ end */
+.flatpickr-calendar .flatpickr-day.inRange{
+  background: var(--picker-blue-ghost) !important;
+  border-color: transparent !important;
+  box-shadow:
+    -5px 0 0 var(--picker-blue-ghost) inset,
+     5px 0 0 var(--picker-blue-ghost) inset !important;
+  color: #fff;
+}
+
+/* Border 'today' (kalau tidak dipilih) */
+.flatpickr-calendar .flatpickr-day.today:not(.selected):not(.startRange):not(.endRange){
+  border-color: var(--picker-blue) !important;
+}
+
+/* Warna ikon panah bulan */
+.flatpickr-calendar .flatpickr-prev-month,
+.flatpickr-calendar .flatpickr-next-month{
+  color: var(--picker-blue) !important;
+  fill: var(--picker-blue) !important;
+}
+
 /* Header */
 .header{position:sticky; top:0; z-index:50;background:linear-gradient(180deg,#0063ab,#001c31);border-bottom:1px solid #242424; padding:12px 14px;display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
 .brand{display:flex; gap:10px; align-items:center; font-weight:700;padding:6px 10px; border-radius:10px; background:#0f0f0f; border:1px solid #222;}
@@ -355,7 +371,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   color:#7a7a7a;
   user-select:none;
 }
-#rangeVis{ min-width:260px; }
+#rangeVis{ min-width:260px; font-variant-numeric: tabular-nums;letter-spacing: .2px;}
 #rangeVis::placeholder{
   text-align: center;
 }
