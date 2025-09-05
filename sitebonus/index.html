@@ -318,6 +318,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   border-radius:6px;
   padding:0 8px;
   outline:none;
+  text-align: center; 
 }
 .range-wrap .range:hover { border-color:#3c89e8; }
 .range-wrap .range:focus { border-color:#1668dc; }
@@ -327,6 +328,9 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   user-select:none;
 }
 #rangeVis{ min-width:260px; }
+#rangeVis::placeholder{
+  text-align: center;
+}
 </style>
 </head>
 <body>
@@ -524,7 +528,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   const fmtDMYHMS = d => {
   const x = new Date(d);return `${two(x.getDate())}/${two(x.getMonth()+1)}/${x.getFullYear()} ` +`${two(x.getHours())}:${two(x.getMinutes())}:${two(x.getSeconds())}`;};
   const fmtDMY = d => {const x = new Date(d);return `${two(x.getDate())}/${two(x.getMonth()+1)}/${x.getFullYear()}`;};
-
+  const RANGE_SEP = ' \u2192 ';
   const LS_KEY='bonusRecords.v1';
   const LS_LAST_MONTH='bonusRecords.lastOpenedMonth';
   const LS_LAST_SITE = 'bonusRecords.lastSite';
@@ -614,24 +618,25 @@ function initDateRangePicker(){
 
   if (fpRange) fpRange.destroy();
 
-  fpRange = flatpickr('#rangeVis', {
-    mode: 'range',
-    dateFormat: 'Y-m-d',
-    showMonths: 2,                  // 2 bulan berdampingan, panah aktif
-    defaultDate: [savedFrom, savedTo],
-    onClose: (selectedDates) => {
-      if (selectedDates.length === 2){
-        const fs = toISODateLocal(selectedDates[0]);
-        const ts = toISODateLocal(selectedDates[1]);
-        $('#rangeFrom').value = fs;
-        $('#rangeTo').value   = ts;
-        localStorage.setItem(LS_DR_FROM, fs);
-        localStorage.setItem(LS_DR_TO,   ts);
-        $('#rangeVis').value = `${fs} → ${ts}`;
-        render();
-      }
+ fpRange = flatpickr('#rangeVis', {
+  mode: 'range',
+  dateFormat: 'Y-m-d',
+  showMonths: 2,
+  defaultDate: [savedFrom, savedTo],
+  locale: { rangeSeparator: RANGE_SEP },   // <— ganti "to" jadi " → "
+  onClose: (selectedDates) => {
+    if (selectedDates.length === 2){
+      const fs = toISODateLocal(selectedDates[0]);
+      const ts = toISODateLocal(selectedDates[1]);
+      $('#rangeFrom').value = fs;
+      $('#rangeTo').value   = ts;
+      localStorage.setItem(LS_DR_FROM, fs);
+      localStorage.setItem(LS_DR_TO,   ts);
+      $('#rangeVis').value = `${fs}${RANGE_SEP}${ts}`; // <— pakai panah
+      render();
     }
-  });
+  }
+});
 }
 function clampRangeToMonthWithPicker(){
   const {start, end} = monthStartEnd(document.querySelector('#monthFilter').value);
