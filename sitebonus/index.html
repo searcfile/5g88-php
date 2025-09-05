@@ -743,10 +743,12 @@ function initDateRangePicker(){
   const savedFrom = localStorage.getItem(LS_DR_FROM) || defFrom;
   const savedTo   = localStorage.getItem(LS_DR_TO)   || defTo;
 
+  // set nilai awal
   const vis = $('#rangeVis');
-  vis.removeAttribute('placeholder');            // ← jangan pakai placeholder
-  vis.value = `${savedFrom} → ${savedTo}`;
-  vis.dataset.last = vis.value;                  // ← SIMPAN nilai terakhir
+  vis.removeAttribute('placeholder');           // jangan pakai placeholder
+  const initial = `${savedFrom} → ${savedTo}`;
+  vis.value = initial;
+  vis.dataset.last = initial;                   // simpan “nilai terakhir”
 
   $('#rangeFrom').value = savedFrom;
   $('#rangeTo').value   = savedTo;
@@ -758,8 +760,16 @@ function initDateRangePicker(){
     dateFormat: 'Y-m-d',
     showMonths: 2,
     defaultDate: [savedFrom, savedTo],
-    locale: { rangeSeparator: ' → ' },          // “→” bukan “to”
-    onClose(selectedDates){
+    locale: { rangeSeparator: ' → ' },
+
+    // — saat dibuka, kunci nilai terakhir —
+    onOpen(_, __, inst){
+      const v = (vis.value || '').trim();
+      vis.dataset.last = v || `${$('#rangeFrom').value} → ${$('#rangeTo').value}`;
+    },
+
+    // — update saat 2 tanggal terpilih —
+    onChange(selectedDates){
       if (selectedDates.length === 2){
         const fs = toISODateLocal(selectedDates[0]);
         const ts = toISODateLocal(selectedDates[1]);
@@ -771,12 +781,16 @@ function initDateRangePicker(){
 
         const s = `${fs} → ${ts}`;
         vis.value = s;
-        vis.dataset.last = s;                   // ← UPDATE nilai terakhir
-        render();
-      } else {
-        // batal / tidak lengkap → balik ke nilai terakhir
-        vis.value = vis.dataset.last || vis.value;
+        vis.dataset.last = s;                 // refresh “terakhir”
       }
+    },
+
+    // — kalau batal (kurang dari 2), pulihkan nilai terakhir —
+    onClose(selectedDates){
+      if (selectedDates.length < 2){
+        vis.value = vis.dataset.last || `${$('#rangeFrom').value} → ${$('#rangeTo').value}`;
+      }
+      render();
     }
   });
 }
@@ -800,9 +814,9 @@ function clampRangeToMonthWithPicker(){
 
   if (fpRange) fpRange.setDate([fs, ts], true);
 
-  const vis = $('#rangeVis');
-  vis.value = `${fs} → ${ts}`;
-  vis.dataset.last = vis.value;                 // ← PENTING
+const vis = $('#rangeVis');
+vis.value = `${fs} → ${ts}`;
+vis.dataset.last = vis.value;                 // ← PENTING
 }
 // Fallback bila flatpickr tak ada
 function basicRangeChanged(){
