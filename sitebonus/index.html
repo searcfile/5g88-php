@@ -58,17 +58,18 @@ body{margin:0; background:#000; color:var(--text);font:14px/1.45 -apple-system,B
 .val.red{color:var(--red)} .val.green{color:var(--green)} .val.cyan{color:#008000;}
 
 /* Toolbar di atas tabel */
-@media (max-width: 1400px){.spacer{ flex-basis:100%; height:0; }}
-.toolbar .btn{flex-shrink:0;white-space: nowrap;}
-.toolbar{display:flex;align-items:center;gap:12px;row-gap:8px;margin:10px 0 6px;overflow: hidden;white-space: nowrap;}
+.toolbar{
+  display:flex; gap:8px; align-items:center; margin:10px 0 6px;
+  flex-wrap:nowrap; overflow-x:auto; padding-bottom:2px;
+}
 .badge{display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px; border:1px solid #2a2a2a; background:#111; color:#ccc; font-size:12px}
 
 /* Mini-cards (Month & Site) di kiri tombol */
-.mini-cards{display:flex; gap:8px; min-width:0;flex: 1 1 auto;overflow: hidden; }
+.mini-cards{display:flex; gap:8px; min-width:0;}
 .mini-card{
   height:36px; display:flex; align-items:center; gap:8px;
   padding:0 12px; border-radius:8px;
-  border:1px solid #2a2a2a; background:#141414; min-width:160px;flex: 1 1 160px;min-width: 120px;max-width: 260px;overflow: hidden;
+  border:1px solid #2a2a2a; background:#141414; min-width:160px;
 }
 .mini-label{font-size:12px; color:#1668dc}
 .mini-value{
@@ -1122,9 +1123,6 @@ function claimUnclaim(ucId){
   };
   recs.push(newRec);
   writeStore(recs);
-
-  // 2) TANDAI UNCLAIM SUDAH DI‑CLAIM & PINDAHKAN KE BULAN SEKARANG
-  //    Link ke record BARU supaya kolom "Unclaim" di baris record baru tampil negatif (-amount)
   item.claimed   = true;
   item.claimedAt = nowISO;
   item.recordId  = newRec.id;
@@ -1191,7 +1189,6 @@ function clipApply(el, raw){
   el.classList.add('clipnum');
   el.dataset.full = full;
   el.dataset.short = short;
-  // mulai dari short jika memang melebihi batas, kalau tidak langsung full
   el.dataset.state = (full.length > MAX_DISPLAY) ? 'short' : 'full';
   el.textContent = (el.dataset.state === 'short') ? short : full;
   el.title = (el.dataset.state === 'short') ? full : '';
@@ -1203,7 +1200,6 @@ function clipApply(el, raw){
   };
 }
 
-// Terapkan ke NodeList/selector
 function clipMany(selector){
   const nodes = (typeof selector === 'string') ? document.querySelectorAll(selector) : selector;
   nodes.forEach(el => clipApply(el));
