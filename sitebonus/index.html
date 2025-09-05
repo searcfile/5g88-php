@@ -442,27 +442,73 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 .btn:disabled { opacity:.5; cursor:not-allowed; }
 .input:disabled, .select:disabled { opacity:.7;cursor: not-allowed;}
 /* ==== Date Range styles (kanan "Site") ==== */
-.range-wrap{flex:0 0 auto;white-space:nowrap;}
+/* ==== Date Range styles (kanan "Site") ==== */
+.range-wrap{
+  position: relative;                /* untuk menu absolute */
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
 .range-wrap .range{
-  height:36px;               /* biar pas di dalam 36px */
+  height:36px;
   background:#111;
   border:1px solid #424242;
   color:var(--text);
   border-radius:8px;
   padding:0 8px;
   outline:none;
-  text-align: center; 
+  text-align:center;
+  min-width:260px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing:.2px;
 }
 .range-wrap .range:hover { border-color:#3c89e8; }
 .range-wrap .range:focus { border-color:#1668dc; }
+#rangeVis::placeholder{ text-align:center }
 
-.range-sep{
-  color:#7a7a7a;
-  user-select:none;
+/* tombol kecil dropdown */
+.range-quick-btn{
+  height:28px;
+  padding:0 8px;
+  border-radius:8px;
+  border:1px solid #424242;
+  background:#141414;
+  color:rgba(255,255,255,.85);
+  cursor:pointer;
+  transition:all .2s;
 }
-#rangeVis{ min-width:260px; font-variant-numeric: tabular-nums;letter-spacing: .2px;}
-#rangeVis::placeholder{
-  text-align: center;
+.range-quick-btn:hover{ border-color:#3c89e8; color:#3c89e8; }
+
+/* menu preset */
+.range-quick-menu{
+  position:absolute;
+  right:0;
+  top:calc(100% + 6px);
+  background:#111;
+  border:1px solid #424242;
+  border-radius:10px;
+  padding:6px;
+  min-width:200px;
+  display:none;
+  z-index:9999;
+  box-shadow:0 12px 32px rgba(0,0,0,.45);
+}
+.range-quick-menu.show{ display:block; }
+.range-quick-menu button{
+  width:100%;
+  text-align:left;
+  background:transparent;
+  border:0;
+  color:rgba(255,255,255,.9);
+  padding:8px 10px;
+  border-radius:8px;
+  cursor:pointer;
+}
+.range-quick-menu button:hover{ background:#1c1c1c; color:#3c89e8; }
+.range-quick-menu hr{
+  border:0; height:1px; background:#2a2a2a; margin:6px 0;
 }
 </style>
 </head>
@@ -501,6 +547,21 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 
   <div id="rangeWrap" class="range-wrap" title="Filter by date">
   <input id="rangeVis" class="input range" type="text" readonly>
+   <!-- tombol kecil dropdown -->
+  <button id="quickBtn" class="range-quick-btn" aria-haspopup="true" aria-expanded="false" title="Quick ranges">▾</button>
+
+  <!-- menu preset -->
+  <div id="quickMenu" class="range-quick-menu" role="menu" aria-hidden="true">
+    <button type="button" data-q="today">Today</button>
+    <button type="button" data-q="yesterday">Yesterday</button>
+    <hr>
+    <button type="button" data-q="thisweek">This Week</button>
+    <button type="button" data-q="lastweek">Last Week</button>
+    <hr>
+    <button type="button" data-q="thismonth">This Month</button>
+    <button type="button" data-q="lastmonth">Last Month</button>
+  </div>
+
   <input id="rangeFrom" type="hidden">
   <input id="rangeTo"   type="hidden">
 </div>
@@ -687,6 +748,59 @@ function jumpPickerToMonth(yyyyMM){
   const [y,m] = yyyyMM.split('-').map(Number);
   fpRange.jumpToDate(new Date(y, m-1, 1));
 }
+const WEEK_START = 1; 
+
+function setRangeAndRefresh(fs, ts, updatePicker = true){
+  // set nilai hidden + LS
+  $('#rangeFrom').value = fs;
+  $('#rangeTo').value   = ts;
+  localStorage.setItem(LS_DR_FROM, fs);
+  localStorage.setItem(LS_DR_TO,   ts);
+
+  // update tampilan input
+  const vis = $('#rangeVis');
+  const s = `${fs} \u2192 ${ts}`;
+  vis.value = s;
+  vis.dataset.last = s;
+  vis.dataset.lastFrom = fs;
+  vis.dataset.lastTo   = ts;
+
+  // sinkron ke flatpickr
+  if (fpRange && updatePicker) fpRange.setDate([fs, ts], false);
+
+  // sinkron dropdown bulan + mini label
+  syncMonthToRange(fs, ts);
+  setMiniMonthLabel();
+
+  render();
+}
+
+function iso(d){ // YYYY-MM-DD lokal
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+}
+function startOfDay(d){
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+function endOfDay(d){
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+}
+function weekRangeOf(date, startDow = WEEK_START){
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  const dow = d.getDay();                       // 0..6
+  const offset = ((dow - startDow) + 7) % 7;    // jarak dari awal minggu
+  const start = new Date(d);
+  start.setDate(d.getDate() - offset);          // hari pertama minggu
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);             // hari terakhir minggu
+  return { start, end };
+}
+function monthRangeOf(date){
+  const y = date.getFullYear(), m = date.getMonth();
+  const start = new Date(y, m, 1);
+  const end   = new Date(y, m+1, 0);
+  return { start, end };
+}
 function forceCurrentMonth(){
   const cur = toYYYYMM(new Date());   // contoh: "2025-09"
   const { start, end } = monthStartEnd(cur);
@@ -713,6 +827,87 @@ function forceCurrentMonth(){
 
   if (fpRange) fpRange.setDate([fs, ts], false); // jangan trigger render di sini
 }
+function applyQuickRange(kind){
+  const now = new Date();
+  let f, t;
+
+  switch(kind){
+    case 'today': {
+      const s = startOfDay(now);
+      f = iso(s); t = iso(s);
+      break;
+    }
+    case 'yesterday': {
+      const y = startOfDay(now); y.setDate(y.getDate()-1);
+      f = iso(y); t = iso(y);
+      break;
+    }
+    case 'thisweek': {
+      const { start, end } = weekRangeOf(now, WEEK_START);
+      // jangan melampaui hari ini
+      const realEnd = new Date(Math.min(+end, +now));
+      f = iso(start); t = iso(realEnd);
+      break;
+    }
+    case 'lastweek': {
+      const { start } = weekRangeOf(now, WEEK_START);
+      const lastStart = new Date(start); lastStart.setDate(start.getDate()-7);
+      const lastEnd   = new Date(lastStart); lastEnd.setDate(lastStart.getDate()+6);
+      f = iso(lastStart); t = iso(lastEnd);
+      break;
+    }
+    case 'thismonth': {
+      const { start, end } = monthRangeOf(now);
+      const realEnd = new Date(Math.min(+end, +now));
+      f = iso(start); t = iso(realEnd);
+      break;
+    }
+    case 'lastmonth': {
+      const y = now.getFullYear(), m = now.getMonth();
+      const start = new Date(y, m-1, 1);
+      const end   = new Date(y, m, 0);
+      f = iso(start); t = iso(end);
+      break;
+    }
+    default: return;
+  }
+
+  setRangeAndRefresh(f, t, true);
+}
+/* ====== QUICK MENU: toggle + event binding ====== */
+const quickBtn  = document.querySelector('#quickBtn');
+const quickMenu = document.querySelector('#quickMenu');
+
+function toggleQuickMenu(show){
+  const willShow = (typeof show === 'boolean') ? show : !quickMenu.classList.contains('show');
+  quickMenu.classList.toggle('show', willShow);
+  quickBtn?.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+  quickMenu?.setAttribute('aria-hidden', willShow ? 'false' : 'true');
+}
+
+quickBtn?.addEventListener('click', (e)=>{
+  e.stopPropagation();
+  toggleQuickMenu();
+});
+
+// pilih preset
+quickMenu?.querySelectorAll('[data-q]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const k = btn.dataset.q;
+    toggleQuickMenu(false);
+    applyQuickRange(k);
+  });
+});
+
+// klik di luar → tutup
+document.addEventListener('click', ()=>{
+  if (quickMenu?.classList.contains('show')) toggleQuickMenu(false);
+});
+
+// Esc → tutup
+document.addEventListener('keydown', (e)=>{
+  if (e.key === 'Escape') toggleQuickMenu(false);
+});
 function setMiniMonthLabel(){
   const m = $('#monthFilter').value;
   const { start, end } = monthStartEnd(m);
