@@ -298,9 +298,9 @@ span.flatpickr-weekday {
 
 /* Aksi */
 .actions { display:flex; gap:8px; justify-content:center }
-.iconbtn { height:28px; padding:0 10px; border-radius:6px;transition: all 0.2s; border:1px solid #1668dc; background:#141414; color:#1668dc; cursor:pointer; font-weight:600 }
+.iconbtn { height:28px; padding:0 10px; border-radius:6px;transition: all 0.2s; border:1px solid #1668dc; background:#141414; color:#1668dc; cursor:pointer;}
 .iconbtn:hover { border-color:#3c89e8;color:#3c89e8;}.iconbtn:active { border-color:#1554ad;color:#1554ad;}
-.iconbtn-del { height:28px; padding:0 10px; border-radius:6px;transition: all 0.2s; border:1px solid #dc4446; background:#191111; color:#dc4446; cursor:pointer; font-weight:600 }
+.iconbtn-del { height:28px; padding:0 10px; border-radius:6px;transition: all 0.2s; border:1px solid #dc4446; background:#191111; color:#dc4446; cursor:pointer;}
 .iconbtn-del:hover {border-color:#e86e6b; color:#e86e6b;}.iconbtn-del:active {border-color:#ad393a; color:#ad393a;}
 
 /* Pill */
@@ -756,6 +756,30 @@ function ensureRangeWrapAndInputs(){
   }
   return wrap;
 }
+function monthOf(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}`; }
+
+function syncMonthToRange(fs, ts){
+  const newMonth = monthOf(new Date(fs));
+  const sel = document.querySelector('#monthFilter');
+  if (!sel) return;
+
+  // Pastikan option untuk newMonth ada
+  if (![...sel.options].some(o => o.value === newMonth)){
+    const opt = document.createElement('option');
+    opt.value = newMonth;
+    opt.textContent = prettyMonth(newMonth);
+
+    // Masukkan sambil jaga urutan desc (2025-10, 2025-09, dst)
+    const ops = [...sel.options, opt].sort((a,b) => b.value.localeCompare(a.value));
+    sel.innerHTML = '';
+    ops.forEach(o => sel.appendChild(o));
+  }
+
+  if (sel.value !== newMonth){
+    sel.value = newMonth;
+    localStorage.setItem(LS_LAST_MONTH, newMonth);
+  }
+}
 let fpRange = null;
 
 function initDateRangePicker(){
@@ -800,23 +824,28 @@ function initDateRangePicker(){
   },
 
   // update ketika 2 tanggal terpilih
-  onChange(selectedDates, dateStr, inst){
-    if (selectedDates.length === 2){
-      const fs = toISODateLocal(selectedDates[0]);
-      const ts = toISODateLocal(selectedDates[1]);
+onChange(selectedDates, dateStr, inst){
+  if (selectedDates.length === 2){
+    const fs = toISODateLocal(selectedDates[0]);
+    const ts = toISODateLocal(selectedDates[1]);
 
-      $('#rangeFrom').value = fs;
-      $('#rangeTo').value   = ts;
-      localStorage.setItem(LS_DR_FROM, fs);
-      localStorage.setItem(LS_DR_TO,   ts);
+    $('#rangeFrom').value = fs;
+    $('#rangeTo').value   = ts;
+    localStorage.setItem(LS_DR_FROM, fs);
+    localStorage.setItem(LS_DR_TO,   ts);
 
-      const s = `${fs} → ${ts}`;
-      vis.value       = s;
-      vis.dataset.last = s;
-      vis.dataset.lastFrom = fs;
-      vis.dataset.lastTo   = ts;
-    }
-  },
+    const s = `${fs} → ${ts}`;
+    vis.value        = s;
+    vis.dataset.last = s;
+    vis.dataset.lastFrom = fs;
+    vis.dataset.lastTo   = ts;
+
+    // ⬇️ penting: buat header month & mini-card ikut pindah
+    syncMonthToRange(fs, ts);
+    setMiniMonthLabel();
+    render();
+  }
+},
 
   // kalau batal (kurang dari 2), pulihkan via inst.setDate agar tidak kosong lagi
   onClose(selectedDates, dateStr, inst){
@@ -854,7 +883,11 @@ function clampRangeToMonthWithPicker(){
 
 const vis = $('#rangeVis');
 vis.value = `${fs} → ${ts}`;
-vis.dataset.last = vis.value;                 // ← PENTING
+vis.dataset.last = vis.value;   // sudah ada
+vis.dataset.lastFrom = fs;      // ⬅️ tambah
+vis.dataset.lastTo   = ts;      // ⬅️ tambah
+syncMonthToRange(fs, ts);
+setMiniMonthLabel();
 }
 // Fallback bila flatpickr tak ada
 function basicRangeChanged(){
@@ -880,6 +913,8 @@ vis.value = `${fs} → ${ts}`;
 vis.dataset.last = vis.value;
 vis.dataset.lastFrom = fs;
 vis.dataset.lastTo   = ts;
+syncMonthToRange(fs, ts);   // ⬅️ tambah
+setMiniMonthLabel();
 }
 function resetToCurrentOnLoad(){
   const now = new Date();
