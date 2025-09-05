@@ -54,7 +54,7 @@ body{margin:0; background:#000; color:var(--text);font:14px/1.45 -apple-system,B
 .card .val{font-size:14px; font-weight:700}
 
 /* Ellipsis khusus kartu */
-.card .val{display:block;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#008000;}
+.card .val{display:block;max-width:100%;overflow:hidden;white-space:nowrap;color:#008000;}
 .val.red{color:var(--red)} .val.green{color:var(--green)} .val.cyan{color:#008000;}
 
 /* Toolbar di atas tabel */
@@ -73,7 +73,7 @@ body{margin:0; background:#000; color:var(--text);font:14px/1.45 -apple-system,B
 }
 .mini-label{font-size:12px; color:#1668dc}
 .mini-value{
-  font-weight:700; max-width:260px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
+  font-weight:700; max-width:260px; overflow:hidden; white-space:nowrap;
 }
 
 /* ====== TABLE ====== */
@@ -83,7 +83,7 @@ body{margin:0; background:#000; color:var(--text);font:14px/1.45 -apple-system,B
 .table-scroller::-webkit-scrollbar-track{ background:#141414; }
 .table-scroller::-webkit-scrollbar-thumb{background:#424242; border-radius:8px;border:2px solid transparent; background-clip:content-box;}
 .table thead{background:linear-gradient(180deg,#161616,#131313)}
-.table th,.table td{padding:10px 12px;border-bottom:1px solid #303030;white-space:nowrap; overflow:hidden; text-overflow:ellipsis;vertical-align:middle;text-align:center;color:#008000;}
+.table th,.table td{padding:10px 12px;border-bottom:1px solid #303030;white-space:nowrap; overflow:hidden;vertical-align:middle;text-align:center;color:#008000;}
 
 /* Kolom khusus */
 .table th:first-child, .table td:first-child,
@@ -214,7 +214,7 @@ body{margin:0; background:#000; color:var(--text);font:14px/1.45 -apple-system,B
 
 /* Unclaim list styles */
 .uc-item > :nth-child(3){
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  overflow:hidden; white-space:nowrap;
 }
 .uc-claimed{ white-space:nowrap; overflow:visible; }
 .uc-item > *{ min-width:0; }
