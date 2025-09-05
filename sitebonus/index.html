@@ -755,44 +755,56 @@ function initDateRangePicker(){
 
   if (fpRange) fpRange.destroy();
 
-  fpRange = flatpickr('#rangeVis', {
-    mode: 'range',
-    dateFormat: 'Y-m-d',
-    showMonths: 2,
-    defaultDate: [savedFrom, savedTo],
-    locale: { rangeSeparator: ' → ' },
+ fpRange = flatpickr('#rangeVis', {
+  mode: 'range',
+  dateFormat: 'Y-m-d',
+  showMonths: 2,
+  defaultDate: [savedFrom, savedTo],
+  locale: { rangeSeparator: ' → ' },
+  clickOpens: true,
+  allowInput: false,
 
-    // — saat dibuka, kunci nilai terakhir —
-    onOpen(_, __, inst){
-      const v = (vis.value || '').trim();
-      vis.dataset.last = v || `${$('#rangeFrom').value} → ${$('#rangeTo').value}`;
-    },
+  // simpan kondisi terakhir saat dibuka
+  onOpen(_, __, inst) {
+    const f = $('#rangeFrom').value || savedFrom;
+    const t = $('#rangeTo').value   || savedTo;
+    vis.dataset.lastFrom = f;
+    vis.dataset.lastTo   = t;
+    vis.dataset.last     = `${f} → ${t}`;
+  },
 
-    // — update saat 2 tanggal terpilih —
-    onChange(selectedDates){
-      if (selectedDates.length === 2){
-        const fs = toISODateLocal(selectedDates[0]);
-        const ts = toISODateLocal(selectedDates[1]);
+  // update ketika 2 tanggal terpilih
+  onChange(selectedDates, dateStr, inst){
+    if (selectedDates.length === 2){
+      const fs = toISODateLocal(selectedDates[0]);
+      const ts = toISODateLocal(selectedDates[1]);
 
-        $('#rangeFrom').value = fs;
-        $('#rangeTo').value   = ts;
-        localStorage.setItem(LS_DR_FROM, fs);
-        localStorage.setItem(LS_DR_TO,   ts);
+      $('#rangeFrom').value = fs;
+      $('#rangeTo').value   = ts;
+      localStorage.setItem(LS_DR_FROM, fs);
+      localStorage.setItem(LS_DR_TO,   ts);
 
-        const s = `${fs} → ${ts}`;
-        vis.value = s;
-        vis.dataset.last = s;                 // refresh “terakhir”
-      }
-    },
-
-    // — kalau batal (kurang dari 2), pulihkan nilai terakhir —
-    onClose(selectedDates){
-      if (selectedDates.length < 2){
-        vis.value = vis.dataset.last || `${$('#rangeFrom').value} → ${$('#rangeTo').value}`;
-      }
-      render();
+      const s = `${fs} → ${ts}`;
+      vis.value       = s;
+      vis.dataset.last = s;
+      vis.dataset.lastFrom = fs;
+      vis.dataset.lastTo   = ts;
     }
-  });
+  },
+
+  // kalau batal (kurang dari 2), pulihkan via inst.setDate agar tidak kosong lagi
+  onClose(selectedDates, dateStr, inst){
+    if (selectedDates.length < 2){
+      const lf = vis.dataset.lastFrom || $('#rangeFrom').value || savedFrom;
+      const lt = vis.dataset.lastTo   || $('#rangeTo').value   || savedTo;
+
+      // penting: set kembali ke instance Flatpickr (bukan hanya input.value)
+      inst.setDate([lf, lt], false);   // false = jangan trigger onChange lagi
+      vis.value = `${lf} → ${lt}`;
+    }
+    render();
+  }
+});
 }
 function clampRangeToMonthWithPicker(){
   const {start, end} = monthStartEnd($('#monthFilter').value);
@@ -837,10 +849,11 @@ function basicRangeChanged(){
   localStorage.setItem(LS_DR_FROM, fs);
   localStorage.setItem(LS_DR_TO,   ts);
 
-  const vis = $('#rangeVis');
-  vis.value = `${fs} → ${ts}`;
-  vis.dataset.last = vis.value;                 // ← PENTING
-  render();
+const vis = $('#rangeVis');
+vis.value = `${fs} → ${ts}`;
+vis.dataset.last = vis.value;
+vis.dataset.lastFrom = fs;
+vis.dataset.lastTo   = ts;
 }
 // Paksa range ke 1..akhir bulan yang dipilih + sync ke UI & LS
 function setMonthAndRange(yyyyMM){
