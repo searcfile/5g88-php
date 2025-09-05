@@ -46,7 +46,35 @@ body{margin:0; background:#000; color:var(--text);font:14px/1.45 -apple-system,B
 
 /* Full width container */
 .wrap{ width:100%; max-width:none; margin:16px 0; padding:0 14px 60px; }
+.cards-row,
+.toolbar,
+.table-scroller{
+  scrollbar-width: thin;                  /* Firefox */
+  scrollbar-color: #424242 #141414;       /* thumb | track */
+}
 
+/* WebKit (Chrome/Edge/Safari) */
+.cards-row::-webkit-scrollbar,
+.toolbar::-webkit-scrollbar,
+.table-scroller::-webkit-scrollbar{
+  height: 10px;                           /* untuk horizontal */
+  width: 10px;                            /* kalau ada vertikal */
+}
+
+.cards-row::-webkit-scrollbar-track,
+.toolbar::-webkit-scrollbar-track,
+.table-scroller::-webkit-scrollbar-track{
+  background: #141414;                    /* sama dgn table */
+}
+
+.cards-row::-webkit-scrollbar-thumb,
+.toolbar::-webkit-scrollbar-thumb,
+.table-scroller::-webkit-scrollbar-thumb{
+  background: #424242;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
 /* Summary rows */
 .cards-row{display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; scrollbar-width:thin;min-width:0;}
 .card{background:#141414;border:1px solid #424242; border-radius:14px; padding:12px;min-width:120px; flex:1 1 220px;}
