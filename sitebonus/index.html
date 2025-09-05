@@ -500,7 +500,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
       </div>
 
   <div id="rangeWrap" class="range-wrap" title="Filter by date">
-  <input id="rangeVis" class="input range" type="text" placeholder="YYYY-MM-DD → YYYY-MM-DD" readonly>
+  <input id="rangeVis" class="input range" type="text" readonly>
   <input id="rangeFrom" type="hidden">
   <input id="rangeTo"   type="hidden">
 </div>
@@ -733,7 +733,6 @@ function ensureRangeWrapAndInputs(){
 let fpRange = null;
 
 function initDateRangePicker(){
-  ensureRangeWrapAndInputs();
   const month = $('#monthFilter').value;
   const {start, end} = monthStartEnd(month);
 
@@ -744,37 +743,48 @@ function initDateRangePicker(){
   const savedFrom = localStorage.getItem(LS_DR_FROM) || defFrom;
   const savedTo   = localStorage.getItem(LS_DR_TO)   || defTo;
 
+  const vis = $('#rangeVis');
+  vis.removeAttribute('placeholder');            // ← jangan pakai placeholder
+  vis.value = `${savedFrom} → ${savedTo}`;
+  vis.dataset.last = vis.value;                  // ← SIMPAN nilai terakhir
+
   $('#rangeFrom').value = savedFrom;
   $('#rangeTo').value   = savedTo;
-  $('#rangeVis').value  = `${savedFrom} → ${savedTo}`;
 
   if (fpRange) fpRange.destroy();
 
- fpRange = flatpickr('#rangeVis', {
-  mode: 'range',
-  dateFormat: 'Y-m-d',
-  showMonths: 2,
-  defaultDate: [savedFrom, savedTo],
-  locale: { rangeSeparator: RANGE_SEP },   // <— ganti "to" jadi " → "
-  onClose: (selectedDates) => {
-    if (selectedDates.length === 2){
-      const fs = toISODateLocal(selectedDates[0]);
-      const ts = toISODateLocal(selectedDates[1]);
-      $('#rangeFrom').value = fs;
-      $('#rangeTo').value   = ts;
-      localStorage.setItem(LS_DR_FROM, fs);
-      localStorage.setItem(LS_DR_TO,   ts);
-      $('#rangeVis').value = `${fs}${RANGE_SEP}${ts}`; // <— pakai panah
-      render();
+  fpRange = flatpickr('#rangeVis', {
+    mode: 'range',
+    dateFormat: 'Y-m-d',
+    showMonths: 2,
+    defaultDate: [savedFrom, savedTo],
+    locale: { rangeSeparator: ' → ' },          // “→” bukan “to”
+    onClose(selectedDates){
+      if (selectedDates.length === 2){
+        const fs = toISODateLocal(selectedDates[0]);
+        const ts = toISODateLocal(selectedDates[1]);
+
+        $('#rangeFrom').value = fs;
+        $('#rangeTo').value   = ts;
+        localStorage.setItem(LS_DR_FROM, fs);
+        localStorage.setItem(LS_DR_TO,   ts);
+
+        const s = `${fs} → ${ts}`;
+        vis.value = s;
+        vis.dataset.last = s;                   // ← UPDATE nilai terakhir
+        render();
+      } else {
+        // batal / tidak lengkap → balik ke nilai terakhir
+        vis.value = vis.dataset.last || vis.value;
+      }
     }
-  }
-});
+  });
 }
 function clampRangeToMonthWithPicker(){
-  const {start, end} = monthStartEnd(document.querySelector('#monthFilter').value);
+  const {start, end} = monthStartEnd($('#monthFilter').value);
 
-  let f = new Date(document.querySelector('#rangeFrom').value || start);
-  let t = new Date(document.querySelector('#rangeTo').value   || end);
+  let f = new Date($('#rangeFrom').value || start);
+  let t = new Date($('#rangeTo').value   || end);
 
   if (f < start) f = start;
   if (f > end)   f = end;
@@ -783,22 +793,23 @@ function clampRangeToMonthWithPicker(){
   if (f > t) [f, t] = [t, f];
 
   const fs = toISODateLocal(f), ts = toISODateLocal(t);
-  document.querySelector('#rangeFrom').value = fs;
-  document.querySelector('#rangeTo').value   = ts;
+  $('#rangeFrom').value = fs;
+  $('#rangeTo').value   = ts;
   localStorage.setItem(LS_DR_FROM, fs);
   localStorage.setItem(LS_DR_TO,   ts);
 
-  if (fpRange){
-    fpRange.setDate([fs, ts], true);  // update paparan flatpickr
-    document.querySelector('#rangeVis').value = `${fs} → ${ts}`;
-  }
+  if (fpRange) fpRange.setDate([fs, ts], true);
+
+  const vis = $('#rangeVis');
+  vis.value = `${fs} → ${ts}`;
+  vis.dataset.last = vis.value;                 // ← PENTING
 }
 // Fallback bila flatpickr tak ada
 function basicRangeChanged(){
-  const {start, end} = monthStartEnd(document.querySelector('#monthFilter').value);
+  const {start, end} = monthStartEnd($('#monthFilter').value);
 
-  let f = document.querySelector('#rangeFrom').value ? new Date(document.querySelector('#rangeFrom').value) : start;
-  let t = document.querySelector('#rangeTo').value   ? new Date(document.querySelector('#rangeTo').value)   : end;
+  let f = $('#rangeFrom').value ? new Date($('#rangeFrom').value) : start;
+  let t = $('#rangeTo').value   ? new Date($('#rangeTo').value)   : end;
 
   if (f < start) f = start;
   if (f > end)   f = end;
@@ -807,13 +818,14 @@ function basicRangeChanged(){
   if (f > t) [f, t] = [t, f];
 
   const fs = toISODateLocal(f), ts = toISODateLocal(t);
-  document.querySelector('#rangeFrom').value = fs;
-  document.querySelector('#rangeTo').value   = ts;
+  $('#rangeFrom').value = fs;
+  $('#rangeTo').value   = ts;
   localStorage.setItem(LS_DR_FROM, fs);
   localStorage.setItem(LS_DR_TO,   ts);
 
-  const vis = document.querySelector('#rangeVis');
-  if (vis) vis.value = `${fs} → ${ts}`;
+  const vis = $('#rangeVis');
+  vis.value = `${fs} → ${ts}`;
+  vis.dataset.last = vis.value;                 // ← PENTING
   render();
 }
 // Paksa range ke 1..akhir bulan yang dipilih + sync ke UI & LS
