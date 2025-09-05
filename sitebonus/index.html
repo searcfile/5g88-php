@@ -687,6 +687,32 @@ function jumpPickerToMonth(yyyyMM){
   const [y,m] = yyyyMM.split('-').map(Number);
   fpRange.jumpToDate(new Date(y, m-1, 1));
 }
+function forceCurrentMonth(){
+  const cur = toYYYYMM(new Date());   // contoh: "2025-09"
+  const { start, end } = monthStartEnd(cur);
+  const today = new Date();
+  const fs = toISODateLocal(start);
+  const ts = toISODateLocal(new Date(Math.min(+today, +end)));
+
+  // Header month
+  $('#monthFilter').value = cur;
+  localStorage.setItem(LS_LAST_MONTH, cur);
+
+  // Sinkronkan range + tampilan input
+  $('#rangeFrom').value = fs;
+  $('#rangeTo').value   = ts;
+  localStorage.setItem(LS_DR_FROM, fs);
+  localStorage.setItem(LS_DR_TO,   ts);
+
+  const s = `${fs} → ${ts}`;
+  const vis = $('#rangeVis');
+  if (vis){
+    vis.value = s;
+    vis.dataset.last = s;
+  }
+
+  if (fpRange) fpRange.setDate([fs, ts], false); // jangan trigger render di sini
+}
 function setMiniMonthLabel(){
   const m = $('#monthFilter').value;
   const { start, end } = monthStartEnd(m);
@@ -856,35 +882,37 @@ vis.dataset.lastFrom = fs;
 vis.dataset.lastTo   = ts;
 }
 function resetToCurrentOnLoad(){
-  const cur = toYYYYMM(new Date());        // contoh: "2025-09"
-  // set dropdown bulan ke bulan sekarang
-  const sel = $('#monthFilter');
-  if (sel) sel.value = cur;
-  localStorage.setItem(LS_LAST_MONTH, cur);
+  const now = new Date();
+  const curMonth = toYYYYMM(now);                 // "YYYY-MM"
+  const { start, end } = monthStartEnd(curMonth); // 1..akhir bulan
+  const fs = toISODateLocal(start);               // 01-<bulan>
+  const ts = toISODateLocal(new Date(Math.min(+now, +end))); // 01..hari-ini
 
-  // range: 1 -> min(hari ini, akhir bulan)
-  const { start, end } = monthStartEnd(cur);
-  const today = new Date();
-  const fs = toISODateLocal(start);
-  const ts = toISODateLocal(new Date(Math.min(+today, +end)));
+  // 1) Paksa header Month ke bulan sekarang
+  const monthSel = document.querySelector('#monthFilter');
+  if (monthSel) monthSel.value = curMonth;
+  localStorage.setItem(LS_LAST_MONTH, curMonth);
 
-  // simpan ke LS (supaya initDateRangePicker pakai ini)
+  // 2) Simpan & sinkronkan range
   localStorage.setItem(LS_DR_FROM, fs);
   localStorage.setItem(LS_DR_TO,   ts);
 
-  // sync hidden + tampilan
-  if ($('#rangeFrom')) $('#rangeFrom').value = fs;
-  if ($('#rangeTo'))   $('#rangeTo').value   = ts;
-  if ($('#rangeVis')) {
-    const s = `${fs} → ${ts}`;
-    $('#rangeVis').value         = s;
-    $('#rangeVis').dataset.last  = s;
-    $('#rangeVis').dataset.lastFrom = fs;
-    $('#rangeVis').dataset.lastTo   = ts;
+  const fromEl = document.querySelector('#rangeFrom');
+  const toEl   = document.querySelector('#rangeTo');
+  if (fromEl) fromEl.value = fs;
+  if (toEl)   toEl.value   = ts;
+
+  // 3) Perbarui tampilan input teks
+  const vis = document.querySelector('#rangeVis');
+  if (vis){
+    const s = `${fs} \u2192 ${ts}`;
+    vis.removeAttribute('placeholder');
+    vis.value = s;
+    vis.dataset.last = s;
   }
 
-  // kalau flatpickr sudah ada (mis. hot-reload), ikutkan juga
-  if (fpRange) fpRange.setDate([fs, ts], false);
+  // Catatan: fpRange belum dibuat di sini, jadi tidak perlu setDate.
+  // initDateRangePicker() setelah ini akan baca nilai yang baru kita simpan.
 }
 // Paksa range ke 1..akhir bulan yang dipilih + sync ke UI & LS
 function setMonthAndRange(yyyyMM){
@@ -944,32 +972,35 @@ function readTarget(){
   let editingId = null;
   let ucActiveTab = 'pending';
 
-  window.addEventListener('DOMContentLoaded',()=>{
-    buildMonthOptions();
-    resetToCurrentOnLoad();
-    initDateRangePicker();
-    const savedSite = localStorage.getItem(LS_LAST_SITE);
-    $('#siteFilter').value = (savedSite === '5G88' || savedSite === 'SPM888' || savedSite === 'ALL')
-    ? savedSite
-    : 'ALL';
-    render();
-    $('#createBtn').addEventListener('click',()=>openModal());
-    $('#exportBtn').addEventListener('click', exportCSV);
-    $('#siteFilter').addEventListener('change', () => {localStorage.setItem(LS_LAST_SITE, $('#siteFilter').value);render();});
-$('#monthFilter').addEventListener('change', ()=>{
-  const m = $('#monthFilter').value;
-  localStorage.setItem(LS_LAST_MONTH, m);
-  jumpPickerToMonth(m);
-  setMonthAndRange(m);      // ini sudah set range 1..akhir bulan + render()
-  setMiniMonthLabel();      // pastikan label “Month” ikut update
-});
-    $('#targetBtn').addEventListener('click', openTargetModal);
+window.addEventListener('DOMContentLoaded', () => {
+  buildMonthOptions();          // bangun opsi bulan dari data
+  resetToCurrentOnLoad();       // ⬅️ paksa kembali ke bulan & range sekarang
+  initDateRangePicker();        // flatpickr akan pakai nilai dari LS
+  const savedSite = localStorage.getItem(LS_LAST_SITE);
+  $('#siteFilter').value = (savedSite === '5G88' || savedSite === 'SPM888' || savedSite === 'ALL') ? savedSite : 'ALL';
 
-    // NEW: Unclaim center
-    $('#unclaimBtn').addEventListener('click', openUnclaimModal);
-    $('#tabPending').addEventListener('click', ()=>switchUcTab('pending'));
-    $('#tabHistory').addEventListener('click', ()=>switchUcTab('history'));
+  render();
+  // listeners
+  $('#createBtn').addEventListener('click', () => openModal());
+  $('#exportBtn').addEventListener('click',  exportCSV);
+  $('#siteFilter').addEventListener('change', () => {
+    localStorage.setItem(LS_LAST_SITE, $('#siteFilter').value);
+    render();
   });
+
+  $('#monthFilter').addEventListener('change', () => {
+    const m = $('#monthFilter').value;
+    localStorage.setItem(LS_LAST_MONTH, m);
+    jumpPickerToMonth(m);
+    setMonthAndRange(m);  // set 1..akhir bulan + render()
+    setMiniMonthLabel();  // label "Month" di mini-card
+  });
+
+  $('#targetBtn').addEventListener('click', openTargetModal);
+  $('#unclaimBtn').addEventListener('click', openUnclaimModal);
+  $('#tabPending').addEventListener('click', () => switchUcTab('pending'));
+  $('#tabHistory').addEventListener('click', () => switchUcTab('history'));
+});
 
   function buildMonthOptions(){
     const sel=$('#monthFilter'); sel.innerHTML='';
