@@ -855,6 +855,37 @@ vis.dataset.last = vis.value;
 vis.dataset.lastFrom = fs;
 vis.dataset.lastTo   = ts;
 }
+function resetToCurrentOnLoad(){
+  const cur = toYYYYMM(new Date());        // contoh: "2025-09"
+  // set dropdown bulan ke bulan sekarang
+  const sel = $('#monthFilter');
+  if (sel) sel.value = cur;
+  localStorage.setItem(LS_LAST_MONTH, cur);
+
+  // range: 1 -> min(hari ini, akhir bulan)
+  const { start, end } = monthStartEnd(cur);
+  const today = new Date();
+  const fs = toISODateLocal(start);
+  const ts = toISODateLocal(new Date(Math.min(+today, +end)));
+
+  // simpan ke LS (supaya initDateRangePicker pakai ini)
+  localStorage.setItem(LS_DR_FROM, fs);
+  localStorage.setItem(LS_DR_TO,   ts);
+
+  // sync hidden + tampilan
+  if ($('#rangeFrom')) $('#rangeFrom').value = fs;
+  if ($('#rangeTo'))   $('#rangeTo').value   = ts;
+  if ($('#rangeVis')) {
+    const s = `${fs} → ${ts}`;
+    $('#rangeVis').value         = s;
+    $('#rangeVis').dataset.last  = s;
+    $('#rangeVis').dataset.lastFrom = fs;
+    $('#rangeVis').dataset.lastTo   = ts;
+  }
+
+  // kalau flatpickr sudah ada (mis. hot-reload), ikutkan juga
+  if (fpRange) fpRange.setDate([fs, ts], false);
+}
 // Paksa range ke 1..akhir bulan yang dipilih + sync ke UI & LS
 function setMonthAndRange(yyyyMM){
   const { start, end } = monthStartEnd(yyyyMM);
@@ -915,7 +946,7 @@ function readTarget(){
 
   window.addEventListener('DOMContentLoaded',()=>{
     buildMonthOptions();
-    autoSwitchToCurrentMonth();
+    resetToCurrentOnLoad();
     initDateRangePicker();
     const savedSite = localStorage.getItem(LS_LAST_SITE);
     $('#siteFilter').value = (savedSite === '5G88' || savedSite === 'SPM888' || savedSite === 'ALL')
