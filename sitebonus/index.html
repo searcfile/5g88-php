@@ -582,6 +582,7 @@ function ensureRangeWrapAndInputs(){
 let fpRange = null;
 
 function initDateRangePicker(){
+  ensureRangeWrapAndInputs();
   const month = $('#monthFilter').value;
   const {start, end} = monthStartEnd(month);
 
@@ -663,7 +664,26 @@ function basicRangeChanged(){
   if (vis) vis.value = `${fs} → ${ts}`;
   render();
 }
+// Paksa range ke 1..akhir bulan yang dipilih + sync ke UI & LS
+function setMonthAndRange(yyyyMM){
+  const { start, end } = monthStartEnd(yyyyMM);
+  const fs = toISODateLocal(start);
+  const ts = toISODateLocal(end);
 
+  $('#rangeFrom').value = fs;
+  $('#rangeTo').value   = ts;
+  localStorage.setItem(LS_DR_FROM, fs);
+  localStorage.setItem(LS_DR_TO,   ts);
+
+  const vis = $('#rangeVis');
+  if (vis) vis.value = `${fs} → ${ts}`;
+
+  if (window.fpRange){
+    fpRange.setDate([fs, ts], true);   // true = trigger change & re-render
+  }
+
+  render();
+}
 function readTarget(){
   // Kalau sudah ada v3, pakai apa adanya (jangan timpa)
   try {
@@ -714,7 +734,12 @@ function readTarget(){
     $('#createBtn').addEventListener('click',()=>openModal());
     $('#exportBtn').addEventListener('click', exportCSV);
     $('#siteFilter').addEventListener('change', () => {localStorage.setItem(LS_LAST_SITE, $('#siteFilter').value);render();});
-    $('#monthFilter').addEventListener('change', ()=>{const m = $('#monthFilter').value;localStorage.setItem(LS_LAST_MONTH, m);jumpPickerToMonth(m);render();});
+    $('#monthFilter').addEventListener('change', ()=>{
+  const m = $('#monthFilter').value;
+  localStorage.setItem(LS_LAST_MONTH, m);
+  jumpPickerToMonth(m);   // cuma geser tampilan picker
+  setMonthAndRange(m);    // ⬅️ range jadi full bulan terpilih
+});
     $('#targetBtn').addEventListener('click', openTargetModal);
 
     // NEW: Unclaim center
