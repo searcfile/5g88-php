@@ -326,6 +326,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   color:#7a7a7a;
   user-select:none;
 }
+#rangeVis{ min-width:260px; }
 </style>
 </head>
 <body>
@@ -360,10 +361,11 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
           <span id="miniSite" class="mini-value"></span>
         </div>
       </div>
-     <div id="rangeWrap" class="range-wrap" title="Filter by date">
-  <input id="rangeFrom" class="input range" type="date">
-  <span class="range-sep">→</span>
-  <input id="rangeTo"   class="input range" type="date">
+
+  <div id="rangeWrap" class="range-wrap" title="Filter by date">
+  <input id="rangeVis" class="input range" type="text" placeholder="YYYY-MM-DD → YYYY-MM-DD" readonly>
+  <input id="rangeFrom" type="hidden">
+  <input id="rangeTo"   type="hidden">
 </div>
       <div class="spacer"></div>
 
@@ -505,6 +507,8 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
     </div>
   </div>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
   const $ = s => document.querySelector(s);
   const fmtNum = n => (Number.isFinite(n)?n:parseFloat(n||0)).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
@@ -542,52 +546,158 @@ function monthStartEnd(yyyyMM){
   const end   = new Date(y, m, 0); // hari terakhir bulan
   return {start, end};
 }
+// — NEW: pastikan container & hidden inputs sentiasa ada —
+function ensureRangeWrapAndInputs(){
+  // cari / buat <div id="rangeWrap" class="range-wrap">
+  let wrap = document.querySelector('#rangeWrap');
+  if (!wrap){
+    wrap = document.createElement('div');
+    wrap.id = 'rangeWrap';
+    wrap.className = 'range-wrap';
 
-function initDateRange(){
-  const month = $('#monthFilter').value;
-  const {start, end} = monthStartEnd(month);
+    // letak dalam .toolbar, tepat di kiri .spacer (kanan mini-cards)
+    const toolbar = document.querySelector('.toolbar');
+    const before  = toolbar?.querySelector('.spacer') || null;
+    (toolbar || document.body).insertBefore(wrap, before);
+  }
 
-  const savedFrom = localStorage.getItem(LS_DR_FROM);
-  const savedTo   = localStorage.getItem(LS_DR_TO);
-
-  // default: 1st day → today (diklem ke akhir bulan)
-  const today = new Date();
-  const defaultFrom = toISODateLocal(start);
-  const defaultTo   = toISODateLocal(new Date(Math.min(today, end)));
-
-  $('#rangeFrom').value = savedFrom || defaultFrom;
-  $('#rangeTo').value   = savedTo   || defaultTo;
-
-  clampRangeToMonth(); // pastikan masih dalam bulan aktif
-
-  $('#rangeFrom').addEventListener('change', onRangeChange);
-  $('#rangeTo').addEventListener('change', onRangeChange);
+  // hidden inputs untuk filter sebenar
+  if (!document.querySelector('#rangeFrom')){
+    const rf = document.createElement('input');
+    rf.type = 'hidden'; rf.id = 'rangeFrom';
+    wrap.appendChild(rf);
+  }
+  if (!document.querySelector('#rangeTo')){
+    const rt = document.createElement('input');
+    rt.type = 'hidden'; rt.id = 'rangeTo';
+    wrap.appendChild(rt);
+  }
+  return wrap;
 }
+let fpRange = null; // biar di global. Kalau sudah ada di file kamu, tak perlu tambah lagi.
 
-function clampRangeToMonth(){
-  const month = $('#monthFilter').value;
+function initDateRangePicker(){
+  const wrap = ensureRangeWrapAndInputs(); // pastikan wrap & hidden ada
+
+  const month = document.querySelector('#monthFilter').value;
   const {start, end} = monthStartEnd(month);
 
-  let f = $('#rangeFrom').value ? new Date($('#rangeFrom').value) : start;
-  let t = $('#rangeTo').value   ? new Date($('#rangeTo').value)   : end;
+  const today   = new Date();
+  const defFrom = toISODateLocal(start);
+  const defTo   = toISODateLocal(new Date(Math.min(+today, +end)));
 
-  // klem ke dalam bulan aktif
+  const savedFrom = localStorage.getItem(LS_DR_FROM) || defFrom;
+  const savedTo   = localStorage.getItem(LS_DR_TO)   || defTo;
+
+  // clamp tarikh tersimpan supaya kekal dalam bulan aktif
+  const clampDateString = (d, s, e) => {
+    const t = new Date(d);
+    if (isNaN(+t)) return toISODateLocal(s);
+    const v = new Date(Math.min(Math.max(+t, +s), +e));
+    return toISODateLocal(v);
+  };
+  const fromClamped = clampDateString(savedFrom, start, end);
+  const toClamped   = clampDateString(savedTo,   start, end);
+
+  // sync ke hidden inputs
+  document.querySelector('#rangeFrom').value = fromClamped;
+  document.querySelector('#rangeTo').value   = toClamped;
+
+  // pastikan input visual (#rangeVis) ada
+  let visEl = document.querySelector('#rangeVis');
+  if (!visEl){
+    visEl = document.createElement('input');
+    visEl.id = 'rangeVis';
+    visEl.type = 'text';
+    visEl.readOnly = true;
+    visEl.className = 'input range';
+    // taruh sebagai anak pertama dalam rangeWrap (akan duduk kanan "Site")
+    wrap.insertBefore(visEl, wrap.firstChild);
+  }
+  visEl.value = `${fromClamped} → ${toClamped}`;
+
+  // jika pernah init, destroy dulu
+  if (fpRange) fpRange.destroy();
+
+  // fallback jika flatpickr tak dimuat
+  if (typeof flatpickr === 'undefined'){
+    console.warn('Flatpickr belum dimuat — fallback 2 input hidden.');
+    // sebagai backup, bila kau nak guna 2 input biasa, sambungkan event ini:
+    visEl.onclick = () => alert('Date picker tidak tersedia. Pastikan script Flatpickr dimuat.');
+    return;
+  }
+
+  // init flatpickr (range)
+  fpRange = flatpickr('#rangeVis', {
+    mode: 'range',
+    dateFormat: 'Y-m-d',
+    showMonths: 2,
+    defaultDate: [fromClamped, toClamped],
+    minDate: toISODateLocal(start),
+    maxDate: toISODateLocal(end),
+    onOpen: (_, __, inst) => {
+      const {start, end} = monthStartEnd(document.querySelector('#monthFilter').value);
+      inst.set('minDate', toISODateLocal(start));
+      inst.set('maxDate', toISODateLocal(end));
+    },
+    onClose: (selectedDates) => {
+      if (selectedDates.length === 2){
+        const f = toISODateLocal(selectedDates[0]);
+        const t = toISODateLocal(selectedDates[1]);
+        document.querySelector('#rangeFrom').value = f;
+        document.querySelector('#rangeTo').value   = t;
+        localStorage.setItem(LS_DR_FROM, f);
+        localStorage.setItem(LS_DR_TO,   t);
+        document.querySelector('#rangeVis').value = `${f} → ${t}`;
+        render();
+      }
+    }
+  });
+}
+function clampRangeToMonthWithPicker(){
+  const {start, end} = monthStartEnd(document.querySelector('#monthFilter').value);
+
+  let f = new Date(document.querySelector('#rangeFrom').value || start);
+  let t = new Date(document.querySelector('#rangeTo').value   || end);
+
   if (f < start) f = start;
   if (f > end)   f = end;
   if (t < start) t = start;
   if (t > end)   t = end;
-
-  // jika from > to, tukar
   if (f > t) [f, t] = [t, f];
 
-  $('#rangeFrom').value = toISODateLocal(f);
-  $('#rangeTo').value   = toISODateLocal(t);
-}
+  const fs = toISODateLocal(f), ts = toISODateLocal(t);
+  document.querySelector('#rangeFrom').value = fs;
+  document.querySelector('#rangeTo').value   = ts;
+  localStorage.setItem(LS_DR_FROM, fs);
+  localStorage.setItem(LS_DR_TO,   ts);
 
-function onRangeChange(){
-  clampRangeToMonth();
-  localStorage.setItem(LS_DR_FROM, $('#rangeFrom').value);
-  localStorage.setItem(LS_DR_TO,   $('#rangeTo').value);
+  if (fpRange){
+    fpRange.setDate([fs, ts], true);  // update paparan flatpickr
+    document.querySelector('#rangeVis').value = `${fs} → ${ts}`;
+  }
+}
+// Fallback bila flatpickr tak ada
+function basicRangeChanged(){
+  const {start, end} = monthStartEnd(document.querySelector('#monthFilter').value);
+
+  let f = document.querySelector('#rangeFrom').value ? new Date(document.querySelector('#rangeFrom').value) : start;
+  let t = document.querySelector('#rangeTo').value   ? new Date(document.querySelector('#rangeTo').value)   : end;
+
+  if (f < start) f = start;
+  if (f > end)   f = end;
+  if (t < start) t = start;
+  if (t > end)   t = end;
+  if (f > t) [f, t] = [t, f];
+
+  const fs = toISODateLocal(f), ts = toISODateLocal(t);
+  document.querySelector('#rangeFrom').value = fs;
+  document.querySelector('#rangeTo').value   = ts;
+  localStorage.setItem(LS_DR_FROM, fs);
+  localStorage.setItem(LS_DR_TO,   ts);
+
+  const vis = document.querySelector('#rangeVis');
+  if (vis) vis.value = `${fs} → ${ts}`;
   render();
 }
 
@@ -632,7 +742,7 @@ function readTarget(){
   window.addEventListener('DOMContentLoaded',()=>{
     buildMonthOptions();
     autoSwitchToCurrentMonth();
-    initDateRange();
+    initDateRangePicker();
     const savedSite = localStorage.getItem(LS_LAST_SITE);
     $('#siteFilter').value = (savedSite === '5G88' || savedSite === 'SPM888' || savedSite === 'ALL')
     ? savedSite
@@ -641,7 +751,7 @@ function readTarget(){
     $('#createBtn').addEventListener('click',()=>openModal());
     $('#exportBtn').addEventListener('click', exportCSV);
     $('#siteFilter').addEventListener('change', () => {localStorage.setItem(LS_LAST_SITE, $('#siteFilter').value);render();});
-    $('#monthFilter').addEventListener('change', ()=>{localStorage.setItem(LS_LAST_MONTH,$('#monthFilter').value);clampRangeToMonth(); render();});
+    $('#monthFilter').addEventListener('change', ()=>{localStorage.setItem(LS_LAST_MONTH, $('#monthFilter').value);clampRangeToMonthWithPicker();render();});
     $('#targetBtn').addEventListener('click', openTargetModal);
 
     // NEW: Unclaim center
@@ -781,15 +891,19 @@ function setBackgroundInert(enable, exceptTarget){
 function openModalA11y(modalSel, focusSel) {
   const m = document.querySelector(modalSel);
   if (!m) return;
-  m.classList.add('debug-no-overlay');
   m.classList.add('show');
   m.setAttribute('aria-hidden', 'false');
-  setBackgroundInert(true, m);       // <— kirim ELEMENT, bukan string
+  setBackgroundInert(true, m);
 
-  const first = m.querySelector(
-    focusSel || 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-  );
-  first?.focus();
+  // hanya auto-focus kalau focusSel bukan false
+  if (focusSel !== false) {
+    const first = m.querySelector(
+      (typeof focusSel === 'string' && focusSel)
+        ? focusSel
+        : 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    first?.focus();
+  }
 }
 function closeModalA11y(modalSel, returnFocusSel) {
   const m = document.querySelector(modalSel);
@@ -1053,27 +1167,26 @@ function render(){
   applyTableScrollLimit();
 }
 function applyTableScrollLimit() {
-  const wrap  = document.querySelector('.table');
+  const scroller = document.querySelector('.table-scroller');
   const head  = document.querySelector('#dataTable thead');
-  const body  = document.querySelectorAll('#dataTable tbody tr');
+  const rows  = document.querySelectorAll('#dataTable tbody tr');
   const foot  = document.querySelector('#dataTable tfoot');
 
-  if (!wrap || !head) return;
+  if (!scroller || !head) return;
 
-  // ≤ 10 baris → biarkan tanpa scroll paksa
-  if (body.length <= 10) {
-    wrap.style.maxHeight = '';
-    wrap.style.overflowY = 'visible';
+  // ≤ 10 baris → biar tanpa scroll paksa
+  if (rows.length <= 10) {
+    scroller.style.maxHeight = '';
+    scroller.style.overflowY = 'visible';
     return;
   }
 
-  // Hitung tinggi: header + 10 baris + footer
-  const rowH  = (body[0]?.getBoundingClientRect().height) || 44;
+  const rowH  = (rows[0]?.getBoundingClientRect().height) || 44;
   const headH = head.getBoundingClientRect().height || 44;
   const footH = foot?.getBoundingClientRect().height || 0;
 
-  wrap.style.maxHeight = (headH + (rowH * 10) + footH) + 'px';
-  wrap.style.overflowY = 'auto';
+  scroller.style.maxHeight = (headH + (rowH * 10) + footH) + 'px';
+  scroller.style.overflowY = 'auto';
 }
 
 function renderSummaryRows(t, count, site, month){
@@ -1134,20 +1247,37 @@ function renderSummaryRows(t, count, site, month){
   }
 
   function exportCSV(){
-    const site=$('#siteFilter').value, month=$('#monthFilter').value, t=readTarget();
-    const data=readStore().filter(r=>r.month===month).filter(r=>site==='ALL'?true:r.site===site)
-      .sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
-    const header=['datetime','site','deposit','withdrawal','bonus','forfeit','member','resit_in','sales','bonus_deposit','bonus_resit','bonus_sales_base'];
-    const rows=[header.join(',')];
-    for(const r of data){
-      const bDep=pickTierBonus(r.deposit, t.depositTiers);
-      const bRes=pickTierBonus(r.resit,   t.resitTiers);
-      const bSales=pickTierBonus(r.sales, t.salesTiers);
-      rows.push([new Date(r.datetime).toISOString(), r.site, r.deposit, r.withdrawal, r.bonus, r.forfeit, r.member, r.resit, r.sales, bDep, bRes, bSales].join(','));
-    }
-    const blob=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8;'});
-    const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`bonus-${month}-${site}.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  const site  = $('#siteFilter').value;
+  const month = $('#monthFilter').value;
+  const t     = readTarget();
+
+  // ambil date range yang aktif
+  const fromStr = $('#rangeFrom').value;
+  const toStr   = $('#rangeTo').value;
+  const fromTS  = fromStr ? new Date(fromStr + 'T00:00:00').getTime() : -Infinity;
+  const toTS    = toStr   ? new Date(toStr   + 'T23:59:59').getTime() :  Infinity;
+
+  const data = readStore()
+    .filter(r => r.month === month)
+    .filter(r => site === 'ALL' ? true : r.site === site)
+    .filter(r => {
+      const ts = new Date(r.datetime).getTime();
+      return ts >= fromTS && ts <= toTS;
+    })
+    .sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
+
+  const header=['datetime','site','deposit','withdrawal','bonus','forfeit','member','resit_in','sales','bonus_deposit','bonus_resit','bonus_sales_base'];
+  const rows=[header.join(',')];
+  for(const r of data){
+    const bDep=pickTierBonus(r.deposit, t.depositTiers);
+    const bRes=pickTierBonus(r.resit,   t.resitTiers);
+    const bSales=pickTierBonus(r.sales, t.salesTiers);
+    rows.push([new Date(r.datetime).toISOString(), r.site, r.deposit, r.withdrawal, r.bonus, r.forfeit, r.member, r.resit, r.sales, bDep, bRes, bSales].join(','));
   }
+  const blob=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a');
+  a.href=url; a.download=`bonus-${month}-${site}.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
 
  // ===== C. Unclaim Modal =====
 function openUnclaimModal(){
