@@ -238,7 +238,7 @@ span.flatpickr-weekday {
 /* 5) Jaga jarak antar tombol */
 .toolbar{
   display:flex; gap:8px; align-items:center; margin:10px 0 6px;
-  flex-wrap: nowrap !important; overflow-x:auto; padding-bottom:2px;white-space: nowrap;
+  flex-wrap: nowrap !important; overflow-x:auto; padding-bottom:2px;white-space: nowrap;overflow-y: visible;position: relative;
 }
 .badge{display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px; border:1px solid #2a2a2a; background:#111; color:#ccc; font-size:12px}
 
@@ -470,7 +470,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 
 /* tombol kecil dropdown */
 .range-quick-btn{
-  height:28px;
+  height:36px;
   padding:0 8px;
   border-radius:8px;
   border:1px solid #424242;
@@ -480,6 +480,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   transition:all .2s;
 }
 .range-quick-btn:hover{ border-color:#3c89e8; color:#3c89e8; }
+.range-quick-btn:focus{ outline: 2px solid #1668dc; outline-offset: 2px; }
 
 /* menu preset */
 .range-quick-menu{
@@ -492,8 +493,8 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   padding:6px;
   min-width:200px;
   display:none;
-  z-index:9999;
-  box-shadow:0 12px 32px rgba(0,0,0,.45);
+  z-index:2147483000;
+  box-shadow:0 12px 32px rgba(0,0,0,.45);max-height: 300px; overflow: auto;
 }
 .range-quick-menu.show{ display:block; }
 .range-quick-menu button{
@@ -874,40 +875,46 @@ function applyQuickRange(kind){
 
   setRangeAndRefresh(f, t, true);
 }
-/* ====== QUICK MENU: toggle + event binding ====== */
-const quickBtn  = document.querySelector('#quickBtn');
-const quickMenu = document.querySelector('#quickMenu');
+/* ====== QUICK MENU: init & handlers (safe) ====== */
+function initQuickMenu(){
+  const quickBtn  = document.getElementById('quickBtn');
+  const quickMenu = document.getElementById('quickMenu');
+  if (!quickBtn || !quickMenu) return;
 
-function toggleQuickMenu(show){
-  const willShow = (typeof show === 'boolean') ? show : !quickMenu.classList.contains('show');
-  quickMenu.classList.toggle('show', willShow);
-  quickBtn?.setAttribute('aria-expanded', willShow ? 'true' : 'false');
-  quickMenu?.setAttribute('aria-hidden', willShow ? 'false' : 'true');
-}
+  const toggleQuickMenu = (show)=>{
+    const willShow = (typeof show === 'boolean') ? show : !quickMenu.classList.contains('show');
+    quickMenu.classList.toggle('show', willShow);
+    quickBtn.setAttribute('aria-expanded', willShow ? 'true' : 'false');
+    quickMenu.setAttribute('aria-hidden',  willShow ? 'false' : 'true');
+  };
 
-quickBtn?.addEventListener('click', (e)=>{
-  e.stopPropagation();
-  toggleQuickMenu();
-});
-
-// pilih preset
-quickMenu?.querySelectorAll('[data-q]').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    const k = btn.dataset.q;
-    toggleQuickMenu(false);
-    applyQuickRange(k);
+  quickBtn.addEventListener('click', (e)=>{
+    e.stopPropagation();            // jangan kena handler <document>
+    toggleQuickMenu();
   });
-});
 
-// klik di luar → tutup
-document.addEventListener('click', ()=>{
-  if (quickMenu?.classList.contains('show')) toggleQuickMenu(false);
-});
+  // klik di dalam menu jangan menutup
+  quickMenu.addEventListener('click', (e)=> e.stopPropagation());
 
-// Esc → tutup
-document.addEventListener('keydown', (e)=>{
-  if (e.key === 'Escape') toggleQuickMenu(false);
-});
+  // pilih preset
+  quickMenu.querySelectorAll('[data-q]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const k = btn.dataset.q;
+      toggleQuickMenu(false);
+      applyQuickRange(k);           // set range + sync UI + render
+    });
+  });
+
+  // klik di luar → tutup
+  document.addEventListener('click', ()=>{
+    if (quickMenu.classList.contains('show')) toggleQuickMenu(false);
+  });
+
+  // Esc → tutup
+  document.addEventListener('keydown', (e)=>{
+    if (e.key === 'Escape') toggleQuickMenu(false);
+  });
+}
 function setMiniMonthLabel(){
   const m = $('#monthFilter').value;
   const { start, end } = monthStartEnd(m);
@@ -1230,6 +1237,7 @@ window.addEventListener('DOMContentLoaded', () => {
   $('#unclaimBtn').addEventListener('click', openUnclaimModal);
   $('#tabPending').addEventListener('click', () => switchUcTab('pending'));
   $('#tabHistory').addEventListener('click', () => switchUcTab('history'));
+  initQuickMenu();
 });
 
   function buildMonthOptions(){
