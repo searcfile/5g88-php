@@ -21,24 +21,11 @@ body{margin:0; background:#000; color:var(--text);font:14px/1.45 -apple-system,B
   background-clip: content-box;
 }
 /* Header */
-.header{
-  position:sticky; top:0; z-index:50;
-  background:linear-gradient(180deg,#0063ab,#001c31);
-  border-bottom:1px solid #242424; padding:12px 14px;
-  display:flex; gap:10px; align-items:center; flex-wrap:wrap;
-}
-.brand{
-  display:flex; gap:10px; align-items:center; font-weight:700;
-  padding:6px 10px; border-radius:10px; background:#0f0f0f; border:1px solid #222;
-}
+.header{position:sticky; top:0; z-index:50;background:linear-gradient(180deg,#0063ab,#001c31);border-bottom:1px solid #242424; padding:12px 14px;display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+.brand{display:flex; gap:10px; align-items:center; font-weight:700;padding:6px 10px; border-radius:10px; background:#0f0f0f; border:1px solid #222;}
 /* efek hover untuk satu baris penuh */
 #dataTable tbody td{transition: background-color .15s ease;}
-
-/* saat hover di baris mana pun, semua sel di baris itu ikut menyala */
-#dataTable tbody tr:hover > td{
-  background:#1d1d1d;   /* biru samar */
-  border-color: transparent;
-}
+#dataTable tbody tr:hover > td{background:#1d1d1d;border-color: transparent;}
 #dataTable{border-collapse: separate;border-spacing: 0;}
 .input {height:36px; border-radius:8px; outline:none; border:1px solid #424242; background:#141414; color:var(--text);padding:6px 10px; transition: all 0.2s;}
 .input:hover { border-color:#3c89e8; }
@@ -135,7 +122,8 @@ body{margin:0; background:#000; color:var(--text);font:14px/1.45 -apple-system,B
 .actions { display:flex; gap:8px; justify-content:center }
 .iconbtn { height:28px; padding:0 10px; border-radius:6px;transition: all 0.2s; border:1px solid #2a2a2a; background:#151515; color:rgba(255,255,255,0.85); cursor:pointer; font-weight:600 }
 .iconbtn:hover { border-color:#3c89e8;color:#3c89e8;}
-.iconbtn.del { border-color:#dc4446; background:#191111; color:#dc4446 }
+.iconbtn-del { height:28px; padding:0 10px; border-radius:6px;transition: all 0.2s; border:1px solid #dc4446; background:#191111; color:#dc4446; cursor:pointer; font-weight:600 }
+.iconbtn-del:hover {border-color:#e86e6b; color:#e86e6b;}.iconbtn-del:active {border-color:#ad393a; color:#ad393a;}
 
 /* Pill */
 .pill { padding: 2px 8px; border-radius:999px; border:1px solid #2d2d2d; background:#121212;}
@@ -871,7 +859,7 @@ function render(){
       <td>
         <div class="actions">
           <button class="iconbtn" onclick="window.__edit('${r.id}')">Edit</button>
-          <button class="iconbtn del" onclick="window.__del('${r.id}')">Delete</button>
+          <button class="iconbtn-del" onclick="window.__del('${r.id}')">Delete</button>
         </div>
       </td>
     `;
