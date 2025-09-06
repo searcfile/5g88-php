@@ -932,35 +932,45 @@ function initQuickMenu(){
     const willShow = (typeof show === 'boolean') ? show : !quickMenu.classList.contains('show');
 
     if (willShow) {
-      // cek ruang di bawah tombol; kalau mepet, buka ke atas
+      // ===== OPEN =====
       const r = quickBtn.getBoundingClientRect();
-      const approxMenuH = 240; // kira-kira tinggi menu
+      const approxMenuH = 240;
       const spaceBelow = window.innerHeight - r.bottom;
       quickMenu.classList.toggle('up', spaceBelow < approxMenuH);
-    }
 
-    quickMenu.classList.toggle('show', willShow);
-    quickBtn.setAttribute('aria-expanded', willShow ? 'true' : 'false');
-    quickMenu.setAttribute('aria-hidden',  willShow ? 'false' : 'true');
+      quickMenu.classList.add('show');
+      quickBtn.setAttribute('aria-expanded', 'true');
+      quickMenu.setAttribute('aria-hidden',  'false');
+    } else {
+      // ===== CLOSE =====
+      // ⬇️ Tambahkan dua baris ini SEBELUM aria-hidden = true
+      if (quickMenu.contains(document.activeElement)) quickBtn.focus();
+      quickMenu.setAttribute('aria-hidden','true');
+
+      quickMenu.classList.remove('show');
+      quickBtn.setAttribute('aria-expanded', 'false');
+    }
   };
 
   quickBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleQuickMenu(); });
   quickMenu.addEventListener('click', (e)=> e.stopPropagation());
   quickMenu.querySelectorAll('[data-q]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      toggleQuickMenu(false);
+      toggleQuickMenu(false);           // menutup → fokus balik ke tombol
       applyQuickRange(btn.dataset.q);
     });
   });
   document.addEventListener('click', ()=> quickMenu.classList.contains('show') && toggleQuickMenu(false));
   document.addEventListener('keydown', (e)=> e.key === 'Escape' && toggleQuickMenu(false));
+
   setActiveQuick(
-  keyForRange(
-    document.getElementById('rangeFrom').value,
-    document.getElementById('rangeTo').value
-  )
-);
+    keyForRange(
+      document.getElementById('rangeFrom').value,
+      document.getElementById('rangeTo').value
+    )
+  );
 }
+Kalau kamu tetap pakai versi satu baris quickMenu.setAttribute('aria-hidden', willShow ? 'false' : 'true'), pisahkan jadi dua cabang seperti di atas supaya kita bisa
 function setMiniMonthLabel(){
   const m = $('#monthFilter').value;
   const { start, end } = monthStartEnd(m);
@@ -1096,20 +1106,16 @@ onChange(selectedDates, dateStr, inst){
   }
 },
 
-  onClose(selectedDates, dateStr, inst){
-  // Ambil fallback dari hidden inputs / default
-  let lf = $('#rangeFrom').value || savedFrom;
-  let lt = $('#rangeTo').value   || savedTo;
-
-  // Kalau user menutup tanpa lengkap 2 tanggal, restore last
+onClose(selectedDates, dateStr, inst){
   if (selectedDates.length < 2){
-    lf = vis.dataset.lastFrom || lf;
-    lt = vis.dataset.lastTo   || lt;
+    const lf = vis.dataset.lastFrom || $('#rangeFrom').value || savedFrom;
+    const lt = vis.dataset.lastTo   || $('#rangeTo').value   || savedTo;
     inst.setDate([lf, lt], false);
     vis.value = `${lf} → ${lt}`;
   }
-
-  setActiveQuick(keyForRange(lf, lt));
+  const curF = $('#rangeFrom').value || savedFrom;
+  const curT = $('#rangeTo').value   || savedTo;
+  setActiveQuick(keyForRange(curF, curT));
   render();
 }
 });
