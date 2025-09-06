@@ -164,10 +164,6 @@ span.flatpickr-weekday {
 .flatpickr-calendar .flatpickr-next-month:hover{
   filter:brightness(1.2);
 }
-.flatpickr-dayContainer,
-.flatpickr-days {
-  padding-top: 30px !important;   /* adjust sesuai kebutuhan: 4px, 8px, dst */
-}
 /* Header */
 .header{position:sticky; top:0; z-index:50;background:linear-gradient(180deg,#0063ab,#001c31);border-bottom:1px solid #242424; padding:12px 14px;display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
 .brand{display:flex; gap:10px; align-items:center; font-weight:700;padding:6px 10px; border-radius:10px; background:#0f0f0f; border:1px solid #222;}
@@ -494,26 +490,33 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   border:1px solid #424242;
   border-radius:10px;
   padding:6px;
-  min-width:260px;
-  display:none;
-  z-index:2147483640;
-  box-shadow:0 12px 32px rgba(0,0,0,.45);max-height: 300px; overflow: auto;white-space: nowrap;overflow-x: hidden;
+  display:none;                 /* tetap hide saat belum show */
+  z-index:2147483646;
+  box-shadow:0 12px 32px rgba(0,0,0,.45);
+  display:flex;                 /* <-- jadikan flex container */
+  flex-wrap:nowrap;             /* <-- jangan turun baris */
+  gap:6px;
+  white-space:nowrap;           /* teks tombol tetap 1 baris */
+  overflow-x:auto;              /* kalau kepanjangan, bisa scroll horizontal */
+  overflow-y:hidden;
+  min-width:fit-content;        /* lebar mengikuti isi */
+  max-width:90vw;               /* biar tidak melebihi layar */
 }
-.range-quick-menu.show{ display:block; }
+.range-quick-menu.show{ display:flex; }
 .range-quick-menu button{
-  width:100%;
-  text-align:left;
+  flex:0 0 auto;                /* ukuran mengikuti konten */
+  width:auto;                   /* <-- HAPUS width:100% */
   background:transparent;
   border:0;
   color:rgba(255,255,255,.9);
-  padding:8px 10px;
+  padding:8px 12px;
   border-radius:8px;
-  cursor:pointer;white-space: nowrap; overflow: hidden; text-overflow: clip;
+  cursor:pointer;
+  white-space:nowrap;
+  text-align:center;            /* center label */
 }
 .range-quick-menu button:hover{ background:#1c1c1c; color:#3c89e8; }
-.range-quick-menu hr{
-  border:0; height:1px; background:#2a2a2a; margin:6px 0;
-}
+.range-quick-menu hr{display: none;}
 #rangeWrap{
   position: relative;
   z-index: 101;
@@ -566,16 +569,14 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   <button id="quickBtn" class="range-quick-btn" aria-haspopup="true" aria-expanded="false" title="Quick ranges">▾</button>
 
   <!-- menu preset -->
-  <div id="quickMenu" class="range-quick-menu" role="menu" aria-hidden="true">
-    <button type="button" data-q="today">Today</button>
-    <button type="button" data-q="yesterday">Yesterday</button>
-    <hr>
-    <button type="button" data-q="thisweek">This Week</button>
-    <button type="button" data-q="lastweek">Last Week</button>
-    <hr>
-    <button type="button" data-q="thismonth">This Month</button>
-    <button type="button" data-q="lastmonth">Last Month</button>
-  </div>
+<div id="quickMenu" class="range-quick-menu" role="menu" aria-hidden="true">
+  <button type="button" data-q="today">Today</button>
+  <button type="button" data-q="yesterday">Yesterday</button>
+  <button type="button" data-q="thisweek">This Week</button>
+  <button type="button" data-q="lastweek">Last Week</button>
+  <button type="button" data-q="thismonth">This Month</button>
+  <button type="button" data-q="lastmonth">Last Month</button>
+</div>
 
   <input id="rangeFrom" type="hidden">
   <input id="rangeTo"   type="hidden">
