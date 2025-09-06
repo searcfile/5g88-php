@@ -576,10 +576,16 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 .toast .icon{ width:20px; height:20px; display:grid; place-items:center; }
 .toast .icon svg{ width:18px; height:18px; display:block; }
 .toast .close{
-  background: transparent; border: 0; color: #9ca3af;
-  cursor: pointer; font-size: 18px; line-height: 1;
+  background: transparent;
+  border: 0;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  transition: color .15s ease, transform .12s ease;
 }
-
+.toast .close:hover{ color:#fff; }
+.toast .close:active{ transform: scale(.92); }
 .toast.success{ --ico:#1e824c; }
 .toast.info   { --ico:#1668dc; }
 .toast.warn   { --ico:#a36a00; }
@@ -1535,12 +1541,12 @@ function setBackgroundInert(enable, exceptTarget){
   const except = (exceptTarget instanceof Element)
     ? exceptTarget
     : document.querySelector(exceptTarget);
-  if (!except) return;
 
   document.querySelectorAll('body > *').forEach(el => {
-    if (el === except) return;
+    // jangan matikan toast & confirm, dan tentu saja modal yang dibuka
+    if (el === except || el.id === 'toastHost' || el.id === 'confirmModal') return;
     if (enable) el.classList.add('bg-inert');
-    else el.classList.remove('bg-inert');
+    else        el.classList.remove('bg-inert');
   });
 }
 
