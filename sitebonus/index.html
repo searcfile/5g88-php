@@ -610,7 +610,8 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   overflow:auto; max-height:60vh;
 }
 .notes-table{
-  width: 900px;              /* bikin bisa scroll horizontal ketika sempit */
+  width: 100%;           /* dari fixed 900px -> penuh container */
+  min-width: 900px;      /* still boleh scroll bila sempit */
   table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0;
@@ -620,12 +621,14 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   text-align:center; white-space:nowrap; color:var(--text);
 }
 .notes-table thead th{
-  position: sticky; top: 0; z-index: 1;
-  background: linear-gradient(180deg,#161616,#131313);
-  box-shadow: 0 2px 0 rgba(0,0,0,.35);
+  background: linear-gradient(180deg, #1668dc, #1668dc);
+  border-bottom: 0 !important;  /* hilangkan 1px border hitam */
+  box-shadow: none;             /* kalau tak nak garis shadow */
 }
+.notes-table thead th:first-child{ border-top-left-radius: 10px; }
+.notes-table thead th:last-child { border-top-right-radius: 10px; }
 .notes-table input{
-  width:100%; height:32px; border-radius:8px;
+  width:100%; height:32px; border-radius:6px;
   border:1px solid #424242; background:#141414; color:var(--text);
   padding:4px 8px;
 }
