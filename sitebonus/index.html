@@ -236,8 +236,17 @@ span.flatpickr-weekday {
 
 /* 5) Jaga jarak antar tombol */
 .toolbar{
-  display:flex; gap:8px; align-items:center; margin:10px 0 6px;z-index: 100;
-  flex-wrap: nowrap !important; overflow-x:auto; padding-bottom:2px;white-space: nowrap;overflow: visible;position: relative;
+  display:flex;
+  gap:8px;
+  align-items:center;
+  margin:10px 0 6px;
+  z-index:100;
+  flex-wrap:nowrap !important;
+  white-space:nowrap;
+  overflow-x:auto;   /* biar bisa geser ke samping */
+  overflow-y:visible;
+  padding-bottom:2px;
+  position:relative;
 }
 .badge{display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px; border:1px solid #2a2a2a; background:#111; color:#ccc; font-size:12px}
 
@@ -260,11 +269,13 @@ span.flatpickr-weekday {
 .table-scroller::-webkit-scrollbar-track{ background:#141414; }
 .table-scroller::-webkit-scrollbar-thumb{background:#424242; border-radius:8px;border:2px solid transparent; background-clip:content-box;}
 .table thead{background:linear-gradient(180deg,#161616,#131313)}
-.table th,.table td{padding:10px 12px;border-bottom:1px solid #303030;white-space:nowrap; overflow:hidden;vertical-align:middle;text-align:center;color:#008000;}
+.table th,.table td{padding:10px 12px;border-bottom:1px solid #303030;white-space:nowrap; overflow:hidden;vertical-align:middle;text-align:center;color:#008000;max-width:140px;}
 
 /* Kolom khusus */
 .table th:first-child, .table td:first-child,
 .table th:last-child,  .table td:last-child { text-align:center; }
+.table th:first-child, .table td:first-child { max-width:180px }
+.table th:last-child,  .table td:last-child  { max-width:180px }
 
 /* Footer */
 .table tfoot td { background:#0f0f0f; font-weight:800 }
@@ -315,7 +326,13 @@ span.flatpickr-weekday {
 }
 
 /* DataTable guard */
-#dataTable { table-layout: fixed; width: 100%;border-spacing: 0;border-collapse: separate !important; }
+#dataTable{
+  table-layout:fixed;
+  width:100%;
+  min-width:1700px;    /* paksa lebih lebar dari viewport → muncul scroll di .table-scroller */
+  border-spacing:0;
+  border-collapse:separate !important;
+}
 #dataTable th, #dataTable td { padding: 10px 12px; }
 #dataTable td:last-child .actions { justify-content:center !important; }
 #dataTable tfoot td{position: sticky;bottom: 0;z-index: 1;background:#0f0f0f;text-align:center !important;}
