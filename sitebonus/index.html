@@ -546,10 +546,12 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 #toastHost{
   position: fixed;
   bottom: 20px;
-  left: 24px;                 /* mau pojok kanan? pakai right:24px; left:auto; */
+  left: 50%;                 /* tengah horizontal */
+  transform: translateX(-50%);
+  right: auto;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;        /* setiap toast di-center */
   gap: 8px;
   z-index: 2147483647;
   pointer-events: none;
@@ -2041,26 +2043,7 @@ function toast(msg, type='success', ms=2600){
   const timer = setTimeout(close, ms);
   el.addEventListener('mouseenter', () => clearTimeout(timer), {once:true});
 }
-function askConfirm(message, {okText='Yes', cancelText='No'} = {}){
-  return new Promise(resolve=>{
-    const m  = document.getElementById('confirmModal');
-    const no = document.getElementById('confirmNo');
-    const yes= document.getElementById('confirmYes');
-    document.getElementById('confirmMsg').textContent = message;
-    yes.textContent = okText; no.textContent = cancelText;
 
-    openModalA11y('#confirmModal', '#confirmNo');
-
-    const done = (val)=>{
-      closeModalA11y('#confirmModal');
-      no.onclick = yes.onclick = m.querySelector('.overlay').onclick = null;
-      resolve(val);
-    };
-    no.onclick = ()=> done(false);
-    yes.onclick= ()=> done(true);
-    m.querySelector('.overlay').onclick = ()=> done(false);
-  });
-}
 // Claim logic: BUAT RECORD BARU DI BULAN SEKARANG + pindahkan unclaim ke bulan sekarang
 function claimUnclaim(ucId){
   const ucAll = readUnclaims();
@@ -2113,7 +2096,7 @@ function claimUnclaim(ucId){
   // 3) Pindahkan tampilan ke bulan sekarang (opsional tapi sesuai permintaan)
   $('#monthFilter').value = nowMonth;
   localStorage.setItem(LS_LAST_MONTH, nowMonth);
-
+  setMonthAndRange(nowMonth);
   render();
   toast('Unclaim claimed', 'success');
 
