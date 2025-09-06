@@ -515,6 +515,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   text-align:center;            /* center label */
 }
 .range-quick-menu button:hover{ background:#1c1c1c; color:#3c89e8; }
+.range-quick-menu button.active{background: transparent !important;color:#fff !important;}
 .range-quick-menu hr{display: none;}
 #rangeWrap{
   position: relative;
@@ -786,7 +787,7 @@ function setRangeAndRefresh(fs, ts, updatePicker = true){
   // sinkron dropdown bulan + mini label
   syncMonthToRange(fs, ts);
   setMiniMonthLabel();
-
+  setActiveQuick(keyForRange(fs, ts));
   render();
 }
 
@@ -842,6 +843,45 @@ function forceCurrentMonth(){
 
   if (fpRange) fpRange.setDate([fs, ts], false); // jangan trigger render di sini
 }
+function setActiveQuick(key){
+  document.querySelectorAll('#quickMenu [data-q]').forEach(b=>{
+    const on = (b.dataset.q === key);
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', on);
+  });
+}
+function keyForRange(fs, ts){
+  const now = new Date();
+  const iso0 = d => iso(startOfDay(d));
+
+  if (fs === iso0(now) && ts === iso0(now)) return 'today';
+
+  const y = new Date(now); y.setDate(y.getDate()-1);
+  if (fs === iso0(y) && ts === iso0(y)) return 'yesterday';
+
+  { // this week
+    const {start, end} = weekRangeOf(now, WEEK_START);
+    const realEnd = new Date(Math.min(+end, +now));
+    if (fs === iso(start) && ts === iso(realEnd)) return 'thisweek';
+  }
+  { // last week
+    const {start} = weekRangeOf(now, WEEK_START);
+    const lastStart = new Date(start); lastStart.setDate(start.getDate()-7);
+    const lastEnd   = new Date(lastStart); lastEnd.setDate(lastStart.getDate()+6);
+    if (fs === iso(lastStart) && ts === iso(lastEnd)) return 'lastweek';
+  }
+  { // this month
+    const {start, end} = monthRangeOf(now);
+    const realEnd = new Date(Math.min(+end, +now));
+    if (fs === iso(start) && ts === iso(realEnd)) return 'thismonth';
+  }
+  { // last month
+    const lmStart = new Date(now.getFullYear(), now.getMonth()-1, 1);
+    const lmEnd   = new Date(now.getFullYear(), now.getMonth(), 0);
+    if (fs === iso(lmStart) && ts === iso(lmEnd)) return 'lastmonth';
+  }
+  return null;
+}
 function applyQuickRange(kind){
   const now = new Date();
   let f, t;
@@ -849,46 +889,40 @@ function applyQuickRange(kind){
   switch(kind){
     case 'today': {
       const s = startOfDay(now);
-      f = iso(s); t = iso(s);
-      break;
+      f = iso(s); t = iso(s); break;
     }
     case 'yesterday': {
       const y = startOfDay(now); y.setDate(y.getDate()-1);
-      f = iso(y); t = iso(y);
-      break;
+      f = iso(y); t = iso(y); break;
     }
     case 'thisweek': {
       const { start, end } = weekRangeOf(now, WEEK_START);
-      // jangan melampaui hari ini
       const realEnd = new Date(Math.min(+end, +now));
-      f = iso(start); t = iso(realEnd);
-      break;
+      f = iso(start); t = iso(realEnd); break;
     }
     case 'lastweek': {
       const { start } = weekRangeOf(now, WEEK_START);
       const lastStart = new Date(start); lastStart.setDate(start.getDate()-7);
       const lastEnd   = new Date(lastStart); lastEnd.setDate(lastStart.getDate()+6);
-      f = iso(lastStart); t = iso(lastEnd);
-      break;
+      f = iso(lastStart); t = iso(lastEnd); break;
     }
     case 'thismonth': {
       const { start, end } = monthRangeOf(now);
       const realEnd = new Date(Math.min(+end, +now));
-      f = iso(start); t = iso(realEnd);
-      break;
+      f = iso(start); t = iso(realEnd); break;
     }
     case 'lastmonth': {
       const y = now.getFullYear(), m = now.getMonth();
       const start = new Date(y, m-1, 1);
       const end   = new Date(y, m, 0);
-      f = iso(start); t = iso(end);
-      break;
+      f = iso(start); t = iso(end); break;
     }
     default: return;
   }
 
-  setRangeAndRefresh(f, t, true);
+  setRangeAndRefresh(f, t, true); // update range + render
 }
+
 function initQuickMenu(){
   const quickBtn  = document.getElementById('quickBtn');
   const quickMenu = document.getElementById('quickMenu');
@@ -920,6 +954,12 @@ function initQuickMenu(){
   });
   document.addEventListener('click', ()=> quickMenu.classList.contains('show') && toggleQuickMenu(false));
   document.addEventListener('keydown', (e)=> e.key === 'Escape' && toggleQuickMenu(false));
+  setActiveQuick(
+  keyForRange(
+    document.getElementById('rangeFrom').value,
+    document.getElementById('rangeTo').value
+  )
+);
 }
 function setMiniMonthLabel(){
   const m = $('#monthFilter').value;
@@ -1051,22 +1091,27 @@ onChange(selectedDates, dateStr, inst){
     // ⬇️ penting: buat header month & mini-card ikut pindah
     syncMonthToRange(fs, ts);
     setMiniMonthLabel();
+    setActiveQuick(keyForRange(fs, ts));
     render();
   }
 },
 
-  // kalau batal (kurang dari 2), pulihkan via inst.setDate agar tidak kosong lagi
   onClose(selectedDates, dateStr, inst){
-    if (selectedDates.length < 2){
-      const lf = vis.dataset.lastFrom || $('#rangeFrom').value || savedFrom;
-      const lt = vis.dataset.lastTo   || $('#rangeTo').value   || savedTo;
+  // Ambil fallback dari hidden inputs / default
+  let lf = $('#rangeFrom').value || savedFrom;
+  let lt = $('#rangeTo').value   || savedTo;
 
-      // penting: set kembali ke instance Flatpickr (bukan hanya input.value)
-      inst.setDate([lf, lt], false);   // false = jangan trigger onChange lagi
-      vis.value = `${lf} → ${lt}`;
-    }
-    render();
+  // Kalau user menutup tanpa lengkap 2 tanggal, restore last
+  if (selectedDates.length < 2){
+    lf = vis.dataset.lastFrom || lf;
+    lt = vis.dataset.lastTo   || lt;
+    inst.setDate([lf, lt], false);
+    vis.value = `${lf} → ${lt}`;
   }
+
+  setActiveQuick(keyForRange(lf, lt));
+  render();
+}
 });
 }
 function clampRangeToMonthWithPicker(){
@@ -1096,6 +1141,7 @@ vis.dataset.lastFrom = fs;      // ⬅️ tambah
 vis.dataset.lastTo   = ts;      // ⬅️ tambah
 syncMonthToRange(fs, ts);
 setMiniMonthLabel();
+setActiveQuick(keyForRange(fs, ts));
 }
 // Fallback bila flatpickr tak ada
 function basicRangeChanged(){
@@ -1123,6 +1169,7 @@ vis.dataset.lastFrom = fs;
 vis.dataset.lastTo   = ts;
 syncMonthToRange(fs, ts);   // ⬅️ tambah
 setMiniMonthLabel();
+setActiveQuick(keyForRange(fs, ts));
 }
 function resetToCurrentOnLoad(){
   const now = new Date();
@@ -1160,8 +1207,11 @@ function resetToCurrentOnLoad(){
 // Paksa range ke 1..akhir bulan yang dipilih + sync ke UI & LS
 function setMonthAndRange(yyyyMM){
   const { start, end } = monthStartEnd(yyyyMM);
+  const today = new Date();
+  const endClamped = new Date(Math.min(+end, +today)); // ⬅️ clamp ke hari ini utk bulan berjalan
+
   const fs = toISODateLocal(start);
-  const ts = toISODateLocal(end);
+  const ts = toISODateLocal(endClamped);
 
   $('#rangeFrom').value = fs;
   $('#rangeTo').value   = ts;
@@ -1172,10 +1222,12 @@ function setMonthAndRange(yyyyMM){
   if (vis) vis.value = `${fs} → ${ts}`;
 
   if (window.fpRange){
-    fpRange.setDate([fs, ts], true);   // true = trigger change & re-render
+    fpRange.setDate([fs, ts], true);   // trigger onChange -> render + setActiveQuick
+  } else {
+    // kalau mau aman tanpa flatpickr
+    setActiveQuick(keyForRange(fs, ts));
+    render();
   }
-
-  render();
 }
 function readTarget(){
   // Kalau sudah ada v3, pakai apa adanya (jangan timpa)
