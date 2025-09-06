@@ -3,72 +3,88 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Bonus Recorder — Login</title>
+<title>Bonus Recorder — Sign In</title>
 <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
 <style>
   :root{
-    --bg1:#090b10; --bg2:#0c1220; --card:#0f1424; --muted:#aab5c7; --text:#e8edf5;
-    --primary:#4da3ff; --primary-2:#2a7be6; --ok:#21c27a; --warn:#f4b740; --err:#ff5a5a;
-    --ring:rgba(77,163,255,.35);
+    --bg1:#070a10; --bg2:#0b1220; --card:#0f1424;
+    --text:#eaf1ff; --muted:#9fb1cf;
+    --primary:#4da3ff; --primary-2:#2a7be6;
+    --ok:#1fb774; --err:#ff5a5a; --ring:rgba(77,163,255,.35);
   }
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
-    margin:0; color:var(--text); font:14px/1.5 Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-    background: radial-gradient(1200px 800px at 10% -10%, #1a2744 0%, transparent 50%),
-                radial-gradient(900px 600px at 90% 0%, #0c2b57 0%, transparent 60%),
-                linear-gradient(160deg, var(--bg1), var(--bg2));
-    display:grid; place-items:center; padding:20px;
+    margin:0; font:14px/1.55 Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(1200px 800px at 10% -20%, #1a2744 0%, transparent 55%),
+      radial-gradient(900px 600px at 95% 0%, #0c2b57 0%, transparent 60%),
+      linear-gradient(160deg, var(--bg1), var(--bg2));
+    overflow:auto;
   }
-  .shell{width:min(940px,100%); display:grid; grid-template-columns: 1.15fr .85fr; gap:18px}
-  @media (max-width:860px){ .shell{grid-template-columns:1fr} .hero{min-height:160px} }
 
-  .hero{
-    border:1px solid #1c2a45; border-radius:16px; background:
-      radial-gradient(1200px 600px at 20% 0%, rgba(77,163,255,.12), transparent 60%),
-      linear-gradient(180deg, #0c1220, #0a0f1a);
-    padding:26px; display:flex; flex-direction:column; justify-content:space-between;
-    box-shadow: 0 20px 60px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
-    min-height:260px;
+  /* floating orbs */
+  .bg-orb{position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden}
+  .orb{
+    position:absolute; filter:blur(40px); opacity:.22; border-radius:50%;
+    mix-blend-mode:screen; transform:translate(-50%,-50%); animation:float 16s ease-in-out infinite;
   }
-  .brand{
-    display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.2px;
-    background: #0b1324; border:1px solid #1c2a45; border-radius:12px; padding:10px 12px; width:max-content;
+  .orb.a{width:520px;height:520px; left:15%; top:20%; background:#1e5af0; animation-duration:22s}
+  .orb.b{width:420px;height:420px; right:12%; top:10%; background:#2bc0ff; animation-duration:18s}
+  .orb.c{width:520px;height:520px; left:70%; bottom:-10%; background:#5e2bff; animation-duration:24s}
+  @keyframes float{
+    0%,100%{transform:translate(-50%,-50%) translateY(0)}
+    50%{transform:translate(-50%,-50%) translateY(-30px)}
   }
-  .brand .dot{width:9px; height:9px; border-radius:50%; background:var(--primary); box-shadow:0 0 16px var(--primary)}
-  .title{font-size:28px; font-weight:900; margin:16px 0 6px}
-  .sub{color:var(--muted)}
 
+  .shell{
+    position:relative; z-index:1;
+    min-height:100%;
+    display:grid; place-items:center; padding:26px 14px;
+  }
   .card{
-    border:1px solid #1c2a45; border-radius:16px; background:#0f1424;
-    box-shadow: 0 20px 60px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
-    padding:16px;
+    width: min(520px, 94vw);
+    background: linear-gradient(180deg, rgba(15,20,36,.75), rgba(11,17,32,.75));
+    border:1px solid #203255;
+    border-radius:18px;
+    box-shadow:
+      0 25px 80px rgba(0,0,0,.55),
+      inset 0 1px 0 rgba(255,255,255,.06);
+    padding:18px;
   }
-  .tabs{display:flex; gap:6px; margin-bottom:12px}
+
+  .brand{
+    display:flex; align-items:center; gap:10px; width:max-content;
+    padding:10px 12px; border-radius:12px; border:1px solid #203255; background:#0b1326;
+    font-weight:800; letter-spacing:.2px;
+  }
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--primary);box-shadow:0 0 14px var(--primary)}
+  .title{font-size:26px; font-weight:900; margin:14px 2px 2px}
+  .sub{color:var(--muted); margin:0 2px 12px}
+
+  .tabs{display:flex; gap:6px; margin:6px 2px 12px}
   .tab{
     flex:1; height:38px; border-radius:10px; cursor:pointer;
     border:1px solid #233150; background:linear-gradient(180deg,#0d1426,#0b1220);
-    color:#cdd7ea; font-weight:700; letter-spacing:.2px;
-    transition: all .18s ease;
+    color:#cdd7ea; font-weight:800; letter-spacing:.2px; transition:all .18s ease;
   }
-  .tab:hover{border-color:#36507d; color:#eaf1ff}
+  .tab:hover{border-color:#36507d; color:#fff}
   .tab.active{background:linear-gradient(180deg,#1b2c53,#163a71); border-color:#4370b4; color:#fff; box-shadow:0 0 0 4px var(--ring)}
 
   .form{display:flex; flex-direction:column; gap:10px}
   .group{display:flex; flex-direction:column; gap:6px}
-  .label{font-size:12px; color:#9bb3d8; font-weight:700}
+  .label{font-size:12px; color:#9bb3d8; font-weight:800}
   .row{display:flex; gap:10px}
-  .row > .group{flex:1}
+  .row>.group{flex:1}
 
-  .input, .btn, .select{
+  .input,.btn,.select{
     height:40px; border-radius:10px; outline:none;
     transition: box-shadow .18s ease, border-color .18s ease, background .18s ease, color .18s ease;
   }
-  .input, .select{
-    border:1px solid #233150; background:#0b1324; color:var(--text); padding:8px 12px;
-  }
-  .input:hover, .select:hover{ border-color:#36507d }
-  .input:focus, .select:focus{ border-color:#4da3ff; box-shadow:0 0 0 4px var(--ring) }
+  .input,.select{border:1px solid #233150; background:#0b1324; color:var(--text); padding:8px 12px}
+  .input:hover{border-color:#36507d}
+  .input:focus{border-color:#4da3ff; box-shadow:0 0 0 4px var(--ring)}
   .input[disabled]{opacity:.6; cursor:not-allowed}
 
   .pwd{position:relative}
@@ -76,62 +92,54 @@
     position:absolute; right:8px; top:50%; transform:translateY(-50%);
     background:transparent; border:0; cursor:pointer; color:#c7d6ef; font-size:12px; padding:4px 6px;
   }
-  .hint{font-size:12px; color:#9bb3d8}
 
   .btn{
-    border:0; background:linear-gradient(180deg, var(--primary), var(--primary-2));
-    color:white; font-weight:800; cursor:pointer; padding:8px 14px;
+    border:0; background:linear-gradient(180deg,var(--primary),var(--primary-2));
+    color:white; font-weight:900; cursor:pointer; padding:8px 14px; letter-spacing:.2px;
   }
   .btn:hover{ filter:brightness(1.05) }
-  .btn:active{ transform: translateY(1px) }
-  .btn.secondary{ background:#111a30; border:1px solid #233150; color:#d7e4ff; }
-  .btn.warn{ background:linear-gradient(180deg, #ff9c3a, #db7b13) }
+  .btn:active{ transform:translateY(1px) }
+  .btn.secondary{ background:#0f182c; border:1px solid #233150; color:#d7e4ff }
+  .btn.warn{ background:linear-gradient(180deg,#ff9c3a,#db7b13) }
   .btn:disabled{ opacity:.6; cursor:not-allowed }
 
-  .foot{display:flex; gap:10px; margin-top:4px}
-  .center{display:grid; place-items:center}
-  .err{background:#2a0d12; color:#ffb3b3; border:1px solid #45161b; padding:8px 10px; border-radius:8px; display:none}
-  .ok {background:#0f2a1d; color:#b6ffd7; border:1px solid #184931; padding:8px 10px; border-radius:8px; display:none}
+  .foot{display:flex; gap:10px; margin-top:2px; flex-wrap:wrap}
+  .small{font-size:12px; color:#8ea8d1}
+
+  .alert{display:none; padding:8px 10px; border-radius:8px; border:1px solid transparent}
+  .err{display:none; background:#2a0d12; color:#ffb3b3; border-color:#45161b}
+  .ok {display:none; background:#0f2a1d; color:#b6ffd7; border-color:#184931}
 
   .toast-host{position:fixed; bottom:18px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; gap:8px; z-index:9999}
-  .toast{min-width:280px; max-width:min(520px, 92vw); background:#0f1729; border:1px solid #233150; color:#e8edf5; padding:10px 12px; border-radius:10px; box-shadow:0 14px 40px rgba(0,0,0,.45); display:flex; gap:8px; align-items:center; font-weight:700; animation:tin .18s ease-out}
+  .toast{min-width:280px; max-width:min(520px,92vw); background:#0f1729; border:1px solid #233150; color:var(--text); padding:10px 12px; border-radius:10px; box-shadow:0 14px 40px rgba(0,0,0,.45); display:flex; gap:8px; align-items:center; font-weight:800; animation:tin .18s ease-out}
   .toast.ok{border-color:#1d5a3a} .toast.err{border-color:#67333a}
   @keyframes tin{from{opacity:0; transform:translateY(12px)} to{opacity:1; transform:translateY(0)}}
-
-  .note{font-size:12px; color:#8ea8d1}
-  .small{font-size:12px}
 </style>
 </head>
 <body>
+  <!-- floating lights -->
+  <div class="bg-orb">
+    <div class="orb a"></div><div class="orb b"></div><div class="orb c"></div>
+  </div>
 
   <div class="shell">
-    <!-- Kiri: Hero / Info -->
-    <section class="hero">
-      <div>
-        <div class="brand"><span class="dot"></span><span>Bonus Recorder</span></div>
-        <div class="title">Masuk dengan Username</div>
-        <div class="sub">Manajemen bonus yang aman, cepat, dan sinkron ke cloud.</div>
-      </div>
-      <div class="note">
-        • Username unik (a–z, 0–9, titik, underscore, minus).<br />
-        • Password minimal 6 karakter. Rekomendasi: campur huruf & angka/simbol.
-      </div>
-    </section>
+    <section class="card" role="dialog" aria-modal="true" aria-labelledby="title">
+      <div class="brand"><span class="dot"></span><span>Bonus Recorder</span></div>
+      <h1 id="title" class="title">Masuk dengan Username</h1>
+      <p class="sub">Satu kartu, tiga aksi: Login, Register, dan Ganti Password.</p>
 
-    <!-- Kanan: Auth Card -->
-    <section class="card">
-      <div class="tabs" role="tablist">
-        <button id="tabLogin"  class="tab active" role="tab" aria-selected="true">Login</button>
-        <button id="tabSignup" class="tab" role="tab" aria-selected="false">Register</button>
-        <button id="tabChange" class="tab" role="tab" aria-selected="false">Change Password</button>
+      <div class="tabs" role="tablist" aria-label="Auth tabs">
+        <button id="tabLogin"  class="tab active"  role="tab" aria-selected="true">Login</button>
+        <button id="tabSignup" class="tab"         role="tab" aria-selected="false">Register</button>
+        <button id="tabChange" class="tab"         role="tab" aria-selected="false">Change Password</button>
       </div>
 
-      <!-- Login -->
+      <!-- LOGIN -->
       <form id="formLogin" class="form" autocomplete="on">
-        <div id="loginErr" class="err"></div>
+        <div id="loginErr" class="alert err"></div>
         <div class="group">
           <label class="label" for="loginUser">Username</label>
-          <input id="loginUser" class="input" type="text" inputmode="text" placeholder="mis. bonus5g88" required />
+          <input id="loginUser" class="input" type="text" placeholder="mis. bonus5g88" required />
         </div>
         <div class="group pwd">
           <label class="label" for="loginPass">Password</label>
@@ -142,17 +150,17 @@
           <button id="btnLogin" class="btn" type="submit">Masuk</button>
           <button type="button" class="btn secondary" id="toSignup">Buat Akun</button>
         </div>
-        <div class="small">Setelah login sukses → otomatis ke Halaman A.</div>
+        <div class="small">Login sukses → otomatis ke Halaman A.</div>
       </form>
 
-      <!-- Register -->
+      <!-- REGISTER -->
       <form id="formSignup" class="form" autocomplete="off" style="display:none">
-        <div id="signupErr" class="err"></div>
-        <div id="signupOk"  class="ok"></div>
+        <div id="signupErr" class="alert err"></div>
+        <div id="signupOk"  class="alert ok"></div>
         <div class="group">
           <label class="label" for="signUser">Username (unik)</label>
           <input id="signUser" class="input" type="text" placeholder="mis. bonus5g88" required />
-          <div class="hint">3–32 karakter: a–z, 0–9, '.', '_' atau '-'</div>
+          <div class="small">3–32 karakter: a–z, 0–9, '.', '_' atau '-'</div>
         </div>
         <div class="row">
           <div class="group pwd">
@@ -172,10 +180,10 @@
         </div>
       </form>
 
-      <!-- Change Password -->
+      <!-- CHANGE PASSWORD -->
       <form id="formChange" class="form" autocomplete="off" style="display:none">
-        <div id="changeErr" class="err"></div>
-        <div id="changeOk"  class="ok"></div>
+        <div id="changeErr" class="alert err"></div>
+        <div id="changeOk"  class="alert ok"></div>
         <div class="group">
           <label class="label" for="chgUser">Username</label>
           <input id="chgUser" class="input" type="text" placeholder="username kamu" required />
@@ -201,7 +209,6 @@
           <button id="btnChange" class="btn warn" type="submit">Ganti Password</button>
           <button type="button" class="btn secondary" id="toLogin2">Kembali ke Login</button>
         </div>
-        <div class="small">Ganti password akan memverifikasi password saat ini, lalu memperbarui password akunmu.</div>
       </form>
     </section>
   </div>
@@ -210,23 +217,23 @@
 
   <!-- Firebase (modular) -->
   <script type="module">
-    /* === Konfigurasi === */
-    const DASHBOARD_URL = 'A.html'; // TODO: ganti ke halaman A kamu
+    /* ================= CONFIG ================= */
+    const DASHBOARD_URL = 'A.html'; // ganti ke halaman A kamu
 
     const firebaseConfig = {
-      // TODO: ISI KONFIGURASI FIREBASE KAMU
+      // TODO: isi konfigurasi Firebase kamu
       // apiKey: "YOUR_API_KEY",
       // authDomain: "YOUR_PROJECT.firebaseapp.com",
       // projectId: "YOUR_PROJECT",
       // storageBucket: "YOUR_PROJECT.appspot.com",
-      // messagingSenderId: "1234567890",
-      // appId: "1:1234567890:web:abcdef",
+      // messagingSenderId: "123456789",
+      // appId: "1:123456789:web:abcdef",
     };
 
-    // Domain email virtual untuk "username login"
-    const VIRTUAL_DOMAIN = 'user.local'; // hasil email: <username>@user.local
+    // email virtual: <username>@user.local
+    const VIRTUAL_DOMAIN = 'user.local';
 
-    /* === Import Firebase === */
+    /* =============== FIREBASE IMPORTS =============== */
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
     import {
       getAuth, onAuthStateChanged, signOut,
@@ -241,34 +248,22 @@
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
-    /* === Helper UI === */
+    /* =============== UI HELPERS =============== */
     const $ = s => document.querySelector(s);
+    const show = (el, on=true)=>{ if(typeof el==='string') el=$(el); el.style.display = on?'':'none'; };
+    const setMsg = (sel, msg) => { const el=$(sel); el.textContent = msg||''; el.style.display = msg?'':'none'; };
     const toast = (msg, type='ok') => {
-      const host = $('#toastHost');
-      const el = document.createElement('div');
-      el.className = `toast ${type==='err'?'err':'ok'}`;
-      el.textContent = msg;
-      host.appendChild(el);
-      setTimeout(()=>{ el.style.opacity=.0; el.style.transform='translateY(8px)'; setTimeout(()=>el.remove(),160); }, 2600);
+      const host = $('#toastHost'); const el = document.createElement('div');
+      el.className = `toast ${type==='err'?'err':'ok'}`; el.textContent = msg; host.appendChild(el);
+      setTimeout(()=>{ el.style.opacity=.0; el.style.transform='translateY(8px)'; setTimeout(()=>el.remove(), 160); }, 2600);
     };
-    function show(el, on=true){ if(typeof el==='string') el=$(el); el.style.display = on ? '' : 'none'; }
-    function setErr(id, msg){ const el=$(id); if(!el) return; el.textContent=msg||''; show(el, !!msg); }
-    function setOk(id, msg){ const el=$(id); if(!el) return; el.textContent=msg||''; show(el, !!msg); }
-    function setLoading(btn, loading=true){
-      if(!btn) return;
-      btn.disabled = loading;
-      btn.dataset._old = btn.dataset._old || btn.textContent;
-      btn.textContent = loading ? 'Please wait…' : btn.dataset._old;
-    }
-    function togglePassword(sel){
-      const i = document.querySelector(sel);
-      if(!i) return; i.type = (i.type === 'password') ? 'text' : 'password';
-    }
-    document.querySelectorAll('.toggle').forEach(b=>{
-      b.addEventListener('click', ()=>togglePassword(b.dataset.toggle));
-    });
+    const setLoading = (btn, on=true) => { if(!btn) return; btn.disabled = on; btn.dataset.old ??= btn.textContent; btn.textContent = on?'Please wait…':btn.dataset.old; };
+    document.querySelectorAll('.toggle').forEach(b=> b.addEventListener('click', ()=> {
+      const i = document.querySelector(b.dataset.toggle); i.type = (i.type==='password') ? 'text' : 'password';
+      b.textContent = (i.type === 'password') ? 'Show' : 'Hide';
+    }));
 
-    /* === Tab switch === */
+    /* =============== TABS =============== */
     const tabs = [
       {btn:'#tabLogin',  form:'#formLogin'},
       {btn:'#tabSignup', form:'#formSignup'},
@@ -276,12 +271,10 @@
     ];
     function activate(which){
       tabs.forEach(t=>{
-        $(t.btn).classList.toggle('active', t.btn === which);
-        show(t.form, t.btn === which);
+        $(t.btn).classList.toggle('active', t.btn===which);
+        show(t.form, t.btn===which);
       });
-      // reset alerts
-      ['#loginErr','#signupErr','#signupOk','#changeErr','#changeOk'].forEach(id=>setErr(id,''));
-      setOk('#signupOk',''); setOk('#changeOk','');
+      ['#loginErr','#signupErr','#signupOk','#changeErr','#changeOk'].forEach(id=>setMsg(id,''));
     }
     $('#tabLogin').onclick  = ()=>activate('#tabLogin');
     $('#tabSignup').onclick = ()=>activate('#tabSignup');
@@ -289,53 +282,39 @@
     $('#toSignup').onclick  = ()=>activate('#tabSignup');
     $('#toLogin1').onclick  = $('#toLogin2').onclick = ()=>activate('#tabLogin');
 
-    /* === Username policy === */
+    /* =============== USERNAME HANDLING =============== */
     const USER_RE = /^[a-zA-Z0-9._-]{3,32}$/;
     const toEmail = u => `${u.toLowerCase()}@${VIRTUAL_DOMAIN}`;
-    const udoc   = uname => doc(db, 'usernames', uname.toLowerCase()); // dokumen indeks username -> {uid, email}
+    const udoc   = uname => doc(db, 'usernames', uname.toLowerCase());
 
-    /* === Redirect jika sudah login === */
+    /* =============== REDIRECT IF ALREADY SIGNED IN =============== */
     onAuthStateChanged(auth, (user)=>{
-      // kalau lagi di halaman login dan sudah sign-in → langsung ke Halaman A
-      if(user){
-        // opsional: cegah loop jika kamu host login sebagai halaman yang sama
-        if (location.href.indexOf(DASHBOARD_URL) === -1) {
+      if (user) {
+        if (location.href.indexOf(DASHBOARD_URL) === -1)
           location.replace(DASHBOARD_URL);
-        }
       }
     });
 
-    /* === LOGIN === */
+    /* =============== LOGIN =============== */
     $('#formLogin').addEventListener('submit', async (e)=>{
       e.preventDefault();
-      setErr('#loginErr','');
+      setMsg('#loginErr','');
       const u = $('#loginUser').value.trim();
       const p = $('#loginPass').value;
-
-      if(!USER_RE.test(u)){ setErr('#loginErr','Format username tidak valid.'); return; }
-      const btn = $('#btnLogin'); setLoading(btn, true);
-
+      if(!USER_RE.test(u)){ setMsg('#loginErr','Format username tidak valid.'); return; }
+      const btn = $('#btnLogin'); setLoading(btn,true);
       try{
-        // cek username ke Firestore → ambil email virtual
         const mapSnap = await getDoc(udoc(u));
-        if(!mapSnap.exists()){ throw new Error('USERNAME_NOT_FOUND'); }
+        if(!mapSnap.exists()) throw new Error('USERNAME_NOT_FOUND');
         const email = mapSnap.data().email;
-
-        // login pakai email virtual + password
         await signInWithEmailAndPassword(auth, email, p);
         toast('Login sukses');
-        // redirect
         location.replace(DASHBOARD_URL);
       }catch(err){
-        console.error(err);
         const msg = mapLoginError(err);
-        setErr('#loginErr', msg);
-        toast(msg, 'err');
-      }finally{
-        setLoading(btn, false);
-      }
+        setMsg('#loginErr', msg); toast(msg, 'err');
+      }finally{ setLoading(btn,false); }
     });
-
     function mapLoginError(err){
       const code = err?.code || err?.message || '';
       if (err?.message === 'USERNAME_NOT_FOUND') return 'Username tidak ditemukan.';
@@ -344,111 +323,67 @@
       return 'Gagal login. Coba lagi.';
     }
 
-    /* === REGISTER === */
+    /* =============== REGISTER =============== */
     $('#formSignup').addEventListener('submit', async (e)=>{
       e.preventDefault();
-      setErr('#signupErr',''); setOk('#signupOk','');
+      setMsg('#signupErr',''); setMsg('#signupOk','');
       const u  = $('#signUser').value.trim();
-      const p1 = $('#signPass').value;
-      const p2 = $('#signPass2').value;
-
-      if(!USER_RE.test(u)){ setErr('#signupErr','Username 3–32 karakter (a–z, 0–9, . _ -)'); return; }
-      if(p1.length < 6){ setErr('#signupErr','Password minimal 6 karakter.'); return; }
-      if(p1 !== p2){ setErr('#signupErr','Konfirmasi password tidak sama.'); return; }
-
-      const btn = $('#btnSignup'); setLoading(btn, true);
-
+      const p1 = $('#signPass').value, p2 = $('#signPass2').value;
+      if(!USER_RE.test(u)){ setMsg('#signupErr','Username 3–32 karakter (a–z, 0–9, . _ -)'); return; }
+      if(p1.length<6){ setMsg('#signupErr','Password minimal 6 karakter.'); return; }
+      if(p1!==p2){ setMsg('#signupErr','Konfirmasi password tidak sama.'); return; }
+      const btn = $('#btnSignup'); setLoading(btn,true);
       try{
-        // cek ketersediaan username
-        const unameRef = udoc(u);
-        const taken = await getDoc(unameRef);
-        if(taken.exists()){ setErr('#signupErr','Username sudah dipakai. Pilih yang lain.'); return; }
-
-        // buat akun dengan email virtual
+        const ref = udoc(u); const taken = await getDoc(ref);
+        if(taken.exists()){ setMsg('#signupErr','Username sudah dipakai.'); return; }
         const email = toEmail(u);
         const cred = await createUserWithEmailAndPassword(auth, email, p1);
-
-        // index username -> uid/email
-        await setDoc(unameRef, { uid: cred.user.uid, email, createdAt: serverTimestamp() });
-
-        // profil dasar
-        await setDoc(doc(db, 'users', cred.user.uid, 'meta', 'profile'), {
-          username: u, createdAt: serverTimestamp()
-        });
-
-        // selesai (sign-in state aktif). Kamu bisa langsung redirect atau info sukses
-        setOk('#signupOk','Akun berhasil dibuat. Silakan login.');
-        toast('Register sukses');
-        // sign out supaya user kembali ke tab login (opsional)
+        await setDoc(ref, { uid: cred.user.uid, email, createdAt: serverTimestamp() });
+        await setDoc(doc(db,'users',cred.user.uid,'meta','profile'), { username:u, createdAt:serverTimestamp() });
         await signOut(auth);
-        activate('#tabLogin');
-        $('#loginUser').value = u;
-        $('#loginPass').focus();
+        setMsg('#signupOk','Akun berhasil dibuat. Silakan login.'); toast('Register sukses');
+        activate('#tabLogin'); $('#loginUser').value = u; $('#loginPass').focus();
       }catch(err){
-        console.error(err);
         let msg = 'Gagal register. Coba lagi.';
         const code = err?.code || '';
-        if(code.includes('auth/weak-password')) msg = 'Password terlalu lemah (min. 6 karakter).';
-        if(code.includes('auth/email-already-in-use')) msg = 'Nama pengguna itu baru saja terpakai. Pilih yang lain.';
-        setErr('#signupErr', msg);
-        toast(msg, 'err');
-      }finally{
-        setLoading(btn, false);
-      }
+        if(code.includes('auth/weak-password')) msg = 'Password terlalu lemah.';
+        if(code.includes('auth/email-already-in-use')) msg = 'Nama pengguna itu baru saja terpakai.';
+        setMsg('#signupErr', msg); toast(msg,'err');
+      }finally{ setLoading(btn,false); }
     });
 
-    /* === CHANGE PASSWORD (tanpa masuk dashboard) ===
-       Langkah: lookup username → signIn → updatePassword → signOut
-    */
+    /* =============== CHANGE PASSWORD =============== */
     $('#formChange').addEventListener('submit', async (e)=>{
       e.preventDefault();
-      setErr('#changeErr',''); setOk('#changeOk','');
-      const u   = $('#chgUser').value.trim();
-      const cur = $('#chgCurrent').value;
-      const np  = $('#chgNew').value;
-      const np2 = $('#chgNew2').value;
-
-      if(!USER_RE.test(u)){ setErr('#changeErr','Format username tidak valid.'); return; }
-      if(np.length < 6){ setErr('#changeErr','Password baru minimal 6 karakter.'); return; }
-      if(np !== np2){ setErr('#changeErr','Konfirmasi password baru tidak sama.'); return; }
-
-      const btn = $('#btnChange'); setLoading(btn, true);
-
+      setMsg('#changeErr',''); setMsg('#changeOk','');
+      const u = $('#chgUser').value.trim();
+      const cur = $('#chgCurrent').value, np = $('#chgNew').value, np2 = $('#chgNew2').value;
+      if(!USER_RE.test(u)){ setMsg('#changeErr','Format username tidak valid.'); return; }
+      if(np.length<6){ setMsg('#changeErr','Password baru minimal 6 karakter.'); return; }
+      if(np!==np2){ setMsg('#changeErr','Konfirmasi password baru tidak sama.'); return; }
+      const btn = $('#btnChange'); setLoading(btn,true);
       try{
         const mapSnap = await getDoc(udoc(u));
-        if(!mapSnap.exists()){ throw new Error('USERNAME_NOT_FOUND'); }
+        if(!mapSnap.exists()) throw new Error('USERNAME_NOT_FOUND');
         const email = mapSnap.data().email;
 
-        // login sementara
         const cred = await signInWithEmailAndPassword(auth, email, cur);
-
-        // reauth (best practice)
-        const credential = EmailAuthProvider.credential(email, cur);
-        await reauthenticateWithCredential(cred.user, credential);
-
-        // update password
+        const credObj = EmailAuthProvider.credential(email, cur);
+        await reauthenticateWithCredential(cred.user, credObj);
         await updatePassword(cred.user, np);
-
-        // sign out
         await signOut(auth);
 
-        setOk('#changeOk','Password berhasil diganti.');
-        toast('Password diubah.');
+        setMsg('#changeOk','Password berhasil diganti.'); toast('Password diubah.');
       }catch(err){
-        console.error(err);
         let msg = 'Gagal ganti password.';
         if (err?.message === 'USERNAME_NOT_FOUND') msg = 'Username tidak ditemukan.';
         const code = err?.code || '';
-        if (code.includes('auth/invalid-credential')) msg = 'Password saat ini salah.';
-        if (code.includes('auth/too-many-requests'))  msg = 'Terlalu banyak percobaan. Coba lagi nanti.';
-        if (code.includes('auth/weak-password'))      msg = 'Password baru terlalu lemah.';
-        setErr('#changeErr', msg);
-        toast(msg, 'err');
-      }finally{
-        setLoading(btn, false);
-      }
+        if(code.includes('auth/invalid-credential')) msg = 'Password saat ini salah.';
+        if(code.includes('auth/too-many-requests'))  msg = 'Terlalu banyak percobaan. Coba lagi nanti.';
+        if(code.includes('auth/weak-password'))      msg = 'Password baru terlalu lemah.';
+        setMsg('#changeErr', msg); toast(msg,'err');
+      }finally{ setLoading(btn,false); }
     });
-
   </script>
 </body>
 </html>
