@@ -631,6 +631,13 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 }
 .notes-table input:disabled{opacity:.75}
 .notes-table .actions{display:flex;gap:8px;justify-content:center}
+/* Rename Columns editor */
+.hdr-editor{
+  display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 6px;
+}
+.hdr-editor .input{
+  width:150px; height:34px;
+}
 </style>
 </head>
 <body>
@@ -869,6 +876,29 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 
     <div class="foot" style="justify-content:flex-start">
       <button id="addRowBtn" class="btn">+ Add Row</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Rename Notes Columns -->
+<div id="hdrModal" class="modal" aria-hidden="true">
+  <div class="overlay" onclick="closeHdrModal()"></div>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="hdrTitle" tabindex="-1" style="max-width:560px">
+    <button class="modal-close" onclick="closeHdrModal()" aria-label="Close">&times;</button>
+    <h3 id="hdrTitle">Rename Columns</h3>
+
+    <div class="hdr-editor">
+      <input id="hdr_0" class="input" type="text" placeholder="SALES">
+      <input id="hdr_1" class="input" type="text" placeholder="AMOUNT">
+      <input id="hdr_2" class="input" type="text" placeholder="DEPOSIT">
+      <input id="hdr_3" class="input" type="text" placeholder="AMOUNT /2">
+      <input id="hdr_4" class="input" type="text" placeholder="RESIT">
+      <input id="hdr_5" class="input" type="text" placeholder="AMOUNT /2">
+    </div>
+
+    <div class="foot">
+      <button id="hdrCancel" class="btn-cancel">Cancel</button>
+      <button id="hdrSave"   class="btn">Save</button>
     </div>
   </div>
 </div>
@@ -2102,36 +2132,6 @@ function renderUnclaimList(which = 'pending'){
     list.appendChild(row);
   }
 }
-function toast(msg, type='success', ms=2600){
-  const host = document.getElementById('toastHost');
-  if(!host){ alert(msg); return; }
-
-  const el = document.createElement('div');
-  el.className = `toast ${type}`;
-  const iconHTML = (type==='success') ? svgCheckCircle()
-                  : `<svg viewBox="0 0 24 24" aria-hidden="true">
-                       <circle cx="12" cy="12" r="12" fill="var(--ico)"></circle>
-                       <text x="12" y="16" text-anchor="middle" font-size="14" fill="#fff">${type==='info'?'i':'!'}</text>
-                     </svg>`;
-
-  el.innerHTML = `
-    <span class="icon">${iconHTML}</span>
-    <span class="msg">${msg}</span>
-    <button class="close" aria-label="Dismiss">×</button>
-  `;
-
-  host.appendChild(el);
-
-  const close = () => {
-    el.style.animation = 'toast-out .16s ease-in forwards';
-    setTimeout(() => el.remove(), 160);
-  };
-  el.querySelector('.close').onclick = close;
-
-  const timer = setTimeout(close, ms);
-  el.addEventListener('mouseenter', () => clearTimeout(timer), {once:true});
-}
-
 // Claim logic: BUAT RECORD BARU DI BULAN SEKARANG + pindahkan unclaim ke bulan sekarang
 function claimUnclaim(ucId){
   const ucAll = readUnclaims();
@@ -2243,7 +2243,7 @@ function clipApply(el, raw){
     el.title = (state === 'short') ? el.dataset.full : '';
   };
 }
-/* ========= Toast + Confirm helpers ========= */
+
 /* Ikon ceklis: lingkaran + centang (path dari kamu) */
 const CHECK_CIRCLE_PATH = "M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12z";
 const CHECK_MARK_PATH   = "M11 17l-5-5.299 1.399-1.43 3.574 3.736 6.572-7.007 1.455 1.403-8 8.597z";
@@ -2344,22 +2344,36 @@ const writeHdr = (a)=> localStorage.setItem(LS_NOTE_HDR, JSON.stringify(a));
 
 function applyHdr(){
   const h = readHdr();
-  const ths = document.querySelectorAll('#notesTable thead th');
-  ths.forEach((th, i) => { if (h[i]) th.textContent = h[i]; });
+  const ths = document.querySelectorAll('#notesTable thead th:nth-child(-n+6)');
+  ths.forEach((th, i) => th.textContent = h[i] || DEF_HDR[i]);
 }
-
-/* tombol Rename Columns */
-document.getElementById('editHdrBtn')?.addEventListener('click', async ()=>{
+function openHdrModal(){
   const h = readHdr();
-  for (let i = 0; i < h.length; i++) {
-    const v = prompt(`Rename column "${h[i]}"`, h[i]);
-    if (v === null) return;            // batal -> tidak jadi ubah apa-apa
-    h[i] = v.trim() || h[i];           // kosong -> pakai yang lama
+  for (let i=0;i<6;i++){
+    const inp = document.getElementById('hdr_'+i);
+    if (inp) inp.value = h[i] ?? '';
   }
-  writeHdr(h);
+  openModalA11y('#hdrModal', '#hdr_0');
+  document.getElementById('hdr_0')?.select();
+}
+function closeHdrModal(){ closeModalA11y('#hdrModal', '#editHdrBtn'); }
+
+function saveHdrModal(){
+  const vals = [];
+  for (let i=0;i<6;i++){
+    const v = (document.getElementById('hdr_'+i)?.value || '').trim();
+    vals.push(v || DEF_HDR[i]); // kosong -> default
+  }
+  writeHdr(vals);
   applyHdr();
   toast('Column names updated','success');
-});
+  closeHdrModal();
+}
+
+// wiring tombol
+document.getElementById('editHdrBtn')?.addEventListener('click', openHdrModal);
+document.getElementById('hdrCancel') ?.addEventListener('click', closeHdrModal);
+document.getElementById('hdrSave')   ?.addEventListener('click', saveHdrModal);
   
 function openNotesModal(){
   notesState.notes = ensureNotes();
