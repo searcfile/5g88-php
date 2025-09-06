@@ -484,7 +484,9 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 /* menu preset */
 .range-quick-menu{
   position:absolute;
-  right:-50px;
+  left:50%;
+  transform:translateX(-50%);
+  right:auto;
   top:calc(100% + 6px);
   background:#111;
   border:1px solid #424242;
@@ -522,9 +524,12 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   z-index: 101;
 }
 .range-quick-menu.up{
-  top: auto;
-  bottom: calc(100% + 6px);
+  top:auto;
+  bottom:calc(100% + 6px);
+  left:50%;
+  transform:translateX(-50%);
 }
+.quick-anchor{ position:relative; display:inline-block; } /* lebar = lebar tombol */
 @media (max-width: 380px){
   .range-quick-menu{ min-width: 300px; }
 }
@@ -563,20 +568,24 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
         </div>
       </div>
 
-  <div id="rangeWrap" class="range-wrap" title="Filter by date">
+<div id="rangeWrap" class="range-wrap" title="Filter by date">
   <input id="rangeVis" class="input range" type="text" readonly>
-   <!-- tombol kecil dropdown -->
-  <button id="quickBtn" class="range-quick-btn" aria-haspopup="true" aria-expanded="false" title="Quick ranges">▾</button>
 
-  <!-- menu preset -->
-<div id="quickMenu" class="range-quick-menu" role="menu" aria-hidden="true">
-  <button type="button" data-q="today">Today</button>
-  <button type="button" data-q="yesterday">Yesterday</button>
-  <button type="button" data-q="thisweek">This Week</button>
-  <button type="button" data-q="lastweek">Last Week</button>
-  <button type="button" data-q="thismonth">This Month</button>
-  <button type="button" data-q="lastmonth">Last Month</button>
-</div>
+  <!-- ⬇️ anchor untuk pusatkan menu -->
+  <div class="quick-anchor">
+    <button id="quickBtn" class="range-quick-btn"
+            aria-haspopup="true" aria-expanded="false"
+            title="Quick ranges">▾</button>
+
+    <div id="quickMenu" class="range-quick-menu" role="menu" aria-hidden="true">
+      <button type="button" data-q="today">Today</button>
+      <button type="button" data-q="yesterday">Yesterday</button>
+      <button type="button" data-q="thisweek">This Week</button>
+      <button type="button" data-q="lastweek">Last Week</button>
+      <button type="button" data-q="thismonth">This Month</button>
+      <button type="button" data-q="lastmonth">Last Month</button>
+    </div>
+  </div>
 
   <input id="rangeFrom" type="hidden">
   <input id="rangeTo"   type="hidden">
