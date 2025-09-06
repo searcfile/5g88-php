@@ -488,21 +488,20 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   top:calc(100% + 6px);
   background:#111;
   border:1px solid #424242;
-  border-radius:10px;
+  border-radius:8px;
   padding:6px;
-  display:none;                 /* tetap hide saat belum show */
+  display:none;                 /* ⬅️ default: sembunyi */
   z-index:2147483646;
   box-shadow:0 12px 32px rgba(0,0,0,.45);
-  display:flex;                 /* <-- jadikan flex container */
-  flex-wrap:nowrap;             /* <-- jangan turun baris */
+  flex-wrap:nowrap;
   gap:6px;
-  white-space:nowrap;           /* teks tombol tetap 1 baris */
-  overflow-x:auto;              /* kalau kepanjangan, bisa scroll horizontal */
+  white-space:nowrap;
+  overflow-x:auto;
   overflow-y:hidden;
-  min-width:fit-content;        /* lebar mengikuti isi */
-  max-width:90vw;               /* biar tidak melebihi layar */
+  min-width:fit-content;
+  max-width:90vw;
 }
-.range-quick-menu.show{ display:flex; }
+.range-quick-menu.show{ display:flex; } 
 .range-quick-menu button{
   flex:0 0 auto;                /* ukuran mengikuti konten */
   width:auto;                   /* <-- HAPUS width:100% */
