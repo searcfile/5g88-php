@@ -564,14 +564,16 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   border: 1px solid #2a3646;
   color: #e5e7eb;
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: 8px;
   box-shadow: 0 10px 30px rgba(0,0,0,.45);
-  display: grid;
-  grid-template-columns: 20px 1fr auto;   /* icon | text | close */
   align-items: center;
   font-weight: 600;
   animation: toast-in .22s ease-out;
   column-gap: 5px;
+  display: grid;
+  grid-template-columns: 20px auto auto; /* icon | teks | X (semua size = konten) */
+  column-gap: 5px;                       /* jarak antar kolom = 5px */
+  justify-content: start; 
 }
 .toast .icon{ width:20px; height:20px; display:grid; place-items:center; }
 .toast .icon svg{ width:18px; height:18px; display:block; }
@@ -583,6 +585,11 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   font-size: 18px;
   line-height: 1;
   transition: color .15s ease, transform .12s ease;
+}
+.toast .msg{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .toast .close:hover{ color:#fff; }
 .toast .close:active{ transform: scale(.92); }
