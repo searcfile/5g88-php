@@ -491,10 +491,10 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   border:1px solid #424242;
   border-radius:10px;
   padding:6px;
-  min-width:200px;
+  min-width:260px;
   display:none;
   z-index:2147483640;
-  box-shadow:0 12px 32px rgba(0,0,0,.45);max-height: 300px; overflow: auto;
+  box-shadow:0 12px 32px rgba(0,0,0,.45);max-height: 300px; overflow: auto;white-space: nowrap;overflow-x: hidden;
 }
 .range-quick-menu.show{ display:block; }
 .range-quick-menu button{
@@ -505,7 +505,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   color:rgba(255,255,255,.9);
   padding:8px 10px;
   border-radius:8px;
-  cursor:pointer;
+  cursor:pointer;white-space: nowrap; overflow: hidden; text-overflow: clip;
 }
 .range-quick-menu button:hover{ background:#1c1c1c; color:#3c89e8; }
 .range-quick-menu hr{
@@ -518,6 +518,9 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 .range-quick-menu.up{
   top: auto;
   bottom: calc(100% + 6px);
+}
+@media (max-width: 380px){
+  .range-quick-menu{ min-width: 300px; }
 }
 </style>
 </head>
