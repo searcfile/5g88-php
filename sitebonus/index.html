@@ -601,6 +601,36 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 /* animasi */
 @keyframes toast-in{ from{opacity:0; transform:translateY(16px)} to{opacity:1; transform:translateY(0)} }
 @keyframes toast-out{ to{opacity:0; transform:translateY(8px)} }
+/* ===== Notes (Personal) ===== */
+.notes-bar{display:flex;gap:8px;align-items:center;margin:8px 0 10px}
+.notes-bar .btn,.notes-bar .btn-cancel,.notes-bar .select{height:32px}
+
+.note-table-wrap{
+  border:1px solid #2a2a2a; border-radius:10px; background:#101010;
+  overflow:auto; max-height:60vh;
+}
+.notes-table{
+  width: 900px;              /* bikin bisa scroll horizontal ketika sempit */
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.notes-table th,.notes-table td{
+  padding:8px 10px; border-bottom:1px solid #303030;
+  text-align:center; white-space:nowrap; color:var(--text);
+}
+.notes-table thead th{
+  position: sticky; top: 0; z-index: 1;
+  background: linear-gradient(180deg,#161616,#131313);
+  box-shadow: 0 2px 0 rgba(0,0,0,.35);
+}
+.notes-table input{
+  width:100%; height:32px; border-radius:8px;
+  border:1px solid #424242; background:#141414; color:var(--text);
+  padding:4px 8px;
+}
+.notes-table input:disabled{opacity:.75}
+.notes-table .actions{display:flex;gap:8px;justify-content:center}
 </style>
 </head>
 <body>
@@ -614,15 +644,13 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
     <button id="unclaimBtn" class="btn-unclaim" title="Kelola Unclaim">Unclaim</button>
 
     <div class="spacer"></div>
+    <button id="viewBtn" class="btn-exp">View</button>
     <button id="exportBtn" class="btn-exp">Export CSV</button>
   </div>
 
   <div class="wrap">
-    <!-- Row 1 summary -->
     <div class="cards-row" id="summaryRowTop"></div>
-    <!-- Row 2 summary -->
     <div class="cards-row" id="summaryRowBottom" style="margin-top:8px;"></div>
-
     <!-- Toolbar above table -->
     <div class="toolbar">
       <div id="miniInfo" class="mini-cards">
@@ -798,6 +826,51 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
     </div>
   </div>
 
+<!-- Notes (Personal) -->
+<div id="notesModal" class="modal" aria-hidden="true">
+  <div class="overlay" onclick="closeNotesModal()"></div>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="notesTitle" tabindex="-1">
+    <button class="modal-close" onclick="closeNotesModal()" aria-label="Close">&times;</button>
+    <h3 id="notesTitle">Notes</h3>
+
+    <div class="notes-bar">
+      <select id="noteSelect" class="select"></select>
+      <button id="addNoteBtn" class="btn">+ New</button>
+      <button id="renameNoteBtn" class="btn">Rename</button>
+      <button id="delNoteBtn" class="btn-cancel">Delete</button>
+      <div class="spacer"></div>
+      <button id="saveNoteBtn" class="btn">Save</button>
+      <button id="cancelNoteBtn" class="btn-cancel">Cancel</button>
+    </div>
+
+    <div class="note-table-wrap">
+      <table id="notesTable" class="notes-table">
+        <colgroup>
+          <col style="width:120px"><!-- SALES -->
+          <col style="width:120px"><!-- SALES AMOUNT -->
+          <col style="width:120px"><!-- DEPOSIT -->
+          <col style="width:120px"><!-- DEPOSIT AMOUNT/2 -->
+          <col style="width:120px"><!-- RESIT -->
+          <col style="width:120px"><!-- RESIT AMOUNT/2 -->
+          <col style="width:140px"><!-- Actions -->
+        </colgroup>
+        <thead>
+          <tr>
+            <th>SALES</th><th>AMOUNT</th>
+            <th>DEPOSIT</th><th>AMOUNT /2</th>
+            <th>RESIT</th><th>AMOUNT /2</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="notesTBody"></tbody>
+      </table>
+    </div>
+
+    <div class="foot" style="justify-content:flex-start">
+      <button id="addRowBtn" class="btn">+ Add Row</button>
+    </div>
+  </div>
+</div>
 <!-- Toast host -->
 <div id="toastHost" aria-live="polite" aria-atomic="true"></div>
 
@@ -1590,10 +1663,11 @@ document.addEventListener('keydown', (e) => {
   if (!openModal) return;
 
   if (e.key === 'Escape') {
-    // tutup modal yang terbuka (tentukan prioritas sesuai id)
-    if (openModal.id === 'targetModal') closeTargetModal();
-    else if (openModal.id === 'unclaimModal') closeUnclaimModal();
-    else if (openModal.id === 'modal') closeModal();
+    const id = openModal.id;
+    if (id === 'notesModal')      closeNotesModal();
+    else if (id === 'targetModal') closeTargetModal();
+    else if (id === 'unclaimModal') closeUnclaimModal();
+    else if (id === 'modal')       closeModal();
     return;
   }
 
@@ -2229,6 +2303,165 @@ function askConfirm(message, {okText='Yes', cancelText='No'} = {}){
     m.querySelector('.overlay').onclick = ()=> done(false);
   });
 }
+/* ===== Notes (Personal) ===== */
+const LS_NOTES = 'bonusNotes.v1';
+const readNotes = ()=>{ try{return JSON.parse(localStorage.getItem(LS_NOTES))||[]}catch{return[]} };
+const writeNotes = a => localStorage.setItem(LS_NOTES, JSON.stringify(a));
+
+function ensureNotes(){
+  let notes = readNotes();
+  if(!notes.length){
+    notes = [{
+      id:'n_'+Date.now(),
+      name:'Default',
+      rows:[
+        {s:30000, sa:300,  d: 8000, da:20, r:250,  ra:30},
+        {s:40000, sa:350,  d:10000, da:25, r:300,  ra:40},
+        {s:50000, sa:400,  d:12000, da:30, r:350,  ra:50},
+        {s:60000, sa:450,  d:15000, da:35, r:400,  ra:60},
+        {s:70000, sa:500,  d:20000, da:40, r:450,  ra:70},
+        {s:80000, sa:800,  d:25000, da:50, r:'',   ra:''},
+        {s:120000,sa:900,  d:'',    da:'', r:'',   ra:''},
+      ]
+    }];
+    writeNotes(notes);
+  }
+  return notes;
+}
+
+let notesState = { notes: [], idx: 0, dirty:false };
+
+function openNotesModal(){
+  notesState.notes = ensureNotes();
+  const sel = document.getElementById('noteSelect');
+  sel.innerHTML='';
+  notesState.notes.forEach((n,i)=>{
+    const o=document.createElement('option');
+    o.value=i; o.textContent=n.name; sel.appendChild(o);
+  });
+  notesState.idx = Math.min(notesState.idx, notesState.notes.length-1);
+  sel.value = String(notesState.idx);
+  notesState.dirty=false;
+
+  renderNotesTable();
+  openModalA11y('#notesModal', '#noteSelect');
+}
+function closeNotesModal(){ closeModalA11y('#notesModal', '#viewBtn'); }
+
+function renderNotesTable(){
+  const note = notesState.notes[notesState.idx];
+  const tb = document.getElementById('notesTBody');
+  tb.innerHTML = '';
+
+  note.rows.forEach((row,ri)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="number" step="1" min="0" value="${row.s??''}" disabled></td>
+      <td><input type="number" step="1" min="0" value="${row.sa??''}" disabled></td>
+      <td><input type="number" step="1" min="0" value="${row.d??''}" disabled></td>
+      <td><input type="number" step="1" min="0" value="${row.da??''}" disabled></td>
+      <td><input type="number" step="1" min="0" value="${row.r??''}" disabled></td>
+      <td><input type="number" step="1" min="0" value="${row.ra??''}" disabled></td>
+      <td class="actions">
+        <button class="iconbtn edit">Edit</button>
+        <button class="iconbtn-del del">Delete</button>
+      </td>
+    `;
+    const inputs = [...tr.querySelectorAll('input')];
+    const btnEdit = tr.querySelector('.edit');
+    const btnDel  = tr.querySelector('.del');
+
+    btnEdit.onclick = () => {
+      const enable = inputs[0].disabled;
+      inputs.forEach(i => i.disabled = !enable);
+      if (enable){
+        btnEdit.textContent = 'Save';
+        btnEdit.classList.add('active');
+        inputs[0].focus();
+      }else{
+        btnEdit.textContent = 'Edit';
+        btnEdit.classList.remove('active');
+        const [s,sa,d,da,r,ra] = inputs.map(i=>i.value);
+        note.rows[ri] = {
+          s: s!==''?+s:'', sa: sa!==''?+sa:'',
+          d: d!==''?+d:'', da: da!==''?+da:'',
+          r: r!==''?+r:'', ra: ra!==''?+ra:''
+        };
+        notesState.dirty = true;
+        toast('Row updated','info');
+      }
+    };
+
+    btnDel.onclick = async () => {
+      if (await askConfirm('Delete this line?', {okText:'Yes', cancelText:'No'})){
+        note.rows.splice(ri,1);
+        notesState.dirty = true;
+        renderNotesTable();
+        toast('Line deleted','warn');
+      }
+    };
+
+    tb.appendChild(tr);
+  });
+}
+
+// buttons & actions
+document.getElementById('addRowBtn')?.addEventListener('click', () => {
+  const note = notesState.notes[notesState.idx];
+  note.rows.push({s:'',sa:'',d:'',da:'',r:'',ra:''});
+  renderNotesTable();
+  document.querySelector('#notesTBody tr:last-child .edit')?.click(); // langsung mode edit
+});
+
+document.getElementById('saveNoteBtn')?.addEventListener('click', () => {
+  writeNotes(notesState.notes);
+  notesState.dirty=false;
+  toast('Note saved','success');
+});
+document.getElementById('cancelNoteBtn')?.addEventListener('click', () => {
+  const curIdx = notesState.idx;
+  notesState.notes = ensureNotes();            // reload dari LS
+  notesState.idx   = Math.min(curIdx, notesState.notes.length-1);
+  document.getElementById('noteSelect').value = String(notesState.idx);
+  renderNotesTable();
+  notesState.dirty=false;
+  toast('Canceled','info');
+});
+
+document.getElementById('noteSelect')?.addEventListener('change', (e)=>{
+  notesState.idx = +e.target.value;
+  renderNotesTable();
+});
+
+document.getElementById('addNoteBtn')?.addEventListener('click', () => {
+  const name = prompt('Note name?', 'New Note');
+  if(!name) return;
+  notesState.notes.push({id:'n_'+Date.now()+Math.random().toString(36).slice(2,6), name, rows:[]});
+  writeNotes(notesState.notes);
+  openNotesModal();
+  toast('Note added','success');
+});
+document.getElementById('renameNoteBtn')?.addEventListener('click', () => {
+  const note = notesState.notes[notesState.idx];
+  const name = prompt('Rename note', note.name);
+  if(!name) return;
+  note.name = name;
+  writeNotes(notesState.notes);
+  openNotesModal();
+  toast('Renamed','info');
+});
+document.getElementById('delNoteBtn')?.addEventListener('click', async () => {
+  if(!(await askConfirm('Delete this note?', {okText:'Yes', cancelText:'No'}))) return;
+  notesState.notes.splice(notesState.idx,1);
+  if(!notesState.notes.length) notesState.notes = ensureNotes();
+  writeNotes(notesState.notes);
+  notesState.idx = 0;
+  openNotesModal();
+  toast('Note deleted','warn');
+});
+
+// buka modal dari tombol View
+document.getElementById('viewBtn')?.addEventListener('click', openNotesModal);
 function clipMany(selector){
   const nodes = (typeof selector === 'string') ? document.querySelectorAll(selector) : selector;
   nodes.forEach(el => clipApply(el));
