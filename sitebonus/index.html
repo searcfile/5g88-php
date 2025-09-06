@@ -954,27 +954,58 @@ function initQuickMenu(){
   const quickMenu = document.getElementById('quickMenu');
   if (!quickBtn || !quickMenu) return;
 
+  // hitung & pasang posisi menu (fixed) relatif ke tombol
+  let reposer = null;
+  const positionMenu = () => {
+    const r = quickBtn.getBoundingClientRect();
+    const approxH = Math.min(260, quickMenu.scrollHeight || 260);
+    const spaceBelow = window.innerHeight - r.bottom;
+    const openUp = spaceBelow < approxH;
+
+    quickMenu.style.position = 'fixed';
+    quickMenu.style.left = (r.left + r.width/2) + 'px';
+    quickMenu.style.transform = 'translateX(-50%)';
+
+    if (!openUp) {
+      quickMenu.style.top = (r.bottom + 6) + 'px';
+      quickMenu.style.bottom = '';
+      quickMenu.classList.remove('up');
+    } else {
+      quickMenu.style.top = '';
+      quickMenu.style.bottom = (window.innerHeight - r.top + 6) + 'px';
+      quickMenu.classList.add('up');
+    }
+  };
+
+  const clearInline = () => {
+    quickMenu.style.position = '';
+    quickMenu.style.left = '';
+    quickMenu.style.top = '';
+    quickMenu.style.bottom = '';
+    quickMenu.style.transform = '';
+  };
+
   const toggleQuickMenu = (show)=>{
     const willShow = (typeof show === 'boolean') ? show : !quickMenu.classList.contains('show');
 
     if (willShow) {
-      // ===== OPEN =====
-      const r = quickBtn.getBoundingClientRect();
-      const approxMenuH = 240;
-      const spaceBelow = window.innerHeight - r.bottom;
-      quickMenu.classList.toggle('up', spaceBelow < approxMenuH);
-
+      positionMenu();
       quickMenu.classList.add('show');
       quickBtn.setAttribute('aria-expanded', 'true');
       quickMenu.setAttribute('aria-hidden',  'false');
+
+      reposer = () => positionMenu();
+      window.addEventListener('resize', reposer);
+      window.addEventListener('scroll', reposer, true); // termasuk scroll parent
     } else {
-      // ===== CLOSE =====
-      // ⬇️ Tambahkan dua baris ini SEBELUM aria-hidden = true
       if (quickMenu.contains(document.activeElement)) quickBtn.focus();
       quickMenu.setAttribute('aria-hidden','true');
-
       quickMenu.classList.remove('show');
       quickBtn.setAttribute('aria-expanded', 'false');
+
+      window.removeEventListener('resize', reposer);
+      window.removeEventListener('scroll', reposer, true);
+      clearInline();
     }
   };
 
@@ -982,7 +1013,7 @@ function initQuickMenu(){
   quickMenu.addEventListener('click', (e)=> e.stopPropagation());
   quickMenu.querySelectorAll('[data-q]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      toggleQuickMenu(false);           // menutup → fokus balik ke tombol
+      toggleQuickMenu(false);
       applyQuickRange(btn.dataset.q);
     });
   });
