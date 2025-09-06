@@ -837,6 +837,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
       <select id="noteSelect" class="select"></select>
       <button id="addNoteBtn" class="btn">+ New</button>
       <button id="renameNoteBtn" class="btn">Rename</button>
+      <button id="editHdrBtn" class="btn">Rename Columns</button>
       <button id="delNoteBtn" class="btn-cancel">Delete</button>
       <div class="spacer"></div>
       <button id="saveNoteBtn" class="btn">Save</button>
@@ -2331,6 +2332,35 @@ function ensureNotes(){
 
 let notesState = { notes: [], idx: 0, dirty:false };
 
+/* ===== Rename Headers (Notes) ===== */
+const LS_NOTE_HDR = 'bonusNotes.headers.v1';
+const DEF_HDR = ['SALES','AMOUNT','DEPOSIT','AMOUNT /2','RESIT','AMOUNT /2'];
+
+const readHdr  = ()=>{ try{ const x = JSON.parse(localStorage.getItem(LS_NOTE_HDR));
+  return (Array.isArray(x) && x.length === 6) ? x : DEF_HDR.slice();
+} catch { return DEF_HDR.slice(); }};
+
+const writeHdr = (a)=> localStorage.setItem(LS_NOTE_HDR, JSON.stringify(a));
+
+function applyHdr(){
+  const h = readHdr();
+  const ths = document.querySelectorAll('#notesTable thead th');
+  ths.forEach((th, i) => { if (h[i]) th.textContent = h[i]; });
+}
+
+/* tombol Rename Columns */
+document.getElementById('editHdrBtn')?.addEventListener('click', async ()=>{
+  const h = readHdr();
+  for (let i = 0; i < h.length; i++) {
+    const v = prompt(`Rename column "${h[i]}"`, h[i]);
+    if (v === null) return;            // batal -> tidak jadi ubah apa-apa
+    h[i] = v.trim() || h[i];           // kosong -> pakai yang lama
+  }
+  writeHdr(h);
+  applyHdr();
+  toast('Column names updated','success');
+});
+  
 function openNotesModal(){
   notesState.notes = ensureNotes();
   const sel = document.getElementById('noteSelect');
@@ -2344,6 +2374,7 @@ function openNotesModal(){
   notesState.dirty=false;
 
   renderNotesTable();
+  applyHdr();
   openModalA11y('#notesModal', '#noteSelect');
 }
 function closeNotesModal(){ closeModalA11y('#notesModal', '#viewBtn'); }
