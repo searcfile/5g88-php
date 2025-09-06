@@ -1216,7 +1216,6 @@ function setMiniMonthLabel(){
 }
 // — NEW: pastikan container & hidden inputs sentiasa ada —
 function ensureRangeWrapAndInputs(){
-  // cari / buat <div id="rangeWrap" class="range-wrap">
   let wrap = document.querySelector('#rangeWrap');
   if (!wrap){
     wrap = document.createElement('div');
@@ -1434,9 +1433,6 @@ function resetToCurrentOnLoad(){
     vis.value = s;
     vis.dataset.last = s;
   }
-
-  // Catatan: fpRange belum dibuat di sini, jadi tidak perlu setDate.
-  // initDateRangePicker() setelah ini akan baca nilai yang baru kita simpan.
 }
 // Paksa range ke 1..akhir bulan yang dipilih + sync ke UI & LS
 function setMonthAndRange(yyyyMM){
@@ -1577,12 +1573,9 @@ function openModal(rec = null) {
   $('#m_deposit').oninput = autoCalc;
   $('#m_withdrawal').oninput = autoCalc;
   autoCalc();
-
-  // 💡 Pastikan urutan ini tepat
-  lockFormBySite();                       // kunci field dulu
-  $('#m_site').onchange = lockFormBySite; // buka saat dipilih
-
-  openModalA11y('#modal', false);        // buka tanpa auto-focus
+  lockFormBySite();                      
+  $('#m_site').onchange = lockFormBySite;
+  openModalA11y('#modal', false);       
   $('#saveBtn').onclick = saveModal;
 }
 const closeModal = () => closeModalA11y('#modal', '#createBtn');
@@ -1593,7 +1586,6 @@ function lockFormBySite() {
   const ctrls = Array.from(document.querySelectorAll('#modal .dialog input, #modal .dialog select, #modal .dialog textarea'))
     .filter(el => el.id !== 'm_site');
 
-  // enable/disable
   ctrls.forEach(el => {
     // sales readonly tetap readonly; hanya ubah disabled
     if (el.id !== 'm_sales') el.disabled = !hasSite;
@@ -2202,7 +2194,7 @@ async function deleteUnclaim(ucId){
   if (idx < 0) return;
 
   const item = ucAll[idx];
-  if (item.claimed){ alert('Item sudah claimed dan tidak bisa dihapus.'); return; }
+  if (item.claimed){ toast('Item sudah claimed dan tidak bisa dihapus.', 'info'); return; }
 
   if(!(await askConfirm('Hapus unclaim pending ini?', {okText:'Yes', cancelText:'No'}))) return;
 
