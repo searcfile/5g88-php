@@ -337,20 +337,28 @@ if (urlTab && ["login","forgot","changepw"].indexOf(urlTab) >= 0) gotoTab(urlTab
 /* =========================
    AUTH STATE (auto-redirect jika sudah login)
 ========================= */
-auth.onAuthStateChanged(function(user){
+auth.onAuthStateChanged(async function (user) {
   var tabChange = document.querySelector('.tab[data-tab="changepw"]');
   var isLogged  = !!user;
   if (tabChange) tabChange.classList.toggle('hidden', !isLogged);
 
-  // Auto redirect kalau sudah login & bukan mau ganti password
-  if (isLogged && urlTab !== 'changepw') {
-    location.replace(REDIRECT_URL);
-    return;
-  }
+  if (isLogged) {
+    // ⬇️⬇️ Tambahan: jaga-jaga kalau user sudah login sebelum submit form
+    try {
+      var uname = sanitizeUsername(getUsernameFromUser(user));
+      await db.ref('usernames/' + uname).transaction(function (v) { return v || user.uid; });
+      await db.ref('uids/' + user.uid + '/username').set(uname);
+    } catch(e) { /* boleh diabaikan */ }
+    // ⬆️⬆️
 
-  if (isLogged){
     var cpUser = $("#cp-user");
     if (cpUser) cpUser.textContent = "Masuk sebagai: " + getUsernameFromUser(user);
+
+    // Auto redirect kalau bukan tab ganti password
+    if (urlTab !== 'changepw') {
+      location.replace(REDIRECT_URL);
+      return;
+    }
   } else {
     var curBtn = document.querySelector('.tab[aria-selected="true"]');
     var curTab = curBtn ? curBtn.getAttribute('data-tab') : 'login';
@@ -398,24 +406,26 @@ if (loginForm){
     if (!u || !p){ toast("Lengkapi username & password.", "error"); if(btn){btn.disabled=false;btn.textContent=old;} return; }
     if (!USER_RE.test(u)){ toast("Format username salah (3–30: a–z 0–9 . _ -).", "error"); if(btn){btn.disabled=false;btn.textContent=old;} return; }
 
-    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function(){
-      return auth.signInWithEmailAndPassword(toPseudoEmail(u), p);
-    }).then(function(){
-      clearFail();
-      toast("Login berhasil. Mengalihkan…", "success");
-      setTimeout(function(){ location.href = REDIRECT_URL; }, 200);
-    }).catch(function(err){
-      registerFail();
-      var code = String(err && err.code || "");
-      var msg="Gagal login.";
-      if (code.indexOf("user-not-found")>=0) msg="Username tidak ditemukan.";
-      else if (code.indexOf("wrong-password")>=0 || code.indexOf("invalid-credential")>=0) msg="Password salah.";
-      else if (code.indexOf("too-many-requests")>=0) msg="Terlalu banyak percobaan. Coba lagi nanti.";
-      else if (code.indexOf("network-request-failed")>=0) msg="Jaringan bermasalah. Coba lagi.";
-      toast(msg, "error");
-    }).finally(function(){
-      if (btn){ btn.disabled=false; btn.textContent=old; }
-    });
+   auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function () {
+  return auth.signInWithEmailAndPassword(toPseudoEmail(u), p);
+}).then(async function () {
+  // ⬇️⬇️ Tambahan WAJIB (membuat mapping untuk rules)
+  var cur   = auth.currentUser;
+  var uname = sanitizeUsername(getUsernameFromUser(cur));
+  // klaim username kalau kosong
+  await db.ref('usernames/' + uname).transaction(function (v) { return v || cur.uid; });
+  // simpan mapping uid -> username
+  await db.ref('uids/' + cur.uid + '/username').set(uname);
+  // ⬆️⬆️
+
+  clearFail();
+  toast("Login berhasil. Mengalihkan…", "success");
+  setTimeout(function(){ location.href = REDIRECT_URL; }, 200);
+}).catch(function (err) {
+  // ... (biarkan punyamu yang sekarang)
+}).finally(function(){
+  if (btn){ btn.disabled=false; btn.textContent=old; }
+});
   });
 }
 
