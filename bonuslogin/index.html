@@ -223,6 +223,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
 <script type="text/javascript">
+"use strict";
 var REDIRECT_URL = "https://searcfile.github.io/5g88-php/sitebonus/";
 var USER_DOMAIN  = "@5g88.local";
 
@@ -241,7 +242,7 @@ var auth = firebase.auth();
 var db   = firebase.database();
 
 /* =========================
-   HELPERS (DOM, TOAST, TAB)
+   HELPERS UI
 ========================= */
 function $(s){ return document.querySelector(s); }
 function $all(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); }
@@ -251,9 +252,7 @@ function toast(msg, type){
   var el = $("#toast");
   if (!el) { alert(msg); return; }
   el.textContent = msg;
-  el.style.borderColor = (type === "error")
-    ? "#ef4444"
-    : (type === "success" ? "#10b981" : "#2b3653");
+  el.style.borderColor = (type === "error") ? "#ef4444" : (type === "success" ? "#10b981" : "#2b3653");
   el.classList.add("show");
   clearTimeout(toast._t);
   toast._t = setTimeout(function(){ el.classList.remove("show"); }, 2600);
@@ -263,22 +262,16 @@ function gotoTab(name){
   $all("[data-panel]").forEach(function(p){ p.classList.toggle("hidden", p.getAttribute("data-panel") !== name); });
   $all(".tab").forEach(function(t){ t.setAttribute("aria-selected", (t.getAttribute("data-tab") === name) ? "true" : "false"); });
 }
-
-$all(".tab").forEach(function(btn){
-  btn.addEventListener("click", function(){ gotoTab(btn.getAttribute("data-tab")); });
-});
-$all("[data-goto]").forEach(function(a){
-  a.addEventListener("click", function(e){ e.preventDefault(); gotoTab(a.getAttribute("data-goto")); });
-});
+$all(".tab").forEach(function(btn){ btn.addEventListener("click", function(){ gotoTab(btn.getAttribute("data-tab")); }); });
+$all("[data-goto]").forEach(function(a){ a.addEventListener("click", function(e){ e.preventDefault(); gotoTab(a.getAttribute("data-goto")); }); });
 
 /* =========================
-   USERNAME SANITIZE & EMAIL PSEUDO
+   USERNAME SANITIZE & PSEUDO EMAIL
 ========================= */
 var USER_RE = /^[a-z0-9._-]{3,30}$/;
 function sanitizeUsername(u){
   u = (u || "").toLowerCase();
-  u = u.replace(/\s+/g,'').replace(/[^a-z0-9._-]/g,'');
-  return u;
+  return u.replace(/\s+/g,'').replace(/[^a-z0-9._-]/g,'');
 }
 function toPseudoEmail(username){
   var u = sanitizeUsername(username);
@@ -286,8 +279,9 @@ function toPseudoEmail(username){
 }
 function getUsernameFromUser(u){
   var em = (u && u.email) ? u.email : "";
-  if (em.slice(-USER_DOMAIN.length) === USER_DOMAIN) return em.slice(0, -USER_DOMAIN.length);
-  return (u && u.displayName) ? u.displayName : em;
+  return em.slice(-USER_DOMAIN.length) === USER_DOMAIN
+    ? em.slice(0, -USER_DOMAIN.length)
+    : (u && u.displayName) ? u.displayName : em;
 }
 
 /* =========================
@@ -308,7 +302,7 @@ function canTry(){
 function registerFail(){
   failCount++; localStorage.setItem('login.fails', String(failCount));
   if (failCount % 5 === 0){
-    lockUntil = Date.now() + 30000; // 30 detik
+    lockUntil = Date.now() + 30000;
     localStorage.setItem('login.lockUntil', String(lockUntil));
     toast("Terlalu banyak percobaan. Coba lagi dalam 30 detik.", "error");
   }
@@ -325,7 +319,6 @@ function clearFail(){
 var urlTab = null;
 try { urlTab = new URLSearchParams(location.search).get("tab"); }
 catch(_e){
-  // Fallback sederhana
   var qs = location.search.replace(/^\?/,'').split('&');
   for (var i=0;i<qs.length;i++){
     var kv = qs[i].split('=');
@@ -335,53 +328,18 @@ catch(_e){
 if (urlTab && ["login","forgot","changepw"].indexOf(urlTab) >= 0) gotoTab(urlTab);
 
 /* =========================
-   AUTH STATE (auto-redirect jika sudah login)
+   AUTH STATE (tanpa write ke /uids /usernames)
 ========================= */
-var didMapUsername = false; // cegah mapping berulang
-
-async function ensureUsernameMapping(user){
-  try{
-    var uname = sanitizeUsername(getUsernameFromUser(user));
-    if (!uname) return;          // kalau kosong, skip
-    if (didMapUsername) return;  // sudah diproses di sesi ini
-
-    // claim: /usernames/{uname} -> uid (sekali saja)
-    await db.ref('usernames/'+uname).transaction(function(v){
-      return v || user.uid;
-    });
-
-    // backlink: /uids/{uid}/username -> uname
-    await db.ref('uids/'+user.uid+'/username').set(uname);
-
-    didMapUsername = true;
-  }catch(e){
-    console.warn('ensureUsernameMapping gagal:', e);
-    // Boleh dibiarkan—rules di halaman tujuan akan tetap jalan
-    // setelah loginForm (POST-login) juga melakukan mapping.
-  }
-}
-
-// ——— Ganti block ini ———
 auth.onAuthStateChanged(function(user){
   var tabChange = document.querySelector('.tab[data-tab="changepw"]');
   var isLogged  = !!user;
   if (tabChange) tabChange.classList.toggle('hidden', !isLogged);
 
   if (isLogged){
-    // update label user
     var cpUser = $("#cp-user");
     if (cpUser) cpUser.textContent = "Masuk sebagai: " + getUsernameFromUser(user);
-
-    // mapping username → RTDB (fire-and-forget, tanpa await agar non-blocking)
-    ensureUsernameMapping(user);
-
-    // ❌ Jangan redirect di sini supaya tidak dobel
-    // (Redirect cukup dilakukan setelah login sukses di handler submit)
-    if (urlTab === 'changepw') {
-      gotoTab('changepw');
-    }
+    if (urlTab === 'changepw') gotoTab('changepw');
   }else{
-    // kalau user logout & lagi di tab ganti password, balikin ke login
     var curBtn = document.querySelector('.tab[aria-selected="true"]');
     var curTab = curBtn ? curBtn.getAttribute('data-tab') : 'login';
     if (curTab === 'changepw') gotoTab('login');
@@ -389,7 +347,7 @@ auth.onAuthStateChanged(function(user){
 });
 
 /* =========================
-   INPUT BEHAVIOR (lowercase otomatis)
+   INPUT (lowercase otomatis)
 ========================= */
 var uEl = $("#u");
 if (uEl){
@@ -409,7 +367,7 @@ if (fuEl){
 }
 
 /* =========================
-   LOGIN
+   LOGIN (tanpa tulis /uids & /usernames)
 ========================= */
 var loginForm = $("#form-login");
 if (loginForm){
@@ -432,12 +390,6 @@ if (loginForm){
       await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
       await auth.signInWithEmailAndPassword(toPseudoEmail(u), p);
 
-      // ==== Penting: klaim username di RTDB (untuk rules) ====
-      var cur   = auth.currentUser;
-      var uname = sanitizeUsername(getUsernameFromUser(cur)); // "admins88" dll
-      await db.ref('usernames/'+uname).transaction(function(v){ return v || cur.uid; });
-      await db.ref('uids/'+cur.uid+'/username').set(uname);
-
       clearFail();
       toast("Login berhasil. Mengalihkan…", "success");
       setTimeout(function(){ location.href = REDIRECT_URL; }, 200);
@@ -451,7 +403,6 @@ if (loginForm){
       else if (code.indexOf("wrong-password")>=0 || code.indexOf("invalid-credential")>=0) msg="Password salah.";
       else if (code.indexOf("too-many-requests")>=0) msg="Terlalu banyak percobaan. Coba lagi nanti.";
       else if (code.indexOf("network-request-failed")>=0) msg="Jaringan bermasalah. Coba lagi.";
-      else if (code.indexOf("permission_denied")>=0) msg="Tidak bisa klaim username. Cek rules RTDB & node /usernames.";
       console.error(err);
       toast(msg, "error");
     } finally {
@@ -461,7 +412,7 @@ if (loginForm){
 }
 
 /* =========================
-   LUPA PASSWORD (request ke admin)
+   LUPA PASSWORD (request ke admin) — pakai waktu server
 ========================= */
 var forgotForm = $("#form-forgot");
 if (forgotForm){
@@ -477,7 +428,7 @@ if (forgotForm){
       username: u,
       pseudoEmail: toPseudoEmail(u),
       notes: notes || null,
-      ts: Date.now(),
+      ts: firebase.database.ServerValue.TIMESTAMP, // ⬅ waktu server
       status: "pending"
     };
     var key = String(Date.now()) + "_" + u;
@@ -493,7 +444,7 @@ if (forgotForm){
 }
 
 /* =========================
-   GANTI PASSWORD (login + reauth)
+   GANTI PASSWORD (reauth)
 ========================= */
 var changeForm = $("#form-changepw");
 if (changeForm){
