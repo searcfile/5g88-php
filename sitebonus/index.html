@@ -1028,50 +1028,92 @@ function __writeLocalState(s){
   localStorage.setItem(LS_UPDATED, String(Number(s.updatedAt || Date.now())));
 }
 
-// Dorong local -> cloud
 async function syncUp(){
-  const uid = auth.currentUser?.uid;
-  if (!uid) return;
+  const u = auth.currentUser;
+  if (!u) return;
+
+  const userKey = safeKey(getUsername(u));  // contoh: "admins88"
   const payload = __readLocalState();
-  // pastikan payload.updatedAt persisten, kalau belum ada set sekarang
-  if (!payload.updatedAt) {
-    bumpUpdated();
-    payload.updatedAt = getUpdatedAt();
-  }
-  await db.ref(`users/${uid}/state`).set(payload);
+  if (!payload.updatedAt){ bumpUpdated(); payload.updatedAt = getUpdatedAt(); }
+
+  await db.ref(`users/${userKey}/state`).set(payload);
+  // simpan mapping untuk rules (opsional tapi bagus)
+  await db.ref(`uids/${u.uid}/username`).set(userKey);
+}
+// Domain login palsu yg kamu pakai
+// ===== Username helpers =====
+const USER_DOMAIN = '@5g88.local';                    // domain palsu yang kamu pakai
+
+function getUsername(u){
+  if (!u) return 'user';
+  const e = u.email || '';
+  if (e.endsWith(USER_DOMAIN)) return e.slice(0, -USER_DOMAIN.length);
+  const dn = (u.displayName || '').trim();
+  if (dn) return dn;
+  // fallback unik pakai ujung UID
+  return 'user_' + (u.uid || '').slice(-6);
 }
 
-// Tarik cloud -> local (kalau belum ada, buat dari local)
-async function syncDown(uid){
-  const snap = await db.ref(`users/${uid}/state`).get();
-  const local = __readLocalState(); // local.updatedAt sudah diisi Date.now()
+// Firebase melarang . # $ [ ] / di key
+function safeKey(k){
+  return String(k).replace(/[.#$\[\]\/]/g,'_');
+}
 
+// Email palsu dari username (dipakai di halaman login)
+const toEmail = (username) => username + USER_DOMAIN;
+
+// (opsional) klaim username saat sign-up
+async function reserveUsername(name){
+  const key = safeKey(name);
+  const uid = auth.currentUser.uid;
+  const ref = db.ref(`usernames/${key}`);
+  const tx  = await ref.transaction(cur => cur || uid); // isi kalau kosong
+  if (!tx.committed || tx.snapshot.val() !== uid) throw new Error('Username sudah dipakai');
+  await db.ref(`uids/${uid}/username`).set(key);
+  return key;
+}
+// Tarik cloud -> local (kalau belum ada, buat dari local)
+async function syncDown(){
+  const u = auth.currentUser;
+  if (!u) return;
+
+  const userKey = safeKey(getUsername(u));
+
+  // coba path baru (berbasis username)
+  let snap = await db.ref(`users/${userKey}/state`).get();
+
+  // MIGRASI sekali: kalau belum ada, tarik dari path lama (uid)
+  if (!snap.exists()){
+    const old = await db.ref(`users/${u.uid}/state`).get();
+    if (old.exists()){
+      await db.ref(`users/${userKey}/state`).set(old.val());
+      await db.ref(`uids/${u.uid}/username`).set(userKey);
+      // opsional: hapus path lama -> await db.ref(`users/${u.uid}`).remove();
+      snap = await db.ref(`users/${userKey}/state`).get();
+    } else {
+      await syncUp();                                     // pertama kali, dorong dari local
+      snap = await db.ref(`users/${userKey}/state`).get();
+    }
+  }
+
+  const local = __readLocalState();
   if (snap.exists()){
-    const cloud = snap.val();
+    const cloud  = snap.val();
     const tCloud = Number(cloud.updatedAt || 0);
     const tLocal = Number(local.updatedAt || 0);
-
-    if (tCloud >= tLocal) {
-      // Cloud lebih baru -> pakai cloud
-      __writeLocalState(cloud);
-    } else {
-      // Local lebih baru -> dorong ke cloud
-      await db.ref(`users/${uid}/state`).set(local);
-    }
-  } else {
-    // pertama kali: buat dari local
-    await syncUp();
+    if (tCloud >= tLocal) __writeLocalState(cloud);
+    else await db.ref(`users/${userKey}/state`).set(local);
   }
 }
 
 auth.onAuthStateChanged(async (user)=>{
   if (!user) { location.replace(LOGIN_URL); return; }
 
-  const uname = (user.email || "").replace("@5g88.local","") || "user";
-  setUserUI(uname);
+  const uname = getUsername(user);
+  setUserUI(uname);              // label header = admins88, dsb
 
-  // Tarik data cloud -> local, lalu render
-  try { await syncDown(user.uid); } catch(e){ console.error('syncDown error', e); }
+  try { await syncDown(); }      // ⬅️ tidak pakai uid lagi
+  catch(e){ console.error('syncDown error', e); }
 
   document.documentElement.classList.remove('auth-wait');
   if (typeof render === 'function') render();
