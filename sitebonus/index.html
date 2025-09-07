@@ -990,13 +990,11 @@ async function syncUp(){
   const u = auth.currentUser;
   if (!u) return;
 
-  const userKey = safeKey(getUsername(u));  // contoh: "admins88"
+  const userKey = await ensureMapping(u);          // ⬅️ WAJIB duluan
   const payload = __readLocalState();
   if (!payload.updatedAt){ bumpUpdated(); payload.updatedAt = getUpdatedAt(); }
 
   await db.ref(`users/${userKey}/state`).set(payload);
-  // simpan mapping untuk rules (opsional tapi bagus)
-  await db.ref(`uids/${u.uid}/username`).set(userKey);
 }
 // Domain login palsu yg kamu pakai
 // ===== Username helpers =====
@@ -1035,27 +1033,25 @@ async function syncDown(){
   const u = auth.currentUser;
   if (!u) return;
 
-  const userKey = safeKey(getUsername(u));
+  const userKey = await ensureMapping(u); // ⬅️ WAJIB duluan
 
-  // coba path baru (berbasis username)
-  let snap = await db.ref(`users/${userKey}/state`).get();
+  // sekarang boleh baca path baru
+  let snap = await db.ref(`users/${userKey}/state`).get().catch(() => null);
 
-  // MIGRASI sekali: kalau belum ada, tarik dari path lama (uid)
-  if (!snap.exists()){
-    const old = await db.ref(`users/${u.uid}/state`).get();
-    if (old.exists()){
-      await db.ref(`users/${userKey}/state`).set(old.val());
-      await db.ref(`uids/${u.uid}/username`).set(userKey);
-      // opsional: hapus path lama -> await db.ref(`users/${u.uid}`).remove();
+  if (!snap || !snap.exists()){
+    // coba path lama (berbasis uid) – rules masih izinkan
+    const old = await db.ref(`users/${u.uid}/state`).get().catch(() => null);
+    if (old && old.exists()){
+      await db.ref(`users/${userKey}/state`).set(old.val()); // mapping sudah aman
       snap = await db.ref(`users/${userKey}/state`).get();
     } else {
-      await syncUp();                                     // pertama kali, dorong dari local
+      await syncUp();                                        // first run
       snap = await db.ref(`users/${userKey}/state`).get();
     }
   }
 
-  const local = __readLocalState();
-  if (snap.exists()){
+  const local  = __readLocalState();
+  if (snap && snap.exists()){
     const cloud  = snap.val();
     const tCloud = Number(cloud.updatedAt || 0);
     const tLocal = Number(local.updatedAt || 0);
@@ -1067,12 +1063,13 @@ async function syncDown(){
 auth.onAuthStateChanged(async (user)=>{
   if (!user) { location.replace(LOGIN_URL); return; }
 
-  const uname = getUsername(user);
-  setUserUI(uname);              // label header = admins88, dsb
+  const uname = getUsername(user).replace(/[.#$\[\]\/]/g,'_'); // safeKey
 
-  try { await syncDown(); }      // ⬅️ tidak pakai uid lagi
-  catch(e){ console.error('syncDown error', e); }
+  // pastikan mapping tersedia utk rules
+  await db.ref(`uids/${user.uid}/username`).set(uname);
 
+  setUserUI(uname);
+  try { await syncDown(); } catch(e){ console.error('syncDown error', e); }
   document.documentElement.classList.remove('auth-wait');
   if (typeof render === 'function') render();
 });
@@ -1093,6 +1090,19 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') safeSyncUp();
 });
 window.addEventListener('beforeunload', () => { safeSyncUp(); });
+  
+async function ensureMapping(u){
+  if (!u) return null;
+  // coba mapping yang sudah ada
+  const mapRef  = db.ref(`uids/${u.uid}/username`);
+  const mapSnap = await mapRef.get().catch(() => null);
+  let userKey = (mapSnap && mapSnap.exists()) ? mapSnap.val() : safeKey(getUsername(u));
+
+  // klaim username (unik) + set mapping uid -> username
+  await db.ref(`usernames/${userKey}`).transaction(v => v || u.uid);
+  await mapRef.set(userKey);
+  return userKey;
+}
   const $ = s => document.querySelector(s);
   const fmtNum = n => (Number.isFinite(n)?n:parseFloat(n||0)).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
   const fmtInt = n => (parseInt(n||0,10)).toLocaleString();
