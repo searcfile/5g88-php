@@ -996,12 +996,8 @@ async function syncUp(){
 
   await db.ref(`users/${userKey}/state`).set(payload);
 }
-// Domain login palsu yg kamu pakai
-// ===== Username helpers =====
-const USER_DOMAIN = '@5g88.local'; // domain email pseudo
 
-// ==== AMBIL USERNAME DARI EMAIL PSEUDO ====
-// hasil: "admins88" bila email = "admins88@5g88.local"
+const USER_DOMAIN = '@5g88.local'; 
 function getUsername(u){
   const e = u?.email || '';
   if (e.endsWith(USER_DOMAIN)) return e.slice(0, -USER_DOMAIN.length);
@@ -1009,16 +1005,6 @@ function getUsername(u){
   return 'user_' + (u?.uid || '').slice(-6);
 }
 
-async function syncUp(){
-  const u = auth.currentUser;
-  if (!u) return;
-
-  const userKey = getUsername(u);        // ⬅️ tanpa safeKey
-  const payload = __readLocalState();
-  if (!payload.updatedAt){ bumpUpdated(); payload.updatedAt = getUpdatedAt(); }
-
-  await db.ref(`users/${userKey}/state`).set(payload);
-}
 
 async function syncDown(){
   const u = auth.currentUser;
