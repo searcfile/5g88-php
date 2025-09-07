@@ -337,29 +337,51 @@ if (urlTab && ["login","forgot","changepw"].indexOf(urlTab) >= 0) gotoTab(urlTab
 /* =========================
    AUTH STATE (auto-redirect jika sudah login)
 ========================= */
-auth.onAuthStateChanged(async function (user) {
+var didMapUsername = false; // cegah mapping berulang
+
+async function ensureUsernameMapping(user){
+  try{
+    var uname = sanitizeUsername(getUsernameFromUser(user));
+    if (!uname) return;          // kalau kosong, skip
+    if (didMapUsername) return;  // sudah diproses di sesi ini
+
+    // claim: /usernames/{uname} -> uid (sekali saja)
+    await db.ref('usernames/'+uname).transaction(function(v){
+      return v || user.uid;
+    });
+
+    // backlink: /uids/{uid}/username -> uname
+    await db.ref('uids/'+user.uid+'/username').set(uname);
+
+    didMapUsername = true;
+  }catch(e){
+    console.warn('ensureUsernameMapping gagal:', e);
+    // Boleh dibiarkan—rules di halaman tujuan akan tetap jalan
+    // setelah loginForm (POST-login) juga melakukan mapping.
+  }
+}
+
+// ——— Ganti block ini ———
+auth.onAuthStateChanged(function(user){
   var tabChange = document.querySelector('.tab[data-tab="changepw"]');
   var isLogged  = !!user;
   if (tabChange) tabChange.classList.toggle('hidden', !isLogged);
 
-  if (isLogged) {
-    // ⬇️⬇️ Tambahan: jaga-jaga kalau user sudah login sebelum submit form
-    try {
-      var uname = sanitizeUsername(getUsernameFromUser(user));
-      await db.ref('usernames/' + uname).transaction(function (v) { return v || user.uid; });
-      await db.ref('uids/' + user.uid + '/username').set(uname);
-    } catch(e) { /* boleh diabaikan */ }
-    // ⬆️⬆️
-
+  if (isLogged){
+    // update label user
     var cpUser = $("#cp-user");
     if (cpUser) cpUser.textContent = "Masuk sebagai: " + getUsernameFromUser(user);
 
-    // Auto redirect kalau bukan tab ganti password
-    if (urlTab !== 'changepw') {
-      location.replace(REDIRECT_URL);
-      return;
+    // mapping username → RTDB (fire-and-forget, tanpa await agar non-blocking)
+    ensureUsernameMapping(user);
+
+    // ❌ Jangan redirect di sini supaya tidak dobel
+    // (Redirect cukup dilakukan setelah login sukses di handler submit)
+    if (urlTab === 'changepw') {
+      gotoTab('changepw');
     }
-  } else {
+  }else{
+    // kalau user logout & lagi di tab ganti password, balikin ke login
     var curBtn = document.querySelector('.tab[aria-selected="true"]');
     var curTab = curBtn ? curBtn.getAttribute('data-tab') : 'login';
     if (curTab === 'changepw') gotoTab('login');
@@ -391,7 +413,7 @@ if (fuEl){
 ========================= */
 var loginForm = $("#form-login");
 if (loginForm){
-  loginForm.addEventListener("submit", function(e){
+  loginForm.addEventListener("submit", async function(e){
     e.preventDefault();
     if (!canTry()) return;
     if (!navigator.onLine){ toast("Offline. Periksa koneksi internet.", "error"); return; }
@@ -400,30 +422,42 @@ if (loginForm){
     var old = btn ? btn.textContent : '';
     if (btn){ btn.disabled = true; btn.textContent = 'Memproses…'; }
 
-    var u = sanitizeUsername(($("#u") && $("#u").value) || "");
-    var p = ($("#password") && $("#password").value) || "";
+    try{
+      var u = sanitizeUsername(($("#u") && $("#u").value) || "");
+      var p = ($("#password") && $("#password").value) || "";
 
-    if (!u || !p){ toast("Lengkapi username & password.", "error"); if(btn){btn.disabled=false;btn.textContent=old;} return; }
-    if (!USER_RE.test(u)){ toast("Format username salah (3–30: a–z 0–9 . _ -).", "error"); if(btn){btn.disabled=false;btn.textContent=old;} return; }
+      if (!u || !p) throw { code:"missing" };
+      if (!USER_RE.test(u)) throw { code:"bad-username" };
 
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-  .then(() => auth.signInWithEmailAndPassword(toPseudoEmail(u), p))
-  .then(() => {
-    var cur   = auth.currentUser;
-    var uname = sanitizeUsername(getUsernameFromUser(cur));
-    return db.ref('usernames/'+uname).transaction(v => v || cur.uid)
-      .then(() => db.ref('uids/'+cur.uid+'/username').set(uname));
-  })
-  .then(() => {
-    clearFail();
-    toast("Login berhasil. Mengalihkan…", "success");
-    setTimeout(() => location.href = REDIRECT_URL, 200);
-  })
-}).catch(function(err){
-  // ... (biarkan bagian error kamu seperti semula)
-}).finally(function(){
-  if (btn){ btn.disabled=false; btn.textContent=old; }
-});
+      await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+      await auth.signInWithEmailAndPassword(toPseudoEmail(u), p);
+
+      // ==== Penting: klaim username di RTDB (untuk rules) ====
+      var cur   = auth.currentUser;
+      var uname = sanitizeUsername(getUsernameFromUser(cur)); // "admins88" dll
+      await db.ref('usernames/'+uname).transaction(function(v){ return v || cur.uid; });
+      await db.ref('uids/'+cur.uid+'/username').set(uname);
+
+      clearFail();
+      toast("Login berhasil. Mengalihkan…", "success");
+      setTimeout(function(){ location.href = REDIRECT_URL; }, 200);
+    } catch(err){
+      registerFail();
+      var code = String(err && err.code || "");
+      var msg="Gagal login.";
+      if (code === "missing") msg="Lengkapi username & password.";
+      else if (code === "bad-username") msg="Format username salah (3–30: a–z 0–9 . _ -).";
+      else if (code.indexOf("user-not-found")>=0) msg="Username tidak ditemukan.";
+      else if (code.indexOf("wrong-password")>=0 || code.indexOf("invalid-credential")>=0) msg="Password salah.";
+      else if (code.indexOf("too-many-requests")>=0) msg="Terlalu banyak percobaan. Coba lagi nanti.";
+      else if (code.indexOf("network-request-failed")>=0) msg="Jaringan bermasalah. Coba lagi.";
+      else if (code.indexOf("permission_denied")>=0) msg="Tidak bisa klaim username. Cek rules RTDB & node /usernames.";
+      console.error(err);
+      toast(msg, "error");
+    } finally {
+      if (btn){ btn.disabled=false; btn.textContent=old; }
+    }
+  });
 }
 
 /* =========================
