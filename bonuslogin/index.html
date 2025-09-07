@@ -66,20 +66,12 @@
   form{ display:grid; gap:12px; }
   .row{ display:grid; gap:8px; }
   label{ font-size:13px; color:var(--sub); }
-input{
-  height:40px;
-  width:100%;
-  border-radius:8px;
-  border:1px solid #424242;
-  background:#141414;
-  color:#e6e6e6;
-  padding:8px 12px;       /* default padding */
-  outline:none;
-}
-input:hover{ border-color:#3a4a72 }
-input:focus{ box-shadow: var(--ring); border-color:#1668dc }
-input::placeholder{ color: var(--muted); opacity: .95; }
-.field input{ padding-right:44px; }
+  input{
+    height:44px; border-radius:10px; border:1px solid #2b3653; background:#0e1728;
+    color:#e5e7eb; padding:0 12px; outline:none;
+  }
+  input:hover{ border-color:#3a4a72 }
+  input:focus{ box-shadow: var(--ring); border-color:#d6b24a }
 
   .btn{
     height:44px; border-radius:10px; border:1px solid #c6a23a;
@@ -151,12 +143,10 @@ input::placeholder{ color: var(--muted); opacity: .95; }
 
     <!-- LOGIN -->
     <form id="form-login" data-panel="login" autocomplete="on">
-<div class="row">
-  <label for="u">Username</label>
-  <div class="field">
-    <input id="u" name="u" type="text" placeholder="Username" required>
-  </div>
-</div>
+      <div class="row">
+        <label for="u">Username</label>
+        <input id="u" name="u" type="text" placeholder="Username" required>
+      </div>
 <div class="row">
   <label for="password">Password</label>
   <div class="field">
