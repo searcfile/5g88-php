@@ -475,53 +475,11 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 #rangeVis::placeholder{ text-align:center }
 
 /* tombol kecil dropdown */
-.range-quick-btn{
-  height:36px;
-  padding:0 8px;
-  border-radius:8px;
-  border:1px solid #424242;
-  background:#141414;
-  color:rgba(255,255,255,.85);
-  cursor:pointer;
-  transition:all .2s;
-}
+.range-quick-btn{height:36px;padding:0 8px;border-radius:8px;border:1px solid #424242;background:#141414;color:rgba(255,255,255,.85);cursor:pointer;transition:all .2s;}
 .range-quick-btn:hover{ border-color:#3c89e8; color:#3c89e8; }.range-quick-btn:active{ border-color:#1554ad; color:#1554ad;}
-
-/* menu preset */
-.range-quick-menu{
-  position:absolute;
-  left:50%;
-  transform:translateX(-50%);
-  right:auto;
-  top:calc(100% + 6px);
-  background:#111;
-  border:1px solid #424242;
-  border-radius:8px;
-  padding:6px;
-  display:none;                 /* ⬅️ default: sembunyi */
-  z-index:2147483646;
-  box-shadow:0 12px 32px rgba(0,0,0,.45);
-  flex-wrap:nowrap;
-  gap:6px;
-  white-space:nowrap;
-  overflow-x:auto;
-  overflow-y:hidden;
-  min-width:fit-content;
-  max-width:90vw;
-}
+.range-quick-menu{position:absolute;left:50%;transform:translateX(-50%);right:auto;top:calc(100% + 6px);background:#111;border:1px solid #424242;border-radius:8px;padding:6px;display:none;z-index:2147483646;box-shadow:0 12px 32px rgba(0,0,0,.45);flex-wrap:nowrap;gap:6px;white-space:nowrap;overflow-x:auto;overflow-y:hidden;min-width:fit-content;max-width:90vw;}
 .range-quick-menu.show{ display:flex; } 
-.range-quick-menu button{
-  flex:0 0 auto;                /* ukuran mengikuti konten */
-  width:auto;                   /* <-- HAPUS width:100% */
-  background:transparent;
-  border:0;
-  color:rgba(255,255,255,.9);
-  padding:8px 12px;
-  border-radius:8px;
-  cursor:pointer;
-  white-space:nowrap;
-  text-align:center;            /* center label */
-}
+.range-quick-menu button{flex:0 0 auto;width:auto;background:transparent;border:0;color:rgba(255,255,255,.9);padding:8px 12px;border-radius:8px;cursor:pointer;white-space:nowrap;text-align:center;}
 .range-quick-menu button:hover{ background:transparent; color:#3c89e8; }.range-quick-menu button:active{ background:transparent; color:#1554ad; }
 .range-quick-menu button.active{background: transparent !important;color:#1668dc !important;}
 .range-quick-menu hr{display: none;}
