@@ -21,11 +21,7 @@ body{margin:0; background:#000; color:var(--text);font:14px/1.45 -apple-system,B
   border: 2px solid transparent;
   background-clip: content-box;
 }
-/* ==================== FLATPICKR UPGRADE PACK ==================== */
-:root{
-  --picker-blue: #1668dc;                    /* biru utama */
-  --picker-blue-ghost: rgba(22,104,220,.25); /* isi di antara range */
-}
+:root{--picker-blue: #1668dc;--picker-blue-ghost: rgba(22,104,220,.25);}
 span.flatpickr-weekday {
   cursor: default;
   font-size: 90%;
@@ -1080,26 +1076,43 @@ function keyForRange(fs, ts){
   if (fs === iso0(y) && ts === iso0(y)) return 'yesterday';
 
   { // this week
-    const {start, end} = weekRangeOf(now, WEEK_START);
-    const realEnd = new Date(Math.min(+end, +now));
-    if (fs === iso(start) && ts === iso(realEnd)) return 'thisweek';
+    const { start, end } = weekRangeOf(now, WEEK_START);
+    const fullStart  = iso(start);
+    const fullEnd    = iso(end);
+    const clampedEnd = iso(new Date(Math.min(+end, +now)));
+
+    // anggap thisweek kalau full 7 hari ATAU versi clamp
+    if (fs === fullStart && (ts === fullEnd || ts === clampedEnd)) {
+      return 'thisweek';
+    }
   }
+
   { // last week
-    const {start} = weekRangeOf(now, WEEK_START);
+    const { start } = weekRangeOf(now, WEEK_START);
     const lastStart = new Date(start); lastStart.setDate(start.getDate()-7);
     const lastEnd   = new Date(lastStart); lastEnd.setDate(lastStart.getDate()+6);
     if (fs === iso(lastStart) && ts === iso(lastEnd)) return 'lastweek';
   }
+
   { // this month
-    const {start, end} = monthRangeOf(now);
-    const realEnd = new Date(Math.min(+end, +now));
-    if (fs === iso(start) && ts === iso(realEnd)) return 'thismonth';
+    const { start, end } = monthRangeOf(now);
+    const fullStart  = iso(start);
+    const fullEnd    = iso(end);
+    const clampedEnd = iso(new Date(Math.min(+end, +now)));
+
+    // anggap thismonth jika full bulan ATAU versi clamp
+    if ((fs === fullStart && ts === fullEnd) ||
+        (fs === fullStart && ts === clampedEnd)) {
+      return 'thismonth';
+    }
   }
+
   { // last month
     const lmStart = new Date(now.getFullYear(), now.getMonth()-1, 1);
     const lmEnd   = new Date(now.getFullYear(), now.getMonth(), 0);
     if (fs === iso(lmStart) && ts === iso(lmEnd)) return 'lastmonth';
   }
+
   return null;
 }
 function applyQuickRange(kind){
@@ -1115,11 +1128,13 @@ function applyQuickRange(kind){
       const y = startOfDay(now); y.setDate(y.getDate()-1);
       f = iso(y); t = iso(y); break;
     }
-    case 'thisweek': {
-      const { start, end } = weekRangeOf(now, WEEK_START);
-      const realEnd = new Date(Math.min(+end, +now));
-      f = iso(start); t = iso(realEnd); break;
-    }
+   case 'thisweek': {
+  const { start, end } = weekRangeOf(now, WEEK_START);
+  // FULL 7 hari (Sen–Min kalau WEEK_START = 1)
+  f = iso(start);
+  t = iso(end);
+  break;
+}
     case 'lastweek': {
       const { start } = weekRangeOf(now, WEEK_START);
       const lastStart = new Date(start); lastStart.setDate(start.getDate()-7);
@@ -1128,8 +1143,9 @@ function applyQuickRange(kind){
     }
     case 'thismonth': {
       const { start, end } = monthRangeOf(now);
-      const realEnd = new Date(Math.min(+end, +now));
-      f = iso(start); t = iso(realEnd); break;
+      f = iso(start);
+      t = iso(end);
+      break;
     }
     case 'lastmonth': {
       const y = now.getFullYear(), m = now.getMonth();
