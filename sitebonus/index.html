@@ -983,22 +983,24 @@ function jumpPickerToMonth(yyyyMM){
 const WEEK_START = 1; 
 
 function setRangeAndRefresh(fs, ts, updatePicker = true){
-  // set nilai hidden + LS
+  // simpan hidden + LS
   $('#rangeFrom').value = fs;
   $('#rangeTo').value   = ts;
   localStorage.setItem(LS_DR_FROM, fs);
   localStorage.setItem(LS_DR_TO,   ts);
 
-  // update tampilan input
+  // sinkron ke flatpickr (biar tidak overwrite tampilan kita)
+  if (fpRange && updatePicker) {
+    fpRange.setDate([fs, ts], false);   // jangan trigger render di sini
+  }
+
+  // update tampilan input (SELALU setelah setDate)
   const vis = $('#rangeVis');
   const s = `${fs} \u2192 ${ts}`;
   vis.value = s;
   vis.dataset.last = s;
   vis.dataset.lastFrom = fs;
   vis.dataset.lastTo   = ts;
-
-  // sinkron ke flatpickr
-  if (fpRange && updatePicker) fpRange.setDate([fs, ts], false);
 
   // sinkron dropdown bulan + mini label
   syncMonthToRange(fs, ts);
