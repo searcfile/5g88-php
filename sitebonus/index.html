@@ -958,66 +958,48 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   const LS_LAST_MONTH='bonusRecords.lastOpenedMonth';
   const LS_LAST_SITE = 'bonusRecords.lastSite';
   const LS_TARGET='bonusTargets.v3';
-  const LS_UNCLAIM='bonusUnclaims.v1';   // NEW
-
+  const LS_UNCLAIM='bonusUnclaims.v1';
   const readStore=()=>{try{return JSON.parse(localStorage.getItem(LS_KEY))||[]}catch{return[]}};
   const writeStore=a=>localStorage.setItem(LS_KEY,JSON.stringify(a));
-
   const readUnclaims=()=>{try{return JSON.parse(localStorage.getItem(LS_UNCLAIM))||[]}catch{return[]}};
   const writeUnclaims=a=>localStorage.setItem(LS_UNCLAIM,JSON.stringify(a));
   const LS_DR_FROM = 'bonusRecords.rangeFrom';
-const LS_DR_TO   = 'bonusRecords.rangeTo';
-const toISODateLocal = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+  const LS_DR_TO   = 'bonusRecords.rangeTo';
+  const toISODateLocal = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
 
 function monthStartEnd(yyyyMM){
   const [y,m] = yyyyMM.split('-').map(Number);
   const start = new Date(y, m-1, 1);
-  const end   = new Date(y, m, 0); // hari terakhir bulan
-  return {start, end};
-}
+  const end   = new Date(y, m, 0);
+  return {start, end};}
 function jumpPickerToMonth(yyyyMM){
   if (!fpRange) return;
   const [y,m] = yyyyMM.split('-').map(Number);
   fpRange.jumpToDate(new Date(y, m-1, 1));
 }
-const WEEK_START = 1; 
-
+  const WEEK_START = 1; 
 function setRangeAndRefresh(fs, ts, updatePicker = true){
-  // simpan hidden + LS
   $('#rangeFrom').value = fs;
   $('#rangeTo').value   = ts;
   localStorage.setItem(LS_DR_FROM, fs);
   localStorage.setItem(LS_DR_TO,   ts);
-
-  // sinkron ke flatpickr (biar tidak overwrite tampilan kita)
-  if (fpRange && updatePicker) {
-    fpRange.setDate([fs, ts], false);   // jangan trigger render di sini
-  }
-
-  // update tampilan input (SELALU setelah setDate)
+  if (fpRange && updatePicker) {fpRange.setDate([fs, ts], false);}
   const vis = $('#rangeVis');
   const s = `${fs} \u2192 ${ts}`;
   vis.value = s;
   vis.dataset.last = s;
   vis.dataset.lastFrom = fs;
   vis.dataset.lastTo   = ts;
-
-  // sinkron dropdown bulan + mini label
   syncMonthToRange(fs, ts);
   setMiniMonthLabel();
   setActiveQuick(keyForRange(fs, ts));
-  render();
-}
-
-function iso(d){ // YYYY-MM-DD lokal
-  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
-}
+  render();}
+function iso(d){
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;}
 function startOfDay(d){
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-}
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());}
 function endOfDay(d){
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
-}
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);}
 function weekRangeOf(date, startDow = WEEK_START){
   const d = new Date(date);
   d.setHours(0,0,0,0);
@@ -1309,19 +1291,23 @@ let fpRange = null;
 
 function initDateRangePicker(){
   const month = $('#monthFilter').value;
-  const {start, end} = monthStartEnd(month);
+  const { start, end } = monthStartEnd(month);
 
+  // default full bulan (01 → akhir bulan)
   const defFrom = toISODateLocal(start);
-  const defTo   = toISODateLocal(end);   // ⬅️ full month
+  const defTo   = toISODateLocal(end);
 
   const savedFrom = localStorage.getItem(LS_DR_FROM) || defFrom;
   const savedTo   = localStorage.getItem(LS_DR_TO)   || defTo;
 
+  // set nilai awal input & hidden
   const vis = $('#rangeVis');
   vis.removeAttribute('placeholder');
   const initial = `${savedFrom} \u2192 ${savedTo}`;
   vis.value = initial;
-  vis.dataset.last = initial;
+  vis.dataset.last     = initial;
+  vis.dataset.lastFrom = savedFrom;  // penting untuk onClose
+  vis.dataset.lastTo   = savedTo;    // penting untuk onClose
 
   $('#rangeFrom').value = savedFrom;
   $('#rangeTo').value   = savedTo;
@@ -1333,29 +1319,57 @@ function initDateRangePicker(){
     dateFormat: 'Y-m-d',
     showMonths: 2,
     defaultDate: [savedFrom, savedTo],
-    locale: { rangeSeparator: ' \u2192 ' },
+    locale: { rangeSeparator: ' \u2192 ' }, // " → "
     clickOpens: true,
     allowInput: false,
-    // onOpen/onChange/onClose tetap seperti punyamu
-    onOpen(_, __, inst){ /* ... */ },
-    onChange(selectedDates, dateStr, inst){ /* ... */ },
-    onClose(selectedDates, dateStr, inst){ /* ... */ }
-  });
-}
 
-onClose(selectedDates, dateStr, inst){
-  if (selectedDates.length < 2){
-    const lf = vis.dataset.lastFrom || $('#rangeFrom').value || savedFrom;
-    const lt = vis.dataset.lastTo   || $('#rangeTo').value   || savedTo;
-    inst.setDate([lf, lt], false);
-    vis.value = `${lf} → ${lt}`;
-  }
-  const curF = $('#rangeFrom').value || savedFrom;
-  const curT = $('#rangeTo').value   || savedTo;
-  setActiveQuick(keyForRange(curF, curT));
-  render();
-}
-});
+    // simpan kondisi terakhir saat dibuka
+    onOpen(_, __, inst) {
+      const f = $('#rangeFrom').value || savedFrom;
+      const t = $('#rangeTo').value   || savedTo;
+      vis.dataset.lastFrom = f;
+      vis.dataset.lastTo   = t;
+      vis.dataset.last     = `${f} \u2192 ${t}`;
+    },
+
+    // update ketika 2 tanggal terpilih
+    onChange(selectedDates, dateStr, inst){
+      if (selectedDates.length === 2){
+        const fs = toISODateLocal(selectedDates[0]);
+        const ts = toISODateLocal(selectedDates[1]);
+
+        $('#rangeFrom').value = fs;
+        $('#rangeTo').value   = ts;
+        localStorage.setItem(LS_DR_FROM, fs);
+        localStorage.setItem(LS_DR_TO,   ts);
+
+        const s = `${fs} \u2192 ${ts}`;
+        vis.value        = s;
+        vis.dataset.last = s;
+        vis.dataset.lastFrom = fs;
+        vis.dataset.lastTo   = ts;
+
+        syncMonthToRange(fs, ts);
+        setMiniMonthLabel();
+        setActiveQuick(keyForRange(fs, ts));
+        render();
+      }
+    },
+
+    // jika user menutup sebelum pilih 2 tanggal, revert ke range terakhir
+    onClose(selectedDates, dateStr, inst){
+      if (selectedDates.length < 2){
+        const lf = vis.dataset.lastFrom || $('#rangeFrom').value || savedFrom;
+        const lt = vis.dataset.lastTo   || $('#rangeTo').value   || savedTo;
+        inst.setDate([lf, lt], false);
+        vis.value = `${lf} \u2192 ${lt}`;
+      }
+      const curF = $('#rangeFrom').value || savedFrom;
+      const curT = $('#rangeTo').value   || savedTo;
+      setActiveQuick(keyForRange(curF, curT));
+      render();
+    }
+  });
 }
 function clampRangeToMonthWithPicker(){
   const {start, end} = monthStartEnd($('#monthFilter').value);
