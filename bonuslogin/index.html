@@ -1,293 +1,219 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Bonus Recorder — Login</title>
-<style>
-  :root{
-    --bg1:#070a10; --bg2:#0b1220; --card:#0f1424;
-    --text:#eaf1ff; --muted:#9fb1cf;
-    --primary:#4da3ff; --primary-2:#2a7be6;
-    --ring:rgba(77,163,255,.35);
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0; font:14px/1.55 Inter, system-ui, -apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-    color:var(--text);
-    background:
-      radial-gradient(1100px 700px at 10% -15%, #1a2744 0%, transparent 55%),
-      radial-gradient(900px 600px at 95% 0%, #0c2b57 0%, transparent 60%),
-      linear-gradient(160deg, var(--bg1), var(--bg2));
-  }
-  .shell{min-height:100%; display:grid; place-items:center; padding:26px 14px}
-  .card{
-    width:min(520px,94vw);
-    background:linear-gradient(180deg, rgba(15,20,36,.78), rgba(11,17,32,.78));
-    border:1px solid #203255; border-radius:18px; padding:18px;
-    box-shadow:0 25px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.06);
-  }
-  .brand{display:flex;align-items:center;gap:10px;width:max-content;padding:10px 12px;border-radius:12px;border:1px solid #203255;background:#0b1326;font-weight:800}
-  .brand .dot{width:9px;height:9px;border-radius:50%;background:#4da3ff;box-shadow:0 0 14px #4da3ff}
-  .title{font-size:26px;font-weight:900;margin:14px 2px 4px}
-  .sub{color:var(--muted); margin:0 2px 12px}
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg1:#0f172a; /* slate-900 */
+      --bg2:#1e293b; /* slate-800 */
+      --acc:#22d3ee; /* cyan-400 */
+      --acc2:#a78bfa;/* violet-400 */
+      --ok:#10b981;  /* emerald-500 */
+      --err:#ef4444; /* red-500 */
+      --card:#0b1220cc;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;color:#e5e7eb;
+      background: radial-gradient(1200px 800px at 10% -10%, #1b2a55 0%, transparent 60%),
+                  radial-gradient(1000px 700px at 110% 10%, #2b134f 0%, transparent 55%),
+                  linear-gradient(160deg, var(--bg1), var(--bg2));
+      display:grid;place-items:center;overflow:hidden;
+    }
+    .orbs::before,.orbs::after{content:"";position:absolute;border-radius:999px;filter:blur(50px);opacity:.25}
+    .orbs::before{width:420px;height:420px;background:conic-gradient(from 180deg, var(--acc), var(--acc2));left:-120px;top:-80px}
+    .orbs::after{width:500px;height:500px;background:conic-gradient(from 90deg, var(--acc2), var(--acc));right:-140px;bottom:-120px}
 
-  .tabs{display:flex;gap:6px;margin:6px 2px 12px}
-  .tab{
-    flex:1;height:38px;border-radius:10px;cursor:pointer;
-    border:1px solid #233150;background:linear-gradient(180deg,#0d1426,#0b1220);
-    color:#cdd7ea;font-weight:800;letter-spacing:.2px;transition:all .18s ease
-  }
-  .tab:hover{border-color:#36507d;color:#fff}
-  .tab.active{background:linear-gradient(180deg,#1b2c53,#163a71);border-color:#4370b4;color:#fff;box-shadow:0 0 0 4px var(--ring)}
+    .wrap{position:relative;width:min(920px,92vw);display:grid;grid-template-columns:1.1fr .9fr;gap:2rem;align-items:stretch}
+    @media (max-width: 860px){.wrap{grid-template-columns:1fr}}
 
-  .form{display:flex;flex-direction:column;gap:10px}
-  .group{display:flex;flex-direction:column;gap:6px}
-  .label{font-size:12px;color:#9bb3d8;font-weight:800}
-  .input{height:40px;border-radius:10px;border:1px solid #233150;background:#0b1324;color:var(--text);padding:8px 12px;outline:none;transition:box-shadow .18s,border-color .18s}
-  .input:hover{border-color:#36507d}
-  .input:focus{border-color:#4da3ff;box-shadow:0 0 0 4px var(--ring)}
-  .pwd{position:relative}
-  .toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:transparent;border:0;color:#c7d6ef;font-size:12px;padding:4px 6px;cursor:pointer}
+    .left{
+      position:relative;padding:2rem;border:1px solid #3b3f51; border-radius:24px; background:linear-gradient(180deg, #0b1220f2, #0b1220bb);
+      box-shadow: 0 10px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
+      backdrop-filter: blur(10px);
+    }
+    .brand{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem}
+    .logo{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 6px 18px rgba(34,211,238,.35)}
+    .brand h1{font-size:1.25rem;margin:0;font-weight:700;letter-spacing:.2px}
+    .muted{color:#94a3b8;font-size:.92rem}
 
-  .btn{height:40px;border-radius:10px;border:0;background:linear-gradient(180deg,var(--primary),var(--primary-2));color:#fff;font-weight:900;letter-spacing:.2px;cursor:pointer;padding:8px 14px}
-  .btn:hover{filter:brightness(1.05)} .btn:active{transform:translateY(1px)} .btn:disabled{opacity:.6;cursor:not-allowed}
-  .btn.secondary{background:#0f182c;border:1px solid #233150}
+    form{display:grid;gap:1rem;margin-top:1rem}
+    .field{display:grid;gap:.5rem}
+    label{font-size:.9rem;color:#cbd5e1}
+    .control{position:relative}
+    input{
+      width:100%;padding:14px 44px 14px 14px;border-radius:12px;border:1px solid #2d3548;background:#0e1726;color:#fff;outline:none;
+      transition:border-color .2s, box-shadow .2s;
+    }
+    input:focus{border-color:#475569;box-shadow:0 0 0 4px rgba(79,70,229,.18)}
+    .eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#9ca3af;cursor:pointer}
 
-  .foot{display:flex;gap:10px;margin-top:2px;flex-wrap:wrap}
-  .link{font-size:12px;color:#97b7f5;cursor:pointer;text-decoration:underline;width:max-content}
-  .small{font-size:12px;color:#8ea8d1}
+    .actions{display:flex;gap:.8rem;align-items:center;margin-top:.25rem}
+    .btn{appearance:none;border:none;cursor:pointer;border-radius:12px;padding:12px 16px;font-weight:700;letter-spacing:.2px}
+    .btn.primary{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#0b1220;box-shadow:0 8px 22px rgba(167,139,250,.28)}
+    .btn.primary:disabled{opacity:.6;cursor:not-allowed;filter:grayscale(.4)}
+    .btn.ghost{background:transparent;border:1px solid #334155;color:#cbd5e1}
 
-  .alert{display:none;padding:8px 10px;border-radius:8px;border:1px solid transparent}
-  .err{display:none;background:#2a0d12;color:#ffb3b3;border-color:#45161b}
-  .ok {display:none;background:#0f2a1d;color:#b6ffd7;border-color:#184931}
+    .note{font-size:.82rem;color:#94a3b8;margin-top:4px}
 
-  /* modal info lupa password */
-  .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.45);z-index:5}
-  .modal .box{width:min(480px,92vw);background:#0f1424;border:1px solid #203255;border-radius:14px;padding:14px}
-  .modal.show{display:flex}
-</style>
+    .state{min-height:24px;display:flex;align-items:center;gap:.5rem}
+    .state .msg{font-size:.92rem}
+    .state .ok{color:var(--ok)}
+    .state .err{color:var(--err)}
+
+    .shake{animation:shake .36s ease-in-out}
+    @keyframes shake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-4px)}40%,60%{transform:translateX(4px)}}
+
+    /* Right banner */
+    .right{position:relative;border-radius:24px;overflow:hidden;border:1px solid #3b3f51; background:radial-gradient(120% 100% at 0% 0%, #0ea5bacc 0%, transparent 60%), radial-gradient(120% 120% at 100% 0%, #8b5cf6aa 0%, transparent 60%), linear-gradient(160deg, #0b1220, #0b1220cc)}
+    .hero{position:absolute;inset:0;padding:2rem;display:flex;flex-direction:column;justify-content:flex-end}
+    .hero h2{font-size:1.6rem;margin:0 0 .4rem 0}
+    .hero p{margin:0;color:#cbd5e1}
+    .badge{position:absolute;left:2rem;top:2rem;font-size:.75rem;color:#0b1220;background:#a5f3fc;border-radius:999px;padding:.35rem .6rem;font-weight:700}
+
+    .orbs{position:absolute;inset:-1px;pointer-events:none}
+  </style>
 </head>
 <body>
-  <div class="shell">
-    <section class="card" role="dialog" aria-modal="true" aria-labelledby="title">
-      <div class="brand"><span class="dot"></span><span>Bonus Recorder</span></div>
-      <h1 id="title" class="title">Masuk dengan Username</h1>
-      <p class="sub">Satu kartu, dua aksi: Login & Register. Change Password tersedia di <b>Halaman A</b> setelah login.</p>
-
-      <div class="tabs" role="tablist">
-        <button id="tabLogin"  class="tab active"  role="tab" aria-selected="true">Login</button>
-        <button id="tabSignup" class="tab"         role="tab" aria-selected="false">Register</button>
+  <div class="wrap">
+    <section class="left" id="card">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L20 7V17L12 22L4 17V7L12 2Z" fill="currentColor"/>
+          </svg>
+        </div>
+        <h1>Secure Portal</h1>
       </div>
+      <p class="muted">Silakan login untuk melanjutkan. Akses dilindungi dengan verifikasi kredensial.</p>
 
-      <!-- LOGIN -->
-      <form id="formLogin" class="form" autocomplete="on">
-        <div id="loginErr" class="alert err"></div>
-        <div class="group">
-          <label class="label" for="loginUser">Username</label>
-          <input id="loginUser" class="input" type="text" placeholder="mis. bonus5g88" required />
+      <form id="loginForm" autocomplete="off">
+        <div class="field">
+          <label for="user">Username</label>
+          <div class="control">
+            <input id="user" name="user" type="text" placeholder="masukkan username" required />
+          </div>
         </div>
-        <div class="group pwd">
-          <label class="label" for="loginPass">Password</label>
-          <input id="loginPass" class="input" type="password" placeholder="••••••••" required />
-          <button type="button" class="toggle" data-toggle="#loginPass">Show</button>
-          <span id="forgotLink" class="link">Lupa password?</span>
+        <div class="field">
+          <label for="pass">Password</label>
+          <div class="control">
+            <input id="pass" name="pass" type="password" placeholder="••••••••" required />
+            <button type="button" class="eye" aria-label="Toggle password" id="togglePass">👁️</button>
+          </div>
+          <div class="note">Hint: gunakan kredensial default yang disediakan di kode.</div>
         </div>
-        <div class="foot">
-          <button id="btnLogin" class="btn" type="submit">Masuk</button>
-          <button type="button" class="btn secondary" id="toSignup">Ke Register</button>
-        </div>
-        <div class="small">Login sukses → otomatis ke Halaman A.</div>
-      </form>
 
-      <!-- REGISTER -->
-      <form id="formSignup" class="form" autocomplete="off" style="display:none">
-        <div id="signupErr" class="alert err"></div>
-        <div id="signupOk"  class="alert ok"></div>
-        <div class="group">
-          <label class="label" for="signUser">Username (unik)</label>
-          <input id="signUser" class="input" type="text" placeholder="mis. bonus5g88" required />
-          <div class="small">3–32 karakter: a–z, 0–9, '.', '_' atau '-'</div>
+        <div class="actions">
+          <button class="btn primary" id="btnLogin" type="submit" disabled>Sign In</button>
+          <button class="btn ghost" type="button" id="btnClear">Clear</button>
         </div>
-        <div class="group pwd">
-          <label class="label" for="signPass">Password</label>
-          <input id="signPass" class="input" type="password" placeholder="minimal 6 karakter" required />
-          <button type="button" class="toggle" data-toggle="#signPass">Show</button>
-        </div>
-        <div class="group pwd">
-          <label class="label" for="signPass2">Ulangi Password</label>
-          <input id="signPass2" class="input" type="password" placeholder="ulangi password" required />
-          <button type="button" class="toggle" data-toggle="#signPass2">Show</button>
-        </div>
-        <div class="foot">
-          <button id="btnSignup" class="btn" type="submit">Register</button>
-          <button type="button" class="btn secondary" id="toLogin1">Ke Login</button>
+
+        <div class="state" id="state">
+          <span class="msg" id="msg">&nbsp;</span>
         </div>
       </form>
     </section>
+
+    <aside class="right">
+      <span class="badge">PRO ACCESS</span>
+      <div class="hero">
+        <h2>Welcome back 👋</h2>
+        <p>Desain modern, aman, dan responsif. Siap dipakai di desktop & mobile.</p>
+      </div>
+      <div class="orbs"></div>
+    </aside>
   </div>
 
-  <!-- Modal info lupa password -->
-  <div id="forgotModal" class="modal" aria-hidden="true">
-    <div class="box">
-      <h3 style="margin:0 0 8px">Lupa Password</h3>
-      <p style="margin:0 0 8px;color:#cfe0ff">
-        Karena login menggunakan <b>username (tanpa email)</b>, reset password hanya bisa dilakukan
-        setelah login melalui menu <b>Change Password</b> di Halaman A, atau oleh admin/project owner.
-      </p>
-      <p class="small" style="margin:0 0 10px">Jika benar-benar lupa, hubungi admin untuk reset manual.</p>
-      <button id="closeForgot" class="btn">Mengerti</button>
-    </div>
-  </div>
+  <div class="orbs"></div>
 
-  <div id="toastHost" style="position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:9"></div>
+  <script>
+    // ====== KONFIGURASI YANG MUDAH DIUBAH ======
+    const SUCCESS_REDIRECT = "sitebonus/"; // ganti ke URL tujuan setelah login sukses
 
-  <!-- Firebase (modular) -->
-  <script type="module">
-    /* ================= CONFIG ================= */
-    const DASHBOARD_URL = 'A.html'; // halaman tujuan setelah login
+    // Hardcoded akun yang diizinkan
+    const CREDENTIALS = [
+      { username: "boss88", password: "Super@123" },
+      { username: "admin88", password: "SPM@2025!" }
+    ];
 
-    const firebaseConfig = {
-      // --- ganti dengan config Firebase kamu ---
-      // apiKey: "YOUR_API_KEY",
-      // authDomain: "YOUR_PROJECT.firebaseapp.com",
-      // projectId: "YOUR_PROJECT",
-      // storageBucket: "YOUR_PROJECT.appspot.com",
-      // messagingSenderId: "123456789",
-      // appId: "1:123456789:web:abcdef",
-    };
-    const VIRTUAL_DOMAIN = 'user.local'; // email alias untuk username
+    // Opsi keamanan ringan
+    const MAX_ATTEMPTS = 5; // kunci setelah 5x gagal
+    let attempts = 0;
 
-    /* =============== FIREBASE IMPORTS =============== */
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-    import {
-      getAuth, onAuthStateChanged, signOut,
-      createUserWithEmailAndPassword, signInWithEmailAndPassword
-    } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-    import {
-      getFirestore, doc, setDoc, getDoc, serverTimestamp
-    } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+    // ====== HELPER UI ======
+    const $ = (s) => document.querySelector(s);
+    const user = $('#user');
+    const pass = $('#pass');
+    const btn  = $('#btnLogin');
+    const msg  = $('#msg');
+    const card = $('#card');
 
-    const app  = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db   = getFirestore(app);
-
-    /* =============== UI HELPERS =============== */
-    const $ = s => document.querySelector(s);
-    const show = (el, on=true)=>{ if(typeof el==='string') el=$(el); el.style.display = on?'':'none'; };
-    const setMsg = (sel, msg) => { const el=$(sel); el.textContent = msg||''; el.style.display = msg?'':'none'; };
-    const toast = (msg, type='ok') => {
-      const host = document.getElementById('toastHost');
-      const box  = document.createElement('div');
-      box.textContent = msg;
-      box.style.minWidth = '280px';
-      box.style.maxWidth = '92vw';
-      box.style.background = '#0f1729';
-      box.style.border = '1px solid ' + (type==='err' ? '#67333a' : '#233150');
-      box.style.color = '#eaf1ff';
-      box.style.padding = '10px 12px';
-      box.style.borderRadius = '10px';
-      box.style.boxShadow = '0 14px 40px rgba(0,0,0,.45)';
-      box.style.fontWeight = '800';
-      box.style.animation = 'tin .18s ease-out';
-      host.appendChild(box);
-      setTimeout(()=>{ box.style.opacity=.0; box.style.transform='translateY(8px)'; setTimeout(()=>box.remove(), 160); }, 2600);
-    };
-    const setLoading = (btn, on=true) => { if(!btn) return; btn.disabled = on; btn.dataset.old ??= btn.textContent; btn.textContent = on?'Please wait…':btn.dataset.old; };
-    document.querySelectorAll('.toggle').forEach(b=> b.addEventListener('click', ()=>{
-      const i=document.querySelector(b.dataset.toggle); i.type = (i.type==='password')?'text':'password'; b.textContent = (i.type==='password')?'Show':'Hide';
-    }));
-
-    /* =============== TABS =============== */
-    function activate(which){
-      const isLogin = which === '#formLogin';
-      document.getElementById('tabLogin').classList.toggle('active', isLogin);
-      document.getElementById('tabSignup').classList.toggle('active', !isLogin);
-      show('#formLogin',  isLogin);
-      show('#formSignup', !isLogin);
-      ['#loginErr','#signupErr','#signupOk'].forEach(id=>setMsg(id,''));
+    function setMsg(text, kind = ""){
+      msg.textContent = text || "\u00A0";
+      msg.className = 'msg ' + (kind || '');
     }
-    document.getElementById('tabLogin').onclick  = ()=>activate('#formLogin');
-    document.getElementById('tabSignup').onclick = ()=>activate('#formSignup');
-    document.getElementById('toSignup').onclick  = ()=>activate('#formSignup');
-    document.getElementById('toLogin1').onclick  = ()=>activate('#formLogin');
+    function setBusy(on){
+      btn.disabled = on || !(user.value && pass.value);
+      btn.textContent = on ? 'Signing in…' : 'Sign In';
+    }
 
-    // forgot modal
-    const fmod = document.getElementById('forgotModal');
-    document.getElementById('forgotLink').onclick = ()=>{ fmod.classList.add('show'); };
-    document.getElementById('closeForgot').onclick = ()=>{ fmod.classList.remove('show'); };
-    fmod.addEventListener('click', e=>{ if(e.target===fmod) fmod.classList.remove('show'); });
+    // Enable button only when fields filled
+    function checkFilled(){ btn.disabled = !(user.value.trim() && pass.value.trim()); }
+    user.addEventListener('input', checkFilled);
+    pass.addEventListener('input', checkFilled);
 
-    /* =============== USERNAME HANDLING =============== */
-    const USER_RE = /^[a-zA-Z0-9._-]{3,32}$/;
-    const toEmail = u => `${u.toLowerCase()}@${VIRTUAL_DOMAIN}`;
-    const udoc   = uname => doc(db, 'usernames', uname.toLowerCase());
+    // Toggle password visibility
+    $('#togglePass').addEventListener('click', ()=>{
+      pass.type = pass.type === 'password' ? 'text' : 'password';
+      pass.focus();
+    });
 
-    /* =============== REDIRECT IF ALREADY SIGNED IN =============== */
-    onAuthStateChanged(auth, (user)=>{
-      if (user) {
-        if (location.href.indexOf(DASHBOARD_URL) === -1) location.replace(DASHBOARD_URL);
+    // Clear fields
+    $('#btnClear').addEventListener('click', ()=>{
+      user.value = ''; pass.value=''; setMsg(''); checkFilled(); user.focus();
+    });
+
+    // ====== AUTH LOGIC ======
+    function isValid(u, p){
+      return CREDENTIALS.some(c => c.username === u && c.password === p);
+    }
+
+    $('#loginForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      if (attempts >= MAX_ATTEMPTS){
+        setMsg('Terlalu banyak percobaan. Coba lagi nanti.', 'err');
+        card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'), 380);
+        return;
+      }
+
+      const u = user.value.trim();
+      const p = pass.value;
+
+      setBusy(true); setMsg('Memverifikasi…');
+      await new Promise(r => setTimeout(r, 500)); // simulasi proses
+
+      if (isValid(u, p)){
+        setMsg('Login berhasil. Mengalihkan…', 'ok');
+        await new Promise(r => setTimeout(r, 300));
+        window.location.href = SUCCESS_REDIRECT;
+      } else {
+        attempts++;
+        setBusy(false);
+        const remain = Math.max(0, MAX_ATTEMPTS - attempts);
+        setMsg(`Username / password salah. Sisa percobaan: ${remain}`, 'err');
+        card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'), 380);
+        pass.focus(); pass.select();
       }
     });
 
-    /* =============== LOGIN =============== */
-    document.getElementById('formLogin').addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      setMsg('#loginErr','');
-      const u = document.getElementById('loginUser').value.trim();
-      const p = document.getElementById('loginPass').value;
-      if(!USER_RE.test(u)){ setMsg('#loginErr','Format username tidak valid.'); return; }
-      const btn = document.getElementById('btnLogin'); setLoading(btn,true);
-      try{
-        const mapSnap = await getDoc(udoc(u));
-        if(!mapSnap.exists()) throw new Error('USERNAME_NOT_FOUND');
-        const email = mapSnap.data().email;
-        await signInWithEmailAndPassword(auth, email, p);
-        toast('Login sukses');
-        location.replace(DASHBOARD_URL);
-      }catch(err){
-        const code = err?.code || err?.message || '';
-        let msg = 'Gagal login. Coba lagi.';
-        if (err?.message === 'USERNAME_NOT_FOUND') msg = 'Username tidak ditemukan.';
-        if (code.includes('auth/invalid-credential')) msg = 'Username atau password salah.';
-        if (code.includes('auth/too-many-requests'))  msg = 'Terlalu banyak percobaan. Coba lagi nanti.';
-        setMsg('#loginErr', msg); toast(msg,'err');
-      }finally{ setLoading(btn,false); }
-    });
-
-    /* =============== REGISTER =============== */
-    document.getElementById('formSignup').addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      setMsg('#signupErr',''); setMsg('#signupOk','');
-      const u  = document.getElementById('signUser').value.trim();
-      const p1 = document.getElementById('signPass').value;
-      const p2 = document.getElementById('signPass2').value;
-      if(!USER_RE.test(u)){ setMsg('#signupErr','Username 3–32 karakter (a–z, 0–9, . _ -)'); return; }
-      if(p1.length<6){ setMsg('#signupErr','Password minimal 6 karakter.'); return; }
-      if(p1!==p2){ setMsg('#signupErr','Konfirmasi password tidak sama.'); return; }
-      const btn = document.getElementById('btnSignup'); setLoading(btn,true);
-      try{
-        const ref = udoc(u);
-        const taken = await getDoc(ref);
-        if(taken.exists()){ setMsg('#signupErr','Username sudah dipakai.'); return; }
-
-        const email = toEmail(u);
-        const cred  = await createUserWithEmailAndPassword(auth, email, p1);
-        await setDoc(ref, { uid: cred.user.uid, email, createdAt: serverTimestamp() });
-        await setDoc(doc(db,'users',cred.user.uid,'meta','profile'), { username:u, createdAt:serverTimestamp() });
-
-        await signOut(auth);
-        setMsg('#signupOk','Akun berhasil dibuat. Silakan login.'); toast('Register sukses');
-        activate('#formLogin'); document.getElementById('loginUser').value = u; document.getElementById('loginPass').focus();
-      }catch(err){
-        let msg = 'Gagal register. Coba lagi.';
-        const code = err?.code || '';
-        if(code.includes('auth/weak-password')) msg = 'Password terlalu lemah.';
-        if(code.includes('auth/email-already-in-use')) msg = 'Nama pengguna itu baru saja terpakai.';
-        setMsg('#signupErr', msg); toast(msg,'err');
-      }finally{ setLoading(btn,false); }
-    });
+    // Autofocus saat load
+    window.addEventListener('DOMContentLoaded', ()=>{ user.focus(); });
   </script>
 </body>
 </html>
