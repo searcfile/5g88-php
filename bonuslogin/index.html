@@ -223,9 +223,12 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
 <script>
-/* ====== Konfigurasi ====== */
-const REDIRECT_URL = "https://searcfile.github.io/5g88-php/sitebonus/";
-const firebaseConfig = {
+   CONFIG & INIT
+========================= */
+var REDIRECT_URL = "https://searcfile.github.io/5g88-php/sitebonus/";
+var USER_DOMAIN  = "@5g88.local";
+
+var firebaseConfig = {
   apiKey: "AIzaSyAvuHrjMwlz3cnTa9eTqDQaAPasjtFa4us",
   authDomain: "bonus-5c5e0.firebaseapp.com",
   projectId: "bonus-5c5e0",
@@ -234,229 +237,294 @@ const firebaseConfig = {
   appId: "1:781993203912:web:704d36f814c6247bf62dfd",
   databaseURL: "https://bonus-5c5e0-default-rtdb.asia-southeast1.firebasedatabase.app"
 };
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db   = firebase.database();
 
-/* ====== Helpers UI ====== */
-const $ = s => document.querySelector(s);
-const toast = (msg, type="info")=>{
-  const el=$("#toast");
-  if (!el) return alert(msg);
-  el.textContent=msg;
-  el.style.borderColor = type==="error" ? "#ef4444" : (type==="success" ? "#10b981" : "#2b3653");
+if (!firebase.apps || !firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+var auth = firebase.auth();
+var db   = firebase.database();
+
+/* =========================
+   HELPERS (DOM, TOAST, TAB)
+========================= */
+function $(s){ return document.querySelector(s); }
+function $all(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); }
+
+function toast(msg, type){
+  if (type === void 0) type = "info";
+  var el = $("#toast");
+  if (!el) { alert(msg); return; }
+  el.textContent = msg;
+  el.style.borderColor = (type==="error") ? "#ef4444" : (type==="success" ? "#10b981" : "#2b3653";
   el.classList.add("show");
   clearTimeout(toast._t);
-  toast._t = setTimeout(()=> el.classList.remove("show"), 2600);
-};
-const gotoTab=(name)=>{
-  document.querySelectorAll("[data-panel]").forEach(p => p.classList.toggle("hidden", p.dataset.panel!==name));
-  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.tab===name? "true":"false"));
-};
-document.querySelectorAll(".tab").forEach(btn=>btn.addEventListener("click",()=>gotoTab(btn.dataset.tab)));
-document.querySelectorAll("[data-goto]").forEach(a=>a.addEventListener("click",(e)=>{e.preventDefault(); gotoTab(a.dataset.goto);}))
+  toast._t = setTimeout(function(){ el.classList.remove("show"); }, 2600);
+}
 
-/* ====== Username → pseudo email ====== */
-const USER_DOMAIN = '@5g88.local';
-const USER_RE = /^[a-z0-9._-]{3,30}$/;
+function gotoTab(name){
+  $all("[data-panel]").forEach(function(p){ p.classList.toggle("hidden", p.getAttribute("data-panel") !== name); });
+  $all(".tab").forEach(function(t){ t.setAttribute("aria-selected", (t.getAttribute("data-tab") === name) ? "true" : "false"); });
+}
 
-const sanitizeUsername = (u) =>
-  (u||"").trim().toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9._-]/g,'');
+$all(".tab").forEach(function(btn){
+  btn.addEventListener("click", function(){ gotoTab(btn.getAttribute("data-tab")); });
+});
+$all("[data-goto]").forEach(function(a){
+  a.addEventListener("click", function(e){ e.preventDefault(); gotoTab(a.getAttribute("data-goto")); });
+});
 
-const toPseudoEmail = (username) => {
-  const u = sanitizeUsername(username);
-  return u ? `${u}${USER_DOMAIN}` : "";
-};
+/* =========================
+   USERNAME SANITIZE & EMAIL PSEUDO
+========================= */
+var USER_RE = /^[a-z0-9._-]{3,30}$/;
+function sanitizeUsername(u){
+  u = (u || "").toLowerCase();
+  u = u.replace(/\s+/g,'').replace(/[^a-z0-9._-]/g,'');
+  return u;
+}
+function toPseudoEmail(username){
+  var u = sanitizeUsername(username);
+  return u ? (u + USER_DOMAIN) : "";
+}
+function getUsernameFromUser(u){
+  var em = (u && u.email) ? u.email : "";
+  if (em.slice(-USER_DOMAIN.length) === USER_DOMAIN) return em.slice(0, -USER_DOMAIN.length);
+  return (u && u.displayName) ? u.displayName : em;
+}
 
-const getUsernameFromUser = (u) => {
-  const em = u?.email || '';
-  return em.endsWith(USER_DOMAIN) ? em.slice(0, -USER_DOMAIN.length) : (u?.displayName || em);
-};
+/* =========================
+   BRUTE FORCE LIMIT (persist)
+========================= */
+var failCount = Number(localStorage.getItem('login.fails') || 0);
+var lockUntil = Number(localStorage.getItem('login.lockUntil') || 0);
 
-/* ====== Brute force limiter (persist) ====== */
-let failCount = Number(localStorage.getItem('login.fails') || 0);
-let lockUntil = Number(localStorage.getItem('login.lockUntil') || 0);
-
-const canTry = () => {
-  const now = Date.now();
-  if (now < lockUntil) {
-    const sec = Math.ceil((lockUntil - now)/1000);
-    toast(`Terlalu banyak percobaan. Coba lagi dalam ${sec}s.`, "error");
+function canTry(){
+  var now = Date.now();
+  if (now < lockUntil){
+    var sec = Math.ceil((lockUntil - now)/1000);
+    toast("Terlalu banyak percobaan. Coba lagi dalam " + sec + "s.", "error");
     return false;
   }
   return true;
-};
-const registerFail = () => {
+}
+function registerFail(){
   failCount++; localStorage.setItem('login.fails', String(failCount));
-  if (failCount % 5 === 0) {
-    lockUntil = Date.now() + 30000;
+  if (failCount % 5 === 0){
+    lockUntil = Date.now() + 30000; // 30 detik
     localStorage.setItem('login.lockUntil', String(lockUntil));
     toast("Terlalu banyak percobaan. Coba lagi dalam 30 detik.", "error");
   }
-};
-const clearFail = () => {
+}
+function clearFail(){
   failCount = 0; lockUntil = 0;
   localStorage.removeItem('login.fails');
   localStorage.removeItem('login.lockUntil');
-};
+}
 
-/* ====== State login (tab Change Password) ====== */
-auth.onAuthStateChanged((user)=>{
-  const tabChange = document.querySelector('.tab[data-tab="changepw"]');
-  const isLogged  = !!user;
+/* =========================
+   URL PARAM ?tab=...
+========================= */
+var urlTab = null;
+try { urlTab = new URLSearchParams(location.search).get("tab"); }
+catch(_e){
+  // Fallback sederhana
+  var qs = location.search.replace(/^\?/,'').split('&');
+  for (var i=0;i<qs.length;i++){
+    var kv = qs[i].split('=');
+    if (decodeURIComponent(kv[0]||'') === 'tab'){ urlTab = decodeURIComponent(kv[1]||''); break; }
+  }
+}
+if (urlTab && ["login","forgot","changepw"].indexOf(urlTab) >= 0) gotoTab(urlTab);
+
+/* =========================
+   AUTH STATE (auto-redirect jika sudah login)
+========================= */
+auth.onAuthStateChanged(function(user){
+  var tabChange = document.querySelector('.tab[data-tab="changepw"]');
+  var isLogged  = !!user;
   if (tabChange) tabChange.classList.toggle('hidden', !isLogged);
 
-  if (!isLogged && document.querySelector('.tab[aria-selected="true"]')?.dataset.tab === 'changepw') {
-    gotoTab('login');
-  }
-  if (isLogged) {
-    $("#cp-user")?.textContent = `Masuk sebagai: ${getUsernameFromUser(user)}`;
-  }
-});
-
-/* ====== LOGIN ====== */
-$("#u")?.addEventListener("input", e=>{
-  const cur = e.target.selectionStart;
-  e.target.value = sanitizeUsername(e.target.value);
-  e.target.setSelectionRange(cur, cur);
-});
-
-$("#form-login").addEventListener("submit", async (e)=>{
-  e.preventDefault();
-  if (!canTry()) return;
-  if (!navigator.onLine) { toast("Offline. Periksa koneksi internet.", "error"); return; }
-
-  const btn = e.submitter || e.target.querySelector('button[type="submit"]');
-  const keep = btn ? btn.textContent : '';
-  if (btn){ btn.disabled = true; btn.textContent = 'Memproses…'; }
-
-  const rawU = $("#u").value;
-  const u = sanitizeUsername(rawU);
-  const p = $("#password").value;
-
-  if (!u || !p) {
-    toast("Lengkapi username & password.", "error");
-    if (btn){ btn.disabled=false; btn.textContent=keep; }
-    return;
-  }
-  if (!USER_RE.test(u)) {
-    toast("Format username salah (3–30: a–z 0–9 . _ -).", "error");
-    if (btn){ btn.disabled=false; btn.textContent=keep; }
+  // Auto redirect kalau sudah login & bukan mau ganti password
+  if (isLogged && urlTab !== 'changepw') {
+    location.replace(REDIRECT_URL);
     return;
   }
 
-  try{
-    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-    await auth.signInWithEmailAndPassword(toPseudoEmail(u), p);
-    clearFail();
-    toast("Login berhasil. Mengalihkan…", "success");
-    setTimeout(()=>location.href = REDIRECT_URL, 200);
-  }catch(err){
-    registerFail();
-    const code = String(err.code || '');
-    let msg="Gagal login.";
-    if (code.includes("user-not-found")) msg="Username tidak ditemukan.";
-    else if (code.includes("wrong-password") || code.includes("invalid-credential")) msg="Password salah.";
-    else if (code.includes("too-many-requests")) msg="Terlalu banyak percobaan. Coba lagi nanti.";
-    else if (code.includes("network-request-failed")) msg="Jaringan bermasalah. Coba lagi.";
-    toast(msg, "error");
-  } finally {
-    if (btn){ btn.disabled=false; btn.textContent=keep; }
+  if (isLogged){
+    var cpUser = $("#cp-user");
+    if (cpUser) cpUser.textContent = "Masuk sebagai: " + getUsernameFromUser(user);
+  } else {
+    var curBtn = document.querySelector('.tab[aria-selected="true"]');
+    var curTab = curBtn ? curBtn.getAttribute('data-tab') : 'login';
+    if (curTab === 'changepw') gotoTab('login');
   }
 });
 
-/* ====== LUPA PASSWORD (request ke admin) ====== */
-$("#fu")?.addEventListener("input", e=>{
-  const cur = e.target.selectionStart;
-  e.target.value = sanitizeUsername(e.target.value);
-  e.target.setSelectionRange(cur, cur);
-});
+/* =========================
+   INPUT BEHAVIOR (lowercase otomatis)
+========================= */
+var uEl = $("#u");
+if (uEl){
+  uEl.addEventListener("input", function(e){
+    var pos = e.target.selectionStart||0;
+    e.target.value = sanitizeUsername(e.target.value);
+    try { e.target.setSelectionRange(pos, pos); } catch(_e){}
+  });
+}
+var fuEl = $("#fu");
+if (fuEl){
+  fuEl.addEventListener("input", function(e){
+    var pos = e.target.selectionStart||0;
+    e.target.value = sanitizeUsername(e.target.value);
+    try { e.target.setSelectionRange(pos, pos); } catch(_e){}
+  });
+}
 
-$("#form-forgot").addEventListener("submit", async (e)=>{
-  e.preventDefault();
-  const u = sanitizeUsername($("#fu").value);
-  const notes = ($("#fnotes").value || "").trim();
-  if (!u) return toast("Isi username.", "error");
-  if (!USER_RE.test(u)) return toast("Format username salah (3–30: a–z 0–9 . _ -).", "error");
+/* =========================
+   LOGIN
+========================= */
+var loginForm = $("#form-login");
+if (loginForm){
+  loginForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    if (!canTry()) return;
+    if (!navigator.onLine){ toast("Offline. Periksa koneksi internet.", "error"); return; }
 
-  try{
-    const payload = {
+    var btn = e.submitter || e.target.querySelector('button[type="submit"]');
+    var old = btn ? btn.textContent : '';
+    if (btn){ btn.disabled = true; btn.textContent = 'Memproses…'; }
+
+    var u = sanitizeUsername(($("#u") && $("#u").value) || "");
+    var p = ($("#password") && $("#password").value) || "";
+
+    if (!u || !p){ toast("Lengkapi username & password.", "error"); if(btn){btn.disabled=false;btn.textContent=old;} return; }
+    if (!USER_RE.test(u)){ toast("Format username salah (3–30: a–z 0–9 . _ -).", "error"); if(btn){btn.disabled=false;btn.textContent=old;} return; }
+
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function(){
+      return auth.signInWithEmailAndPassword(toPseudoEmail(u), p);
+    }).then(function(){
+      clearFail();
+      toast("Login berhasil. Mengalihkan…", "success");
+      setTimeout(function(){ location.href = REDIRECT_URL; }, 200);
+    }).catch(function(err){
+      registerFail();
+      var code = String(err && err.code || "");
+      var msg="Gagal login.";
+      if (code.indexOf("user-not-found")>=0) msg="Username tidak ditemukan.";
+      else if (code.indexOf("wrong-password")>=0 || code.indexOf("invalid-credential")>=0) msg="Password salah.";
+      else if (code.indexOf("too-many-requests")>=0) msg="Terlalu banyak percobaan. Coba lagi nanti.";
+      else if (code.indexOf("network-request-failed")>=0) msg="Jaringan bermasalah. Coba lagi.";
+      toast(msg, "error");
+    }).finally(function(){
+      if (btn){ btn.disabled=false; btn.textContent=old; }
+    });
+  });
+}
+
+/* =========================
+   LUPA PASSWORD (request ke admin)
+========================= */
+var forgotForm = $("#form-forgot");
+if (forgotForm){
+  forgotForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    var u = sanitizeUsername(($("#fu") && $("#fu").value) || "");
+    var notes = (($("#fnotes") && $("#fnotes").value) || "").trim();
+
+    if (!u){ toast("Isi username.", "error"); return; }
+    if (!USER_RE.test(u)){ toast("Format username salah (3–30: a–z 0–9 . _ -).", "error"); return; }
+
+    var payload = {
       username: u,
       pseudoEmail: toPseudoEmail(u),
       notes: notes || null,
       ts: Date.now(),
       status: "pending"
     };
-    const key = `${Date.now()}_${u}`;
-    await db.ref("reset_requests/"+key).set(payload);
-    toast("Permintaan reset sudah terkirim ke admin.", "success");
-    $("#fu").value=""; $("#fnotes").value="";
-  }catch(err){
-    toast("Tidak bisa mengirim permintaan. Coba lagi.", "error");
-  }
-});
+    var key = String(Date.now()) + "_" + u;
 
-/* ====== GANTI PASSWORD (reauth) ====== */
-$("#form-changepw").addEventListener("submit", async (e)=>{
-  e.preventDefault();
-  const user = auth.currentUser;
-  if (!user) return toast("Silakan login dulu.", "error");
+    db.ref("reset_requests").child(key).set(payload).then(function(){
+      toast("Permintaan reset sudah terkirim ke admin.", "success");
+      if ($("#fu")) $("#fu").value="";
+      if ($("#fnotes")) $("#fnotes").value="";
+    }).catch(function(){
+      toast("Tidak bisa mengirim permintaan. Coba lagi.", "error");
+    });
+  });
+}
 
-  const oldP = $("#cp-old").value;
-  const newP = $("#cp-new").value;
-  const reP  = $("#cp-re").value;
-  if (newP !== reP) return toast("Konfirmasi password baru tidak sama.", "error");
-  if (newP.length < 8) return toast("Password baru minimal 8 karakter.", "error");
+/* =========================
+   GANTI PASSWORD (login + reauth)
+========================= */
+var changeForm = $("#form-changepw");
+if (changeForm){
+  changeForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    var user = auth.currentUser;
+    if (!user){ toast("Silakan login dulu.", "error"); return; }
 
-  try{
-    const cred = firebase.auth.EmailAuthProvider.credential(user.email, oldP);
-    await user.reauthenticateWithCredential(cred);
-    await user.updatePassword(newP);
-    await auth.signOut();
-    toast("Password berhasil diubah. Silakan login ulang.", "success");
-    gotoTab("login");
-    $("#cp-old").value = $("#cp-new").value = $("#cp-re").value = "";
-  }catch(err){
-    const code = String(err.code||"");
-    let msg = "Gagal mengubah password.";
-    if (code.includes("wrong-password") || code.includes("invalid-credential")) msg = "Password saat ini salah.";
-    toast(msg, "error");
-  }
-});
+    var btn = e.submitter || e.target.querySelector('button[type="submit"]');
+    var old = btn ? btn.textContent : '';
+    if (btn){ btn.disabled = true; btn.textContent = 'Menyimpan…'; }
 
-/* ====== Optional: ?tab=forgot/changepw & validasi password input ====== */
-const params = new URLSearchParams(location.search);
-const tab = params.get("tab");
-if (tab && ["login","forgot","changepw"].includes(tab)) gotoTab(tab);
+    var oldP = ($("#cp-old") && $("#cp-old").value) || "";
+    var newP = ($("#cp-new") && $("#cp-new").value) || "";
+    var reP  = ($("#cp-re")  && $("#cp-re").value)  || "";
 
-const pw = document.getElementById('password');
-pw?.addEventListener('invalid', () => {
-  if (pw.validity.valueMissing) pw.setCustomValidity('Sila masukkan password.');
-  else if (pw.validity.tooShort) pw.setCustomValidity('Password minimal 6 karakter.');
-  else pw.setCustomValidity('');
-});
-pw?.addEventListener('input', () => pw.setCustomValidity(''));
+    if (newP !== reP){ toast("Konfirmasi password baru tidak sama.", "error"); if(btn){btn.disabled=false;btn.textContent=old;} return; }
+    if (newP.length < 8){ toast("Password baru minimal 8 karakter.", "error"); if(btn){btn.disabled=false;btn.textContent=old;} return; }
 
-/* ====== Eye toggle untuk #password (login) ====== */
-const btnEye = document.getElementById('togglePw');
+    var cred = firebase.auth.EmailAuthProvider.credential(user.email, oldP);
+    user.reauthenticateWithCredential(cred).then(function(){
+      return user.updatePassword(newP);
+    }).then(function(){
+      return auth.signOut();
+    }).then(function(){
+      toast("Password berhasil diubah. Silakan login ulang.", "success");
+      if ($("#cp-old")) $("#cp-old").value = "";
+      if ($("#cp-new")) $("#cp-new").value = "";
+      if ($("#cp-re"))  $("#cp-re").value  = "";
+      gotoTab("login");
+    }).catch(function(err){
+      var code = String(err && err.code || "");
+      var msg = "Gagal mengubah password.";
+      if (code.indexOf("wrong-password")>=0 || code.indexOf("invalid-credential")>=0) msg = "Password saat ini salah.";
+      toast(msg, "error");
+    }).finally(function(){
+      if (btn){ btn.disabled=false; btn.textContent=old; }
+    });
+  });
+}
+
+/* =========================
+   PASSWORD INPUT (validasi + eye toggle)
+========================= */
+var pw  = document.getElementById('password');
+if (pw){
+  pw.addEventListener('invalid', function(){
+    if (pw.validity.valueMissing) pw.setCustomValidity('Sila masukkan password.');
+    else if (pw.validity.tooShort) pw.setCustomValidity('Password minimal 6 karakter.');
+    else pw.setCustomValidity('');
+  });
+  pw.addEventListener('input', function(){ pw.setCustomValidity(''); });
+}
+
+var btnEye = document.getElementById('togglePw');
 if (pw && btnEye) {
-  const eyeOpen = `
-  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-    <path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7z"></path>
-    <circle cx="12" cy="12" r="5" fill="none"></circle>
-    <circle cx="12" cy="12" r="3"></circle>
-  </svg>`;
-  const eyeOff = `
-  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-    <path d="M2 2l20 20-1.41 1.41L16.73 19A10.9 10.9 0 0 1 12 20c-5 0-9.27-3.11-11-7a12.86 12.86 0 0 1 5.07-5.7L.59 3.41 2 2zM12 7a5 5 0 0 1 5 5 4.94 4.94 0 0 1-.53 2.22L9.78 7.53A4.94 4.94 0 0 1 12 7z"></path>
-  </svg>`;
-  const refreshIcon = ()=>{
-    const showing = pw.type === 'text';
+  var eyeOpen = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">'
+              + '<path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7z"></path>'
+              + '<circle cx="12" cy="12" r="5" fill="none"></circle>'
+              + '<circle cx="12" cy="12" r="3"></circle>'
+              + '</svg>';
+  var eyeOff  = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">'
+              + '<path d="M2 2l20 20-1.41 1.41L16.73 19A10.9 10.9 0 0 1 12 20c-5 0-9.27-3.11-11-7a12.86 12.86 0 0 1 5.07-5.7L.59 3.41 2 2zM12 7a5 5 0 0 1 5 5 4.94 4.94 0 0 1-.53 2.22L9.78 7.53A4.94 4.94 0 0 1 12 7z"></path>'
+              + '</svg>';
+
+  function refreshIcon(){
+    var showing = (pw.type === 'text');
     btnEye.innerHTML = showing ? eyeOff : eyeOpen;
     btnEye.setAttribute('aria-pressed', String(showing));
     btnEye.setAttribute('aria-label', showing ? 'Sembunyikan password' : 'Tampilkan password');
-  };
-  btnEye.addEventListener('click', () => {
+  }
+  btnEye.addEventListener('click', function(){
     pw.type = (pw.type === 'password') ? 'text' : 'password';
     refreshIcon();
   });
