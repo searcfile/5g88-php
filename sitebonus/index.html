@@ -1664,6 +1664,7 @@ function readTarget(){
   let ucActiveTab = 'pending';
 
 window.addEventListener('DOMContentLoaded', () => {
+  ensureRangeWrapAndInputs();
   buildMonthOptions();          // bangun opsi bulan dari data
   resetToCurrentOnLoad();       // ⬅️ paksa kembali ke bulan & range sekarang
   initDateRangePicker();        // flatpickr akan pakai nilai dari LS
