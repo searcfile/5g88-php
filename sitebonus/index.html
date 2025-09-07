@@ -989,6 +989,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyAvuHrjMwlz3cnTa9eTqDQaAPasjtFa4us",
@@ -1675,6 +1676,7 @@ function readTarget(){
       };
       localStorage.setItem(LS_TARGET, JSON.stringify(upgraded));
       bumpUpdated();
+      safeSyncUp();
       return upgraded;
     }
   } catch {}
@@ -1687,6 +1689,7 @@ function readTarget(){
   };
   localStorage.setItem(LS_TARGET, JSON.stringify(def));
   bumpUpdated();
+  safeSyncUp();
   return def;
 }
   const writeTarget=t=>localStorage.setItem(LS_TARGET, JSON.stringify(t));
