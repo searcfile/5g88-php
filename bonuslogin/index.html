@@ -134,8 +134,7 @@
         <input id="u" name="u" type="text" placeholder="contoh: bonus5g88" required>
       </div>
       <div class="row">
-        <label for="p">Password</label>
-        <input id="p" name="p" type="password" placeholder="••••••••" required minlength="8">
+        <label for="p">Password</label><input id="password" name="password"type="password"minlength="6" required>
       </div>
       <div class="helper">
         <span class="small">Gunakan username saja, tidak perlu email.</span>
@@ -333,6 +332,17 @@ $("#form-changepw").addEventListener("submit", async (e)=>{
 const params = new URLSearchParams(location.search);
 const tab = params.get("tab");
 if (tab && ["login","forgot","changepw"].includes(tab)) gotoTab(tab);
+const pw = document.getElementById('password');
+
+// pesan kustom saat invalid
+pw.addEventListener('invalid', () => {
+  if (pw.validity.valueMissing) pw.setCustomValidity('Sila masukkan password.');
+  else if (pw.validity.tooShort) pw.setCustomValidity('Password minimal 6 karakter.');
+  else pw.setCustomValidity('');
+});
+
+// hapus pesan kustom saat user mengetik
+pw.addEventListener('input', () => pw.setCustomValidity(''));
 </script>
 </body>
 </html>
