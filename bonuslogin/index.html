@@ -406,23 +406,25 @@ if (loginForm){
     if (!u || !p){ toast("Lengkapi username & password.", "error"); if(btn){btn.disabled=false;btn.textContent=old;} return; }
     if (!USER_RE.test(u)){ toast("Format username salah (3–30: a–z 0–9 . _ -).", "error"); if(btn){btn.disabled=false;btn.textContent=old;} return; }
 
-   auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function () {
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function(){
   return auth.signInWithEmailAndPassword(toPseudoEmail(u), p);
-}).then(async function () {
-  // ⬇️⬇️ Tambahan WAJIB (membuat mapping untuk rules)
-  var cur   = auth.currentUser;
-  var uname = sanitizeUsername(getUsernameFromUser(cur));
-  // klaim username kalau kosong
-  await db.ref('usernames/' + uname).transaction(function (v) { return v || cur.uid; });
-  // simpan mapping uid -> username
-  await db.ref('uids/' + cur.uid + '/username').set(uname);
-  // ⬆️⬆️
+}).then(function(){
+  // === ⬇️ Tambahkan mapping di SINI: uid -> username & klaim username ===
+  var cur    = auth.currentUser;
+  var uname  = sanitizeUsername(getUsernameFromUser(cur));
 
-  clearFail();
-  toast("Login berhasil. Mengalihkan…", "success");
-  setTimeout(function(){ location.href = REDIRECT_URL; }, 200);
-}).catch(function (err) {
-  // ... (biarkan punyamu yang sekarang)
+  return db.ref('usernames/' + uname).transaction(function(v){ return v || cur.uid; })
+    .then(function(){
+      return db.ref('uids/' + cur.uid + '/username').set(uname);
+    })
+    .then(function(){
+      // lanjut seperti biasa
+      clearFail();
+      toast("Login berhasil. Mengalihkan…", "success");
+      setTimeout(function(){ location.href = REDIRECT_URL; }, 200);
+    });
+}).catch(function(err){
+  // ... (biarkan bagian error kamu seperti semula)
 }).finally(function(){
   if (btn){ btn.disabled=false; btn.textContent=old; }
 });
