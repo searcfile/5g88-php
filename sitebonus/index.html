@@ -988,6 +988,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 <script>document.documentElement.classList.add('auth-wait');</script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyAvuHrjMwlz3cnTa9eTqDQaAPasjtFa4us",
@@ -1001,22 +1002,60 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   // 4) Init + Guard
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
+  // === Realtime Database ===
+const db = firebase.database();
 
-  auth.onAuthStateChanged((user)=>{
-  if (!user) {
-    location.replace(LOGIN_URL);
-    return;
+// Ambil semua state dari localStorage
+function __readLocalState(){
+  return {
+    records:  readStore?.()    || [],
+    unclaims: readUnclaims?.() || [],
+    targets:  JSON.parse(localStorage.getItem(LS_TARGET) || 'null'),
+    notes:    JSON.parse(localStorage.getItem('bonusNotes.v1') || 'null'),
+    updatedAt: Date.now()
+  };
+}
+
+// Tulis semua state ke localStorage
+function __writeLocalState(s){
+  if (!s) return;
+  if (Array.isArray(s.records))  writeStore(s.records);
+  if (Array.isArray(s.unclaims)) writeUnclaims(s.unclaims);
+  if (s.targets) localStorage.setItem(LS_TARGET, JSON.stringify(s.targets));
+  if (s.notes)   localStorage.setItem('bonusNotes.v1', JSON.stringify(s.notes));
+}
+
+// Dorong local -> cloud
+async function syncUp(){
+  const uid = auth.currentUser?.uid;
+  if (!uid) return;
+  const payload = __readLocalState();
+  await db.ref(`users/${uid}/state`).set(payload);
+}
+
+// Tarik cloud -> local (kalau belum ada, buat dari local)
+async function syncDown(uid){
+  const snap = await db.ref(`users/${uid}/state`).get();
+  if (snap.exists()){
+    const cloud = snap.val();
+    __writeLocalState(cloud);
+  } else {
+    // pertama kali: buat dari local
+    await syncUp();
   }
-  const uname = (user.email || "").replace("@5g88.local","") || "user";
+}
 
-  // === tambahkan ini:
+auth.onAuthStateChanged(async (user)=>{
+  if (!user) { location.replace(LOGIN_URL); return; }
+
+  const uname = (user.email || "").replace("@5g88.local","") || "user";
   setUserUI(uname);
 
-  // kalau kamu masih punya elemen lama #username tidak masalah:
-  const slot = document.getElementById("username");
-  if (slot) slot.textContent = uname;
+  // Tarik data cloud -> local, lalu render
+  try { await syncDown(user.uid); } catch(e){ console.error('syncDown error', e); }
 
   document.documentElement.classList.remove('auth-wait');
+  if (typeof render === 'function') render();
 });
   // 5) optional: fungsi logout untuk header/button
   window.doLogout = async ()=>{
@@ -1762,6 +1801,7 @@ function lockFormBySite() {
     buildMonthOptions();
     if(rec.month===toYYYYMM(new Date())){ $('#monthFilter').value=rec.month; localStorage.setItem(LS_LAST_MONTH,rec.month); }
     closeModal(); render();
+    syncUp(); 
   }
 // ===== A. Helper inert background + toggle modal =====
 function setBackgroundInert(enable, exceptTarget){
@@ -1999,6 +2039,7 @@ function saveTiersLive(){
     toast('Target saved', 'success');
     closeTargetModal();
     render();
+    syncUp();
   }
 
 function prettyRange(f, t){
@@ -2211,6 +2252,7 @@ function renderSummaryRows(t, count, site, month){
   writeUnclaims(readUnclaims().filter(u=>u.recordId!==id));
   render();
   toast('Record deleted', 'warn');
+  syncUp();
 }
 
   function exportCSV(){
@@ -2367,6 +2409,7 @@ function claimUnclaim(ucId){
   setMonthAndRange(nowMonth);
   render();
   toast('Unclaim claimed', 'success');
+  syncUp();
 
   // Jika Unclaim modal lagi terbuka, langsung switch ke History & scroll atas
   if ($('#unclaimModal').classList.contains('show')) {
@@ -2391,6 +2434,7 @@ async function deleteUnclaim(ucId){
   render();
   if ($('#unclaimModal').classList.contains('show')) switchUcTab('pending');
   toast('Unclaim deleted', 'warn');
+  syncUp();
 }
 window.deleteUnclaim = deleteUnclaim;
 function applyNumberTitles() {
@@ -2639,6 +2683,7 @@ document.getElementById('saveNoteBtn')?.addEventListener('click', () => {
   writeNotes(notesState.notes);
   notesState.dirty=false;
   toast('Note saved','success');
+  syncUp();
 });
 document.getElementById('cancelNoteBtn')?.addEventListener('click', () => {
   const curIdx = notesState.idx;
