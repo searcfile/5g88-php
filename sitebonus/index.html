@@ -2699,33 +2699,86 @@ function setUserUI(name){
   if (nm)  nm.textContent  = name || 'user';
 }
 
-const userBtn  = document.getElementById('userBtn');
-const userMenu = document.getElementById('userMenu');
+(() => {
+  const userBtn  = document.getElementById('userBtn');
+  const userMenu = document.getElementById('userMenu');
+  if (!userBtn || !userMenu) return;
 
-if (userBtn && userMenu){
-  // toggle
+  // cegah close saat klik di dalam menu
+  userMenu.addEventListener('click', e => e.stopPropagation());
+
+  function placeMenu(){
+    // ukur posisi tombol
+    const r = userBtn.getBoundingClientRect();
+
+    // pastikan menu terlihat dulu supaya bisa diukur
+    const wasHidden = !userMenu.classList.contains('show');
+    if (wasHidden) { userMenu.style.visibility = 'hidden'; userMenu.classList.add('show'); }
+
+    const mw = userMenu.offsetWidth;
+    const mh = userMenu.offsetHeight;
+    const spaceBelow = window.innerHeight - r.bottom;
+
+    // posisikan fixed, rata kanan tombol, jaga tetap di layar
+    userMenu.style.position = 'fixed';
+    const left = Math.min(Math.max(r.right - mw, 8), window.innerWidth - mw - 8);
+    userMenu.style.left = left + 'px';
+
+    if (spaceBelow >= mh + 10) {
+      userMenu.style.top = (r.bottom + 8) + 'px';
+      userMenu.style.bottom = '';
+    } else {
+      userMenu.style.top = '';
+      userMenu.style.bottom = (window.innerHeight - r.top + 8) + 'px';
+    }
+
+    if (wasHidden) { userMenu.classList.remove('show'); userMenu.style.visibility = ''; }
+  }
+
+  function openMenu(){
+    placeMenu();
+    userMenu.classList.add('show');
+    userBtn.setAttribute('aria-expanded','true');
+    userMenu.setAttribute('aria-hidden','false');
+    window.addEventListener('resize', placeMenu);
+    window.addEventListener('scroll', placeMenu, true);
+    document.addEventListener('click', onDocClick);
+    document.addEventListener('keydown', onEsc);
+  }
+
+  function closeMenu(){
+    userMenu.classList.remove('show');
+    userBtn.setAttribute('aria-expanded','false');
+    userMenu.setAttribute('aria-hidden','true');
+    window.removeEventListener('resize', placeMenu);
+    window.removeEventListener('scroll', placeMenu, true);
+    document.removeEventListener('click', onDocClick);
+    document.removeEventListener('keydown', onEsc);
+  }
+
+  function onDocClick(e){
+    // tutup hanya jika klik di luar tombol & menu
+    if (e.target !== userBtn && !userMenu.contains(e.target)) closeMenu();
+  }
+  function onEsc(e){ if (e.key === 'Escape') closeMenu(); }
+
   userBtn.addEventListener('click', (e)=>{
     e.stopPropagation();
-    const show = !userMenu.classList.contains('show');
-    userMenu.classList.toggle('show', show);
-    userBtn.setAttribute('aria-expanded', show ? 'true' : 'false');
-    userMenu.setAttribute('aria-hidden',  show ? 'false' : 'true');
+    if (userMenu.classList.contains('show')) closeMenu();
+    else openMenu();
   });
-  // close on outside/Esc
-  document.addEventListener('click', ()=> userMenu.classList.remove('show'));
-  document.addEventListener('keydown', e => { if(e.key==='Escape') userMenu.classList.remove('show'); });
 
   // actions
   document.getElementById('udChangePw')?.addEventListener('click', ()=>{
     location.href = "https://searcfile.github.io/5g88-php/bonuslogin/?tab=changepw";
   });
-  document.getElementById('udForgot')?.addEventListener('click',   ()=>{
+  document.getElementById('udForgot')?.addEventListener('click', ()=>{
     location.href = "https://searcfile.github.io/5g88-php/bonuslogin/?tab=forgot";
   });
-  document.getElementById('udLogout')?.addEventListener('click',   ()=>{
-    doLogout();  // sudah kamu definisikan di guard
+  document.getElementById('udLogout')?.addEventListener('click', ()=>{
+    doLogout();
   });
-}
+})();
 </script>
 </body>
 </html>
