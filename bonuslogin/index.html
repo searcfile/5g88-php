@@ -268,10 +268,10 @@ $all("[data-goto]").forEach(function(a){ a.addEventListener("click", function(e)
 /* =========================
    USERNAME SANITIZE & PSEUDO EMAIL
 ========================= */
-var USER_RE = /^[a-z0-9._-]{3,30}$/;
+var USER_RE = /^[a-z0-9_-]{3,30}$/;
 function sanitizeUsername(u){
   u = (u || "").toLowerCase();
-  return u.replace(/\s+/g,'').replace(/[^a-z0-9._-]/g,'');
+  return u.replace(/\s+/g,'').replace(/[^a-z0-9_-]/g,'');
 }
 function toPseudoEmail(username){
   var u = sanitizeUsername(username);
