@@ -223,6 +223,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
 <script>
+/* ====== Konfigurasi ====== */
 const REDIRECT_URL = "https://searcfile.github.io/5g88-php/sitebonus/";
 const firebaseConfig = {
   apiKey: "AIzaSyAvuHrjMwlz3cnTa9eTqDQaAPasjtFa4us",
@@ -233,15 +234,15 @@ const firebaseConfig = {
   appId: "1:781993203912:web:704d36f814c6247bf62dfd",
   databaseURL: "https://bonus-5c5e0-default-rtdb.asia-southeast1.firebasedatabase.app"
 };
-
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.database();
 
-/* Helpers */
+/* ====== Helpers UI ====== */
 const $ = s => document.querySelector(s);
 const toast = (msg, type="info")=>{
   const el=$("#toast");
+  if (!el) return alert(msg);
   el.textContent=msg;
   el.style.borderColor = type==="error" ? "#ef4444" : (type==="success" ? "#10b981" : "#2b3653");
   el.classList.add("show");
@@ -255,61 +256,128 @@ const gotoTab=(name)=>{
 document.querySelectorAll(".tab").forEach(btn=>btn.addEventListener("click",()=>gotoTab(btn.dataset.tab)));
 document.querySelectorAll("[data-goto]").forEach(a=>a.addEventListener("click",(e)=>{e.preventDefault(); gotoTab(a.dataset.goto);}))
 
-/* Username → pseudo-email (tetap username-only di UI) */
+/* ====== Username → pseudo email ====== */
+const USER_DOMAIN = '@5g88.local';
+const USER_RE = /^[a-z0-9._-]{3,30}$/;
+
+const sanitizeUsername = (u) =>
+  (u||"").trim().toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9._-]/g,'');
+
 const toPseudoEmail = (username) => {
-  const u = (username||"").trim().toLowerCase();
-  if (!u) return "";
-  // gunakan domain pseudo khusus supaya tidak konflik dengan email asli
-  return `${u}@5g88.local`;
+  const u = sanitizeUsername(username);
+  return u ? `${u}${USER_DOMAIN}` : "";
 };
 
-/* Brute force limiter (client-side) */
-let failCount=0, lockUntil=0;
-const canTry=()=> Date.now() >= lockUntil;
-const registerFail=()=>{
-  failCount++;
-  if (failCount % 5 === 0) { lockUntil = Date.now()+30_000; toast("Terlalu banyak percobaan. Coba lagi dalam 30 detik.", "error"); }
+const getUsernameFromUser = (u) => {
+  const em = u?.email || '';
+  return em.endsWith(USER_DOMAIN) ? em.slice(0, -USER_DOMAIN.length) : (u?.displayName || em);
 };
 
-/* Tampilkan tab ganti password saat sudah login */
+/* ====== Brute force limiter (persist) ====== */
+let failCount = Number(localStorage.getItem('login.fails') || 0);
+let lockUntil = Number(localStorage.getItem('login.lockUntil') || 0);
+
+const canTry = () => {
+  const now = Date.now();
+  if (now < lockUntil) {
+    const sec = Math.ceil((lockUntil - now)/1000);
+    toast(`Terlalu banyak percobaan. Coba lagi dalam ${sec}s.`, "error");
+    return false;
+  }
+  return true;
+};
+const registerFail = () => {
+  failCount++; localStorage.setItem('login.fails', String(failCount));
+  if (failCount % 5 === 0) {
+    lockUntil = Date.now() + 30000;
+    localStorage.setItem('login.lockUntil', String(lockUntil));
+    toast("Terlalu banyak percobaan. Coba lagi dalam 30 detik.", "error");
+  }
+};
+const clearFail = () => {
+  failCount = 0; lockUntil = 0;
+  localStorage.removeItem('login.fails');
+  localStorage.removeItem('login.lockUntil');
+};
+
+/* ====== State login (tab Change Password) ====== */
 auth.onAuthStateChanged((user)=>{
-  const t = document.querySelector('.tab[data-tab="changepw"]');
-  if (user) {
-    t.classList.remove("hidden");
-    $("#cp-user").textContent = `Masuk sebagai: ${user.email.replace("@5g88.local","")}`;
-  } else {
-    t.classList.add("hidden");
-    if (document.querySelector('.tab[aria-selected="true"]').dataset.tab==="changepw") gotoTab("login");
+  const tabChange = document.querySelector('.tab[data-tab="changepw"]');
+  const isLogged  = !!user;
+  if (tabChange) tabChange.classList.toggle('hidden', !isLogged);
+
+  if (!isLogged && document.querySelector('.tab[aria-selected="true"]')?.dataset.tab === 'changepw') {
+    gotoTab('login');
+  }
+  if (isLogged) {
+    $("#cp-user")?.textContent = `Masuk sebagai: ${getUsernameFromUser(user)}`;
   }
 });
-/* === LOGIN === */
+
+/* ====== LOGIN ====== */
+$("#u")?.addEventListener("input", e=>{
+  const cur = e.target.selectionStart;
+  e.target.value = sanitizeUsername(e.target.value);
+  e.target.setSelectionRange(cur, cur);
+});
+
 $("#form-login").addEventListener("submit", async (e)=>{
   e.preventDefault();
   if (!canTry()) return;
-  const u = $("#u").value.trim();
+  if (!navigator.onLine) { toast("Offline. Periksa koneksi internet.", "error"); return; }
+
+  const btn = e.submitter || e.target.querySelector('button[type="submit"]');
+  const keep = btn ? btn.textContent : '';
+  if (btn){ btn.disabled = true; btn.textContent = 'Memproses…'; }
+
+  const rawU = $("#u").value;
+  const u = sanitizeUsername(rawU);
   const p = $("#password").value;
-  if (!u || !p) return toast("Lengkapi username & password.", "error");
+
+  if (!u || !p) {
+    toast("Lengkapi username & password.", "error");
+    if (btn){ btn.disabled=false; btn.textContent=keep; }
+    return;
+  }
+  if (!USER_RE.test(u)) {
+    toast("Format username salah (3–30: a–z 0–9 . _ -).", "error");
+    if (btn){ btn.disabled=false; btn.textContent=keep; }
+    return;
+  }
+
   try{
     await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
     await auth.signInWithEmailAndPassword(toPseudoEmail(u), p);
+    clearFail();
     toast("Login berhasil. Mengalihkan…", "success");
     setTimeout(()=>location.href = REDIRECT_URL, 200);
   }catch(err){
     registerFail();
-    const code = err.code||"";
+    const code = String(err.code || '');
     let msg="Gagal login.";
     if (code.includes("user-not-found")) msg="Username tidak ditemukan.";
-    if (code.includes("wrong-password")) msg="Password salah.";
-    if (code.includes("too-many-requests")) msg="Terlalu banyak percobaan. Coba lagi nanti.";
+    else if (code.includes("wrong-password") || code.includes("invalid-credential")) msg="Password salah.";
+    else if (code.includes("too-many-requests")) msg="Terlalu banyak percobaan. Coba lagi nanti.";
+    else if (code.includes("network-request-failed")) msg="Jaringan bermasalah. Coba lagi.";
     toast(msg, "error");
+  } finally {
+    if (btn){ btn.disabled=false; btn.textContent=keep; }
   }
 });
-/* === LUPA PASSWORD (request ke admin) === */
+
+/* ====== LUPA PASSWORD (request ke admin) ====== */
+$("#fu")?.addEventListener("input", e=>{
+  const cur = e.target.selectionStart;
+  e.target.value = sanitizeUsername(e.target.value);
+  e.target.setSelectionRange(cur, cur);
+});
+
 $("#form-forgot").addEventListener("submit", async (e)=>{
   e.preventDefault();
-  const u = $("#fu").value.trim().toLowerCase();
-  const notes = $("#fnotes").value.trim();
+  const u = sanitizeUsername($("#fu").value);
+  const notes = ($("#fnotes").value || "").trim();
   if (!u) return toast("Isi username.", "error");
+  if (!USER_RE.test(u)) return toast("Format username salah (3–30: a–z 0–9 . _ -).", "error");
 
   try{
     const payload = {
@@ -319,7 +387,6 @@ $("#form-forgot").addEventListener("submit", async (e)=>{
       ts: Date.now(),
       status: "pending"
     };
-    // Simpan request ke RTDB: /reset_requests/{timestamp_username}
     const key = `${Date.now()}_${u}`;
     await db.ref("reset_requests/"+key).set(payload);
     toast("Permintaan reset sudah terkirim ke admin.", "success");
@@ -329,7 +396,7 @@ $("#form-forgot").addEventListener("submit", async (e)=>{
   }
 });
 
-/* === GANTI PASSWORD (harus login & reauth) === */
+/* ====== GANTI PASSWORD (reauth) ====== */
 $("#form-changepw").addEventListener("submit", async (e)=>{
   e.preventDefault();
   const user = auth.currentUser;
@@ -350,57 +417,51 @@ $("#form-changepw").addEventListener("submit", async (e)=>{
     gotoTab("login");
     $("#cp-old").value = $("#cp-new").value = $("#cp-re").value = "";
   }catch(err){
-    const code = err.code||"";
+    const code = String(err.code||"");
     let msg = "Gagal mengubah password.";
-    if (code.includes("wrong-password")) msg = "Password saat ini salah.";
+    if (code.includes("wrong-password") || code.includes("invalid-credential")) msg = "Password saat ini salah.";
     toast(msg, "error");
   }
 });
-/* Optional: ?tab=forgot/changepw */
+
+/* ====== Optional: ?tab=forgot/changepw & validasi password input ====== */
 const params = new URLSearchParams(location.search);
 const tab = params.get("tab");
 if (tab && ["login","forgot","changepw"].includes(tab)) gotoTab(tab);
-const pw = document.getElementById('password');
 
-// pesan kustom saat invalid
-pw.addEventListener('invalid', () => {
+const pw = document.getElementById('password');
+pw?.addEventListener('invalid', () => {
   if (pw.validity.valueMissing) pw.setCustomValidity('Sila masukkan password.');
   else if (pw.validity.tooShort) pw.setCustomValidity('Password minimal 6 karakter.');
   else pw.setCustomValidity('');
 });
+pw?.addEventListener('input', () => pw.setCustomValidity(''));
 
-// hapus pesan kustom saat user mengetik
-pw.addEventListener('input', () => pw.setCustomValidity(''));
-// === Eye toggle untuk input #password (login) ===
-  const btn = document.getElementById('togglePw');
-
-  if (pw && btn) {
-    const eyeOpen = `
-    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-      <path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7z"></path>
-      <circle cx="12" cy="12" r="5" fill="none"></circle>
-      <circle cx="12" cy="12" r="3"></circle>
-    </svg>`;
-
-    const eyeOff = `
-    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-      <path d="M2 2l20 20-1.41 1.41L16.73 19A10.9 10.9 0 0 1 12 20c-5 0-9.27-3.11-11-7a12.86 12.86 0 0 1 5.07-5.7L.59 3.41 2 2zM12 7a5 5 0 0 1 5 5 4.94 4.94 0 0 1-.53 2.22L9.78 7.53A4.94 4.94 0 0 1 12 7z"></path>
-    </svg>`;
-
-    function refreshIcon(){
-      const showing = pw.type === 'text';
-      btn.innerHTML = showing ? eyeOff : eyeOpen;
-      btn.setAttribute('aria-pressed', String(showing));
-      btn.setAttribute('aria-label', showing ? 'Sembunyikan password' : 'Tampilkan password');
-    }
-
-    btn.addEventListener('click', () => {
-      pw.type = (pw.type === 'password') ? 'text' : 'password';
-      refreshIcon();
-    });
-
-    refreshIcon(); // set ikon awal
-  }
+/* ====== Eye toggle untuk #password (login) ====== */
+const btnEye = document.getElementById('togglePw');
+if (pw && btnEye) {
+  const eyeOpen = `
+  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+    <path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7z"></path>
+    <circle cx="12" cy="12" r="5" fill="none"></circle>
+    <circle cx="12" cy="12" r="3"></circle>
+  </svg>`;
+  const eyeOff = `
+  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+    <path d="M2 2l20 20-1.41 1.41L16.73 19A10.9 10.9 0 0 1 12 20c-5 0-9.27-3.11-11-7a12.86 12.86 0 0 1 5.07-5.7L.59 3.41 2 2zM12 7a5 5 0 0 1 5 5 4.94 4.94 0 0 1-.53 2.22L9.78 7.53A4.94 4.94 0 0 1 12 7z"></path>
+  </svg>`;
+  const refreshIcon = ()=>{
+    const showing = pw.type === 'text';
+    btnEye.innerHTML = showing ? eyeOff : eyeOpen;
+    btnEye.setAttribute('aria-pressed', String(showing));
+    btnEye.setAttribute('aria-label', showing ? 'Sembunyikan password' : 'Tampilkan password');
+  };
+  btnEye.addEventListener('click', () => {
+    pw.type = (pw.type === 'password') ? 'text' : 'password';
+    refreshIcon();
+  });
+  refreshIcon();
+}
 </script>
 </body>
 </html>
