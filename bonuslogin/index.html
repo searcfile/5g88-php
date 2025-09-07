@@ -103,10 +103,21 @@
     opacity:0; transition:opacity .3s ease; z-index:9999; min-width:260px; text-align:center;
   }
   .toast.show{ opacity:1 }
+.field{position:relative}
+.field input{height:40px; width:100%; padding:8px 40px 8px 12px;
+  border-radius:8px; border:1px solid #424242; background:#141414; color:#e6e6e6}
+.field input:focus{outline:none; border-color:#1668dc}
+
+.eye{
+  position:absolute; right:10px; top:50%; transform:translateY(-50%);
+  width:32px; height:32px; display:grid; place-items:center;
+  background:transparent; border:0; color:#9ca3af; cursor:pointer
+}
+.eye:hover{color:#ffffff}
+.eye svg{display:block}
 </style>
 </head>
 <body>
-
 <div class="wrap">
   <!-- Left: brand -->
   <section class="brand">
@@ -131,11 +142,13 @@
     <form id="form-login" data-panel="login" autocomplete="on">
       <div class="row">
         <label for="u">Username</label>
-        <input id="u" name="u" type="text" placeholder="contoh: bonus5g88" required>
+        <input id="u" name="u" type="text" placeholder="Username" required>
       </div>
-      <div class="row">
-        <label for="p">Password</label><input id="password" name="password"type="password"minlength="6" required>
-      </div>
+     <div class="row field">
+       <label for="password">Password</label>
+       <input id="password" name="password" type="password" minlength="6" required>
+     <button type="button" id="togglePw" class="eye" aria-label="Tampilkan password" aria-pressed="false"></button>
+    </div>
       <div class="helper">
         <span class="small">Gunakan username saja, tidak perlu email.</span>
         <a href="#" data-goto="forgot">Lupa password?</a>
@@ -259,7 +272,7 @@ $("#form-login").addEventListener("submit", async (e)=>{
   e.preventDefault();
   if (!canTry()) return;
   const u = $("#u").value.trim();
-  const p = $("#p").value;
+  const p = $("#password").value;
   if (!u || !p) return toast("Lengkapi username & password.", "error");
   try{
     await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
@@ -343,6 +356,34 @@ pw.addEventListener('invalid', () => {
 
 // hapus pesan kustom saat user mengetik
 pw.addEventListener('input', () => pw.setCustomValidity(''));
+// === Eye toggle untuk input #password (login) ===
+const btn = document.getElementById('togglePw');
+
+const eyeOpen = `
+<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+  <path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7z"></path>
+  <circle cx="12" cy="12" r="5" fill="none"></circle>
+  <circle cx="12" cy="12" r="3"></circle>
+</svg>`;
+
+const eyeOff = `
+<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+  <path d="M2 2l20 20-1.41 1.41L16.73 19A10.9 10.9 0 0 1 12 20c-5 0-9.27-3.11-11-7a12.86 12.86 0 0 1 5.07-5.7L.59 3.41 2 2zM12 7a5 5 0 0 1 5 5 4.94 4.94 0 0 1-.53 2.22L9.78 7.53A4.94 4.94 0 0 1 12 7z"></path>
+</svg>`;
+
+function refreshIcon(){
+  const showing = pw.type === 'text';
+  btn.innerHTML = showing ? eyeOff : eyeOpen;
+  btn.setAttribute('aria-pressed', String(showing));
+  btn.setAttribute('aria-label', showing ? 'Sembunyikan password' : 'Tampilkan password');
+}
+
+btn.addEventListener('click', () => {
+  pw.type = (pw.type === 'password') ? 'text' : 'password';
+  refreshIcon();
+});
+
+refreshIcon(); // set ikon awal
 </script>
 </body>
 </html>
