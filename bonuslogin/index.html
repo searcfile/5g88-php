@@ -8,76 +8,155 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg1:#0f172a; /* slate-900 */
-      --bg2:#1e293b; /* slate-800 */
-      --acc:#22d3ee; /* cyan-400 */
-      --acc2:#a78bfa;/* violet-400 */
-      --ok:#10b981;  /* emerald-500 */
-      --err:#ef4444; /* red-500 */
-      --card:#0b1220cc;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;color:#e5e7eb;
-      background: radial-gradient(1200px 800px at 10% -10%, #1b2a55 0%, transparent 60%),
-                  radial-gradient(1000px 700px at 110% 10%, #2b134f 0%, transparent 55%),
-                  linear-gradient(160deg, var(--bg1), var(--bg2));
-      display:grid;place-items:center;overflow:hidden;
-    }
-    .orbs::before,.orbs::after{content:"";position:absolute;border-radius:999px;filter:blur(50px);opacity:.25}
-    .orbs::before{width:420px;height:420px;background:conic-gradient(from 180deg, var(--acc), var(--acc2));left:-120px;top:-80px}
-    .orbs::after{width:500px;height:500px;background:conic-gradient(from 90deg, var(--acc2), var(--acc));right:-140px;bottom:-120px}
+:root{
+  --bg1:#0f172a; /* slate-900 */
+  --bg2:#1e293b; /* slate-800 */
+  --acc:#22d3ee; /* cyan-400 */
+  --acc2:#a78bfa;/* violet-400 */
+  --ok:#10b981;  /* emerald-500 */
+  --err:#ef4444; /* red-500 */
+  --card:#0b1220cc;
+}
+*{box-sizing:border-box}
+html,body{height:100%;color-scheme:dark light}
+body{
+  margin:0;
+  font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;
+  color:#e5e7eb;
+  background:
+    radial-gradient(1200px 800px at 10% -10%, #1b2a55 0%, transparent 60%),
+    radial-gradient(1000px 700px at 110% 10%, #2b134f 0%, transparent 55%),
+    linear-gradient(160deg, var(--bg1), var(--bg2));
+  /* ⬇️ pusatkan konten */
+  min-height:100dvh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
 
-    .wrap{position:relative;width:min(920px,92vw);display:grid;grid-template-columns:1.1fr .9fr;gap:2rem;align-items:stretch}
-    @media (max-width: 860px){.wrap{grid-template-columns:1fr}}
+/* dekor glow lembut */
+.orbs::before,.orbs::after{content:"";position:absolute;border-radius:999px;filter:blur(50px);opacity:.25}
+.orbs::before{width:420px;height:420px;background:conic-gradient(from 180deg, var(--acc), var(--acc2));left:-120px;top:-80px}
+.orbs::after{width:500px;height:500px;background:conic-gradient(from 90deg, var(--acc2), var(--acc));right:-140px;bottom:-120px}
 
-    .left{
-      position:relative;padding:2rem;border:1px solid #3b3f51; border-radius:24px; background:linear-gradient(180deg, #0b1220f2, #0b1220bb);
-      box-shadow: 0 10px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
-      backdrop-filter: blur(10px);
-    }
-    .brand{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem}
-    .logo{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 6px 18px rgba(34,211,238,.35)}
-    .brand h1{font-size:1.25rem;margin:0;font-weight:700;letter-spacing:.2px}
-    .muted{color:#94a3b8;font-size:.92rem}
+/* ====== layout ====== */
+.wrap{
+  position:relative;
+  width:min(980px,96vw);
+  display:grid;
+  grid-template-columns:1.05fr .95fr;
+  gap:2rem;
+  align-items:stretch;
+  margin:0 auto;              /* ⬅️ pastikan center horizontal */
+}
+@media (max-width: 1024px){ .wrap{width:min(720px,96vw)} }
+@media (max-width: 860px){ .wrap{grid-template-columns:1fr} }
 
-    form{display:grid;gap:1rem;margin-top:1rem}
-    .field{display:grid;gap:.5rem}
-    label{font-size:.9rem;color:#cbd5e1}
-    .control{position:relative}
-    input{
-      width:100%;padding:14px 44px 14px 14px;border-radius:12px;border:1px solid #2d3548;background:#0e1726;color:#fff;outline:none;
-      transition:border-color .2s, box-shadow .2s;
-    }
-    input:focus{border-color:#475569;box-shadow:0 0 0 4px rgba(79,70,229,.18)}
-    .eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#9ca3af;cursor:pointer}
+/* Matikan banner kanan cepat (hapus baris ini kalau mau tampil lagi) */
+.right{ display:none !important; }
 
-    .actions{display:flex;gap:.8rem;align-items:center;margin-top:.25rem}
-    .btn{appearance:none;border:none;cursor:pointer;border-radius:12px;padding:12px 16px;font-weight:700;letter-spacing:.2px}
-    .btn.primary{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#0b1220;box-shadow:0 8px 22px rgba(167,139,250,.28)}
-    .btn.primary:disabled{opacity:.6;cursor:not-allowed;filter:grayscale(.4)}
-    .btn.ghost{background:transparent;border:1px solid #334155;color:#cbd5e1}
+/* ====== card (kiri) ====== */
+.left{
+  position:relative;
+  padding:2rem;
+  border:1px solid #3b3f51;
+  border-radius:24px;
+  background:linear-gradient(180deg, #0b1220f2, #0b1220bb);
+  box-shadow:0 10px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.brand{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem}
+.logo{
+  width:42px;height:42px;border-radius:12px;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));
+  box-shadow:0 6px 18px rgba(34,211,238,.35)
+}
+.brand h1{font-size:1.25rem;margin:0;font-weight:700;letter-spacing:.2px}
+.muted{color:#94a3b8;font-size:.92rem}
 
-    .note{font-size:.82rem;color:#94a3b8;margin-top:4px}
+/* ====== form ====== */
+form{display:grid;gap:1rem;margin-top:1rem}
+.field{display:grid;gap:.5rem}
+label{font-size:.9rem;color:#cbd5e1}
+.control{position:relative}
+input{
+  width:100%;
+  padding:14px 44px 14px 14px;
+  border-radius:12px;
+  border:1px solid #2d3548;
+  background:#0e1726;
+  color:#fff;
+  outline:none;
+  transition:border-color .2s, box-shadow .2s, transform .08s;
+}
+input:focus{
+  border-color:#60a5fa;
+  box-shadow:0 0 0 4px rgba(96,165,250,.18);
+}
+input:active{ transform:scale(.998) }
 
-    .state{min-height:24px;display:flex;align-items:center;gap:.5rem}
-    .state .msg{font-size:.92rem}
-    .state .ok{color:var(--ok)}
-    .state .err{color:var(--err)}
+.eye{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  background:transparent;border:none;color:#9ca3af;cursor:pointer;padding:4px;border-radius:8px;
+}
+.eye:hover{ color:#cbd5e1 }
 
-    .shake{animation:shake .36s ease-in-out}
-    @keyframes shake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-4px)}40%,60%{transform:translateX(4px)}}
+/* ====== buttons ====== */
+.actions{display:flex;gap:.8rem;align-items:center;margin-top:.25rem;flex-wrap:wrap}
+.btn{
+  appearance:none;border:none;cursor:pointer;border-radius:12px;padding:12px 16px;
+  font-weight:700;letter-spacing:.2px;transition:filter .15s, transform .06s, box-shadow .2s;
+}
+.btn:active{ transform:translateY(1px) }
+.btn.primary{
+  background:linear-gradient(135deg,var(--acc),var(--acc2));
+  color:#0b1220;
+  box-shadow:0 8px 22px rgba(167,139,250,.28), inset 0 0 0 1px rgba(0,0,0,.12);
+}
+.btn.primary:hover{ filter:brightness(1.06) }
+.btn.primary:disabled{opacity:.6;cursor:not-allowed;filter:grayscale(.4)}
+.btn.ghost{background:transparent;border:1px solid #334155;color:#cbd5e1}
+.btn.ghost:hover{border-color:#475569}
 
-    /* Right banner */
-    .right{position:relative;border-radius:24px;overflow:hidden;border:1px solid #3b3f51; background:radial-gradient(120% 100% at 0% 0%, #0ea5bacc 0%, transparent 60%), radial-gradient(120% 120% at 100% 0%, #8b5cf6aa 0%, transparent 60%), linear-gradient(160deg, #0b1220, #0b1220cc)}
-    .hero{position:absolute;inset:0;padding:2rem;display:flex;flex-direction:column;justify-content:flex-end}
-    .hero h2{font-size:1.6rem;margin:0 0 .4rem 0}
-    .hero p{margin:0;color:#cbd5e1}
-    .badge{position:absolute;left:2rem;top:2rem;font-size:.75rem;color:#0b1220;background:#a5f3fc;border-radius:999px;padding:.35rem .6rem;font-weight:700}
+/* misc */
+.note{font-size:.82rem;color:#94a3b8;margin-top:4px}
+.state{min-height:24px;display:flex;align-items:center;gap:.5rem}
+.state .msg{font-size:.92rem}
+.state .ok{color:var(--ok)}
+.state .err{color:var(--err)}
 
-    .orbs{position:absolute;inset:-1px;pointer-events:none}
+/* feedback salah password */
+.shake{animation:shake .36s ease-in-out}
+@keyframes shake{
+  10%,90%{transform:translateX(-1px)}
+  20%,80%{transform:translateX(2px)}
+  30%,50%,70%{transform:translateX(-4px)}
+  40%,60%{transform:translateX(4px)}
+}
+
+/* ====== right banner (aktifkan jika perlu) ====== */
+.right{
+  position:relative;border-radius:24px;overflow:hidden;border:1px solid #3b3f51;
+  background:
+    radial-gradient(120% 100% at 0% 0%, #0ea5bacc 0%, transparent 60%),
+    radial-gradient(120% 120% at 100% 0%, #8b5cf6aa 0%, transparent 60%),
+    linear-gradient(160deg, #0b1220, #0b1220cc);
+}
+.hero{position:absolute;inset:0;padding:2rem;display:flex;flex-direction:column;justify-content:flex-end}
+.hero h2{font-size:1.6rem;margin:0 0 .4rem 0}
+.hero p{margin:0;color:#cbd5e1}
+.badge{
+  position:absolute;left:2rem;top:2rem;font-size:.75rem;color:#0b1220;
+  background:#a5f3fc;border-radius:999px;padding:.35rem .6rem;font-weight:700
+}
+.orbs{position:absolute;inset:-1px;pointer-events:none}
+
+/* aksesibilitas: kurangi animasi bila user menolak motion */
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important;transition:none!important}
+}
   </style>
 </head>
 <body>
