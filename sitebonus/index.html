@@ -637,6 +637,36 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 .hdr-editor .input{
   width:150px; height:34px;
 }
+/* === User dropdown === */
+.userbox{ position:relative; flex:0 0 auto; }
+.userbtn{
+  height:36px; border-radius:8px; border:1px solid #424242;
+  background:#141414; color:rgba(255,255,255,.85);
+  display:inline-flex; align-items:center; gap:8px; padding:0 10px; cursor:pointer;
+}
+.userbtn:hover{ border-color:#3c89e8; color:#3c89e8; }
+.userbtn .avatar{
+  width:18px; height:18px; display:grid; place-items:center;
+  border-radius:6px; background:#0f0f0f; border:1px solid #2a2a2a; font-size:12px;
+}
+
+.user-menu{
+  position:absolute; right:0; top:calc(100% + 8px);
+  min-width:240px; background:#111; border:1px solid #424242; border-radius:10px;
+  padding:10px; box-shadow:0 20px 50px rgba(0,0,0,.55); display:none;
+  z-index:2147483645;
+}
+.user-menu.show{ display:block; }
+.ud-head{ font-size:12px; color:#9ca3af; margin-bottom:6px; }
+.ud-sep{ height:1px; background:#2a2a2a; margin:8px 0; }
+.ud-item{
+  width:100%; height:36px; display:flex; align-items:center; gap:8px;
+  background:#141414; border:1px solid #2a2a2a; color:#ddd;
+  border-radius:8px; padding:0 10px; cursor:pointer;
+}
+.ud-item:hover{ border-color:#3c89e8; color:#3c89e8; }
+.ud-item.danger{ border-color:#dc4446; color:#dc4446; background:#191111; }
+.ud-item.danger:hover{ border-color:#e86e6b; color:#e86e6b; }
 </style>
 </head>
 <body>
@@ -652,6 +682,23 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
     <div class="spacer"></div>
     <button id="viewBtn" class="btn-exp">View</button>
     <button id="exportBtn" class="btn-exp">Export CSV</button>
+   <!-- USER DROPDOWN (di kanan tombol Export CSV) -->
+<div id="userBox" class="userbox">
+  <button id="userBtn" class="userbtn" aria-haspopup="true" aria-expanded="false" title="Account">
+    <span class="avatar" aria-hidden="true">👤</span>
+    <span id="userBtnLabel">—</span>
+    <span aria-hidden="true">▾</span>
+  </button>
+
+  <div id="userMenu" class="user-menu" role="menu" aria-hidden="true">
+    <div class="ud-head">Signed in as<br><b id="userMenuName">user</b></div>
+    <div class="ud-sep"></div>
+    <button id="udChangePw" class="ud-item">Change Password…</button>
+    <button id="udForgot"   class="ud-item">Forgot / Reset…</button>
+    <div class="ud-sep"></div>
+    <button id="udLogout"   class="ud-item danger">Logout</button>
+  </div>
+</div>
   </div>
 
   <div class="wrap">
@@ -936,9 +983,46 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   </div>
 </div>
 
-
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<style>html.auth-wait body{visibility:hidden}</style>
+<script>document.documentElement.classList.add('auth-wait');</script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAvuHrjMwlz3cnTa9eTqDQaAPasjtFa4us",
+    authDomain: "bonus-5c5e0.firebaseapp.com",
+    projectId: "bonus-5c5e0",
+    appId: "1:781993203912:web:704d36f814c6247bf62dfd",
+    databaseURL: "https://bonus-5c5e0-default-rtdb.asia-southeast1.firebasedatabase.app"
+  };
+  const LOGIN_URL = "https://searcfile.github.io/5g88-php/bonuslogin/"; // halaman login kamu
+
+  // 4) Init + Guard
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+
+  auth.onAuthStateChanged((user)=>{
+  if (!user) {
+    location.replace(LOGIN_URL);
+    return;
+  }
+  const uname = (user.email || "").replace("@5g88.local","") || "user";
+
+  // === tambahkan ini:
+  setUserUI(uname);
+
+  // kalau kamu masih punya elemen lama #username tidak masalah:
+  const slot = document.getElementById("username");
+  if (slot) slot.textContent = uname;
+
+  document.documentElement.classList.remove('auth-wait');
+});
+  // 5) optional: fungsi logout untuk header/button
+  window.doLogout = async ()=>{
+    await auth.signOut();
+    location.href = LOGIN_URL;
+  };
   const $ = s => document.querySelector(s);
   const fmtNum = n => (Number.isFinite(n)?n:parseFloat(n||0)).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
   const fmtInt = n => (parseInt(n||0,10)).toLocaleString();
@@ -2607,6 +2691,41 @@ window.__del  = (id) => delRecord(id);
   window.openTargetModal=openTargetModal; window.closeTargetModal=closeTargetModal;
   window.openUnclaimModal=openUnclaimModal; window.closeUnclaimModal=closeUnclaimModal;
   window.claimUnclaim=claimUnclaim;
+// ==== User dropdown logic ====
+function setUserUI(name){
+  const lab = document.getElementById('userBtnLabel');
+  const nm  = document.getElementById('userMenuName');
+  if (lab) lab.textContent = name || 'user';
+  if (nm)  nm.textContent  = name || 'user';
+}
+
+const userBtn  = document.getElementById('userBtn');
+const userMenu = document.getElementById('userMenu');
+
+if (userBtn && userMenu){
+  // toggle
+  userBtn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    const show = !userMenu.classList.contains('show');
+    userMenu.classList.toggle('show', show);
+    userBtn.setAttribute('aria-expanded', show ? 'true' : 'false');
+    userMenu.setAttribute('aria-hidden',  show ? 'false' : 'true');
+  });
+  // close on outside/Esc
+  document.addEventListener('click', ()=> userMenu.classList.remove('show'));
+  document.addEventListener('keydown', e => { if(e.key==='Escape') userMenu.classList.remove('show'); });
+
+  // actions
+  document.getElementById('udChangePw')?.addEventListener('click', ()=>{
+    location.href = "https://searcfile.github.io/5g88-php/bonuslogin/?tab=changepw";
+  });
+  document.getElementById('udForgot')?.addEventListener('click',   ()=>{
+    location.href = "https://searcfile.github.io/5g88-php/bonuslogin/?tab=forgot";
+  });
+  document.getElementById('udLogout')?.addEventListener('click',   ()=>{
+    doLogout();  // sudah kamu definisikan di guard
+  });
+}
 </script>
 </body>
 </html>
