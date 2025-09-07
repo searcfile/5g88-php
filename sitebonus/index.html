@@ -990,7 +990,7 @@ async function syncUp(){
   const u = auth.currentUser;
   if (!u) return;
 
-  const userKey = await ensureMapping(u);          // ⬅️ WAJIB duluan
+  const userKey = getUsername(u);   // ⬅️ tanpa safeKey
   const payload = __readLocalState();
   if (!payload.updatedAt){ bumpUpdated(); payload.updatedAt = getUpdatedAt(); }
 
@@ -998,111 +998,80 @@ async function syncUp(){
 }
 // Domain login palsu yg kamu pakai
 // ===== Username helpers =====
-const USER_DOMAIN = '@5g88.local';                    // domain palsu yang kamu pakai
+const USER_DOMAIN = '@5g88.local'; // domain email pseudo
 
+// ==== AMBIL USERNAME DARI EMAIL PSEUDO ====
+// hasil: "admins88" bila email = "admins88@5g88.local"
 function getUsername(u){
-  if (!u) return 'user';
-  const e = u.email || '';
+  const e = u?.email || '';
   if (e.endsWith(USER_DOMAIN)) return e.slice(0, -USER_DOMAIN.length);
-  const dn = (u.displayName || '').trim();
-  if (dn) return dn;
-  // fallback unik pakai ujung UID
-  return 'user_' + (u.uid || '').slice(-6);
+  // fallback (harusnya jarang dipakai)
+  return 'user_' + (u?.uid || '').slice(-6);
 }
 
-// Firebase melarang . # $ [ ] / di key
-function safeKey(k){
-  return String(k).replace(/[.#$\[\]\/]/g,'_');
+async function syncUp(){
+  const u = auth.currentUser;
+  if (!u) return;
+
+  const userKey = getUsername(u);        // ⬅️ tanpa safeKey
+  const payload = __readLocalState();
+  if (!payload.updatedAt){ bumpUpdated(); payload.updatedAt = getUpdatedAt(); }
+
+  await db.ref(`users/${userKey}/state`).set(payload);
 }
 
-// Email palsu dari username (dipakai di halaman login)
-const toEmail = (username) => username + USER_DOMAIN;
-
-// (opsional) klaim username saat sign-up
-async function reserveUsername(name){
-  const key = safeKey(name);
-  const uid = auth.currentUser.uid;
-  const ref = db.ref(`usernames/${key}`);
-  const tx  = await ref.transaction(cur => cur || uid); // isi kalau kosong
-  if (!tx.committed || tx.snapshot.val() !== uid) throw new Error('Username sudah dipakai');
-  await db.ref(`uids/${uid}/username`).set(key);
-  return key;
-}
-// Tarik cloud -> local (kalau belum ada, buat dari local)
 async function syncDown(){
   const u = auth.currentUser;
   if (!u) return;
 
-  const userKey = await ensureMapping(u); // ⬅️ WAJIB duluan
-
-  // sekarang boleh baca path baru
-  let snap = await db.ref(`users/${userKey}/state`).get().catch(() => null);
+  const userKey = getUsername(u);        // ⬅️ tanpa safeKey
+  let snap;
+  try { snap = await db.ref(`users/${userKey}/state`).get(); }
+  catch(e){ console.warn('read failed', e); return; }
 
   if (!snap || !snap.exists()){
-    // coba path lama (berbasis uid) – rules masih izinkan
-    const old = await db.ref(`users/${u.uid}/state`).get().catch(() => null);
-    if (old && old.exists()){
-      await db.ref(`users/${userKey}/state`).set(old.val()); // mapping sudah aman
-      snap = await db.ref(`users/${userKey}/state`).get();
-    } else {
-      await syncUp();                                        // first run
-      snap = await db.ref(`users/${userKey}/state`).get();
-    }
+    await syncUp(); // first run: buat node di cloud dari local
+    snap = await db.ref(`users/${userKey}/state`).get().catch(() => null);
   }
 
+  const cloud  = snap && snap.val();
   const local  = __readLocalState();
-  if (snap && snap.exists()){
-    const cloud  = snap.val();
-    const tCloud = Number(cloud.updatedAt || 0);
-    const tLocal = Number(local.updatedAt || 0);
-    if (tCloud >= tLocal) __writeLocalState(cloud);
-    else await db.ref(`users/${userKey}/state`).set(local);
-  }
+  const tCloud = Number(cloud?.updatedAt || 0);
+  const tLocal = Number(local.updatedAt || 0);
+
+  if (tCloud >= tLocal) __writeLocalState(cloud);
+  else await db.ref(`users/${userKey}/state`).set(local);
 }
 
-auth.onAuthStateChanged(async (user)=>{
+// ==== AUTH STATE ====
+auth.onAuthStateChanged(async (user) => {
   if (!user) { location.replace(LOGIN_URL); return; }
 
-  const uname = getUsername(user).replace(/[.#$\[\]\/]/g,'_'); // safeKey
-
-  // pastikan mapping tersedia utk rules
-  await db.ref(`uids/${user.uid}/username`).set(uname);
-
+  const uname = getUsername(user);       // ⬅️ tanpa safeKey
   setUserUI(uname);
-  try { await syncDown(); } catch(e){ console.error('syncDown error', e); }
+
+  try { await syncDown(); } catch (e) { console.error('syncDown error', e); }
   document.documentElement.classList.remove('auth-wait');
   if (typeof render === 'function') render();
 });
-  // 5) optional: fungsi logout untuk header/button
-  window.doLogout = async ()=>{
-    await auth.signOut();
-    location.href = LOGIN_URL;
-  };
-  let __syncTimer = null;
+
+// ==== LOGOUT ====
+window.doLogout = async ()=>{
+  await auth.signOut();
+  location.href = LOGIN_URL;
+};
+
+// ==== AUTO SYNC SAAT TUTUP TAB ====
+let __syncTimer = null;
 function safeSyncUp() {
   if (!auth.currentUser) return;
   clearTimeout(__syncTimer);
-  __syncTimer = setTimeout(syncUp, 300); // debounce 300ms
+  __syncTimer = setTimeout(syncUp, 300);
 }
-
-// Auto-sync saat user mau pindah tab/close/lock layar
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') safeSyncUp();
 });
 window.addEventListener('beforeunload', () => { safeSyncUp(); });
-  
-async function ensureMapping(u){
-  if (!u) return null;
-  // coba mapping yang sudah ada
-  const mapRef  = db.ref(`uids/${u.uid}/username`);
-  const mapSnap = await mapRef.get().catch(() => null);
-  let userKey = (mapSnap && mapSnap.exists()) ? mapSnap.val() : safeKey(getUsername(u));
-
-  // klaim username (unik) + set mapping uid -> username
-  await db.ref(`usernames/${userKey}`).transaction(v => v || u.uid);
-  await mapRef.set(userKey);
-  return userKey;
-}
   const $ = s => document.querySelector(s);
   const fmtNum = n => (Number.isFinite(n)?n:parseFloat(n||0)).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
   const fmtInt = n => (parseInt(n||0,10)).toLocaleString();
