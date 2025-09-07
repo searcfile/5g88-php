@@ -1012,7 +1012,7 @@ function __readLocalState(){
     unclaims: readUnclaims?.() || [],
     targets:  JSON.parse(localStorage.getItem(LS_TARGET) || 'null'),
     notes:    JSON.parse(localStorage.getItem('bonusNotes.v1') || 'null'),
-    updatedAt: Date.now()
+    updatedAt: getUpdatedAt(),   // ⬅️ pakai nilai persisten
   };
 }
 
@@ -1023,6 +1023,8 @@ function __writeLocalState(s){
   if (Array.isArray(s.unclaims)) writeUnclaims(s.unclaims);
   if (s.targets) localStorage.setItem(LS_TARGET, JSON.stringify(s.targets));
   if (s.notes)   localStorage.setItem('bonusNotes.v1', JSON.stringify(s.notes));
+  // simpan timestamp cloud yg dipakai
+  localStorage.setItem(LS_UPDATED, String(Number(s.updatedAt || Date.now())));
 }
 
 // Dorong local -> cloud
@@ -1030,6 +1032,11 @@ async function syncUp(){
   const uid = auth.currentUser?.uid;
   if (!uid) return;
   const payload = __readLocalState();
+  // pastikan payload.updatedAt persisten, kalau belum ada set sekarang
+  if (!payload.updatedAt) {
+    bumpUpdated();
+    payload.updatedAt = getUpdatedAt();
+  }
   await db.ref(`users/${uid}/state`).set(payload);
 }
 
@@ -1115,6 +1122,9 @@ window.addEventListener('beforeunload', () => { safeSyncUp(); });
 const LS_DR_TO   = 'bonusRecords.rangeTo';
 const toISODateLocal = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
 
+const LS_UPDATED = 'bonusState.updatedAt';
+const getUpdatedAt = () => Number(localStorage.getItem(LS_UPDATED) || 0);
+const bumpUpdated  = () => localStorage.setItem(LS_UPDATED, String(Date.now()));
 function monthStartEnd(yyyyMM){
   const [y,m] = yyyyMM.split('-').map(Number);
   const start = new Date(y, m-1, 1);
@@ -1664,6 +1674,7 @@ function readTarget(){
         salesTiers:   old.salesTiers   || [{threshold:30000, bonus:300}],
       };
       localStorage.setItem(LS_TARGET, JSON.stringify(upgraded));
+      bumpUpdated();
       return upgraded;
     }
   } catch {}
@@ -1675,6 +1686,7 @@ function readTarget(){
     salesTiers:[{threshold:30000, bonus:300}]
   };
   localStorage.setItem(LS_TARGET, JSON.stringify(def));
+  bumpUpdated();
   return def;
 }
   const writeTarget=t=>localStorage.setItem(LS_TARGET, JSON.stringify(t));
@@ -1898,6 +1910,8 @@ function submitNoteNameModal(){
     });
     writeNotes(notesState.notes);
     notesState.idx = notesState.notes.length - 1;
+    bumpUpdated();
+    safeSyncUp();
 
     // perbarui dropdown & table tanpa menutup modal Notes
     const sel = document.getElementById('noteSelect');
@@ -1915,6 +1929,8 @@ function submitNoteNameModal(){
       note.name = val;
       writeNotes(notesState.notes);
       // update option terpilih
+      bumpUpdated();
+      safeSyncUp();
       const sel = document.getElementById('noteSelect');
       if (sel && sel.selectedIndex >= 0) sel.options[sel.selectedIndex].textContent = val;
       toast('Renamed','info');
@@ -2048,6 +2064,7 @@ function saveTiersLive(){
   if(!t.resitTiers.length)   t.resitTiers=[{threshold:250, bonus:30}];
   if(!t.salesTiers.length)   t.salesTiers=[{threshold:30000, bonus:300}];
   writeTarget(t);
+  bumpUpdated();  
   safeSyncUp();
 }
   function saveTarget(){
@@ -2579,6 +2596,7 @@ function ensureNotes(){
       ]
     }];
     writeNotes(notes);
+    bumpUpdated();
   }
   return notes;
 }
@@ -2741,6 +2759,8 @@ document.getElementById('delNoteBtn')?.addEventListener('click', async () => {
   notesState.notes.splice(notesState.idx,1);
   if(!notesState.notes.length) notesState.notes = ensureNotes();
   writeNotes(notesState.notes);
+  bumpUpdated();
+  safeSyncUp();
   notesState.idx = 0;
   openNotesModal();
   toast('Note deleted','warn');
