@@ -406,23 +406,19 @@ if (loginForm){
     if (!u || !p){ toast("Lengkapi username & password.", "error"); if(btn){btn.disabled=false;btn.textContent=old;} return; }
     if (!USER_RE.test(u)){ toast("Format username salah (3–30: a–z 0–9 . _ -).", "error"); if(btn){btn.disabled=false;btn.textContent=old;} return; }
 
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(function(){
-  return auth.signInWithEmailAndPassword(toPseudoEmail(u), p);
-}).then(function(){
-  // === ⬇️ Tambahkan mapping di SINI: uid -> username & klaim username ===
-  var cur    = auth.currentUser;
-  var uname  = sanitizeUsername(getUsernameFromUser(cur));
-
-  return db.ref('usernames/' + uname).transaction(function(v){ return v || cur.uid; })
-    .then(function(){
-      return db.ref('uids/' + cur.uid + '/username').set(uname);
-    })
-    .then(function(){
-      // lanjut seperti biasa
-      clearFail();
-      toast("Login berhasil. Mengalihkan…", "success");
-      setTimeout(function(){ location.href = REDIRECT_URL; }, 200);
-    });
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+  .then(() => auth.signInWithEmailAndPassword(toPseudoEmail(u), p))
+  .then(() => {
+    var cur   = auth.currentUser;
+    var uname = sanitizeUsername(getUsernameFromUser(cur));
+    return db.ref('usernames/'+uname).transaction(v => v || cur.uid)
+      .then(() => db.ref('uids/'+cur.uid+'/username').set(uname));
+  })
+  .then(() => {
+    clearFail();
+    toast("Login berhasil. Mengalihkan…", "success");
+    setTimeout(() => location.href = REDIRECT_URL, 200);
+  })
 }).catch(function(err){
   // ... (biarkan bagian error kamu seperti semula)
 }).finally(function(){
