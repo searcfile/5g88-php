@@ -1036,9 +1036,20 @@ async function syncUp(){
 // Tarik cloud -> local (kalau belum ada, buat dari local)
 async function syncDown(uid){
   const snap = await db.ref(`users/${uid}/state`).get();
+  const local = __readLocalState(); // local.updatedAt sudah diisi Date.now()
+
   if (snap.exists()){
     const cloud = snap.val();
-    __writeLocalState(cloud);
+    const tCloud = Number(cloud.updatedAt || 0);
+    const tLocal = Number(local.updatedAt || 0);
+
+    if (tCloud >= tLocal) {
+      // Cloud lebih baru -> pakai cloud
+      __writeLocalState(cloud);
+    } else {
+      // Local lebih baru -> dorong ke cloud
+      await db.ref(`users/${uid}/state`).set(local);
+    }
   } else {
     // pertama kali: buat dari local
     await syncUp();
@@ -1062,6 +1073,18 @@ auth.onAuthStateChanged(async (user)=>{
     await auth.signOut();
     location.href = LOGIN_URL;
   };
+  let __syncTimer = null;
+function safeSyncUp() {
+  if (!auth.currentUser) return;
+  clearTimeout(__syncTimer);
+  __syncTimer = setTimeout(syncUp, 300); // debounce 300ms
+}
+
+// Auto-sync saat user mau pindah tab/close/lock layar
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') safeSyncUp();
+});
+window.addEventListener('beforeunload', () => { safeSyncUp(); });
   const $ = s => document.querySelector(s);
   const fmtNum = n => (Number.isFinite(n)?n:parseFloat(n||0)).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
   const fmtInt = n => (parseInt(n||0,10)).toLocaleString();
@@ -1801,7 +1824,8 @@ function lockFormBySite() {
     buildMonthOptions();
     if(rec.month===toYYYYMM(new Date())){ $('#monthFilter').value=rec.month; localStorage.setItem(LS_LAST_MONTH,rec.month); }
     closeModal(); render();
-    syncUp(); 
+    bumpUpdated(); 
+    safeSyncUp();
   }
 // ===== A. Helper inert background + toggle modal =====
 function setBackgroundInert(enable, exceptTarget){
@@ -2024,6 +2048,7 @@ function saveTiersLive(){
   if(!t.resitTiers.length)   t.resitTiers=[{threshold:250, bonus:30}];
   if(!t.salesTiers.length)   t.salesTiers=[{threshold:30000, bonus:300}];
   writeTarget(t);
+  safeSyncUp();
 }
   function saveTarget(){
     const readRows=sel=>{
@@ -2039,7 +2064,8 @@ function saveTiersLive(){
     toast('Target saved', 'success');
     closeTargetModal();
     render();
-    syncUp();
+    bumpUpdated(); 
+    safeSyncUp();
   }
 
 function prettyRange(f, t){
@@ -2252,7 +2278,8 @@ function renderSummaryRows(t, count, site, month){
   writeUnclaims(readUnclaims().filter(u=>u.recordId!==id));
   render();
   toast('Record deleted', 'warn');
-  syncUp();
+   bumpUpdated(); 
+  safeSyncUp();
 }
 
   function exportCSV(){
@@ -2409,7 +2436,8 @@ function claimUnclaim(ucId){
   setMonthAndRange(nowMonth);
   render();
   toast('Unclaim claimed', 'success');
-  syncUp();
+  bumpUpdated(); 
+  safeSyncUp();
 
   // Jika Unclaim modal lagi terbuka, langsung switch ke History & scroll atas
   if ($('#unclaimModal').classList.contains('show')) {
@@ -2434,7 +2462,8 @@ async function deleteUnclaim(ucId){
   render();
   if ($('#unclaimModal').classList.contains('show')) switchUcTab('pending');
   toast('Unclaim deleted', 'warn');
-  syncUp();
+  bumpUpdated(); 
+  safeSyncUp();
 }
 window.deleteUnclaim = deleteUnclaim;
 function applyNumberTitles() {
@@ -2683,7 +2712,8 @@ document.getElementById('saveNoteBtn')?.addEventListener('click', () => {
   writeNotes(notesState.notes);
   notesState.dirty=false;
   toast('Note saved','success');
-  syncUp();
+  bumpUpdated(); 
+  safeSyncUp();
 });
 document.getElementById('cancelNoteBtn')?.addEventListener('click', () => {
   const curIdx = notesState.idx;
