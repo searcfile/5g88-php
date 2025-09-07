@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Secure Login — 5G88</title>
+<title>Secure Login — Username Only</title>
 <meta name="color-scheme" content="dark">
 <style>
   :root{
     --bg1:#0a0f1d; --bg2:#0d1326; --card:#0b1220cc;
-    --text:#e5e7eb; --muted:#94a3b8;
-    --gold:#ffd166; --gold-2:#ffcf4d; --danger:#ef4444; --ok:#10b981;
-    --ring: 0 0 0 3px rgba(255,209,102,.25);
+    --text:#e5e7eb; --muted:#9fb2d0; --sub:#cbd5e1;
+    --gold:#ffd166; --gold-2:#ffcf4d; --ok:#10b981; --danger:#ef4444;
+    --ring:0 0 0 3px rgba(255,209,102,.25);
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -22,15 +22,13 @@
       linear-gradient(160deg, var(--bg1), var(--bg2));
     display:grid; place-items:center; padding:24px;
   }
-  .wrap{
-    width:min(980px, 100%); display:grid; grid-template-columns: 1.05fr .95fr; gap:18px;
-  }
-  @media (max-width: 860px){ .wrap{ grid-template-columns: 1fr; } }
+  .wrap{ width:min(980px,100%); display:grid; grid-template-columns: 1.05fr .95fr; gap:18px; }
+  @media (max-width:860px){ .wrap{ grid-template-columns:1fr; } }
 
   .brand{
     border:1px solid #1f2937; background:linear-gradient(180deg,#0e1629,#0a1020);
     border-radius:16px; padding:26px 26px 16px; position:relative; overflow:hidden;
-    box-shadow: 0 15px 50px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.03);
+    box-shadow:0 15px 50px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.03);
   }
   .brand .glow{
     position:absolute; inset:-40%; background:
@@ -41,7 +39,7 @@
   .brand h1{
     margin:0 0 8px; font-size:28px; letter-spacing:.4px; font-weight:800;
     background: linear-gradient(90deg, #fff, #ffe9a6);
-    -webkit-background-clip: text; background-clip:text; color:transparent;
+    -webkit-background-clip:text; background-clip:text; color:transparent;
   }
   .brand p{ margin:0; color:var(--muted) }
   .badge{
@@ -52,8 +50,9 @@
   .card{
     border:1px solid #223049; background:var(--card);
     border-radius:16px; padding:22px; position:relative; overflow:hidden;
-    box-shadow: 0 12px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.03);
+    box-shadow:0 12px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.03);
   }
+
   .tabs{ display:flex; gap:6px; margin-bottom:14px; }
   .tab{
     height:38px; padding:0 12px; border-radius:10px; border:1px solid #2a3550; background:#0f172a;
@@ -66,14 +65,13 @@
 
   form{ display:grid; gap:12px; }
   .row{ display:grid; gap:8px; }
-  label{ font-size:13px; color:#cbd5e1; }
+  label{ font-size:13px; color:var(--sub); }
   input{
     height:44px; border-radius:10px; border:1px solid #2b3653; background:#0e1728;
     color:#e5e7eb; padding:0 12px; outline:none;
   }
   input:hover{ border-color:#3a4a72 }
   input:focus{ box-shadow: var(--ring); border-color:#d6b24a }
-  .hint{ font-size:12px; color:#9fb2d0; }
 
   .btn{
     height:44px; border-radius:10px; border:1px solid #c6a23a;
@@ -90,16 +88,12 @@
 
   .row-split{ display:flex; gap:10px }
   .row-split > *{ flex:1 }
-
-  .danger{ color:var(--danger) }
-  .ok{ color:var(--ok) }
-
-  .helper{
-    margin-top:10px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;
-  }
+  .helper{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
   .helper a{ color:#d6b24a; text-decoration:none; font-size:13px }
   .helper a:hover{ text-decoration:underline }
 
+  .hint{ font-size:12px; color:var(--muted) }
+  .small{ font-size:12px; color:var(--muted) }
   .hidden{ display:none !important }
 
   .toast{
@@ -109,20 +103,17 @@
     opacity:0; transition:opacity .3s ease; z-index:9999; min-width:260px; text-align:center;
   }
   .toast.show{ opacity:1 }
-
-  .small{ font-size:12px; color:#9fb2d0 }
-  .sep{ height:1px; background:linear-gradient(90deg,transparent,#30405f,transparent); margin:10px 0 }
 </style>
 </head>
 <body>
 
 <div class="wrap">
-  <!-- Left: brand / copy -->
+  <!-- Left: brand -->
   <section class="brand">
     <div class="glow"></div>
-    <h1>Welcome back 👋</h1>
-    <p>Masuk terlebih dahulu untuk melanjutkan ke halaman admin.</p>
-    <div class="badge" aria-label="Security">
+    <h1>Selamat datang 👋</h1>
+    <p>Login dengan <b>Username & Password</b> untuk masuk ke halaman admin.</p>
+    <div class="badge">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" stroke="#ffd166" stroke-width="1.5"/><path d="M9 12l2 2 4-4" stroke="#ffd166" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <span>Protected by Firebase Authentication</span>
     </div>
@@ -130,48 +121,52 @@
 
   <!-- Right: auth card -->
   <section class="card">
-    <nav class="tabs" role="tablist" aria-label="Auth forms">
+    <nav class="tabs" role="tablist">
       <button class="tab" role="tab" aria-selected="true" data-tab="login">Login</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="forgot">Lupa Password</button>
       <button class="tab hidden" role="tab" aria-selected="false" data-tab="changepw">Ganti Password</button>
     </nav>
 
     <!-- LOGIN -->
-    <form id="form-login" autocomplete="on" data-panel="login">
+    <form id="form-login" data-panel="login" autocomplete="on">
       <div class="row">
-        <label for="login-id">Email (disarankan) atau Username</label>
-        <input id="login-id" name="id" type="text" inputmode="email" placeholder="nama@email.com atau username" required>
-        <div class="hint">Kalau isi username saja, sistem akan mengubahnya jadi email <code>username@5g88.local</code> (reset via email tidak akan berfungsi).</div>
+        <label for="u">Username</label>
+        <input id="u" name="u" type="text" placeholder="contoh: bonus5g88" required>
       </div>
       <div class="row">
-        <label for="login-pass">Password</label>
-        <input id="login-pass" name="pass" type="password" placeholder="••••••••" required>
+        <label for="p">Password</label>
+        <input id="p" name="p" type="password" placeholder="••••••••" required minlength="8">
       </div>
       <div class="helper">
-        <div class="small">Butuh akun? Admin dapat membuatkannya di Firebase.</div>
+        <span class="small">Gunakan username saja, tidak perlu email.</span>
         <a href="#" data-goto="forgot">Lupa password?</a>
       </div>
       <button class="btn" type="submit">Masuk</button>
     </form>
 
-    <!-- FORGOT -->
-    <form id="form-forgot" class="hidden" data-panel="forgot">
+    <!-- FORGOT (tanpa email) -->
+    <form id="form-forgot" class="hidden" data-panel="forgot" autocomplete="off">
       <div class="row">
-        <label for="forgot-email">Email terdaftar</label>
-        <input id="forgot-email" type="email" placeholder="nama@email.com" required>
-        <div class="hint">Kami akan kirim link reset ke email Anda.</div>
+        <label for="fu">Username</label>
+        <input id="fu" type="text" placeholder="username terdaftar" required>
+        <div class="hint">Permintaan reset akan dikirim ke admin untuk diproses.</div>
+      </div>
+      <div class="row">
+        <label for="fnotes">Catatan (opsional)</label>
+        <input id="fnotes" type="text" placeholder="misal: lupa total, minta reset manual">
       </div>
       <div class="row-split">
         <button type="button" class="btn-ghost" data-goto="login">Kembali</button>
-        <button class="btn" type="submit">Kirim Link Reset</button>
+        <button class="btn" type="submit">Kirim Permintaan Reset</button>
       </div>
+      <div class="small">Admin akan menghubungi Anda setelah password direset.</div>
     </form>
 
-    <!-- CHANGE PASSWORD (only after login) -->
+    <!-- CHANGE PASSWORD (setelah login) -->
     <form id="form-changepw" class="hidden" data-panel="changepw" autocomplete="off">
       <div class="row">
-        <label for="cp-current">Password Saat Ini</label>
-        <input id="cp-current" type="password" placeholder="password lama" required>
+        <label for="cp-old">Password Saat Ini</label>
+        <input id="cp-old" type="password" placeholder="password lama" required>
       </div>
       <div class="row-split">
         <div class="row">
@@ -179,21 +174,17 @@
           <input id="cp-new" type="password" placeholder="min 8 karakter" minlength="8" required>
         </div>
         <div class="row">
-          <label for="cp-confirm">Ulangi Password Baru</label>
-          <input id="cp-confirm" type="password" placeholder="ulangi lagi" minlength="8" required>
+          <label for="cp-re">Ulangi Password Baru</label>
+          <input id="cp-re" type="password" placeholder="ulangi lagi" minlength="8" required>
         </div>
       </div>
-      <div class="sep"></div>
       <div class="row-split">
         <button type="button" class="btn-ghost" data-goto="login">Kembali</button>
         <button class="btn" type="submit">Simpan Password</button>
       </div>
-      <div class="small" id="cp-user" style="margin-top:8px"></div>
+      <div id="cp-user" class="small" style="margin-top:8px"></div>
     </form>
 
-    <div class="small" style="margin-top:12px">
-      Tips keamanan: gunakan email asli agar fitur <em>Lupa Password</em> berfungsi.
-    </div>
   </section>
 </div>
 
@@ -202,16 +193,18 @@
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
 <script>
-/* ===================== CONFIGURASI ===================== */
-const REDIRECT_URL = "https://searcfile.github.io/5G88-editor/menu/"; // ganti ke URL tujuanmu
+/* ===================== KONFIGURASI ===================== */
+const REDIRECT_URL = "https://searcfile.github.io/5G88-editor/menu/"; // ganti tujuan setelah login
 
 // Ganti dengan config Web App dari Firebase Console (Project settings → General → Your apps)
 const firebaseConfig = {
   // ==== FIREBASE_CONFIG_HERE ====
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
   projectId: "YOUR_PROJECT_ID",
   appId: "YOUR_APP_ID",
 };
@@ -219,139 +212,121 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
+const db   = firebase.database();
 
-/* ---------- UI Helpers ---------- */
+/* Helpers */
 const $ = s => document.querySelector(s);
 const toast = (msg, type="info")=>{
-  const el = $("#toast");
-  el.textContent = msg;
+  const el=$("#toast");
+  el.textContent=msg;
   el.style.borderColor = type==="error" ? "#ef4444" : (type==="success" ? "#10b981" : "#2b3653");
   el.classList.add("show");
   clearTimeout(toast._t);
   toast._t = setTimeout(()=> el.classList.remove("show"), 2600);
 };
-const gotoTab = (name)=>{
-  document.querySelectorAll("[data-panel]").forEach(p => p.classList.toggle("hidden", p.getAttribute("data-panel")!==name));
-  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.tab===name ? "true":"false"));
+const gotoTab=(name)=>{
+  document.querySelectorAll("[data-panel]").forEach(p => p.classList.toggle("hidden", p.dataset.panel!==name));
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.tab===name? "true":"false"));
+};
+document.querySelectorAll(".tab").forEach(btn=>btn.addEventListener("click",()=>gotoTab(btn.dataset.tab)));
+document.querySelectorAll("[data-goto]").forEach(a=>a.addEventListener("click",(e)=>{e.preventDefault(); gotoTab(a.dataset.goto);}))
+
+/* Username → pseudo-email (tetap username-only di UI) */
+const toPseudoEmail = (username) => {
+  const u = (username||"").trim().toLowerCase();
+  if (!u) return "";
+  // gunakan domain pseudo khusus supaya tidak konflik dengan email asli
+  return `${u}@5g88.local`;
 };
 
-/* ---------- Tabs click ---------- */
-document.querySelectorAll(".tab").forEach(btn=>{
-  btn.addEventListener("click", ()=>{
-    gotoTab(btn.dataset.tab);
-  });
-});
-document.querySelectorAll("[data-goto]").forEach(a=>{
-  a.addEventListener("click", (e)=>{ e.preventDefault(); gotoTab(a.dataset.goto); });
-});
-
-/* ---------- Username ↔ Email normalizer ---------- */
-const toEmail = (id) => {
-  const v = (id||"").trim();
-  if (!v) return "";
-  return v.includes("@") ? v : (v + "@5g88.local"); // username → pseudo-email
-};
-
-/* ---------- Brute force limiter (client-side) ---------- */
-let failCount = 0;
-let lockUntil = 0;
-const canTry = ()=>{
-  const now = Date.now();
-  if (now < lockUntil) return false;
-  return true;
-};
-const registerFail = ()=>{
+/* Brute force limiter (client-side) */
+let failCount=0, lockUntil=0;
+const canTry=()=> Date.now() >= lockUntil;
+const registerFail=()=>{
   failCount++;
-  if (failCount % 5 === 0) { // setiap 5x gagal, kunci 30 detik
-    lockUntil = Date.now() + 30_000;
-    toast("Terlalu banyak percobaan. Coba lagi dalam 30 detik.", "error");
-  }
+  if (failCount % 5 === 0) { lockUntil = Date.now()+30_000; toast("Terlalu banyak percobaan. Coba lagi dalam 30 detik.", "error"); }
 };
 
-/* ---------- Auth state (untuk tampilkan form ganti password) ---------- */
+/* Tampilkan tab ganti password saat sudah login */
 auth.onAuthStateChanged((user)=>{
-  const changeTab = document.querySelector('.tab[data-tab="changepw"]');
+  const t = document.querySelector('.tab[data-tab="changepw"]');
   if (user) {
-    changeTab.classList.remove("hidden");
-    $("#cp-user").textContent = `Masuk sebagai: ${user.email}`;
+    t.classList.remove("hidden");
+    $("#cp-user").textContent = `Masuk sebagai: ${user.email.replace("@5g88.local","")}`;
   } else {
-    changeTab.classList.add("hidden");
-    if (document.querySelector('.tab[aria-selected="true"]').dataset.tab === "changepw") {
-      gotoTab("login");
-    }
+    t.classList.add("hidden");
+    if (document.querySelector('.tab[aria-selected="true"]').dataset.tab==="changepw") gotoTab("login");
   }
 });
 
-/* ============ FORM: LOGIN ============ */
+/* === LOGIN === */
 $("#form-login").addEventListener("submit", async (e)=>{
   e.preventDefault();
   if (!canTry()) return;
-  const id = toEmail($("#login-id").value);
-  const pass = $("#login-pass").value;
-  if (!id || !pass) { toast("Lengkapi email/username dan password.", "error"); return; }
-
+  const u = $("#u").value.trim();
+  const p = $("#p").value;
+  if (!u || !p) return toast("Lengkapi username & password.", "error");
   try{
-    // signIn
     await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-    await auth.signInWithEmailAndPassword(id, pass);
-
+    await auth.signInWithEmailAndPassword(toPseudoEmail(u), p);
     toast("Login berhasil. Mengalihkan…", "success");
-    // redirect cepat, tapi beri 200ms supaya toast terlihat
-    setTimeout(()=> { window.location.href = REDIRECT_URL; }, 200);
-
+    setTimeout(()=>location.href = REDIRECT_URL, 200);
   }catch(err){
     registerFail();
-    // mapping error
     const code = err.code||"";
-    let msg = "Gagal login. Periksa kembali data Anda.";
-    if (code.includes("user-not-found")) msg = "Akun tidak ditemukan.";
-    if (code.includes("wrong-password")) msg = "Password salah.";
-    if (code.includes("too-many-requests")) msg = "Terlalu banyak percobaan. Coba lagi nanti.";
+    let msg="Gagal login.";
+    if (code.includes("user-not-found")) msg="Username tidak ditemukan.";
+    if (code.includes("wrong-password")) msg="Password salah.";
+    if (code.includes("too-many-requests")) msg="Terlalu banyak percobaan. Coba lagi nanti.";
     toast(msg, "error");
   }
 });
 
-/* ============ FORM: FORGOT PASSWORD ============ */
+/* === LUPA PASSWORD (request ke admin) === */
 $("#form-forgot").addEventListener("submit", async (e)=>{
   e.preventDefault();
-  const email = ($("#forgot-email").value||"").trim();
-  if (!email) return toast("Isi email terdaftar.", "error");
+  const u = $("#fu").value.trim().toLowerCase();
+  const notes = $("#fnotes").value.trim();
+  if (!u) return toast("Isi username.", "error");
+
   try{
-    await auth.sendPasswordResetEmail(email);
-    toast("Link reset terkirim. Cek email Anda.", "success");
+    const payload = {
+      username: u,
+      pseudoEmail: toPseudoEmail(u),
+      notes: notes || null,
+      ts: Date.now(),
+      status: "pending"
+    };
+    // Simpan request ke RTDB: /reset_requests/{timestamp_username}
+    const key = `${Date.now()}_${u}`;
+    await db.ref("reset_requests/"+key).set(payload);
+    toast("Permintaan reset sudah terkirim ke admin.", "success");
+    $("#fu").value=""; $("#fnotes").value="";
   }catch(err){
-    const code = err.code||"";
-    let msg = "Tidak bisa mengirim email reset.";
-    if (code.includes("user-not-found")) msg = "Email tidak terdaftar.";
-    toast(msg, "error");
+    toast("Tidak bisa mengirim permintaan. Coba lagi.", "error");
   }
 });
 
-/* ============ FORM: CHANGE PASSWORD (harus login) ============ */
+/* === GANTI PASSWORD (harus login & reauth) === */
 $("#form-changepw").addEventListener("submit", async (e)=>{
   e.preventDefault();
   const user = auth.currentUser;
-  if (!user) { toast("Silakan login dulu.", "error"); return; }
+  if (!user) return toast("Silakan login dulu.", "error");
 
-  const current = $("#cp-current").value;
-  const next = $("#cp-new").value;
-  const confirm = $("#cp-confirm").value;
-  if (next !== confirm) return toast("Konfirmasi password baru tidak sama.", "error");
-  if (next.length < 8) return toast("Password baru minimal 8 karakter.", "error");
+  const oldP = $("#cp-old").value;
+  const newP = $("#cp-new").value;
+  const reP  = $("#cp-re").value;
+  if (newP !== reP) return toast("Konfirmasi password baru tidak sama.", "error");
+  if (newP.length < 8) return toast("Password baru minimal 8 karakter.", "error");
 
   try{
-    // re-auth untuk aksi sensitif
-    const cred = firebase.auth.EmailAuthProvider.credential(user.email, current);
+    const cred = firebase.auth.EmailAuthProvider.credential(user.email, oldP);
     await user.reauthenticateWithCredential(cred);
-
-    // update password
-    await user.updatePassword(next);
-    // opsional: logout paksa di device ini → memaksa login ulang
+    await user.updatePassword(newP);
     await auth.signOut();
     toast("Password berhasil diubah. Silakan login ulang.", "success");
-    // kembali ke tab login
     gotoTab("login");
-    $("#cp-current").value = $("#cp-new").value = $("#cp-confirm").value = "";
+    $("#cp-old").value = $("#cp-new").value = $("#cp-re").value = "";
   }catch(err){
     const code = err.code||"";
     let msg = "Gagal mengubah password.";
@@ -360,12 +335,7 @@ $("#form-changepw").addEventListener("submit", async (e)=>{
   }
 });
 
-/* ---------- Akses langsung lewat anchor helper ---------- */
-document.querySelectorAll('a[data-goto]').forEach(a=>{
-  a.addEventListener('click', e=>{ e.preventDefault(); gotoTab(a.dataset.goto); });
-});
-
-/* ---------- Optional: Deteksi query ?tab=forgot/changepw ---------- */
+/* Optional: ?tab=forgot/changepw */
 const params = new URLSearchParams(location.search);
 const tab = params.get("tab");
 if (tab && ["login","forgot","changepw"].includes(tab)) gotoTab(tab);
