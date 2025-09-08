@@ -2555,7 +2555,9 @@ function applyHdr(){
   document.querySelectorAll('#notesTable thead th:nth-child(-n+6)')
     .forEach((th,i)=> th.textContent = h[i] || DEF_HDR[i]);
 }
-
+function closeHdrModal(){
+  closeModalA11y('#hdrModal', '#editHdrBtn');
+}
 function openHdrModal(){
   const h = readHdr();
   for (let i=0;i<6;i++) document.getElementById('hdr_'+i).value = h[i] ?? '';
