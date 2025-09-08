@@ -900,12 +900,16 @@ function __writeLocalState(s){
 async function syncUp(){
   const u = auth.currentUser;
   if (!u) return;
-
-  const userKey = getUsername(u);   // ⬅️ tanpa safeKey
+  const userKey = getUsername(u);
   const payload = __readLocalState();
   if (!payload.updatedAt){ bumpUpdated(); payload.updatedAt = getUpdatedAt(); }
 
-  await db.ref(`users/${userKey}/state`).set(payload);
+  try{
+    await db.ref(`users/${userKey}/state`).set(payload);
+    console.log('[syncUp OK]', userKey, 'updatedAt=', payload.updatedAt);
+  }catch(e){
+    console.error('[syncUp FAIL]', e);
+  }
 }
 
 // ⬇️ letak dekat util user/auth
@@ -924,26 +928,29 @@ function getUsername(u){
 async function syncDown(){
   const u = auth.currentUser;
   if (!u) return;
+  const userKey = getUsername(u);
+  try{
+    let snap = await db.ref(`users/${userKey}/state`).get();
+    if (!snap || !snap.exists()){
+      await syncUp(); 
+      snap = await db.ref(`users/${userKey}/state`).get().catch(() => null);
+    }
+    const cloud  = snap && snap.val();
+    const local  = __readLocalState();
+    const tCloud = Number(cloud?.updatedAt || 0);
+    const tLocal = Number(local.updatedAt || 0);
 
-  const userKey = getUsername(u);        // ⬅️ tanpa safeKey
-  let snap;
-  try { snap = await db.ref(`users/${userKey}/state`).get(); }
-  catch(e){ console.warn('read failed', e); return; }
-
-  if (!snap || !snap.exists()){
-    await syncUp(); // first run: buat node di cloud dari local
-    snap = await db.ref(`users/${userKey}/state`).get().catch(() => null);
+    if (tCloud >= tLocal){
+      __writeLocalState(cloud);
+      console.log('[syncDown → LOCAL from CLOUD]', {tCloud, tLocal});
+    }else{
+      await db.ref(`users/${userKey}/state`).set(local);
+      console.log('[syncDown → CLOUD from LOCAL]', {tCloud, tLocal});
+    }
+  }catch(e){
+    console.error('[syncDown FAIL]', e);
   }
-
-  const cloud  = snap && snap.val();
-  const local  = __readLocalState();
-  const tCloud = Number(cloud?.updatedAt || 0);
-  const tLocal = Number(local.updatedAt || 0);
-
-  if (tCloud >= tLocal) __writeLocalState(cloud);
-  else await db.ref(`users/${userKey}/state`).set(local);
 }
-
 // ==== AUTH STATE ====
 auth.onAuthStateChanged(async (user) => {
   if (!user) { location.replace(LOGIN_URL); return; }
@@ -2464,28 +2471,27 @@ function askConfirm(message, {okText='Yes', cancelText='No'} = {}){
     if (ov) ov.onclick = ()=> done(false);
   });
 }
-/* ===== Notes (Personal) ===== */
+
 const LS_NOTES = 'bonusNotes.v1';
-const readNotes = ()=>{ try{return JSON.parse(localStorage.getItem(LS_NOTES))||[]}catch{return[]} };
-const writeNotes = a => localStorage.setItem(LS_NOTES, JSON.stringify(a));
+const readNotes = () => {
+  try { return JSON.parse(localStorage.getItem(LS_NOTES)) || []; }
+  catch { return []; }
+};
 
+const writeNotes = (a) => {
+  localStorage.setItem(LS_NOTES, JSON.stringify(a));
+};
+const writeNotesPersist = (a) => {
+  writeNotes(a);
+  if (typeof bumpUpdated === 'function') bumpUpdated();
+  if (typeof safeSyncUp === 'function') safeSyncUp();
+};
 function ensureNotes(){
-  let notes;
-  try { notes = JSON.parse(localStorage.getItem(LS_NOTES)); } catch { notes = null; }
+  const raw = localStorage.getItem(LS_NOTES);
 
-  // pastikan array
-  if (!Array.isArray(notes)) notes = [];
-
-  // normalisasi setiap note
-  notes = notes.map((n, i) => ({
-    id:   (n && typeof n.id === 'string')   ? n.id   : ('n_' + Date.now() + '_' + i),
-    name: (n && typeof n.name === 'string') ? n.name : ('Note ' + (i+1)),
-    rows: Array.isArray(n?.rows) ? n.rows : []   // <= penting
-  }));
-
-  // kosong -> seed default
-  if (notes.length === 0) {
-    notes = [{
+  // FIRST-RUN → seed sekali
+  if (raw === null){
+    const seed=[{
       id:'n_'+Date.now(),
       name:'Default',
       rows:[
@@ -2498,13 +2504,26 @@ function ensureNotes(){
         {s:120000,sa:900,  d:'',    da:'', r:'',   ra:''},
       ]
     }];
+    localStorage.setItem(LS_NOTES, JSON.stringify(seed));
+    if (typeof bumpUpdated === 'function') bumpUpdated(); // hanya saat seeding pertama
+    return seed;
   }
 
-  localStorage.setItem(LS_NOTES, JSON.stringify(notes)); // tulis balik versi bersih
-  bumpUpdated();
+  // BUKAN first-run → parse & normalisasi
+  let notes;
+  try { notes = JSON.parse(raw); } catch { notes = []; }
+  notes = (Array.isArray(notes) ? notes : []).map((n, i) => ({
+    id:   (n && typeof n.id === 'string')   ? n.id   : ('n_'+Date.now()+'_'+i),
+    name: (n && typeof n.name === 'string') ? n.name : ('Note '+(i+1)),
+    rows: Array.isArray(n?.rows) ? n.rows : []
+  }));
+
+  // tulis balik versi bersih (tanpa bumpUpdated agar tak “menang” di syncDown)
+  localStorage.setItem(LS_NOTES, JSON.stringify(notes));
   return notes;
 }
 
+// kamu boleh inisialisasi begini, atau tetap dibiarkan di openNotesModal
 let notesState = { notes: [], idx: 0, dirty:false };
 
 /* ===== Rename Headers (Notes) ===== */
@@ -2656,6 +2675,7 @@ function renderNotesTable(){
         // keluar edit -> SIMPAN
         const [s, sa, d, da, r, ra] = inputs.map(i => (i.value ?? '').trim());
         note.rows[ri] = { s, sa, d, da, r, ra };   // simpan apa adanya (string)
+        writeNotesPersist(notesState.notes);
         notesState.dirty = true;
 
         inputs.forEach(i => i.disabled = true);
@@ -2675,6 +2695,7 @@ function renderNotesTable(){
 
       if (await askConfirm('Delete this line?', {okText:'Yes', cancelText:'No'})) {
         note.rows.splice(ri, 1);
+        writeNotesPersist(notesState.notes);
         notesState.dirty = true;
         renderNotesTable();                // re-render
         toast('Line deleted','warn');
@@ -2694,7 +2715,7 @@ document.getElementById('addRowBtn')?.addEventListener('click', () => {
 });
 
 document.getElementById('saveNoteBtn')?.addEventListener('click', () => {
-  writeNotes(notesState.notes);
+  writeNotesPersist(notesState.notes);
   notesState.dirty=false;
   toast('Note saved','success');
   bumpUpdated(); 
@@ -2723,13 +2744,21 @@ document.getElementById('renameNoteBtn')?.addEventListener('click', () => {
 });
 document.getElementById('delNoteBtn')?.addEventListener('click', async () => {
   if(!(await askConfirm('Delete this note?', {okText:'Yes', cancelText:'No'}))) return;
-  notesState.notes.splice(notesState.idx,1);
-  if(!notesState.notes.length) notesState.notes = ensureNotes();
+  notesState.notes.splice(notesState.idx, 1);
   writeNotes(notesState.notes);
-  bumpUpdated();
+  bumpUpdated(); 
   safeSyncUp();
-  notesState.idx = 0;
-  openNotesModal();
+  notesState.idx = Math.max(0, notesState.notes.length - 1);
+  const sel = document.getElementById('noteSelect');
+  sel.innerHTML = '';
+  notesState.notes.forEach((n,i)=>{
+    const o=document.createElement('option');
+    o.value=i; o.textContent=n.name || ('Note '+(i+1));
+    sel.appendChild(o);
+  });
+  if (notesState.notes.length) sel.value = String(notesState.idx);
+  renderNotesTable();
+  applyHdr();
   toast('Note deleted','warn');
 });
 
