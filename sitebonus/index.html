@@ -977,7 +977,7 @@ window.doLogout = async ()=>{
 // ==== AUTO SYNC SAAT TUTUP TAB ====
 let __syncTimer = null;
 function safeSyncUp() {
-  if (!auth.currentUser) return;
+  if (!auth.currentUser || BOOTING) return; // ⬅️ tahan saat boot
   clearTimeout(__syncTimer);
   __syncTimer = setTimeout(syncUp, 300);
 }
