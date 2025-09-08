@@ -908,12 +908,16 @@ async function syncUp(){
   await db.ref(`users/${userKey}/state`).set(payload);
 }
 
-const USER_DOMAIN = '@5g88.local'; 
+// ⬇️ letak dekat util user/auth
+const USER_DOMAIN = '@5g88.local';
+const RTDB_FORBIDDEN = /[.#$/\[\]\/]/g;
+
 function getUsername(u){
   const e = u?.email || '';
-  if (e.endsWith(USER_DOMAIN)) return e.slice(0, -USER_DOMAIN.length);
-  // fallback (harusnya jarang dipakai)
-  return 'user_' + (u?.uid || '').slice(-6);
+  let base;
+  if (e.endsWith(USER_DOMAIN)) base = e.slice(0, -USER_DOMAIN.length);
+  else base = 'user_' + (u?.uid || '').slice(-8);
+  return base.replace(RTDB_FORBIDDEN, '_'); // penting untuk path RTDB
 }
 
 
