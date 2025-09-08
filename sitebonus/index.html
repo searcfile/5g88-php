@@ -567,10 +567,10 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   text-align:center;transition: all 0.2s;
 }
 
-#userMenu .ico{
-  width:16px; height:16px; display:inline-flex;
-}
+#userMenu .ico{width:16px; height:16px; display:inline-flex;}
 #userMenu .ico svg{ width:16px; height:16px; display:block; }
+#cpModal .cp-row{ display:grid; gap:6px; margin:8px 0; }
+#cpModal input{ width:100%; }
 </style>
 </head>
 <body>
@@ -868,6 +868,35 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
     <div class="foot">
       <button id="noteNameCancel" class="btn-cancel">Cancel</button>
       <button id="noteNameOk" class="btn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Change Password Modal -->
+<div id="cpModal" class="modal" aria-hidden="true">
+  <div class="overlay"></div>
+  <div class="dialog small">
+    <div class="dlg-head"><h3>Change Password</h3></div>
+
+    <div class="dlg-body">
+      <label class="cp-row">
+        <span>Current Password</span>
+        <input id="cpCurrent" type="password" autocomplete="current-password">
+      </label>
+      <label class="cp-row">
+        <span>New Password</span>
+        <input id="cpNew" type="password" autocomplete="new-password" minlength="6">
+      </label>
+      <label class="cp-row">
+        <span>Confirm New Password</span>
+        <input id="cpNew2" type="password" autocomplete="new-password" minlength="6">
+      </label>
+      <div class="hint">Min. 6 karakter.</div>
+    </div>
+
+    <div class="dlg-actions">
+      <button id="cpOk" class="btn">Change</button>
+      <button id="cpCancel" type="button" class="btn ghost">Cancel</button>
     </div>
   </div>
 </div>
@@ -2855,6 +2884,65 @@ window.__del  = (id) => delRecord(id);
   window.openTargetModal=openTargetModal; window.closeTargetModal=closeTargetModal;
   window.openUnclaimModal=openUnclaimModal; window.closeUnclaimModal=closeUnclaimModal;
   window.claimUnclaim=claimUnclaim;
+  // ===== Change Password (Firebase Auth - compat) =====
+function openChangePwModal(){
+  ['cpCurrent','cpNew','cpNew2'].forEach(id => { const el = document.getElementById(id); if (el) el.value=''; });
+  openModalA11y('#cpModal', '#cpCurrent');
+}
+function closeChangePwModal(){
+  closeModalA11y('#cpModal', '#udChangePw');
+}
+
+async function doChangePassword(){
+  const cur = document.getElementById('cpCurrent').value.trim();
+  const npw = document.getElementById('cpNew').value.trim();
+  const npw2= document.getElementById('cpNew2').value.trim();
+
+  if (!cur || !npw || !npw2) { toast('Isi semua field dulu', 'error'); return; }
+  if (npw !== npw2)          { toast('Konfirmasi password tidak sama', 'error'); return; }
+  if (npw.length < 6)        { toast('Password minimal 6 karakter', 'error'); return; }
+
+  const btn = document.getElementById('cpOk');
+  btn.disabled = true; btn.textContent = 'Changing...';
+
+  try{
+    const user = auth.currentUser;
+    if (!user || !user.email) throw new Error('Not signed in');
+
+    // Re-auth pakai password lama
+    const cred = firebase.auth.EmailAuthProvider.credential(user.email, cur);
+    await user.reauthenticateWithCredential(cred);
+
+    // Update password
+    await user.updatePassword(npw);
+
+    toast('Password updated', 'success');
+    closeChangePwModal();
+  }catch(e){
+    let msg = e?.message || 'Failed to change password';
+    switch (e?.code){
+      case 'auth/wrong-password':          msg = 'Password lama salah.'; break;
+      case 'auth/weak-password':           msg = 'Password baru terlalu lemah (≥ 6 karakter).'; break;
+      case 'auth/requires-recent-login':   msg = 'Sesi kadaluarsa. Silakan login ulang lalu coba lagi.'; break;
+      case 'auth/too-many-requests':       msg = 'Terlalu banyak percobaan. Coba lagi nanti.'; break;
+      case 'auth/network-request-failed':  msg = 'Jaringan bermasalah. Periksa koneksi.'; break;
+    }
+    toast(msg, 'error', 4000);
+  }finally{
+    btn.disabled = false; btn.textContent = 'Change';
+  }
+}
+
+// Wiring tombol pada modal
+document.getElementById('cpCancel')?.addEventListener('click', closeChangePwModal);
+document.getElementById('cpOk')?.addEventListener('click', doChangePassword);
+// Enter = submit, Esc / klik overlay = tutup
+document.querySelector('#cpModal')?.addEventListener('keydown', (e)=>{
+  if (e.key === 'Enter') doChangePassword();
+  if (e.key === 'Escape') closeChangePwModal();
+});
+document.querySelector('#cpModal .overlay')?.addEventListener('click', closeChangePwModal);
+
 // ==== User dropdown logic ====
 function setUserUI(name){
   const lab = document.getElementById('userBtnLabel');
@@ -3039,15 +3127,17 @@ function setUserUI(name){
   });
 
   // actions
-  document.getElementById('udChangePw')?.addEventListener('click', ()=>{
-    location.href = "https://searcfile.github.io/5g88-php/bonuslogin/?tab=changepw";
-  });
-  document.getElementById('udForgot')?.addEventListener('click', ()=>{
-    location.href = "https://searcfile.github.io/5g88-php/bonuslogin/?tab=forgot";
-  });
-  document.getElementById('udLogout')?.addEventListener('click', ()=>{
-    doLogout();
-  });
+  // actions (GANTI JADI INI)
+document.getElementById('udChangePw')?.addEventListener('click', (e)=>{
+  e.preventDefault();
+  closeMenu();            // tutup dropdown dulu
+  openChangePwModal();    // lalu buka popup
+});
+document.getElementById('udLogout')?.addEventListener('click', (e)=>{
+  e.preventDefault();
+  closeMenu();
+  doLogout();
+});
 })();
 </script>
 </body>
