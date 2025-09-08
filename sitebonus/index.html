@@ -2511,35 +2511,44 @@ let notesState = { notes: [], idx: 0, dirty:false };
 const LS_NOTE_HDR = 'bonusNotes.headers.v1';
 const DEF_HDR = ['SALES','AMOUNT','DEPOSIT','AMOUNT /2','RESIT','AMOUNT /2'];
 
-const readHdr  = ()=>{ try{ const x = JSON.parse(localStorage.getItem(LS_NOTE_HDR));
-  return (Array.isArray(x) && x.length === 6) ? x : DEF_HDR.slice();
-} catch { return DEF_HDR.slice(); }};
+// baca header untuk note aktif (migrate sekali dari global)
+function readHdr(){
+  const n = notesState.notes?.[notesState.idx];
+  if (Array.isArray(n?.hdr) && n.hdr.length===6) return n.hdr;
 
-const writeHdr = (a)=> localStorage.setItem(LS_NOTE_HDR, JSON.stringify(a));
+  let g=null; try{ g=JSON.parse(localStorage.getItem(LS_NOTE_HDR)); }catch{}
+  const hdr = (Array.isArray(g) && g.length===6) ? g : DEF_HDR.slice();
+
+  if (n){ n.hdr = hdr.slice(); writeNotes(notesState.notes); bumpUpdated(); safeSyncUp(); }
+  localStorage.removeItem(LS_NOTE_HDR); // buang global selepas migrate
+  return hdr;
+}
+
+function writeHdrForCurrent(hdrArr){
+  const n = notesState.notes?.[notesState.idx];
+  if (!n) return;
+  n.hdr = hdrArr.slice(0,6);
+  writeNotes(notesState.notes); bumpUpdated(); safeSyncUp();
+}
 
 function applyHdr(){
   const h = readHdr();
-  const ths = document.querySelectorAll('#notesTable thead th:nth-child(-n+6)');
-  ths.forEach((th, i) => th.textContent = h[i] || DEF_HDR[i]);
+  document.querySelectorAll('#notesTable thead th:nth-child(-n+6)')
+    .forEach((th,i)=> th.textContent = h[i] || DEF_HDR[i]);
 }
+
 function openHdrModal(){
   const h = readHdr();
-  for (let i=0;i<6;i++){
-    const inp = document.getElementById('hdr_'+i);
-    if (inp) inp.value = h[i] ?? '';
-  }
-  openModalA11y('#hdrModal', '#hdr_0');
-  document.getElementById('hdr_0')?.select();
+  for (let i=0;i<6;i++) document.getElementById('hdr_'+i).value = h[i] ?? '';
+  openModalA11y('#hdrModal', '#hdr_0'); document.getElementById('hdr_0')?.select();
 }
-function closeHdrModal(){ closeModalA11y('#hdrModal', '#editHdrBtn'); }
 
 function saveHdrModal(){
   const vals = [];
   for (let i=0;i<6;i++){
-    const v = (document.getElementById('hdr_'+i)?.value || '').trim();
-    vals.push(v || DEF_HDR[i]); // kosong -> default
+    vals.push((document.getElementById('hdr_'+i)?.value || '').trim() || DEF_HDR[i]);
   }
-  writeHdr(vals);
+  writeHdrForCurrent(vals);
   applyHdr();
   toast('Column names updated','success');
   closeHdrModal();
