@@ -44,120 +44,43 @@ span.flatpickr-weekday {
 }
 
 .flatpickr-calendar .flatpickr-current-month .cur-month{color: #9BC2FF !important;font-weight: 700 !important;}
-.flatpickr-calendar .flatpickr-current-month .numInputWrapper input.cur-year{
-  color: #9BC2FF !important;       /* samakan dengan bulan */
-  font-weight: 700 !important;
-  font-size: 12px !important;      /* samakan ukurannya juga */
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-/* (opsional) kecilkan & samakan warna label hari (Sun, Mon, …) */
-.flatpickr-calendar .flatpickr-weekday{
-  font-size: 11px !important;
-  color: #B7C7E8 !important;
-}
-/* ==== Panel / container ==== */
+.flatpickr-calendar .flatpickr-current-month .numInputWrapper input.cur-year{color: #9BC2FF !important; font-weight: 700 !important;font-size: 12px !important;background: transparent !important;border: none !important;box-shadow: none !important;}
+.flatpickr-calendar .flatpickr-weekday{font-size: 11px !important;color: #B7C7E8 !important;}
 .flatpickr-calendar,
 .flatpickr-calendar .flatpickr-months,
 .flatpickr-calendar .flatpickr-months .flatpickr-month,
 .flatpickr-calendar .flatpickr-weekdays,
 .flatpickr-calendar .flatpickr-days,
-.flatpickr-calendar .dayContainer{
-  background:#141414 !important;
-}
-.flatpickr-calendar{
-  border:1px solid #2a2a2a !important;
-  box-shadow:0 20px 60px rgba(0,0,0,.55) !important;
-}
-/* garis pemisah 2 bulan */
-.flatpickr-calendar .flatpickr-days .dayContainer + .dayContainer{
-  border-left:1px solid #2a2a2a !important;
-}
-
-/* Header & label hari */
+.flatpickr-calendar .dayContainer{background:#141414 !important;}
+.flatpickr-calendar{border:1px solid #2a2a2a !important;box-shadow:0 20px 60px rgba(0,0,0,.55) !important;}
+.flatpickr-calendar .flatpickr-days .dayContainer + .dayContainer{border-left:1px solid #2a2a2a !important;}
 .flatpickr-calendar .flatpickr-current-month,
 .flatpickr-calendar .flatpickr-months .flatpickr-month,
-.flatpickr-calendar .flatpickr-weekday{
-  color:#e6e6e6 !important;
-}
-
-/* Hari default & hover */
-.flatpickr-calendar .flatpickr-day{
-  background:transparent !important;
-  border-color:transparent !important;
-  color:#e6e6e6 !important;
-}
-.flatpickr-calendar .flatpickr-day:hover{
-  background:#1d1d1d !important;
-  border-color:#1d1d1d !important;
-}
-/* Hari luar bulan & disabled */
+.flatpickr-calendar .flatpickr-weekday{color:#e6e6e6 !important;}
+.flatpickr-calendar .flatpickr-day{background:transparent !important;border-color:transparent !important;color:#e6e6e6 !important;}
+.flatpickr-calendar .flatpickr-day:hover{background:#1d1d1d !important;border-color:#1d1d1d !important;}
 .flatpickr-calendar .flatpickr-day.prevMonthDay,
 .flatpickr-calendar .flatpickr-day.nextMonthDay{ color:#767676 !important; }
 .flatpickr-calendar .flatpickr-day.flatpickr-disabled{ color:#555 !important; }
-
-/* Border 'today' (kalau tidak dipilih) */
-.flatpickr-calendar .flatpickr-day.today:not(.selected):not(.startRange):not(.endRange){
-  border-color: var(--picker-blue) !important;
-}
-
-/* ==== RANGE: start / end / inRange ==== */
-/* Titik awal/akhir & tanggal terpilih */
+.flatpickr-calendar .flatpickr-day.today:not(.selected):not(.startRange):not(.endRange){border-color: var(--picker-blue) !important;}
 .flatpickr-calendar .flatpickr-day.selected,
 .flatpickr-calendar .flatpickr-day.startRange,
 .flatpickr-calendar .flatpickr-day.endRange,
 .flatpickr-calendar .flatpickr-day.selected:hover,
 .flatpickr-calendar .flatpickr-day.startRange:hover,
-.flatpickr-calendar .flatpickr-day.endRange:hover{
-  background: var(--picker-blue) !important;
-  border-color: var(--picker-blue) !important;
-  color:#fff !important;
-  box-shadow:none !important;              /* buang efek default yang bikin garis */
-}
-
-/* Bentuk “pil” yang rapih */
-.flatpickr-calendar .flatpickr-day.inRange{
-  background: var(--picker-blue-ghost) !important;
-  border-color: transparent !important;
-  border-radius: 0 !important;
-  box-shadow:
-    -5px 0 0 var(--picker-blue-ghost) inset,
-     5px 0 0 var(--picker-blue-ghost) inset !important;
-  color:#fff;
-}
-.flatpickr-calendar .flatpickr-day.startRange{
-  border-radius:999px 0 0 999px !important;
-}
-.flatpickr-calendar .flatpickr-day.endRange{
-  border-radius:0 999px 999px 0 !important;
-}
-
-/* Jika start & end berdempetan, tetap full biru tanpa seam */
+.flatpickr-calendar .flatpickr-day.endRange:hover{background: var(--picker-blue) !important;border-color: var(--picker-blue) !important;color:#fff !important;box-shadow:none !important;}
+.flatpickr-calendar .flatpickr-day.inRange{background: var(--picker-blue-ghost) !important;border-color: transparent !important;border-radius: 0 !important;box-shadow:-5px 0 0 var(--picker-blue-ghost) inset,5px 0 0 var(--picker-blue-ghost) inset !important;color:#fff;}
+.flatpickr-calendar .flatpickr-day.startRange{border-radius:999px 0 0 999px !important;}
+.flatpickr-calendar .flatpickr-day.endRange{border-radius:0 999px 999px 0 !important;}
 .flatpickr-calendar .flatpickr-day.startRange + .flatpickr-day.endRange,
-.flatpickr-calendar .flatpickr-day.startRange + .flatpickr-day.endRange:hover{
-  background: var(--picker-blue) !important;
-  border-color: var(--picker-blue) !important;
-  box-shadow:none !important;
-  color:#fff !important;
-}
-
-/* ==== Navigasi bulan (panah) ==== */
+.flatpickr-calendar .flatpickr-day.startRange + .flatpickr-day.endRange:hover{background: var(--picker-blue) !important;border-color: var(--picker-blue) !important;box-shadow:none !important;color:#fff !important;}
 .flatpickr-calendar .flatpickr-prev-month,
-.flatpickr-calendar .flatpickr-next-month{
-  color: var(--picker-blue) !important;
-  fill:  var(--picker-blue) !important;
-  background:transparent !important;
-}
+.flatpickr-calendar .flatpickr-next-month{color: var(--picker-blue) !important;fill:  var(--picker-blue) !important; background:transparent !important;}
 .flatpickr-calendar .flatpickr-prev-month:hover,
-.flatpickr-calendar .flatpickr-next-month:hover{
-  filter:brightness(1.2);
-}
-/* Header */
+.flatpickr-calendar .flatpickr-next-month:hover{filter:brightness(1.2);}
+
 .header{position:sticky; top:0; z-index:200;background:linear-gradient(180deg,#0063ab,#001c31);border-bottom:1px solid #242424; padding:12px 14px;display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
 .brand{display:flex; gap:10px; align-items:center; font-weight:700;padding:6px 10px; border-radius:10px; background:#0f0f0f; border:1px solid #222;}
-/* efek hover untuk satu baris penuh */
 .input {height:36px; border-radius:8px; outline:none; border:1px solid #424242; background:#141414; color:var(--text);padding:6px 10px; transition: all 0.2s;}
 .input:hover { border-color:#3c89e8; }
 .input:focus { border-color:#1668dc; }
@@ -177,26 +100,14 @@ span.flatpickr-weekday {
 
 /* Full width container */
 .wrap{ width:100%; max-width:none; margin:16px 0; padding:0 14px 60px; }
-.cards-row,
-.toolbar,
-.table-scroller{
-  scrollbar-width: thin;                  /* Firefox */
-  scrollbar-color: #424242 #141414;       /* thumb | track */
-}
-
-/* WebKit (Chrome/Edge/Safari) */
+.cards-row,.toolbar,.table-scroller{scrollbar-width: thin;scrollbar-color: #424242 #141414;}
 .cards-row::-webkit-scrollbar,
 .toolbar::-webkit-scrollbar,
-.table-scroller::-webkit-scrollbar{
-  height: 10px;                           /* untuk horizontal */
-  width: 10px;                            /* kalau ada vertikal */
-}
+.table-scroller::-webkit-scrollbar{height: 10px;width: 10px;}                     
 
 .cards-row::-webkit-scrollbar-track,
 .toolbar::-webkit-scrollbar-track,
-.table-scroller::-webkit-scrollbar-track{
-  background: #141414;                    /* sama dgn table */
-}
+.table-scroller::-webkit-scrollbar-track{background: #141414;}
 
 .cards-row::-webkit-scrollbar-thumb,
 .toolbar::-webkit-scrollbar-thumb,
@@ -1952,7 +1863,6 @@ function openTargetModal(){
   openModalA11y('#targetModal', '#addDepTier');
 }
 function closeTargetModal(){
-  saveTiersLive(); // pastikan tersimpan & tersync
   closeModalA11y('#targetModal', '#targetBtn');
 }
 
@@ -1980,32 +1890,26 @@ function addTierRow(sel, threshold='', bonus=''){
   const [th, bo] = row.querySelectorAll('input');
   const btnEdit  = row.querySelector('.edit');
   const btnRm    = row.querySelector('.rm');
-
-  // Toggle Edit ↔ Save (+ simpan saat kembali ke mode terkunci)
   btnEdit.onclick = () => {
-    const willEnable = th.disabled;   // kalau tadinya disabled, sekarang enable
+    const willEnable = th.disabled;
     th.disabled = bo.disabled = !willEnable;
 
     if (willEnable){
       // Masuk mode edit
       btnEdit.textContent = 'Save';
       btnEdit.classList.add('active');
-      th.focus();
-      th.select?.();
+      th.focus(); th.select?.();
     } else {
-      // Keluar mode edit → simpan
       btnEdit.textContent = 'Edit';
       btnEdit.classList.remove('active');
-      saveTiersLive();   // ⬅️ simpan ke localStorage tanpa menutup modal
-      toast('Tier updated', 'info');
+      toast('Row locked. Remember to click "Save" in Target modal.', 'info', 1600);
     }
   };
 
- btnRm.addEventListener('click', async () => {
+  btnRm.addEventListener('click', async () => {
     if (await askConfirm('Remove this tier?', {okText:'Yes', cancelText:'No'})){
       row.remove();
-      saveTiersLive();
-      toast('Tier removed', 'warn');
+      toast('Tier removed (pending). Click "Save" to apply.', 'warn', 1800);
     }
   });
 [th, bo].forEach(inp => {
