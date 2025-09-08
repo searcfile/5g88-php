@@ -1033,7 +1033,10 @@ const toISODateLocal = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d
 
 const LS_UPDATED = 'bonusState.updatedAt';
 const getUpdatedAt = () => Number(localStorage.getItem(LS_UPDATED) || 0);
-const bumpUpdated  = () => localStorage.setItem(LS_UPDATED, String(Date.now()));
+const bumpUpdated = () => {
+  if (BOOTING) return;                // tahan saat boot
+  localStorage.setItem(LS_UPDATED, String(Date.now()));
+};
 function monthStartEnd(yyyyMM){
   const [y,m] = yyyyMM.split('-').map(Number);
   const start = new Date(y, m-1, 1);
