@@ -840,15 +840,13 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
     <button class="modal-close" onclick="closeNotesModal()" aria-label="Close">&times;</button>
     <h3 id="notesTitle">Notes</h3>
 
+    <!-- Bar atas: tanpa Save/Cancel -->
     <div class="notes-bar">
       <select id="noteSelect" class="select"></select>
       <button id="addNoteBtn" class="btn">+ New</button>
       <button id="renameNoteBtn" class="btn">Rename</button>
       <button id="editHdrBtn" class="btn">Rename Columns</button>
       <button id="delNoteBtn" class="btn-cancel">Delete</button>
-      <div class="spacer"></div>
-      <button id="saveNoteBtn" class="btn">Save</button>
-      <button id="cancelNoteBtn" class="btn-cancel">Cancel</button>
     </div>
 
     <div class="note-table-wrap">
@@ -874,8 +872,11 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
       </table>
     </div>
 
-    <div class="foot" style="justify-content:flex-start">
+    <div class="foot">
       <button id="addRowBtn" class="btn">+ Add Row</button>
+      <div class="spacer"></div>
+      <button id="cancelNoteBtn" class="btn-cancel">Cancel</button>
+      <button id="saveNoteBtn" class="btn">Save</button>
     </div>
   </div>
 </div>
