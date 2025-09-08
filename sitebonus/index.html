@@ -529,36 +529,39 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 .ud-head{ font-size:12px; color:#9ca3af; margin-bottom:6px; }
 .ud-sep{ height:1px; background:#2a2a2a; margin:8px 0; }
 .ud-item{
-  width:100%; height:36px; display:flex; align-items:center; gap:8px;
+  width:100%; height:auto;
+  min-height:36px;
+  display:flex; align-items:center; justify-content:center; gap:8px;
   background:#141414; border:1px solid #2a2a2a; color:#ddd;
-  border-radius:8px; padding:0 10px; cursor:pointer;white-space: nowrap;overflow: hidden;
-}
+  border-radius:8px; padding:8px 10px; cursor:pointer;}
 .ud-item:hover{ border-color:#3c89e8; color:#3c89e8; }
 .ud-item.danger{ border-color:#dc4446; color:#dc4446; background:#191111; }
 .ud-item.danger:hover{ border-color:#e86e6b; color:#e86e6b; }
 #userMenu .signed-row,
 #userMenu #userMenuName {
-  white-space: nowrap;          /* 1 baris, tanpa wrap */
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip !important;
 }
-
+#userMenu .ud-item .label,
+#userMenu .ud-item span{
+  white-space: normal;
+}
 #userMenu button,
-#userMenu .menu-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;      /* teks + ikon rata tengah */
-  gap: 8px;                     /* jarak ikon–teks */
-  text-align: center;
+#userMenu .menu-btn,
+#userMenu .ud-item{ /* tambahkan ud-item ke rule centering */
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  text-align:center;
 }
 
-#userMenu .ico {                /* wadah ikon */
-  width: 16px;
-  height: 16px;
-  display: inline-flex;
+#userMenu .ico{
+  width:16px; height:16px; display:inline-flex;
 }
-#userMenu .ico svg {
-  width: 16px;
-  height: 16px;
-  display: block;
+#userMenu .ico svg{
+  width:16px; height:16px; display:block;
 }
 </style>
 </head>
@@ -2857,14 +2860,75 @@ function setUserUI(name){
   const userMenu = document.getElementById('userMenu');
   if (!userBtn || !userMenu) return;
 
+  // ---------- TWEAKS ----------
+  function applyUserMenuTweaks(){
+    // 1) Hapus "Forgot / Reset"
+    userMenu.querySelector('#udForgot')?.closest('button, .item, li, a, div')?.remove();
+
+    // 2) Hilangkan "..." pada label tombol
+    const stripDots = (btn) => {
+      if (!btn) return;
+      const labelEl = btn.querySelector('.label') || btn;
+      labelEl.textContent = (labelEl.textContent || '').replace(/\.\.\.$/, '');
+    };
+    stripDots(document.getElementById('udChangePw'));
+    stripDots(document.getElementById('udLogout'));
+
+    // 3) Ikon SVG
+    const ICON_LOCK = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="4" y="10" width="16" height="10" rx="2" ry="2"></rect>
+        <path d="M8 10V7a4 4 0 1 1 8 0v3"></path>
+      </svg>`;
+    const ICON_LOGOUT = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M15 12H3"></path>
+        <path d="M11 8l-4 4 4 4"></path>
+        <path d="M21 3h-6v18h6"></path>
+      </svg>`;
+
+    const addIconLeft = (btn, svg) => {
+      if (!btn) return;
+      if (!btn.querySelector('.ico')){
+        btn.insertAdjacentHTML('afterbegin', `<span class="ico">${svg}</span>`);
+      }
+    };
+    addIconLeft(document.getElementById('udChangePw'), ICON_LOCK);
+    addIconLeft(document.getElementById('udLogout'),   ICON_LOGOUT);
+
+    // 4) Header nama user: nowrap & tanpa ellipsis
+    const nm = document.getElementById('userMenuName');
+    if (nm){
+      nm.style.whiteSpace   = 'nowrap';
+      nm.style.overflow     = 'visible';
+      nm.style.textOverflow = 'clip';
+    }
+
+    // 5) CSS injeksi: pusatkan teks tombol & ukuran ikon
+    if (!document.getElementById('userMenuTweaks')){
+      const st = document.createElement('style');
+      st.id = 'userMenuTweaks';
+      st.textContent = `
+        #udChangePw, #udLogout{
+          display:flex; align-items:center; justify-content:center; gap:8px;
+          text-align:center;
+        }
+        #udChangePw .ico, #udLogout .ico{ width:18px; height:18px; display:inline-flex; }
+        #udChangePw .ico svg, #udLogout .ico svg{ width:100%; height:100%; }
+      `;
+      document.head.appendChild(st);
+    }
+  }
+  // jalankan sekali saat init
+  applyUserMenuTweaks();
+
   // cegah close saat klik di dalam menu
   userMenu.addEventListener('click', e => e.stopPropagation());
 
   function placeMenu(){
-    // ukur posisi tombol
     const r = userBtn.getBoundingClientRect();
-
-    // pastikan menu terlihat dulu supaya bisa diukur
     const wasHidden = !userMenu.classList.contains('show');
     if (wasHidden) { userMenu.style.visibility = 'hidden'; userMenu.classList.add('show'); }
 
@@ -2872,7 +2936,6 @@ function setUserUI(name){
     const mh = userMenu.offsetHeight;
     const spaceBelow = window.innerHeight - r.bottom;
 
-    // posisikan fixed, rata kanan tombol, jaga tetap di layar
     userMenu.style.position = 'fixed';
     const left = Math.min(Math.max(r.right - mw, 8), window.innerWidth - mw - 8);
     userMenu.style.left = left + 'px';
@@ -2890,6 +2953,9 @@ function setUserUI(name){
 
   function openMenu(){
     placeMenu();
+    // pastikan tweaks tetap terpasang (kalau DOM di-render ulang)
+    applyUserMenuTweaks();
+
     userMenu.classList.add('show');
     userBtn.setAttribute('aria-expanded','true');
     userMenu.setAttribute('aria-hidden','false');
@@ -2910,7 +2976,6 @@ function setUserUI(name){
   }
 
   function onDocClick(e){
-    // tutup hanya jika klik di luar tombol & menu
     if (e.target !== userBtn && !userMenu.contains(e.target)) closeMenu();
   }
   function onEsc(e){ if (e.key === 'Escape') closeMenu(); }
