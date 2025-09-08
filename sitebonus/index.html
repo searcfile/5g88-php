@@ -925,17 +925,31 @@ function getUsername(u){
 }
 
 
+function __hasLocalData(){
+  try{
+    const a = readStore?.() || [];
+    const b = readUnclaims?.() || [];
+    const t = localStorage.getItem(LS_TARGET);
+    const n = localStorage.getItem('bonusNotes.v1');
+    return (a.length > 0) || (b.length > 0) || !!t || !!n;
+  }catch{ return false; }
+}
+
 async function syncDown(){
   const u = auth.currentUser;
   if (!u) return;
   const userKey = getUsername(u);
+
   try{
     let snap = await db.ref(`users/${userKey}/state`).get();
     if (!snap || !snap.exists()){
-      await syncUp(); 
-      snap = await db.ref(`users/${userKey}/state`).get().catch(() => null);
+      // Cloud kosong. JANGAN push kosong.
+      // Biarkan saja; nanti setelah user menyimpan sesuatu, safeSyncUp() akan jalan.
+      console.log('[syncDown] no cloud state yet; keeping local until first save');
+      return;
     }
-    const cloud  = snap && snap.val();
+
+    const cloud  = snap.val();
     const local  = __readLocalState();
     const tCloud = Number(cloud?.updatedAt || 0);
     const tLocal = Number(local.updatedAt || 0);
@@ -943,9 +957,16 @@ async function syncDown(){
     if (tCloud >= tLocal){
       __writeLocalState(cloud);
       console.log('[syncDown → LOCAL from CLOUD]', {tCloud, tLocal});
-    }else{
-      await db.ref(`users/${userKey}/state`).set(local);
-      console.log('[syncDown → CLOUD from LOCAL]', {tCloud, tLocal});
+    } else {
+      // Hanya kalau benar-benar ada data lokal yang lebih baru
+      if (__hasLocalData()){
+        await db.ref(`users/${userKey}/state`).set(local);
+        console.log('[syncDown → CLOUD from LOCAL]', {tCloud, tLocal});
+      } else {
+        // Local kosong tapi timestamp kebetulan lebih besar — abaikan, pakai cloud
+        __writeLocalState(cloud);
+        console.log('[syncDown → force CLOUD]', {tCloud, tLocal});
+      }
     }
   }catch(e){
     console.error('[syncDown FAIL]', e);
