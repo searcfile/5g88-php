@@ -3142,29 +3142,26 @@ function setUserUI(name){
   // --------------------- MENU OPEN/CLOSE ---------------------
   userMenu.addEventListener('click', e => e.stopPropagation());
 
-  function placeMenu(){
-    const r = userBtn.getBoundingClientRect();
-    const wasHidden = !userMenu.classList.contains('show');
-    if (wasHidden) { userMenu.style.visibility = 'hidden'; userMenu.classList.add('show'); }
+function placeMenu(){
+  const r = userBtn.getBoundingClientRect();
 
-    const mw = userMenu.offsetWidth;
-    const mh = userMenu.offsetHeight;
-    const spaceBelow = window.innerHeight - r.bottom;
+  // pastikan sebentar terlihat agar bisa hitung width/height
+  const wasHidden = !userMenu.classList.contains('show');
+  if (wasHidden) { userMenu.style.visibility = 'hidden'; userMenu.classList.add('show'); }
 
-    userMenu.style.position = 'fixed';
-    const left = Math.min(Math.max(r.right - mw, 8), window.innerWidth - mw - 8);
-    userMenu.style.left = left + 'px';
+  const mw = userMenu.offsetWidth || 240;   // fallback
+  userMenu.style.position = 'fixed';
 
-    if (spaceBelow >= mh + 10) {
-      userMenu.style.top = (r.bottom + 8) + 'px';
-      userMenu.style.bottom = '';
-    } else {
-      userMenu.style.top = '';
-      userMenu.style.bottom = (window.innerHeight - r.top + 8) + 'px';
-    }
+  // kanan rata dengan tombol, tapi tetap jaga padding 8px dari tepi layar
+  const left = Math.min(Math.max(r.right - mw, 8), window.innerWidth - mw - 8);
+  userMenu.style.left   = left + 'px';
 
-    if (wasHidden) { userMenu.classList.remove('show'); userMenu.style.visibility = ''; }
-  }
+  // ⬇️ SELALU di bawah tombol (tidak pernah pakai bottom)
+  userMenu.style.top    = (r.bottom + 8) + 'px';
+  userMenu.style.bottom = '';
+
+  if (wasHidden) { userMenu.classList.remove('show'); userMenu.style.visibility = ''; }
+}
 
   function openMenu(){
     placeMenu();
