@@ -536,6 +536,30 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 .ud-item:hover{ border-color:#3c89e8; color:#3c89e8; }
 .ud-item.danger{ border-color:#dc4446; color:#dc4446; background:#191111; }
 .ud-item.danger:hover{ border-color:#e86e6b; color:#e86e6b; }
+#userMenu .signed-row,
+#userMenu #userMenuName {
+  white-space: nowrap;          /* 1 baris, tanpa wrap */
+}
+
+#userMenu button,
+#userMenu .menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;      /* teks + ikon rata tengah */
+  gap: 8px;                     /* jarak ikon–teks */
+  text-align: center;
+}
+
+#userMenu .ico {                /* wadah ikon */
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+}
+#userMenu .ico svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
 </style>
 </head>
 <body>
