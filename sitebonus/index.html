@@ -2463,8 +2463,21 @@ const readNotes = ()=>{ try{return JSON.parse(localStorage.getItem(LS_NOTES))||[
 const writeNotes = a => localStorage.setItem(LS_NOTES, JSON.stringify(a));
 
 function ensureNotes(){
-  let notes = readNotes();
-  if(!notes.length){
+  let notes;
+  try { notes = JSON.parse(localStorage.getItem(LS_NOTES)); } catch { notes = null; }
+
+  // pastikan array
+  if (!Array.isArray(notes)) notes = [];
+
+  // normalisasi setiap note
+  notes = notes.map((n, i) => ({
+    id:   (n && typeof n.id === 'string')   ? n.id   : ('n_' + Date.now() + '_' + i),
+    name: (n && typeof n.name === 'string') ? n.name : ('Note ' + (i+1)),
+    rows: Array.isArray(n?.rows) ? n.rows : []   // <= penting
+  }));
+
+  // kosong -> seed default
+  if (notes.length === 0) {
     notes = [{
       id:'n_'+Date.now(),
       name:'Default',
@@ -2478,9 +2491,10 @@ function ensureNotes(){
         {s:120000,sa:900,  d:'',    da:'', r:'',   ra:''},
       ]
     }];
-    writeNotes(notes);
-    bumpUpdated();
   }
+
+  localStorage.setItem(LS_NOTES, JSON.stringify(notes)); // tulis balik versi bersih
+  bumpUpdated();
   return notes;
 }
 
@@ -2531,16 +2545,20 @@ document.getElementById('hdrSave')   ?.addEventListener('click', saveHdrModal);
   
 function openNotesModal(){
   notesState.notes = ensureNotes();
+
   const sel = document.getElementById('noteSelect');
-  sel.innerHTML='';
+  sel.innerHTML = '';
   notesState.notes.forEach((n,i)=>{
     const o=document.createElement('option');
-    o.value=i; o.textContent=n.name; sel.appendChild(o);
+    o.value=i; o.textContent=n.name || ('Note ' + (i+1));
+    sel.appendChild(o);
   });
-  notesState.idx = Math.min(notesState.idx, notesState.notes.length-1);
-  sel.value = String(notesState.idx);
-  notesState.dirty=false;
 
+  if (!Number.isInteger(notesState.idx)) notesState.idx = 0;
+  notesState.idx = Math.min(Math.max(0, notesState.idx), notesState.notes.length-1);
+  sel.value = String(notesState.idx);
+
+  notesState.dirty=false;
   renderNotesTable();
   applyHdr();
   openModalA11y('#notesModal', '#noteSelect');
