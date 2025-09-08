@@ -976,14 +976,9 @@ async function syncDown(){
 auth.onAuthStateChanged(async (user) => {
   if (!user) { location.replace(LOGIN_URL); return; }
 
-  const uname = getUsername(user);
-  setUserUI(uname);
+  setUserUI(getUsername(user));
 
   try { await syncDown(); } catch (e) { console.error('syncDown error', e); }
-
-  // pastikan Notes minimal ada (seed jika belum) lalu push ke cloud
-  ensureNotes();
-  safeSyncUp();
 
   document.documentElement.classList.remove('auth-wait');
   if (typeof render === 'function') render();
