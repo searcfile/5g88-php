@@ -2790,7 +2790,16 @@ document.getElementById('delNoteBtn')?.addEventListener('click', async () => {
   applyHdr();
   toast('Note deleted','warn');
 });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('notesModal')?.classList.contains('show')) {
+    closeNotesModal();
+  }
+});
 
+// Klik overlay (area gelap) untuk tutup — kalau ada elemen .overlay di modal Notes
+document.querySelector('#notesModal .overlay')?.addEventListener('click', () => {
+  closeNotesModal();
+})
 // buka modal dari tombol View
 document.getElementById('viewBtn')?.addEventListener('click', openNotesModal);
 function clipMany(selector){
