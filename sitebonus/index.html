@@ -976,14 +976,22 @@ async function syncDown(){
 auth.onAuthStateChanged(async (user) => {
   if (!user) { location.replace(LOGIN_URL); return; }
 
-  setUserUI(getUsername(user));
+  try {
+    setUserUI(getUsername(user));
+    await syncDown();                 // tarik state dari Cloud dulu
+  } catch (e) {
+    console.error('syncDown error', e);
+  } finally {
+    BOOTING = false;                  // LEPAS guard boot supaya safeSyncUp boleh jalan
+  }
 
-  try { await syncDown(); } catch (e) { console.error('syncDown error', e); }
+  // (opsional tapi disarankan) pastikan Notes ada, lalu dorong ke Cloud
+  if (typeof ensureNotes === 'function') ensureNotes();
+  if (typeof safeSyncUp  === 'function') safeSyncUp();
 
   document.documentElement.classList.remove('auth-wait');
   if (typeof render === 'function') render();
 });
-
 // ==== LOGOUT ====
 window.doLogout = async ()=>{
   await auth.signOut();
