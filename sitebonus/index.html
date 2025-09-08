@@ -2675,9 +2675,8 @@ function renderNotesTable(){
         // keluar edit -> SIMPAN
         const [s, sa, d, da, r, ra] = inputs.map(i => (i.value ?? '').trim());
         note.rows[ri] = { s, sa, d, da, r, ra };   // simpan apa adanya (string)
-        writeNotesPersist(notesState.notes);
         notesState.dirty = true;
-
+        writeNotesPersist(notesState.notes);
         inputs.forEach(i => i.disabled = true);
         tr.dataset.editing = '';
         btnEdit.textContent = 'Edit';
@@ -2695,8 +2694,8 @@ function renderNotesTable(){
 
       if (await askConfirm('Delete this line?', {okText:'Yes', cancelText:'No'})) {
         note.rows.splice(ri, 1);
-        writeNotesPersist(notesState.notes);
         notesState.dirty = true;
+        writeNotesPersist(notesState.notes);
         renderNotesTable();                // re-render
         toast('Line deleted','warn');
       }
