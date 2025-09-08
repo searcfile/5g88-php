@@ -1799,10 +1799,8 @@ function submitNoteNameModal(){
       name: val,
       rows: []
     });
-    writeNotes(notesState.notes);
+    writeNotesPersist(notesState.notes);
     notesState.idx = notesState.notes.length - 1;
-    bumpUpdated();
-    safeSyncUp();
 
     // perbarui dropdown & table tanpa menutup modal Notes
     const sel = document.getElementById('noteSelect');
@@ -1818,10 +1816,7 @@ function submitNoteNameModal(){
     const note = notesState.notes[notesState.idx];
     if (note){
       note.name = val;
-      writeNotes(notesState.notes);
-      // update option terpilih
-      bumpUpdated();
-      safeSyncUp();
+      writeNotesPersist(notesState.notes);
       const sel = document.getElementById('noteSelect');
       if (sel && sel.selectedIndex >= 0) sel.options[sel.selectedIndex].textContent = val;
       toast('Renamed','info');
@@ -2717,8 +2712,6 @@ document.getElementById('saveNoteBtn')?.addEventListener('click', () => {
   writeNotesPersist(notesState.notes);
   notesState.dirty=false;
   toast('Note saved','success');
-  bumpUpdated(); 
-  safeSyncUp();
 });
 document.getElementById('cancelNoteBtn')?.addEventListener('click', () => {
   const curIdx = notesState.idx;
@@ -2744,9 +2737,7 @@ document.getElementById('renameNoteBtn')?.addEventListener('click', () => {
 document.getElementById('delNoteBtn')?.addEventListener('click', async () => {
   if(!(await askConfirm('Delete this note?', {okText:'Yes', cancelText:'No'}))) return;
   notesState.notes.splice(notesState.idx, 1);
-  writeNotes(notesState.notes);
-  bumpUpdated(); 
-  safeSyncUp();
+  writeNotesPersist(notesState.notes);
   notesState.idx = Math.max(0, notesState.notes.length - 1);
   const sel = document.getElementById('noteSelect');
   sel.innerHTML = '';
