@@ -529,19 +529,29 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 .ud-head{ font-size:12px; color:#9ca3af; margin-bottom:6px; }
 .ud-sep{ height:1px; background:#2a2a2a; margin:8px 0; }
 .ud-item{
-  width:100%; height:auto;
+  display:grid;
+  grid-template-columns: 16px 1fr 16px;
+  align-items:center;
+  gap:8px;
+  width:100%;
   min-height:36px;
-  display:flex; align-items:center; justify-content:center; gap:8px;
   background:#141414; border:1px solid #2a2a2a; color:#ddd;
-  border-radius:8px; padding:8px 10px; cursor:pointer;}
+  border-radius:8px; padding:8px 10px; cursor:pointer;
+}
 .ud-item:hover{ border-color:#3c89e8; color:#3c89e8; }
 .ud-item.danger{ border-color:#dc4446; color:#dc4446; background:#191111; }
 .ud-item.danger:hover{ border-color:#e86e6b; color:#e86e6b; }
-#userMenu .signed-row,
+#userMenu,
 #userMenu #userMenuName {
   white-space: nowrap;
   overflow: visible;
   text-overflow: clip !important;
+}
+#userMenu .signed-row{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
 }
 #userMenu .ud-item .label,
 #userMenu .ud-item span{
@@ -560,9 +570,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 #userMenu .ico{
   width:16px; height:16px; display:inline-flex;
 }
-#userMenu .ico svg{
-  width:16px; height:16px; display:block;
-}
+#userMenu .ico svg{ width:16px; height:16px; display:block; }
 </style>
 </head>
 <body>
@@ -2860,21 +2868,52 @@ function setUserUI(name){
   const userMenu = document.getElementById('userMenu');
   if (!userBtn || !userMenu) return;
 
-  // ---------- TWEAKS ----------
+  // --------------------- TWEAKS (DOM + CSS) ---------------------
   function applyUserMenuTweaks(){
-    // 1) Hapus "Forgot / Reset"
-    userMenu.querySelector('#udForgot')?.closest('button, .item, li, a, div')?.remove();
+    // (1) Gabungkan header jadi 1 baris: "Signed in as : <name>"
+    (function fixHeaderRow(){
+      // cari elemen teks "Signed in as" (sering pakai .ud-head)
+      let head = userMenu.querySelector('.ud-head');
+      // fallback: kalau tidak ada, cari elemen pertama di menu
+      if (!head) head = userMenu.firstElementChild;
+      // nama user ambil dari #userMenuName (atau label tombol)
+      const curName = (document.getElementById('userMenuName')?.textContent
+                       || document.getElementById('userBtnLabel')?.textContent
+                       || 'user').trim();
 
-    // 2) Hilangkan "..." pada label tombol
-    const stripDots = (btn) => {
-      if (!btn) return;
-      const labelEl = btn.querySelector('.label') || btn;
-      labelEl.textContent = (labelEl.textContent || '').replace(/\.\.\.$/, '');
+      // kalau sudah single-line, skip
+      if (head && head.classList.contains('signed-row')) return;
+
+      if (head){
+        const row = document.createElement('div');
+        row.className = 'signed-row';
+        row.innerHTML = `Signed in as : <strong id="userMenuName">${curName}</strong>`;
+        head.replaceWith(row);
+      }
+    })();
+
+    // (2) Hapus "Forgot / Reset"
+    userMenu.querySelector('#udForgot')?.closest('button, .ud-item, .item, li, a, div')?.remove();
+
+    // (3) Siapkan label span, buang "..." di akhir, pasang ikon kiri + spacer kanan
+    const ensureLabelSpan = (btn) => {
+      if (!btn) return null;
+      let lab = btn.querySelector('.label');
+      if (!lab){
+        const txt = (btn.textContent || '').trim();
+        btn.textContent = '';
+        lab = document.createElement('span');
+        lab.className = 'label';
+        lab.textContent = txt;
+        btn.appendChild(lab);
+      }
+      return lab;
     };
-    stripDots(document.getElementById('udChangePw'));
-    stripDots(document.getElementById('udLogout'));
+    const stripDots = (span) => {
+      if (!span) return;
+      span.textContent = (span.textContent || '').replace(/\.\.\.$/, '');
+    };
 
-    // 3) Ikon SVG
     const ICON_LOCK = `
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -2889,34 +2928,49 @@ function setUserUI(name){
         <path d="M21 3h-6v18h6"></path>
       </svg>`;
 
-    const addIconLeft = (btn, svg) => {
+    function decorateBtn(btn, svg){
       if (!btn) return;
+      const lab = ensureLabelSpan(btn);
+      stripDots(lab);
+
+      // ikon kiri
       if (!btn.querySelector('.ico')){
         btn.insertAdjacentHTML('afterbegin', `<span class="ico">${svg}</span>`);
       }
-    };
-    addIconLeft(document.getElementById('udChangePw'), ICON_LOCK);
-    addIconLeft(document.getElementById('udLogout'),   ICON_LOGOUT);
-
-    // 4) Header nama user: nowrap & tanpa ellipsis
-    const nm = document.getElementById('userMenuName');
-    if (nm){
-      nm.style.whiteSpace   = 'nowrap';
-      nm.style.overflow     = 'visible';
-      nm.style.textOverflow = 'clip';
+      // spacer kanan agar label benar-benar center
+      if (!btn.querySelector('.spacer')){
+        btn.insertAdjacentHTML('beforeend', `<span class="spacer" aria-hidden="true"></span>`);
+      }
     }
 
-    // 5) CSS injeksi: pusatkan teks tombol & ukuran ikon
+    decorateBtn(document.getElementById('udChangePw'), ICON_LOCK);
+    decorateBtn(document.getElementById('udLogout'),   ICON_LOGOUT);
+
+    // (4) Inject CSS override (ikon kiri + label center, header nowrap, tanpa ellipsis)
     if (!document.getElementById('userMenuTweaks')){
       const st = document.createElement('style');
       st.id = 'userMenuTweaks';
       st.textContent = `
+        /* header 1 baris */
+        #userMenu .signed-row{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
+
+        /* tombol: grid 3 kolom = [ikon kiri][label center][spacer kanan] */
         #udChangePw, #udLogout{
-          display:flex; align-items:center; justify-content:center; gap:8px;
+          display:grid !important;
+          grid-template-columns:16px 1fr 16px;
+          align-items:center;
+          gap:8px;
           text-align:center;
+          overflow:visible;           /* jangan potong isi */
         }
-        #udChangePw .ico, #udLogout .ico{ width:18px; height:18px; display:inline-flex; }
-        #udChangePw .ico svg, #udLogout .ico svg{ width:100%; height:100%; }
+        #udChangePw .label, #udLogout .label{
+          justify-self:center;
+          white-space:nowrap;
+          overflow:visible;
+          text-overflow:clip;
+        }
+        #udChangePw .ico, #udLogout .ico{ width:16px; height:16px; display:inline-flex; }
+        #udChangePw .ico svg, #udLogout .ico svg{ width:16px; height:16px; display:block; }
       `;
       document.head.appendChild(st);
     }
@@ -2924,7 +2978,7 @@ function setUserUI(name){
   // jalankan sekali saat init
   applyUserMenuTweaks();
 
-  // cegah close saat klik di dalam menu
+  // --------------------- MENU OPEN/CLOSE ---------------------
   userMenu.addEventListener('click', e => e.stopPropagation());
 
   function placeMenu(){
@@ -2953,9 +3007,7 @@ function setUserUI(name){
 
   function openMenu(){
     placeMenu();
-    // pastikan tweaks tetap terpasang (kalau DOM di-render ulang)
-    applyUserMenuTweaks();
-
+    applyUserMenuTweaks(); // jaga kalau DOM render ulang
     userMenu.classList.add('show');
     userBtn.setAttribute('aria-expanded','true');
     userMenu.setAttribute('aria-hidden','false');
