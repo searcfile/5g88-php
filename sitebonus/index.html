@@ -2449,12 +2449,15 @@ function askConfirm(message, {okText='Yes', cancelText='No'} = {}){
 
     const done = (val)=>{
       closeModalA11y('#confirmModal');
-      no.onclick = yes.onclick = m.querySelector('.overlay').onclick = null;
+      no.onclick = yes.onclick = null;
+      const ov = m.querySelector('.overlay');
+      if (ov) ov.onclick = null;
       resolve(val);
     };
     no.onclick = ()=> done(false);
     yes.onclick= ()=> done(true);
-    m.querySelector('.overlay').onclick = ()=> done(false);
+    const ov = m.querySelector('.overlay');
+    if (ov) ov.onclick = ()=> done(false);
   });
 }
 /* ===== Notes (Personal) ===== */
@@ -2566,19 +2569,34 @@ function openNotesModal(){
 function closeNotesModal(){ closeModalA11y('#notesModal', '#viewBtn'); }
 
 function renderNotesTable(){
-  const note = notesState.notes[notesState.idx];
+  const note = notesState?.notes?.[notesState?.idx] || { rows: [] };
+  const rows = Array.isArray(note.rows) ? note.rows : [];
   const tb = document.getElementById('notesTBody');
+  if (!tb) return;
   tb.innerHTML = '';
 
-  note.rows.forEach((row,ri)=>{
+  // util kecil: lock/unlock semua baris lain masa editing
+  const setRowsLocked = (locked, exceptTr = null) => {
+    tb.querySelectorAll('tr').forEach(tr => {
+      if (tr === exceptTr) return;
+      tr.querySelectorAll('input,button').forEach(el => {
+        // kekalkan butang Delete aktif ketika tidak mengedit apa-apa
+        const isDel = el.classList && el.classList.contains('del');
+        if (locked) el.disabled = (el.tagName === 'INPUT' || !isDel);
+        else if (!tr.dataset.editing) el.disabled = false;
+      });
+    });
+  };
+
+  rows.forEach((row, ri) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><input type="text" value="${row.s ?? ''}" disabled></td>
-      <td><input type="text" value="${row.sa ?? ''}" disabled></td>
-      <td><input type="text" value="${row.d ?? ''}" disabled></td>
-      <td><input type="text" value="${row.da ?? ''}" disabled></td>
-      <td><input type="text" value="${row.r ?? ''}" disabled></td>
-      <td><input type="text" value="${row.ra ?? ''}" disabled></td>
+      <td><input type="text" value="${row?.s  ?? ''}"  disabled></td>
+      <td><input type="text" value="${row?.sa ?? ''}" disabled></td>
+      <td><input type="text" value="${row?.d  ?? ''}"  disabled></td>
+      <td><input type="text" value="${row?.da ?? ''}" disabled></td>
+      <td><input type="text" value="${row?.r  ?? ''}"  disabled></td>
+      <td><input type="text" value="${row?.ra ?? ''}" disabled></td>
       <td class="actions">
         <button class="iconbtn edit">Edit</button>
         <button class="iconbtn-del del">Delete</button>
@@ -2588,29 +2606,64 @@ function renderNotesTable(){
     const btnEdit = tr.querySelector('.edit');
     const btnDel  = tr.querySelector('.del');
 
+    // ====== EDIT / SAVE toggle ======
     btnEdit.onclick = () => {
-      const enable = inputs[0].disabled;
-      inputs.forEach(i => i.disabled = !enable);
-      if (enable){
+      const enteringEdit = inputs[0].disabled;     // kalau disabled -> nak masuk edit
+      if (enteringEdit) {
+        // simpan nilai asal untuk Esc/cancel
+        tr.dataset.original = JSON.stringify(inputs.map(i => i.value));
+        tr.dataset.editing = '1';
+        inputs.forEach(i => i.disabled = false);
         btnEdit.textContent = 'Save';
         btnEdit.classList.add('active');
-        inputs[0].focus();
+        setRowsLocked(true, tr);
+        inputs[0].focus(); inputs[0].select?.();
+
+        // shortcut: Enter = Save, Esc = Cancel
+        const onKey = (e) => {
+          if (e.key === 'Enter') { btnEdit.click(); }
+          else if (e.key === 'Escape') {
+            try {
+              const orig = JSON.parse(tr.dataset.original || '[]');
+              inputs.forEach((i, idx) => i.value = (orig[idx] ?? ''));
+            } catch {}
+            // keluar tanpa simpan
+            inputs.forEach(i => i.disabled = true);
+            tr.dataset.editing = '';
+            btnEdit.textContent = 'Edit';
+            btnEdit.classList.remove('active');
+            setRowsLocked(false);
+          }
+        };
+        tr.__keyHandler && tr.removeEventListener('keydown', tr.__keyHandler);
+        tr.__keyHandler = onKey;
+        tr.addEventListener('keydown', onKey);
+
       } else {
+        // keluar edit -> SIMPAN
+        const [s, sa, d, da, r, ra] = inputs.map(i => (i.value ?? '').trim());
+        note.rows[ri] = { s, sa, d, da, r, ra };   // simpan apa adanya (string)
+        notesState.dirty = true;
+
+        inputs.forEach(i => i.disabled = true);
+        tr.dataset.editing = '';
         btnEdit.textContent = 'Edit';
         btnEdit.classList.remove('active');
-        // ⬇️ SIMPAN APA ADANYA (string), BUKAN dipaksa number
-        const [s,sa,d,da,r,ra] = inputs.map(i => i.value);
-        note.rows[ri] = { s, sa, d, da, r, ra };
-        notesState.dirty = true;
+        setRowsLocked(false);
         toast('Row updated','info');
       }
     };
 
+    // ====== DELETE ======
     btnDel.onclick = async () => {
-      if (await askConfirm('Delete this line?', {okText:'Yes', cancelText:'No'})){
-        note.rows.splice(ri,1);
+      // Jangan padam ketika baris lain sedang edit
+      const anyEditing = tb.querySelector('tr[data-editing="1"]');
+      if (anyEditing && anyEditing !== tr) return;
+
+      if (await askConfirm('Delete this line?', {okText:'Yes', cancelText:'No'})) {
+        note.rows.splice(ri, 1);
         notesState.dirty = true;
-        renderNotesTable();
+        renderNotesTable();                // re-render
         toast('Line deleted','warn');
       }
     };
