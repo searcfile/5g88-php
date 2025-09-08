@@ -1565,7 +1565,6 @@ function setMonthAndRange(yyyyMM){
   }
 }
 function readTarget(){
-  // Kalau sudah ada v3, pakai apa adanya (jangan timpa)
   try {
     const t = JSON.parse(localStorage.getItem(LS_TARGET));
     if (t && Array.isArray(t.depositTiers) && Array.isArray(t.resitTiers) && Array.isArray(t.salesTiers)) {
@@ -1573,7 +1572,7 @@ function readTarget(){
     }
   } catch {}
 
-  // (Opsional) migrasi sekali dari v2 -> v3
+  // migrasi v2 -> v3 (tanpa bump/sync)
   try {
     const old = JSON.parse(localStorage.getItem('bonusTargets.v2'));
     if (old) {
@@ -1583,21 +1582,17 @@ function readTarget(){
         salesTiers:   old.salesTiers   || [{threshold:30000, bonus:300}],
       };
       localStorage.setItem(LS_TARGET, JSON.stringify(upgraded));
-      bumpUpdated();
-      safeSyncUp();
       return upgraded;
     }
   } catch {}
 
-  // First-run default (hanya sekali)
+  // default sekali (tanpa bump/sync)
   const def = {
     depositTiers:[{threshold:8000, bonus:20},{threshold:10000, bonus:25}],
     resitTiers:[{threshold:250, bonus:30},{threshold:500, bonus:60}],
     salesTiers:[{threshold:30000, bonus:300}]
   };
   localStorage.setItem(LS_TARGET, JSON.stringify(def));
-  bumpUpdated();
-  safeSyncUp();
   return def;
 }
   const writeTarget=t=>localStorage.setItem(LS_TARGET, JSON.stringify(t));
