@@ -2106,9 +2106,9 @@ function render(){
 
   renderSummaryRows(totals, data.length, site, month);
   applyNumberTitles();
-  NumberClipper.clip('#dataTable tbody td:nth-child(n+3):nth-child(-n+12)');
-  NumberClipper.clip('#dataTable tfoot td:nth-child(n+3):nth-child(-n+12)');
-  NumberClipper.clip('.card .val');
+  window.NumberClipper?.clip('#dataTable tbody td:nth-child(n+3):nth-child(-n+12)');
+  window.NumberClipper?.clip('#dataTable tfoot td:nth-child(n+3):nth-child(-n+12)');
+  window.NumberClipper?.clip('.card .val');
   applyTableScrollLimit();
 }
 function applyTableScrollLimit() {
