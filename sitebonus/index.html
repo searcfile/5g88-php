@@ -569,20 +569,16 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 
 #userMenu .ico{width:16px; height:16px; display:inline-flex;}
 #userMenu .ico svg{ width:16px; height:16px; display:block; }
-#cpModal .cp-row{
-  display:grid;
-  row-gap:6px;            /* pakai row-gap, bukan gap umum */
-  margin:8px 0;
-}
+/* ====== input gelap + lebih tinggi ====== */
+#cpModal .cp-row{ display:grid; row-gap:6px; margin:8px 0; }
 #cpModal .cp-row span{ color:#c9c9c9; font-size:14px; }
 
-/* Input gelap + lebih tinggi */
 #cpModal .dlg-body input{
   width:100%;
   background:#141414;
   border:1px solid #424242;
   color:#e8e8e8;
-  height:40px;            /* lebih tinggi */
+  height:40px;
   padding:10px 12px;
   border-radius:8px;
   outline:none;
@@ -593,34 +589,29 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 }
 #cpModal .dlg-body input::placeholder{ color:#9a9a9a; }
 
-/* Header + tombol X */
-#cpModal .dlg-head{
-  position:relative;      /* biar X nempel ke header */
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding-right:40px;     /* ruang aman untuk X */
+/* ====== tombol X — dipakai di SEMUA modal ====== */
+.modal .dlg-head{ position:relative; }
+.modal .dlg-close{
+  position:absolute; top:10px; right:10px;
+  width:28px; height:28px;
+  display:inline-grid; place-items:center;
+  background:#1b1b1b; border:1px solid #3a3a3a;
+  color:#cfcfcf; border-radius:6px; cursor:pointer;
 }
-#cpModal .close-x{
-  position:absolute;
-  top:10px; right:10px;
-  width:32px; height:32px;
-  border:0; background:transparent;
-  color:#bdbdbd;
-  font-size:20px; line-height:32px;
-  border-radius:6px; cursor:pointer;
-}
-#cpModal .close-x:hover{ background:#1f1f1f; color:#fff; }
+.modal .dlg-close:hover{ background:#242424; border-color:#505050; color:#fff; }
+.modal .dlg-close:focus{ outline:2px solid rgba(90,135,255,.35); outline-offset:2px; }
 
-/* Tombol aksi rata kanan */
+/* ====== baris aksi kanan: hint + [Cancel] [Change] ====== */
 #cpModal .dlg-actions{
-  display:flex;
-  gap:8px;
-  justify-content:flex-end;
-  margin-top:12px;
+  display:flex; align-items:center; justify-content:flex-end;
+  gap:8px; margin-top:12px;
+}
+#cpModal .dlg-actions .hint{
+  font-size:12px; color:#8aa2ff; opacity:.95;
+  margin-right:8px; /* jarak sebelum tombol */
 }
 
-/* (opsional) ukuran dialog */
+/* (opsional) lebar dialog */
 #cpModal .dialog.small{ max-width:560px; }
 </style>
 </head>
@@ -927,10 +918,13 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 <div id="cpModal" class="modal" aria-hidden="true">
   <div class="overlay"></div>
   <div class="dialog small">
-   <div class="dlg-head">
-  <h3>Change Password</h3>
-  <button id="cpCloseX" class="dlg-x" aria-label="Close" type="button">×</button>
-</div>
+    <div class="dlg-head">
+      <h3>Change Password</h3>
+      <!-- X yang konsisten untuk semua modal -->
+      <button id="cpCloseX" class="dlg-close" type="button" aria-label="Close">
+        ×
+      </button>
+    </div>
 
     <div class="dlg-body">
       <label class="cp-row">
@@ -945,12 +939,13 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
         <span>Confirm New Password</span>
         <input id="cpNew2" type="password" autocomplete="new-password" minlength="6">
       </label>
-      <div class="hint">Min. 6 karakter.</div>
     </div>
 
+    <!-- hint pindah ke kanan + urutan tombol Cancel, Change -->
     <div class="dlg-actions">
-      <button id="cpOk" class="btn">Change</button>
+      <div class="hint">Min. 6 karakter.</div>
       <button id="cpCancel" type="button" class="btn ghost">Cancel</button>
+      <button id="cpOk" class="btn">Change</button>
     </div>
   </div>
 </div>
