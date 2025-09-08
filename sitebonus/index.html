@@ -2513,11 +2513,12 @@ const writeNotesPersist = (a) => {
 function ensureNotes(){
   const raw = localStorage.getItem(LS_NOTES);
 
-  // FIRST-RUN → seed sekali
+  // FIRST-RUN → seed sekali (sertakan hdr default per-note)
   if (raw === null){
     const seed=[{
       id:'n_'+Date.now(),
       name:'Default',
+      hdr: DEF_HDR.slice(),   // ⬅️ penting: header disimpan per note
       rows:[
         {s:30000, sa:300,  d: 8000, da:20, r:250,  ra:30},
         {s:40000, sa:350,  d:10000, da:25, r:300,  ra:40},
@@ -2528,26 +2529,32 @@ function ensureNotes(){
         {s:120000,sa:900,  d:'',    da:'', r:'',   ra:''},
       ]
     }];
-localStorage.setItem(LS_NOTES, JSON.stringify(seed));
-return seed; 
+    localStorage.setItem(LS_NOTES, JSON.stringify(seed));
+    return seed;
   }
 
-  // BUKAN first-run → parse & normalisasi
+  // BUKAN first-run → parse & normalisasi TANPA membuang hdr
   let notes;
-  try { notes = JSON.parse(raw); } catch { notes = []; }
-  notes = (Array.isArray(notes) ? notes : []).map((n, i) => ({
-    id:   (n && typeof n.id === 'string')   ? n.id   : ('n_'+Date.now()+'_'+i),
-    name: (n && typeof n.name === 'string') ? n.name : ('Note '+(i+1)),
-    rows: Array.isArray(n?.rows) ? n.rows : []
-  }));
+  try { notes = JSON.parse(raw) || []; } catch { notes = []; }
 
-  // tulis balik versi bersih (tanpa bumpUpdated agar tak “menang” di syncDown)
-  localStorage.setItem(LS_NOTES, JSON.stringify(notes));
-  return notes;
+  let changed = false;
+  const clean = (Array.isArray(notes) ? notes : []).map((n, i) => {
+    const id   = (n && typeof n.id   === 'string') ? n.id   : ('n_'+Date.now()+'_'+i);
+    const name = (n && typeof n.name === 'string') ? n.name : ('Note '+(i+1));
+    const rows = Array.isArray(n?.rows) ? n.rows : [];
+    // pertahankan hdr; kalau belum ada, isi default
+    const hdr  = (Array.isArray(n?.hdr) && n.hdr.length === 6) ? n.hdr.slice(0,6) : DEF_HDR.slice();
+
+    // tandai bila ada perbedaan struktur
+    if (!n || n.id !== id || n.name !== name || !Array.isArray(n.rows) || !Array.isArray(n.hdr)) changed = true;
+
+    return { id, name, rows, hdr };
+  });
+
+  // Hanya tulis balik kalau memang ada perubahan struktur
+  if (changed) localStorage.setItem(LS_NOTES, JSON.stringify(clean));
+  return clean;
 }
-
-// kamu boleh inisialisasi begini, atau tetap dibiarkan di openNotesModal
-let notesState = { notes: [], idx: 0, dirty:false };
 
 /* ===== Rename Headers (Notes) ===== */
 const LS_NOTE_HDR = 'bonusNotes.headers.v1';
