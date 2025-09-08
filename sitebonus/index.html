@@ -1753,6 +1753,11 @@ function readTarget(){
   $('#tabPending').addEventListener('click', () => switchUcTab('pending'));
   $('#tabHistory').addEventListener('click', () => switchUcTab('history'));
   initQuickMenu();
+  wireModalEscAndOverlay('#modal',        closeModal);            // Create/Edit
+  wireModalEscAndOverlay('#targetModal',  closeTargetModal);      // Set Target
+  wireModalEscAndOverlay('#unclaimModal', closeUnclaimModal);     // Unclaim
+  wireModalEscAndOverlay('#notesModal',   closeNotesModal);       // Notes
+  wireModalEscAndOverlay('#cpModal',      closeChangePwModal, doChangePassword);
 });
 
   function buildMonthOptions(){
@@ -1963,6 +1968,22 @@ function submitNoteNameModal(){
     }
   }
   closeNoteNameModal();
+}
+/* === ESC + Overlay helper untuk modal === */
+function wireModalEscAndOverlay(modalSel, closeFn, enterFn){
+  const m = document.querySelector(modalSel);
+  if (!m || m.__wired) return;    // jangan double-wire
+
+  // ESC = close, (opsional) ENTER = submit
+  m.addEventListener('keydown', (e)=>{
+    if (e.key === 'Escape'){ e.stopPropagation(); closeFn?.(); }
+    else if (enterFn && e.key === 'Enter'){ enterFn(); }
+  });
+
+  // klik area gelap = close
+  m.querySelector('.overlay')?.addEventListener('click', ()=> closeFn?.());
+
+  m.__wired = true;
 }
 function closeModalA11y(modalSel, returnFocusSel) {
   const m = document.querySelector(modalSel);
@@ -2592,6 +2613,10 @@ function askConfirm(message, {okText='Yes', cancelText='No'} = {}){
     yes.textContent = okText; no.textContent = cancelText;
 
     openModalA11y('#confirmModal', '#confirmNo');
+    m.addEventListener('keydown', (e)=>{
+    if (e.key === 'Escape') done(false);
+    else if (e.key === 'Enter') done(true);
+    }, { once:true });
 
     const done = (val)=>{
       closeModalA11y('#confirmModal');
