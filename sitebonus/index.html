@@ -536,9 +536,9 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   width:100%;
   min-height:36px;
   background:#141414; border:1px solid #2a2a2a; color:#ddd;
-  border-radius:8px; padding:8px 10px; cursor:pointer;
+  border-radius:8px; padding:8px 10px; cursor:pointer;color:rgba(255, 255, 255, 0.85);
 }
-.ud-item:hover{ border-color:#3c89e8; color:#3c89e8; }
+.ud-item:hover{ border-color:#3c89e8; color:#3c89e8; }.ud-item:active{ border-color:#1554ad; color:#1554ad; }
 .ud-item.danger{ border-color:#dc4446; color:#dc4446; background:#191111; }
 .ud-item.danger:hover{ border-color:#e86e6b; color:#e86e6b; }
 #userMenu,
@@ -597,7 +597,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   <div id="userMenu" class="user-menu" role="menu" aria-hidden="true">
     <div class="ud-head">Signed in as<br><b id="userMenuName">user</b></div>
     <div class="ud-sep"></div>
-    <button id="udChangePw" class="ud-item">Change Password…</button>
+    <button id="udChangePw" class="ud-item">Change Password</button>
     <button id="udForgot"   class="ud-item">Forgot / Reset…</button>
     <div class="ud-sep"></div>
     <button id="udLogout"   class="ud-item danger">Logout</button>
