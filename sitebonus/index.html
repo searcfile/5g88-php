@@ -1824,6 +1824,7 @@ function submitNoteNameModal(){
     notesState.notes.push({
       id: 'n_' + Date.now() + Math.random().toString(36).slice(2,6),
       name: val,
+      hdr: DEF_HDR.slice(),
       rows: []
     });
     writeNotesPersist(notesState.notes);
@@ -1837,6 +1838,7 @@ function submitNoteNameModal(){
     sel.appendChild(opt);
     sel.value = String(notesState.idx);
     renderNotesTable();
+    applyHdr();
     toast('Note added','success');
 
   } else { // rename
@@ -2592,7 +2594,7 @@ function saveHdrModal(){
   }
   writeHdrForCurrent(vals);
   applyHdr();
-  toast('Column names updated','success');
+  toast('Column names updated for this note only','success');
   closeHdrModal();
 }
 
@@ -2754,6 +2756,7 @@ document.getElementById('cancelNoteBtn')?.addEventListener('click', () => {
 document.getElementById('noteSelect')?.addEventListener('change', (e)=>{
   notesState.idx = +e.target.value;
   renderNotesTable();
+  applyHdr(); 
 });
 document.getElementById('addNoteBtn')?.addEventListener('click', () => {
   openNoteNameModal('create', 'New Note', '#addNoteBtn');
