@@ -592,8 +592,9 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   padding:10px 12px;
   border-radius:8px;
   outline:none;
+  transition: all 0.2s;
 }
-#cpModal .dlg-body input:focus{border-color:#1668dc;box-shadow:0 0 0 2px rgba(90,135,255,.15);}#cpModal .dlg-body input:hover{border-color:#3c89e8;}#cpModal .dlg-body input:active{border-color:#1554ad;}
+#cpModal .dlg-body input:focus{border-color:#1668dc;}#cpModal .dlg-body input:hover{border-color:#3c89e8;}#cpModal .dlg-body input:active{border-color:#1554ad;}
 
 /* X kecil tanpa background/border (seperti popup lain) */
 #cpModal .dlg-head{ position:relative; }
@@ -610,9 +611,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   display:flex; flex-direction:column; align-items:flex-end; gap:8px;
   margin-top:12px;
 }
-#cpModal .dlg-actions .hint{
-  font-size:12px; color:#8aa2ff; opacity:.95; margin-right:2px;
-}
+#cpModal .dlg-actions {font-size:12px; color:#8aa2ff; opacity:.95; margin-right:2px;}
 #cpModal .dlg-actions .btnrow{
   display:flex; gap:8px; justify-content:flex-end;
 }
