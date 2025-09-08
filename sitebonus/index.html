@@ -2538,7 +2538,7 @@ function readHdr(){
   let g=null; try{ g=JSON.parse(localStorage.getItem(LS_NOTE_HDR)); }catch{}
   const hdr = (Array.isArray(g) && g.length===6) ? g : DEF_HDR.slice();
 
-  if (n){ n.hdr = hdr.slice(); writeNotes(notesState.notes); bumpUpdated(); safeSyncUp(); }
+  if (n){ n.hdr = hdr.slice(); writeNotesPersist(notesState.notes); }
   localStorage.removeItem(LS_NOTE_HDR); // buang global selepas migrate
   return hdr;
 }
@@ -2547,7 +2547,7 @@ function writeHdrForCurrent(hdrArr){
   const n = notesState.notes?.[notesState.idx];
   if (!n) return;
   n.hdr = hdrArr.slice(0,6);
-  writeNotes(notesState.notes); bumpUpdated(); safeSyncUp();
+  writeNotesPersist(notesState.notes);
 }
 
 function applyHdr(){
