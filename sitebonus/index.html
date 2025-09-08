@@ -2555,7 +2555,7 @@ function ensureNotes(){
   if (changed) localStorage.setItem(LS_NOTES, JSON.stringify(clean));
   return clean;
 }
-
+let notesState = { notes: [], idx: 0, dirty: false };
 /* ===== Rename Headers (Notes) ===== */
 const LS_NOTE_HDR = 'bonusNotes.headers.v1';
 const DEF_HDR = ['SALES','AMOUNT','DEPOSIT','AMOUNT /2','RESIT','AMOUNT /2'];
