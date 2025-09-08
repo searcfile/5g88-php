@@ -2749,6 +2749,7 @@ document.getElementById('saveNoteBtn')?.addEventListener('click', () => {
   writeNotesPersist(notesState.notes);
   notesState.dirty=false;
   toast('Note saved','success');
+  closeNotesModal(); 
 });
 document.getElementById('cancelNoteBtn')?.addEventListener('click', () => {
   const curIdx = notesState.idx;
@@ -2757,7 +2758,7 @@ document.getElementById('cancelNoteBtn')?.addEventListener('click', () => {
   document.getElementById('noteSelect').value = String(notesState.idx);
   renderNotesTable();
   notesState.dirty=false;
-  toast('Canceled','info');
+  closeNotesModal();
 });
 
 document.getElementById('noteSelect')?.addEventListener('change', (e)=>{
