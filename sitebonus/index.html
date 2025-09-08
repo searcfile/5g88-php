@@ -874,7 +874,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   const auth = firebase.auth();
   // === Realtime Database ===
 const db = firebase.database();
-
+let BOOTING = true;
 // Ambil semua state dari localStorage
 function __readLocalState(){
   return {
@@ -2515,9 +2515,8 @@ function ensureNotes(){
         {s:120000,sa:900,  d:'',    da:'', r:'',   ra:''},
       ]
     }];
-    localStorage.setItem(LS_NOTES, JSON.stringify(seed));
-    if (typeof bumpUpdated === 'function') bumpUpdated(); // hanya saat seeding pertama
-    return seed;
+localStorage.setItem(LS_NOTES, JSON.stringify(seed));
+return seed; 
   }
 
   // BUKAN first-run → parse & normalisasi
