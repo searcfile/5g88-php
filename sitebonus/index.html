@@ -509,11 +509,15 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   display:inline-flex; align-items:center; gap:8px; padding:0 10px; cursor:pointer;transition: all 0.2s;
 }
 .userbtn:hover{ border-color:#3c89e8; color:#3c89e8; }.userbtn:active{ border-color:#1554ad; color:#1554ad; }
-.userbtn .avatar{
-  width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center;
-  border-radius:6px; background:#141414; border:1px solid #424242; font-size:12px;
+#userBtn .avatar{
+  width:18px; height:18px;
+  display:inline-flex; align-items:center; justify-content:center;
+  margin-right:8px;
+  font-size:0;
 }
-
+#userBtn .avatar .ico{
+  width:18px; height:18px; display:block;
+}
 .user-menu{
   position:absolute; right:0; left: auto;top:calc(100% + 8px);
   width: min(240px, 90vw); background:#141414; border:1px solid #424242; border-radius:6px;
