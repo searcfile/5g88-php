@@ -1866,14 +1866,20 @@ function closeTargetModal(){
   closeModalA11y('#targetModal', '#targetBtn');
 }
 
-  function renderTierEditor(sel, tiers, label){
-    const box=$(sel); box.innerHTML='';
-    const head=document.createElement('div'); head.className='tier-row';
-    head.innerHTML=`<div class="hint" style="align-self:center">Threshold (≥)</div><div class="hint" style="align-self:center">${label}</div><div></div>`;
-    box.appendChild(head);
-    (tiers||[]).forEach(t=>addTierRow(sel,t.threshold,t.bonus));
-  }
-function addTierRow(sel, threshold='', bonus=''){
+function renderTierEditor(sel, tiers, label){
+  const box = $(sel); box.innerHTML = '';
+  const head = document.createElement('div');
+  head.className = 'tier-row';
+  head.innerHTML = `
+    <div class="hint" style="align-self:center">Threshold (≥)</div>
+    <div class="hint" style="align-self:center">${label}</div>
+    <div></div>
+  `;
+  box.appendChild(head);
+
+  (tiers || []).forEach(t => addTierRow(sel, t.threshold, t.bonus));
+}
+function addTierRow(sel, threshold = '', bonus = ''){
   const box = $(sel);
   const row = document.createElement('div');
   row.className = 'tier-row';
@@ -1890,38 +1896,34 @@ function addTierRow(sel, threshold='', bonus=''){
   const [th, bo] = row.querySelectorAll('input');
   const btnEdit  = row.querySelector('.edit');
   const btnRm    = row.querySelector('.rm');
+  th.disabled = true; bo.disabled = true;
+  btnEdit.textContent = 'Edit';
+  btnEdit.classList.remove('active');
   btnEdit.onclick = () => {
     const willEnable = th.disabled;
     th.disabled = bo.disabled = !willEnable;
 
     if (willEnable){
-      // Masuk mode edit
+      // masuk mode edit
       btnEdit.textContent = 'Save';
       btnEdit.classList.add('active');
       th.focus(); th.select?.();
     } else {
+      // keluar mode edit (lock)
       btnEdit.textContent = 'Edit';
       btnEdit.classList.remove('active');
-      toast('Row locked. Remember to click "Save" in Target modal.', 'info', 1600);
+      toast('Row saved (locked). Click "Save" in Target modal to apply.', 'info', 1400);
     }
   };
 
-  btnRm.addEventListener('click', async () => {
-    if (await askConfirm('Remove this tier?', {okText:'Yes', cancelText:'No'})){
+  btnRm.onclick = async () => {
+    if (await askConfirm('Remove this tier?', {okText:'Yes', cancelText:'No'})) {
       row.remove();
-      toast('Tier removed (pending). Click "Save" to apply.', 'warn', 1800);
+      toast('Tier removed (pending). Click "Save" to apply.', 'warn', 1600);
     }
-  });
-[th, bo].forEach(inp => {
-  inp.addEventListener('input', () => {
-    clearTimeout(inp.__deb);
-    inp.__deb = setTimeout(() => {
-      saveTiersLive(); // sudah tulis LS + bumpUpdated + safeSyncUp
-    }, 400);
-  });
-});
+  };
+
   box.appendChild(row);
-  btnEdit.click();
 }
 function readRowsFromEditor(sel){
   const rows = [...document.querySelectorAll(sel+' .tier-row')].slice(1); // skip header
