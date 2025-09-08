@@ -569,8 +569,59 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 
 #userMenu .ico{width:16px; height:16px; display:inline-flex;}
 #userMenu .ico svg{ width:16px; height:16px; display:block; }
-#cpModal .cp-row{ display:grid; gap:6px; margin:8px 0; }
-#cpModal input{ width:100%; }
+#cpModal .cp-row{
+  display:grid;
+  row-gap:6px;            /* pakai row-gap, bukan gap umum */
+  margin:8px 0;
+}
+#cpModal .cp-row span{ color:#c9c9c9; font-size:14px; }
+
+/* Input gelap + lebih tinggi */
+#cpModal .dlg-body input{
+  width:100%;
+  background:#141414;
+  border:1px solid #424242;
+  color:#e8e8e8;
+  height:40px;            /* lebih tinggi */
+  padding:10px 12px;
+  border-radius:8px;
+  outline:none;
+}
+#cpModal .dlg-body input:focus{
+  border-color:#5a87ff;
+  box-shadow:0 0 0 2px rgba(90,135,255,.15);
+}
+#cpModal .dlg-body input::placeholder{ color:#9a9a9a; }
+
+/* Header + tombol X */
+#cpModal .dlg-head{
+  position:relative;      /* biar X nempel ke header */
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding-right:40px;     /* ruang aman untuk X */
+}
+#cpModal .close-x{
+  position:absolute;
+  top:10px; right:10px;
+  width:32px; height:32px;
+  border:0; background:transparent;
+  color:#bdbdbd;
+  font-size:20px; line-height:32px;
+  border-radius:6px; cursor:pointer;
+}
+#cpModal .close-x:hover{ background:#1f1f1f; color:#fff; }
+
+/* Tombol aksi rata kanan */
+#cpModal .dlg-actions{
+  display:flex;
+  gap:8px;
+  justify-content:flex-end;
+  margin-top:12px;
+}
+
+/* (opsional) ukuran dialog */
+#cpModal .dialog.small{ max-width:560px; }
 </style>
 </head>
 <body>
@@ -876,7 +927,10 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 <div id="cpModal" class="modal" aria-hidden="true">
   <div class="overlay"></div>
   <div class="dialog small">
-    <div class="dlg-head"><h3>Change Password</h3></div>
+   <div class="dlg-head">
+  <h3>Change Password</h3>
+  <button id="cpCloseX" class="dlg-x" aria-label="Close" type="button">×</button>
+</div>
 
     <div class="dlg-body">
       <label class="cp-row">
@@ -2942,6 +2996,7 @@ document.querySelector('#cpModal')?.addEventListener('keydown', (e)=>{
   if (e.key === 'Escape') closeChangePwModal();
 });
 document.querySelector('#cpModal .overlay')?.addEventListener('click', closeChangePwModal);
+document.getElementById('cpCloseX')?.addEventListener('click', closeChangePwModal);
 
 // ==== User dropdown logic ====
 function setUserUI(name){
