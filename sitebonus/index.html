@@ -2245,6 +2245,9 @@ function saveTiersLive(){
     salesTiers:   readRowsFromEditor('#salesTierList'),
   };
   // fallback minimal agar tidak kosong total
+  if(!t.depositTiers.length) t.depositTiers=[{threshold:8000,bonus:20}];
+  if(!t.resitTiers.length)   t.resitTiers=[{threshold:250, bonus:30}];
+  if(!t.salesTiers.length)   t.salesTiers=[{threshold:30000, bonus:300}];
   writeTarget(t);
   bumpUpdated();  
   safeSyncUp();
