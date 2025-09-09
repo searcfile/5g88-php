@@ -1089,19 +1089,29 @@ function __readLocalState(){
   return {
     records:  readStore?.()    || [],
     unclaims: readUnclaims?.() || [],
-    targets:  JSON.parse(localStorage.getItem(LS_TARGET) || 'null'),
+    targets:  readTarget(),
     notes:    JSON.parse(localStorage.getItem('bonusNotes.v1') || 'null'),
     updatedAt: getUpdatedAt(),   // ⬅️ pakai nilai persisten
   };
 }
-
+function isValidTargets(x){
+  return x && typeof x === 'object'
+    && Array.isArray(x.depositTiers)
+    && Array.isArray(x.resitTiers)
+    && Array.isArray(x.salesTiers);
+}
 // Tulis semua state ke localStorage
 function __writeLocalState(s){
   if (!s) return;
   if (Array.isArray(s.records))  writeStore(s.records);
   if (Array.isArray(s.unclaims)) writeUnclaims(s.unclaims);
-  if (s.targets !== undefined) localStorage.setItem(LS_TARGET, JSON.stringify(s.targets));
-  if (s.notes   !== undefined) localStorage.setItem('bonusNotes.v1', JSON.stringify(s.notes)); // <-- tukar
+  // hanya tulis kalau valid; kalau invalid, biarkan nilai lokal yang lama
+  if (isValidTargets(s.targets)) {
+    localStorage.setItem(LS_TARGET, JSON.stringify(s.targets));
+  }
+  if (s.notes !== undefined) {
+    localStorage.setItem('bonusNotes.v1', JSON.stringify(s.notes));
+  }
   localStorage.setItem(LS_UPDATED, String(Number(s.updatedAt || Date.now())));
 }
 
@@ -1137,9 +1147,9 @@ function __hasLocalData(){
   try{
     const a = readStore?.() || [];
     const b = readUnclaims?.() || [];
-    const t = localStorage.getItem(LS_TARGET);
+    let t = null; try { t = JSON.parse(localStorage.getItem(LS_TARGET)); } catch {}
     const n = localStorage.getItem('bonusNotes.v1');
-    return (a.length > 0) || (b.length > 0) || !!t || !!n;
+    return (a.length > 0) || (b.length > 0) || isValidTargets(t) || !!n;
   }catch{ return false; }
 }
 
@@ -1151,28 +1161,36 @@ async function syncDown(){
   try{
     let snap = await db.ref(`users/${userKey}/state`).get();
     if (!snap || !snap.exists()){
-      // Cloud kosong. JANGAN push kosong.
-      // Biarkan saja; nanti setelah user menyimpan sesuatu, safeSyncUp() akan jalan.
+      // Cloud kosong. Biarkan lokal jalan dulu—nanti safeSyncUp() akan dorong.
       console.log('[syncDown] no cloud state yet; keeping local until first save');
       return;
     }
 
-    const cloud  = snap.val();
+    const cloud  = snap.val() || {};
     const local  = __readLocalState();
     const tCloud = Number(cloud?.updatedAt || 0);
-    const tLocal = Number(local.updatedAt || 0);
+    const tLocal = Number(local?.updatedAt || 0);
+
+    // --- SELF HEAL: kalau targets cloud invalid tapi lokal valid, perbaiki cloud ---
+    if (!isValidTargets(cloud?.targets) && isValidTargets(local?.targets)) {
+      await db.ref(`users/${userKey}/state`).update({
+        targets: local.targets,
+        updatedAt: getUpdatedAt() || Date.now(),
+      });
+      cloud.targets = local.targets; // lanjut pakai yang sehat
+      console.log('[syncDown] healed cloud targets from local');
+    }
 
     if (tCloud >= tLocal){
-      __writeLocalState(cloud);
+      __writeLocalState(cloud);                     // tarik dari cloud
       console.log('[syncDown → LOCAL from CLOUD]', {tCloud, tLocal});
     } else {
-      // Hanya kalau benar-benar ada data lokal yang lebih baru
+      // hanya dorong ke cloud bila benar2 ada data lokal
       if (__hasLocalData()){
         await db.ref(`users/${userKey}/state`).set(local);
         console.log('[syncDown → CLOUD from LOCAL]', {tCloud, tLocal});
       } else {
-        // Local kosong tapi timestamp kebetulan lebih besar — abaikan, pakai cloud
-        __writeLocalState(cloud);
+        __writeLocalState(cloud);                   // lokal kosong → pakai cloud
         console.log('[syncDown → force CLOUD]', {tCloud, tLocal});
       }
     }
