@@ -37,7 +37,30 @@ body{
   align-items:center;                /* pusat vertikal */
   margin-inline:auto;
 }
+/* Actions: Back + Request (kanan, berdampingan) */
+.row-split{
+  display:flex;
+  justify-content:flex-end;   /* dorong ke kanan */
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;             /* boleh turun baris kalau layar sempit */
+}
+.row-split > *{
+  flex:0 0 160px;             /* lebar tetap 160px (sesuaikan) */
+}
 
+@media (max-width: 420px){
+  .row-split{
+    justify-content:space-between;
+  }
+  .row-split > *{
+    flex:1 0 120px;           /* di layar kecil bisa melebar sama rata */
+  }
+}
+
+/* pastikan tinggi/visual tombol konsisten */
+.btn{ height:44px; }
+.btn-ghost{ height:44px; }
 /* ====== KARTU LOGIN ====== */
 .card{
   width:100%;
@@ -81,7 +104,7 @@ input:focus{
 .eye{
   position:absolute; right:10px; top:50%; transform:translateY(-50%);
   width:32px; height:32px; display:grid; place-items:center;
-  background:transparent; border:0; color:var(--primary); cursor:pointer;
+  background:transparent; border:0; color:#ffffff; cursor:pointer;
 }
 .eye:hover{ color:#ffffff; }
 .eye svg{ display:block; }
