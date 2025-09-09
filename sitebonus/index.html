@@ -2559,7 +2559,7 @@ function renderUnclaimList(which = 'pending'){
   if (!items.length){
     const e = document.createElement('div');
     e.className = 'empty';
-    e.textContent = (which === 'history') ? 'Belum ada riwayat claim.' : 'Belum ada Unclaim.';
+    e.textContent = (which === 'history') ? 'No History.' : 'No Unclaim.';
     list.appendChild(e);
     return;
   }
