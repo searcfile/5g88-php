@@ -717,10 +717,10 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   <col style="width:92px"><!-- Site -->
   <col style="width:120px"><!-- Deposit -->
   <col style="width:120px"><!-- Withdrawal -->
-  <col style="width:120px"><!-- Resit In -->
   <col style="width:120px"><!-- Bonus -->
   <col style="width:110px"><!-- Forfeit -->
   <col style="width:110px"><!-- Member -->
+  <col style="width:120px"><!-- Resit In -->
   <col style="width:120px"><!-- Sales -->
   <col style="width:120px"><!-- Unclaim (NEW) -->
   <col style="width:120px"><!-- Bonus Deposit -->
@@ -734,10 +734,10 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
     <th>Site</th>
     <th>Deposit</th>
     <th>Withdrawal</th>
-    <th>Resit In</th>
     <th>Bonus</th>
     <th>Forfeit</th>
     <th>Member</th>
+    <th>Resit In</th>
     <th>Sales</th>
     <th>Unclaim</th>
     <th>Bonus Deposit</th>
@@ -748,16 +748,16 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 
     <tbody id="tbody"></tbody>
 
- <tfoot>
+<tfoot>
   <tr>
     <td>TOTAL (Filtered)</td>
     <td></td>
     <td id="ft_deposit">0</td>
     <td id="ft_withdrawal">0</td>
-    <td id="ft_resit">0</td>
     <td id="ft_bonus">0</td>
     <td id="ft_forfeit">0</td>
     <td id="ft_member">0</td>
+    <td id="ft_resit">0</td>
     <td id="ft_sales">0</td>
     <td id="ft_unclaim">0</td>
     <td id="ft_bonDep">0</td>
@@ -2213,29 +2213,29 @@ function render(){
     const unclaimDisplay = safe(ucs.claimed) > 0 ? -safe(ucs.claimed) : safe(ucs.pending);
 
     const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${dt}</td>
-      <td style="text-align:center"><span class="pill ${r.site==='5G88'?'site-5g88':'site-spm888'}">${r.site}</span></td>
-      <td class="${r.deposit < 0 ? 'num red' : 'num green'}">${fmtNum(r.deposit)}</td>
-      <td class="num ${r.withdrawal === 0 ? '' : 'red'}">
-        ${ r.withdrawal === 0 ? fmtNum(0) : ('-' + fmtNum(Math.abs(r.withdrawal))) }
-      </td>
-      <td>${fmtNumNoGroup(r.resit)}</td>
-      <td class="num cyan">${fmtNum(r.bonus)}</td>
-      <td>${fmtNum(r.forfeit)}</td>
-      <td>${fmtIntNoGroup(r.member)}</td>
-      <td class="${r.sales < 0 ? 'num red' : 'num green'}">${fmtNum(r.sales)}</td>
-      <td class="num ${unclaimDisplay<0?'red':''}">${fmtNum(unclaimDisplay)}</td>
-      <td>${bonusDep.toLocaleString()}</td>
-      <td>${bonusRes.toLocaleString()}</td>
-      <td>
-        <div class="actions">
-          <button class="iconbtn" onclick="window.__edit('${r.id}')">Edit</button>
-          <button class="iconbtn-del" onclick="window.__del('${r.id}')">Delete</button>
-        </div>
-      </td>
-    `;
-    tb.appendChild(tr);
+tr.innerHTML = `
+  <td>${dt}</td>
+  <td style="text-align:center"><span class="pill ${r.site==='5G88'?'site-5g88':'site-spm888'}">${r.site}</span></td>
+  <td class="${r.deposit < 0 ? 'num red' : 'num green'}">${fmtNum(r.deposit)}</td>
+  <td class="num ${r.withdrawal === 0 ? '' : 'red'}">
+    ${ r.withdrawal === 0 ? fmtNum(0) : ('-' + fmtNum(Math.abs(r.withdrawal))) }
+  </td>
+  <td class="num cyan">${fmtNum(r.bonus)}</td>
+  <td>${fmtNum(r.forfeit)}</td>
+  <td>${fmtIntNoGroup(r.member)}</td>
+  <td>${fmtNumNoGroup(r.resit)}</td>
+  <td class="${r.sales < 0 ? 'num red' : 'num green'}">${fmtNum(r.sales)}</td>
+  <td class="num ${unclaimDisplay<0?'red':''}">${fmtNum(unclaimDisplay)}</td>
+  <td>${bonusDep.toLocaleString()}</td>
+  <td>${bonusRes.toLocaleString()}</td>
+  <td>
+    <div class="actions">
+      <button class="iconbtn" onclick="window.__edit('${r.id}')">Edit</button>
+      <button class="iconbtn-del" onclick="window.__del('${r.id}')">Delete</button>
+    </div>
+  </td>
+`;
+tb.appendChild(tr);
 
     totals.uPending += safe(ucs.pending);
     totals.uClaimed += safe(ucs.claimed);
