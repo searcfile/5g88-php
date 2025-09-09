@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
 <title>Monthly Bonus</title>
 <style>
-:root{ 
+:root{
   --bg:#0a0a0a; --card:#121212; --text:#e6e6e6; --sub:#a7a7a7;
   --gold:#ffd166; --gold-2:#ffcf4d; --red:#ff0000; --green:#008000; --cyan:#60a5fa; --ring:rgba(255,209,102,.55);
 }
@@ -1004,58 +1004,6 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   const auth = firebase.auth();
   // === Realtime Database ===
 const db = firebase.database();
-// ===== RTDB HELPERS: simpan per-collection/per-bulan =====
-const PATH = {
-  recMonth: (uname, yyyyMM) => `users/${uname}/records/${yyyyMM}`,
-  recItem:  (uname, yyyyMM, id) => `users/${uname}/records/${yyyyMM}/${id}`,
-  ucPend:   (uname) => `users/${uname}/unclaims/pending`,
-  ucHist:   (uname) => `users/${uname}/unclaims/history`,
-  notes:    (uname, noteId) => `users/${uname}/notes/${noteId}`,
-  targets:  (uname) => `users/${uname}/targets`,
-  meta:     (uname) => `users/${uname}/meta`,
-};
-
-async function rtdbUpsertRecord(rec){
-  const u = auth.currentUser; if(!u) return;
-  const uname = getUsername(u);
-  await db.ref(PATH.recItem(uname, rec.month, rec.id)).set(rec);
-  await db.ref(PATH.meta(uname) + '/updatedAt').set(Date.now());
-}
-
-async function rtdbDeleteRecord(rec){
-  const u = auth.currentUser; if(!u) return;
-  const uname = getUsername(u);
-  await db.ref(PATH.recItem(uname, rec.month, rec.id)).remove();
-  await db.ref(PATH.meta(uname) + '/updatedAt').set(Date.now());
-}
-
-async function rtdbLoadMonth(yyyyMM){
-  const u = auth.currentUser; if(!u) return [];
-  const uname = getUsername(u);
-  const snap = await db.ref(PATH.recMonth(uname, yyyyMM)).get();
-  return snap.exists() ? Object.values(snap.val()) : [];
-}
-
-async function rtdbUpsertUnclaim(uitem, toHistory=false){
-  const u = auth.currentUser; if(!u) return;
-  const uname = getUsername(u);
-  const base = toHistory ? PATH.ucHist(uname) : PATH.ucPend(uname);
-  await db.ref(`${base}/${uitem.id}`).set(uitem);
-  await db.ref(PATH.meta(uname) + '/updatedAt').set(Date.now());
-}
-async function rtdbDeleteUnclaim(id){
-  const u = auth.currentUser; if(!u) return;
-  const uname = getUsername(u);
-  await db.ref(`${PATH.ucPend(uname)}/${id}`).remove();
-  await db.ref(PATH.meta(uname) + '/updatedAt').set(Date.now());
-}
-
-async function rtdbSaveTargets(t){
-  const u = auth.currentUser; if(!u) return;
-  const uname = getUsername(u);
-  await db.ref(PATH.targets(uname)).set(t);
-  await db.ref(PATH.meta(uname) + '/updatedAt').set(Date.now());
-}
 let BOOTING = true;
 // Ambil semua state dari localStorage
 function __readLocalState(){
@@ -1120,46 +1068,36 @@ function __hasLocalData(){
 async function syncDown(){
   const u = auth.currentUser;
   if (!u) return;
-  const uname = getUsername(u);
+  const userKey = getUsername(u);
 
   try{
-    // meta (timestamp cloud)
-    const metaSnap = await db.ref(PATH.meta(uname)).get();
-    const cloudTs = Number(metaSnap.child('updatedAt').val() || 0);
-    const localTs = getUpdatedAt();
-
-    // targets & notes
-    const [tSnap, nSnap] = await Promise.all([
-      db.ref(PATH.targets(uname)).get(),
-      db.ref(`users/${uname}/notes`).get()
-    ]);
-    if (tSnap.exists()){
-      localStorage.setItem(LS_TARGET, JSON.stringify(tSnap.val()));
-    }
-    if (nSnap.exists()){
-      const notes = Object.values(nSnap.val());
-      localStorage.setItem(LS_NOTES, JSON.stringify(notes));
+    let snap = await db.ref(`users/${userKey}/state`).get();
+    if (!snap || !snap.exists()){
+      // Cloud kosong. JANGAN push kosong.
+      // Biarkan saja; nanti setelah user menyimpan sesuatu, safeSyncUp() akan jalan.
+      console.log('[syncDown] no cloud state yet; keeping local until first save');
+      return;
     }
 
-    // records: hanya bulan aktif
-    const curMonth = document.querySelector('#monthFilter')?.value || toYYYYMM(new Date());
-    const monthData = await rtdbLoadMonth(curMonth);
+    const cloud  = snap.val();
+    const local  = __readLocalState();
+    const tCloud = Number(cloud?.updatedAt || 0);
+    const tLocal = Number(local.updatedAt || 0);
 
-    const all = readStore().filter(r => r.month !== curMonth).concat(monthData);
-    writeStore(all);
-
-    // unclaims
-    const [uPend, uHist] = await Promise.all([
-      db.ref(PATH.ucPend(uname)).get(),
-      db.ref(PATH.ucHist(uname)).get(),
-    ]);
-    const uc = []
-      .concat(uPend.exists() ? Object.values(uPend.val()) : [])
-      .concat(uHist.exists() ? Object.values(uHist.val()) : []);
-    writeUnclaims(uc);
-
-    localStorage.setItem(LS_UPDATED, String(Math.max(cloudTs, localTs)));
-    console.log('[syncDown] month=', curMonth, 'records=', monthData.length);
+    if (tCloud >= tLocal){
+      __writeLocalState(cloud);
+      console.log('[syncDown → LOCAL from CLOUD]', {tCloud, tLocal});
+    } else {
+      // Hanya kalau benar-benar ada data lokal yang lebih baru
+      if (__hasLocalData()){
+        await db.ref(`users/${userKey}/state`).set(local);
+        console.log('[syncDown → CLOUD from LOCAL]', {tCloud, tLocal});
+      } else {
+        // Local kosong tapi timestamp kebetulan lebih besar — abaikan, pakai cloud
+        __writeLocalState(cloud);
+        console.log('[syncDown → force CLOUD]', {tCloud, tLocal});
+      }
+    }
   }catch(e){
     console.error('[syncDown FAIL]', e);
   }
@@ -1170,19 +1108,7 @@ auth.onAuthStateChanged(async (user) => {
 
   try {
     setUserUI(getUsername(user));
-    await syncDown();
-    const MAX_CACHE_MONTHS = 6;
-    function pruneLocalRecords(){
-    const cur = new Date();
-    const keep = new Set();
-     for (let i=0;i<MAX_CACHE_MONTHS;i++){
-    const d = new Date(cur.getFullYear(), cur.getMonth()-i, 1);
-    keep.add(toYYYYMM(d));
-  }
-  const kept = readStore().filter(r => keep.has(r.month));
-  if (kept.length !== readStore().length) writeStore(kept);
-}
-    pruneLocalRecords();
+    await syncDown();                 // tarik state dari Cloud dulu
   } catch (e) {
     console.error('syncDown error', e);
   } finally {
@@ -1209,47 +1135,37 @@ function safeSyncUp() {
   clearTimeout(__syncTimer);
   __syncTimer = setTimeout(syncUp, 300);
 }
-function debounce(fn, ms=50){ 
-  let t; 
-  return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; 
-}
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') safeSyncUp();
 });
 window.addEventListener('beforeunload', () => { safeSyncUp(); });
-const $ = s => document.querySelector(s);
-const fmtNum = n => (Number.isFinite(n)?n:parseFloat(n||0)).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
-const fmtInt = n => (parseInt(n||0,10)).toLocaleString();
-const fmtNumNoGroup = (n) => {const v = Number.isFinite(n) ? n : parseFloat(n || 0);if (!Number.isFinite(v)) return '0';const isWhole = Math.abs(v - Math.round(v)) < 1e-10;return v.toLocaleString(undefined, {useGrouping: false,minimumFractionDigits: isWhole ? 0 : 2,maximumFractionDigits: isWhole ? 0 : 2,});};
-const fmtIntNoGroup = (n) =>(parseInt(n || 0, 10)).toLocaleString(undefined, { useGrouping: false });
-const pad2 = n => String(n).padStart(2,'0');
-const toYYYYMM = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
-function parseLocalDT(v){
-  if (!v) return new Date();
-  const [d,t='00:00:00'] = v.split('T');
-  const [y,m,day] = d.split('-').map(Number);
-  const [hh,mm,ss=0] = t.split(':').map(Number);
-  return new Date(y, (m||1)-1, day||1, hh||0, mm||0, ss||0, 0);
-}
-const dt24 = d =>new Date(d).toLocaleString(undefined, {year: 'numeric',month: '2-digit',day: '2-digit',hour: '2-digit',minute: '2-digit',second: '2-digit',hour12: false,hourCycle: 'h23',});
-const safe = v => Number.isFinite(+v) ? +v : 0;
-const two = n => String(n).padStart(2,'0');
-const fmtDMYHMS = d => {
-const x = new Date(d);return `${two(x.getDate())}/${two(x.getMonth()+1)}/${x.getFullYear()} ` +`${two(x.getHours())}:${two(x.getMinutes())}:${two(x.getSeconds())}`;};
-const fmtDMY = d => {const x = new Date(d);return `${two(x.getDate())}/${two(x.getMonth()+1)}/${x.getFullYear()}`;};
-const RANGE_SEP = ' \u2192 ';
-const LS_KEY='bonusRecords.v1';
-const LS_LAST_MONTH='bonusRecords.lastOpenedMonth';
-const LS_LAST_SITE = 'bonusRecords.lastSite';
-const LS_TARGET='bonusTargets.v3';
-const LS_UNCLAIM='bonusUnclaims.v1';   // NEW
+  const $ = s => document.querySelector(s);
+  const fmtNum = n => (Number.isFinite(n)?n:parseFloat(n||0)).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+  const fmtInt = n => (parseInt(n||0,10)).toLocaleString();
+  const fmtNumNoGroup = (n) => {const v = Number.isFinite(n) ? n : parseFloat(n || 0);if (!Number.isFinite(v)) return '0';const isWhole = Math.abs(v - Math.round(v)) < 1e-10;return v.toLocaleString(undefined, {useGrouping: false,minimumFractionDigits: isWhole ? 0 : 2,maximumFractionDigits: isWhole ? 0 : 2,});};
+  const fmtIntNoGroup = (n) =>(parseInt(n || 0, 10)).toLocaleString(undefined, { useGrouping: false });
+  const pad2 = n => String(n).padStart(2,'0');
+  const toYYYYMM = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
+  const parseLocalDT = v => v? new Date(v.replace('T',' ')) : new Date();
+  const dt24 = d =>new Date(d).toLocaleString(undefined, {year: 'numeric',month: '2-digit',day: '2-digit',hour: '2-digit',minute: '2-digit',second: '2-digit',hour12: false,hourCycle: 'h23',});
+  const safe = v => Number.isFinite(+v) ? +v : 0;
+  const two = n => String(n).padStart(2,'0');
+  const fmtDMYHMS = d => {
+  const x = new Date(d);return `${two(x.getDate())}/${two(x.getMonth()+1)}/${x.getFullYear()} ` +`${two(x.getHours())}:${two(x.getMinutes())}:${two(x.getSeconds())}`;};
+  const fmtDMY = d => {const x = new Date(d);return `${two(x.getDate())}/${two(x.getMonth()+1)}/${x.getFullYear()}`;};
+  const RANGE_SEP = ' \u2192 ';
+  const LS_KEY='bonusRecords.v1';
+  const LS_LAST_MONTH='bonusRecords.lastOpenedMonth';
+  const LS_LAST_SITE = 'bonusRecords.lastSite';
+  const LS_TARGET='bonusTargets.v3';
+  const LS_UNCLAIM='bonusUnclaims.v1';   // NEW
 
-const readStore=()=>{try{return JSON.parse(localStorage.getItem(LS_KEY))||[]}catch{return[]}};
-const writeStore=a=>localStorage.setItem(LS_KEY,JSON.stringify(a));
+  const readStore=()=>{try{return JSON.parse(localStorage.getItem(LS_KEY))||[]}catch{return[]}};
+  const writeStore=a=>localStorage.setItem(LS_KEY,JSON.stringify(a));
 
-const readUnclaims=()=>{try{return JSON.parse(localStorage.getItem(LS_UNCLAIM))||[]}catch{return[]}};
-const writeUnclaims=a=>localStorage.setItem(LS_UNCLAIM,JSON.stringify(a));
-const LS_DR_FROM = 'bonusRecords.rangeFrom';
+  const readUnclaims=()=>{try{return JSON.parse(localStorage.getItem(LS_UNCLAIM))||[]}catch{return[]}};
+  const writeUnclaims=a=>localStorage.setItem(LS_UNCLAIM,JSON.stringify(a));
+  const LS_DR_FROM = 'bonusRecords.rangeFrom';
 const LS_DR_TO   = 'bonusRecords.rangeTo';
 const toISODateLocal = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
 
@@ -1296,7 +1212,7 @@ function setRangeAndRefresh(fs, ts, updatePicker = true){
   syncMonthToRange(fs, ts);
   setMiniMonthLabel();
   setActiveQuick(keyForRange(fs, ts));
-  rerender();
+  render();
 }
 
 function iso(d){ // YYYY-MM-DD lokal
@@ -1450,16 +1366,7 @@ function applyQuickRange(kind){
 
   setRangeAndRefresh(f, t, true); // update range + render
 }
-async function rtdbSaveNotesBulk(notes){
-  const u = auth.currentUser; if(!u) return;
-  const uname = getUsername(u);
-  const updates = {};
-  for (const n of notes){
-    updates[`users/${uname}/notes/${n.id}`] = n;
-  }
-  await db.ref().update(updates);
-  await db.ref(PATH.meta(uname) + '/updatedAt').set(Date.now());
-}
+
 function initQuickMenu(){
   const quickBtn  = document.getElementById('quickBtn');
   const quickMenu = document.getElementById('quickMenu');
@@ -1668,7 +1575,7 @@ onChange(selectedDates, dateStr, inst){
     syncMonthToRange(fs, ts);
     setMiniMonthLabel();
     setActiveQuick(keyForRange(fs, ts));
-    rerender();
+    render();
   }
 },
 
@@ -1682,7 +1589,7 @@ onClose(selectedDates, dateStr, inst){
   const curF = $('#rangeFrom').value || savedFrom;
   const curT = $('#rangeTo').value   || savedTo;
   setActiveQuick(keyForRange(curF, curT));
-  rerender();
+  render();
 }
 });
 }
@@ -1742,7 +1649,6 @@ vis.dataset.lastTo   = ts;
 syncMonthToRange(fs, ts);   // ⬅️ tambah
 setMiniMonthLabel();
 setActiveQuick(keyForRange(fs, ts));
-rerender(); 
 }
 function resetToCurrentOnLoad(){
   const now = new Date();
@@ -1796,7 +1702,7 @@ function setMonthAndRange(yyyyMM){
   } else {
     // kalau mau aman tanpa flatpickr
     setActiveQuick(keyForRange(fs, ts));
-    rerender();
+    render();
   }
 }
 function readTarget(){
@@ -1853,14 +1759,13 @@ function readTarget(){
     render();
   });
 
-  $('#monthFilter').addEventListener('change', async () => {
-  const m = $('#monthFilter').value;
-  localStorage.setItem(LS_LAST_MONTH, m);
-  jumpPickerToMonth(m);
-  setMonthAndRange(m);  // set 1..akhir bulan + render()
-  setMiniMonthLabel();  // label "Month" di mini-card
-  await syncDown();
-});
+  $('#monthFilter').addEventListener('change', () => {
+    const m = $('#monthFilter').value;
+    localStorage.setItem(LS_LAST_MONTH, m);
+    jumpPickerToMonth(m);
+    setMonthAndRange(m);  // set 1..akhir bulan + render()
+    setMiniMonthLabel();  // label "Month" di mini-card
+  });
 
   $('#targetBtn').addEventListener('click', openTargetModal);
   $('#unclaimBtn').addEventListener('click', openUnclaimModal);
@@ -1956,47 +1861,37 @@ function lockFormBySite() {
     };
   }
 
-function saveModal(){
-  if (!$('#m_site').value) return;
+  function saveModal(){
+    if (!$('#m_site').value) return;
+    const rec=collectModal();
+    const arr=readStore(); const i=arr.findIndex(x=>x.id===rec.id);
+    if(i>=0) arr[i]=rec; else arr.push(rec);
+    writeStore(arr);
+    toast(editingId ? 'Record updated' : 'Record created', 'success');
 
-  const rec = collectModal();
-  const arr = readStore();
-  const i = arr.findIndex(x => x.id === rec.id);
-  if (i >= 0) arr[i] = rec; else arr.push(rec);
-  writeStore(arr);
-  rtdbUpsertRecord(rec).catch(console.error);
-  toast(editingId ? 'Record updated' : 'Record created', 'success');
+    // NEW: jika user isi Unclaim Amount -> simpan pending item
+    const ucAmt = safe($('#m_unclaim').value);
+    if (ucAmt > 0) {
+      const uc = readUnclaims();
+      uc.push({
+        id: 'uc_'+Date.now()+Math.random().toString(36).slice(2,6),
+        recordId: rec.id,
+        site: rec.site,
+        month: rec.month,
+        createdAt: new Date().toISOString(),
+        amount: ucAmt,
+        claimed: false,
+        claimedAt: null
+      });
+      writeUnclaims(uc);
+    }
 
-  // jika user isi Unclaim Amount -> simpan pending + sync ke RTDB
-  const ucAmt = safe($('#m_unclaim').value);
-  if (ucAmt > 0) {
-    const uitem = {
-      id: 'uc_' + Date.now() + Math.random().toString(36).slice(2,6),
-      recordId: rec.id,
-      site: rec.site,
-      month: rec.month,
-      createdAt: new Date().toISOString(),
-      amount: ucAmt,
-      claimed: false,
-      claimedAt: null
-    };
-    const uc = readUnclaims();
-    uc.push(uitem);
-    writeUnclaims(uc);
-    rtdbUpsertUnclaim(uitem, false).catch(console.error); // <-- penting: sync pending ke cloud
+    buildMonthOptions();
+    if(rec.month===toYYYYMM(new Date())){ $('#monthFilter').value=rec.month; localStorage.setItem(LS_LAST_MONTH,rec.month); }
+    closeModal(); render();
+    bumpUpdated(); 
+    safeSyncUp();
   }
-
-  buildMonthOptions();
-  if (rec.month === toYYYYMM(new Date())) {
-    $('#monthFilter').value = rec.month;
-    localStorage.setItem(LS_LAST_MONTH, rec.month);
-  }
-
-  closeModal();
-  render();
-  bumpUpdated();
-  safeSyncUp();
-}
 // ===== A. Helper inert background + toggle modal =====
 function setBackgroundInert(enable, exceptTarget){
   const except = (exceptTarget instanceof Element)
@@ -2238,7 +2133,6 @@ function saveTiersLive(){
   if(!t.resitTiers.length)   t.resitTiers=[{threshold:250, bonus:30}];
   if(!t.salesTiers.length)   t.salesTiers=[{threshold:30000, bonus:300}];
   writeTarget(t);
-  rtdbSaveTargets(t).catch(console.error);
   bumpUpdated();  
   safeSyncUp();
 }
@@ -2253,7 +2147,6 @@ function saveTiersLive(){
     if(!t.resitTiers.length)   t.resitTiers=[{threshold:250, bonus:30}];
     if(!t.salesTiers.length)   t.salesTiers=[{threshold:30000, bonus:300}];
     writeTarget(t);
-    rtdbSaveTargets(t).catch(console.error);
     toast('Target saved', 'success');
     closeTargetModal();
     render();
@@ -2301,23 +2194,17 @@ function render(){
     if (u.claimed) ucByRecord[u.recordId].claimed += safe(u.amount);
     else           ucByRecord[u.recordId].pending += safe(u.amount);
   }
+
   // archive banner: sembunyikan ketika range lintas bulan
   $('#archiveBanner').style.display = 'none';
   $('#bannerMonth').textContent = prettyMonth(month);
 
-  const tb = $('#tbody'); 
-tb.innerHTML = '';
-let totals = { d:0,w:0,b:0,f:0,m:0,r:0,s:0, bd:0, br:0, bsBase:0, uDisp:0, uPending:0, uClaimed:0, uAll:0 };
+  const tb = $('#tbody'); tb.innerHTML = '';
+  let totals = { d:0,w:0,b:0,f:0,m:0,r:0,s:0, bd:0, br:0, bsBase:0, uDisp:0, uPending:0, uClaimed:0, uAll:0 };
 
-// chunked render
-const CHUNK = 300;
-let i = 0;
-
-function renderChunk(){
-  const frag = document.createDocumentFragment();
-  for(let c=0; c<CHUNK && i<data.length; c++, i++){
-    const r = data[i];
+  for (const r of data){
     const dt = fmtDMYHMS(r.datetime);
+
     const bonusDep       = pickTierBonus(safe(r.deposit), targets.depositTiers);
     const bonusRes       = pickTierBonus(safe(r.resit),   targets.resitTiers);
     const bonusSalesBase = pickTierBonus(safe(r.sales),   targets.salesTiers);
@@ -2330,7 +2217,9 @@ function renderChunk(){
       <td>${dt}</td>
       <td style="text-align:center"><span class="pill ${r.site==='5G88'?'site-5g88':'site-spm888'}">${r.site}</span></td>
       <td class="${r.deposit < 0 ? 'num red' : 'num green'}">${fmtNum(r.deposit)}</td>
-      <td class="num ${r.withdrawal === 0 ? '' : 'red'}">${ r.withdrawal === 0 ? fmtNum(0) : ('-' + fmtNum(Math.abs(r.withdrawal))) }</td>
+      <td class="num ${r.withdrawal === 0 ? '' : 'red'}">
+        ${ r.withdrawal === 0 ? fmtNum(0) : ('-' + fmtNum(Math.abs(r.withdrawal))) }
+      </td>
       <td>${fmtNumNoGroup(r.resit)}</td>
       <td class="num cyan">${fmtNum(r.bonus)}</td>
       <td>${fmtNum(r.forfeit)}</td>
@@ -2346,12 +2235,12 @@ function renderChunk(){
         </div>
       </td>
     `;
-    frag.appendChild(tr);
+    tb.appendChild(tr);
 
-    // akumulasi totals
     totals.uPending += safe(ucs.pending);
     totals.uClaimed += safe(ucs.claimed);
     totals.uAll     += safe(ucs.pending) + safe(ucs.claimed);
+
     totals.d  += safe(r.deposit);
     totals.w  += safe(r.withdrawal);
     totals.b  += safe(r.bonus);
@@ -2359,22 +2248,37 @@ function renderChunk(){
     totals.m  += safe(r.member);
     totals.r  += safe(r.resit);
     totals.s  += safe(r.sales);
+
     totals.bd += safe(bonusDep);
     totals.br += safe(bonusRes);
     totals.bsBase += safe(bonusSalesBase);
   }
-  tb.appendChild(frag);
-  if (i < data.length) requestAnimationFrame(renderChunk);
-  else finishFooterAndCards();
-}
-requestAnimationFrame(renderChunk);
 
-function finishFooterAndCards(){
   $('#emptyState').style.display = data.length ? 'none' : 'block';
   totals.uDisp = safe(totals.uPending);
 
+  // footer
+  $('#ft_deposit').textContent    = fmtNum(totals.d);
+  const wdTotalAbs = Math.abs(totals.w);
+  $('#ft_withdrawal').textContent = wdTotalAbs === 0 ? fmtNum(0) : `-${fmtNum(wdTotalAbs)}`;
+  $('#ft_bonus').textContent      = fmtNum(totals.b);
+  $('#ft_forfeit').textContent    = fmtNum(totals.f);
+  $('#ft_member').textContent     = fmtIntNoGroup(totals.m);
+  $('#ft_resit').textContent      = fmtNumNoGroup(totals.r);
+  $('#ft_sales').textContent      = fmtNum(totals.s);
+  $('#ft_unclaim').textContent    = fmtNum(totals.uDisp);
+  $('#ft_bonDep').textContent     = totals.bd.toLocaleString();
+  $('#ft_bonRes').textContent     = totals.br.toLocaleString();
+
+  const ftW = $('#ft_withdrawal');
+  ftW.className = ''; ftW.classList.add('num'); if (wdTotalAbs > 0) ftW.classList.add('red');
+  const ftS = $('#ft_sales');
+  ftS.className = ''; ftS.classList.add('num'); if (totals.s < 0) ftS.classList.add('red'); else if (totals.s > 0) ftS.classList.add('green');
+
+  // mini-cards: tampilkan range
   setMiniMonthLabel();
   $('#miniSite').textContent  = (site === 'ALL' ? 'All Sites' : site);
+
   renderSummaryRows(totals, data.length, site, month);
   applyNumberTitles();
   window.NumberClipper?.clip('#dataTable tbody td:nth-child(n+3):nth-child(-n+12)');
@@ -2453,24 +2357,14 @@ function renderSummaryRows(t, count, site, month){
     bottom.appendChild(d);
   });
 }
-const rerender = debounce(render, 16);
-async function delRecord(id){
+
+ async function delRecord(id){
   if(!(await askConfirm('Delete this record?', {okText:'Yes', cancelText:'No'}))) return;
-
-  // ⬇️ simpan dulu bulan record SEBELUM dihapus
-  const rec = readStore().find(r => r.id === id);
-  const recMonth = rec?.month || null;
-
-  writeStore(readStore().filter(r => r.id !== id));
-  writeUnclaims(readUnclaims().filter(u => u.recordId !== id));
+  writeStore(readStore().filter(r=>r.id!==id));
+  writeUnclaims(readUnclaims().filter(u=>u.recordId!==id));
   render();
   toast('Record deleted', 'warn');
-
-  if (recMonth) {
-    rtdbDeleteRecord({ id, month: recMonth }).catch(console.error);
-  }
-
-  bumpUpdated();
+   bumpUpdated(); 
   safeSyncUp();
 }
 
@@ -2573,74 +2467,65 @@ function renderUnclaimList(which = 'pending'){
     list.appendChild(row);
   }
 }
-// buat claim jadi async biar urut
-async function claimUnclaim(ucId){
+// Claim logic: BUAT RECORD BARU DI BULAN SEKARANG + pindahkan unclaim ke bulan sekarang
+function claimUnclaim(ucId){
   const ucAll = readUnclaims();
   const idx = ucAll.findIndex(x => x.id === ucId);
   if (idx < 0) return;
 
-  const original = ucAll[idx];
-  if (original.claimed) return;
+  const item = ucAll[idx];
+  if (item.claimed) return;
 
   // ambil record asal (buat dapat site asal)
   const recs = readStore();
-  const recOld = recs.find(r => r.id === original.recordId);
+  const recOld = recs.find(r => r.id === item.recordId);
 
-  // waktu sekarang
+  // waktu sekarang (tanggal & bulan klaim)
   const now = new Date();
-  const nowISO = now.toISOString();
-  const nowMonth = toYYYYMM(now);
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth()+1).padStart(2,'0');
+  const dd = String(now.getDate()).padStart(2,'0');
+  const HH = String(now.getHours()).padStart(2,'0');
+  const MM = String(now.getMinutes()).padStart(2,'0');
+  const SS = String(now.getSeconds()).padStart(2,'0');
+  const nowISO = new Date(`${yyyy}-${mm}-${dd}T${HH}:${MM}:${SS}`).toISOString();
+  const nowMonth = `${yyyy}-${mm}`;
 
-  // BUAT RECORD BARU (bulan sekarang)
-  const amt = safe(original.amount);
+  // 1) BUAT RECORD BARU (masuk bulan sekarang)
+  //    Deposit = amount klaim, Withdrawal = 0, Sales = Deposit - Withdrawal
   const newRec = {
     id: 'id_' + Date.now() + Math.random().toString(36).slice(2,7),
-    site: recOld?.site || original.site || '5G88',
+    site: (recOld?.site || item.site || '5G88'),
     datetime: nowISO,
     month: nowMonth,
-    deposit: amt,
+    deposit: safe(item.amount),
     withdrawal: 0,
     bonus: 0,
     forfeit: 0,
     member: 0,
     resit: 0,
-    sales: amt
+    sales: safe(item.amount) - 0
   };
-
-  // update local dulu
   recs.push(newRec);
   writeStore(recs);
-
-  const updated = {
-    ...original,
-    claimed: true,
-    claimedAt: nowISO,
-    recordId: newRec.id,
-    month: nowMonth,              // penting agar muncul di bulan sekarang
-    site: newRec.site
-  };
-  ucAll[idx] = updated;
+  item.claimed   = true;
+  item.claimedAt = nowISO;
+  item.recordId  = newRec.id;
+  item.month     = nowMonth;              // ⬅️ penting agar muncul di bulan sekarang
+  item.site      = newRec.site || item.site;
+  ucAll[idx]     = item;
   writeUnclaims(ucAll);
 
-  // sync ke cloud dgn urutan jelas
-  try {
-    await rtdbUpsertRecord(newRec);           // catat record claim
-    await rtdbUpsertUnclaim(updated, true);   // pindahkan ke history (pakai data yg sudah di-update)
-    await rtdbDeleteUnclaim(updated.id);      // hapus dari pending
-  } catch (e) {
-    console.error('[claimUnclaim sync FAIL]', e);
-  }
-
-  // pindahkan tampilan ke bulan sekarang
+  // 3) Pindahkan tampilan ke bulan sekarang (opsional tapi sesuai permintaan)
   $('#monthFilter').value = nowMonth;
   localStorage.setItem(LS_LAST_MONTH, nowMonth);
   setMonthAndRange(nowMonth);
   render();
   toast('Unclaim claimed', 'success');
-  bumpUpdated();
+  bumpUpdated(); 
   safeSyncUp();
 
-  // bila modal unclaim terbuka, geser ke History
+  // Jika Unclaim modal lagi terbuka, langsung switch ke History & scroll atas
   if ($('#unclaimModal').classList.contains('show')) {
     switchUcTab('history');
     const list = $('#ucList');
@@ -2660,7 +2545,6 @@ async function deleteUnclaim(ucId){
 
   ucAll.splice(idx, 1);
   writeUnclaims(ucAll);
-  rtdbDeleteUnclaim(ucId).catch(console.error);
   render();
   if ($('#unclaimModal').classList.contains('show')) switchUcTab('pending');
   toast('Unclaim deleted', 'warn');
@@ -2778,7 +2662,6 @@ const writeNotes = (a) => {
 };
 const writeNotesPersist = (a) => {
   writeNotes(a);
-  rtdbSaveNotesBulk?.(a); 
   if (typeof bumpUpdated === 'function') bumpUpdated();
   if (typeof safeSyncUp === 'function') safeSyncUp();
 };
@@ -3140,12 +3023,19 @@ async function doChangePassword(){
     btn.disabled = false; btn.textContent = 'Change';
   }
 }
+
+// Wiring tombol pada modal
 document.getElementById('cpCancel')?.addEventListener('click', closeChangePwModal);
 document.getElementById('cpOk')?.addEventListener('click', doChangePassword);
-document.getElementById('cpModal')?.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter')  doChangePassword();
+// Enter = submit, Esc / klik overlay = tutup
+document.querySelector('#cpModal')?.addEventListener('keydown', (e)=>{
+  if (e.key === 'Enter') doChangePassword();
   if (e.key === 'Escape') closeChangePwModal();
 });
+document.querySelector('#cpModal .overlay')?.addEventListener('click', closeChangePwModal);
+document.getElementById('cpCloseX')?.addEventListener('click', closeChangePwModal);
+
+// ==== User dropdown logic ====
 function setUserUI(name){
   const lab = document.getElementById('userBtnLabel');
   const nm  = document.getElementById('userMenuName');
