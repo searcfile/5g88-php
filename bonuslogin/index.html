@@ -167,12 +167,12 @@
     <form id="form-forgot" class="hidden" data-panel="forgot" autocomplete="off">
       <div class="row">
         <label for="fu">Username</label>
-        <input id="u" type="text" placeholder="Username-Register" required>
+        <input id="u" type="text" placeholder="Username" required>
       </div>
       <div class="row">
         <label for="fnotes">Notes (optional)</label>
         <input id="u" type="text" placeholder="(optional)">
-        <span class="small">Click request.</span>
+        <span class="small">Click button request.</span>
       </div>
       <div class="row-split">
         <button type="button" class="btn-ghost" data-goto="login">Back</button>
@@ -183,22 +183,22 @@
     <!-- CHANGE PASSWORD (setelah login) -->
     <form id="form-changepw" class="hidden" data-panel="changepw" autocomplete="off">
       <div class="row">
-        <label for="cp-old">Password Saat Ini</label>
-        <input id="cp-old" type="password" placeholder="password lama" required>
+        <label for="cp-old">Wrong password</label>
+        <input id="cp-old" type="password" placeholder="old password" required>
       </div>
       <div class="row-split">
         <div class="row">
-          <label for="cp-new">Password Baru</label>
-          <input id="cp-new" type="password" placeholder="min 8 karakter" minlength="8" required>
+          <label for="cp-new">New password</label>
+          <input id="cp-new" type="password" placeholder="min 6 letter" minlength="6" required>
         </div>
         <div class="row">
-          <label for="cp-re">Ulangi Password Baru</label>
-          <input id="cp-re" type="password" placeholder="ulangi lagi" minlength="8" required>
+          <label for="cp-re">Confirm password</label>
+          <input id="cp-re" type="password" placeholder="confirm password" minlength="6" required>
         </div>
       </div>
       <div class="row-split">
-        <button type="button" class="btn-ghost" data-goto="login">Kembali</button>
-        <button class="btn" type="submit">Simpan Password</button>
+        <button type="button" class="btn-ghost" data-goto="login">Back</button>
+        <button class="btn" type="submit">Save password</button>
       </div>
       <div id="cp-user" class="small" style="margin-top:8px"></div>
     </form>
