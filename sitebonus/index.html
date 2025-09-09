@@ -1100,8 +1100,8 @@ function __writeLocalState(s){
   if (!s) return;
   if (Array.isArray(s.records))  writeStore(s.records);
   if (Array.isArray(s.unclaims)) writeUnclaims(s.unclaims);
-  if (s.targets !== undefined)   localStorage.setItem(LS_TARGET, JSON.stringify(s.targets)); // ⬅️
-  if (s.notes)                   localStorage.setItem('bonusNotes.v1', JSON.stringify(s.notes));
+  if (s.targets !== undefined) localStorage.setItem(LS_TARGET, JSON.stringify(s.targets));
+  if (s.notes   !== undefined) localStorage.setItem('bonusNotes.v1', JSON.stringify(s.notes)); // <-- tukar
   localStorage.setItem(LS_UPDATED, String(Number(s.updatedAt || Date.now())));
 }
 
@@ -1208,10 +1208,10 @@ window.doLogout = async ()=>{
 
 // ==== AUTO SYNC SAAT TUTUP TAB ====
 let __syncTimer = null;
-function safeSyncUp() {
-  if (!auth.currentUser || BOOTING) return; // ⬅️ tahan saat boot
+function safeSyncUp(immediate = false) {
+  if (!auth.currentUser || BOOTING) return;
   clearTimeout(__syncTimer);
-  if (immediate) return syncUp();
+  if (immediate) return syncUp();   // flush sekarang
   __syncTimer = setTimeout(syncUp, 300);
 }
 document.addEventListener('visibilitychange', () => {
@@ -2247,13 +2247,10 @@ async function saveTarget(){
     resitTiers:   readRowsFromEditor('#resTierList'),
     salesTiers:   readRowsFromEditor('#salesTierList'),
   };
+  writeTarget(t);
+  bumpUpdated();
 
-  writeTarget(t);        // simpan ke local
-  bumpUpdated();         // update timestamp state
-
-  // ⬇️ penting: jangan tunggu debounce — push sekarang ke Firebase
-  await Loading.wrap(syncUp(), 'Saving…');
-
+  await syncUp();                // cukup ini saja
   toast('Target saved', 'success');
   closeTargetModal();
   render();
