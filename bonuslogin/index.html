@@ -108,7 +108,8 @@
 }
 .field input::placeholder{ color: var(--muted); opacity:.95; }
 #u::placeholder { color: var(--muted); opacity:.95; }
-
+#fnotes::placeholder { color: var(--muted); opacity:.95; }
+#fu::placeholder { color: var(--muted); opacity:.95; }
 /* tombol mata (ini boleh tetap) */
 .eye{
   position:absolute; right:10px; top:50%; transform:translateY(-50%);
@@ -167,11 +168,11 @@
     <form id="form-forgot" class="hidden" data-panel="forgot" autocomplete="off">
       <div class="row">
         <label for="fu">Username</label>
-        <input id="u" type="text" placeholder="Username" required>
+        <input id="fu" type="text" placeholder="Username" required>
       </div>
       <div class="row">
         <label for="fnotes">Notes (optional)</label>
-        <input id="u" type="text" placeholder="(optional)">
+        <input id="fnotes" type="text" placeholder="(optional)">
         <span class="small">Click button request.</span>
       </div>
       <div class="row-split">
