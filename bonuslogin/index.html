@@ -302,7 +302,7 @@ function canTry(){
   var now = Date.now();
   if (now < lockUntil){
     var sec = Math.ceil((lockUntil - now)/1000);
-    toast("Terlalu banyak percobaan. Coba lagi dalam " + sec + "s.", "error");
+    toast("Too many attempts. Try again in " + sec + "s.", "error");
     return false;
   }
   return true;
@@ -312,7 +312,7 @@ function registerFail(){
   if (failCount % 5 === 0){
     lockUntil = Date.now() + 30000;
     localStorage.setItem('login.lockUntil', String(lockUntil));
-    toast("Terlalu banyak percobaan. Coba lagi dalam 30 detik.", "error");
+    toast("Too many attempts. Try again in 30 seconds.", "error");
   }
 }
 function clearFail(){
@@ -345,7 +345,7 @@ auth.onAuthStateChanged(function(user){
 
   if (isLogged){
     var cpUser = $("#cp-user");
-    if (cpUser) cpUser.textContent = "Masuk sebagai: " + getUsernameFromUser(user);
+    if (cpUser) cpUser.textContent = "Log in as: " + getUsernameFromUser(user);
     if (urlTab === 'changepw') gotoTab('changepw');
   }else{
     var curBtn = document.querySelector('.tab[aria-selected="true"]');
@@ -382,11 +382,11 @@ if (loginForm){
   loginForm.addEventListener("submit", async function(e){
     e.preventDefault();
     if (!canTry()) return;
-    if (!navigator.onLine){ toast("Offline. Periksa koneksi internet.", "error"); return; }
+    if (!navigator.onLine){ toast("Offline. Check your internet connection.", "error"); return; }
 
     var btn = e.submitter || e.target.querySelector('button[type="submit"]');
     var old = btn ? btn.textContent : '';
-    if (btn){ btn.disabled = true; btn.textContent = 'Memproses…'; }
+    if (btn){ btn.disabled = true; btn.textContent = 'Processing…'; }
 
     try{
       var u = sanitizeUsername(($("#u") && $("#u").value) || "");
@@ -399,18 +399,18 @@ if (loginForm){
       await auth.signInWithEmailAndPassword(toPseudoEmail(u), p);
 
       clearFail();
-      toast("Login berhasil. Mengalihkan…", "success");
+      toast("Login successful. Redirecting…", "success");
       setTimeout(function(){ location.href = REDIRECT_URL; }, 200);
     } catch(err){
       registerFail();
       var code = String(err && err.code || "");
-      var msg="Gagal login.";
+      var msg="Login failed.";
       if (code === "missing") msg="Lengkapi username & password.";
       else if (code === "bad-username") msg="Format username salah (3–30: a–z 0–9 . _ -).";
-      else if (code.indexOf("user-not-found")>=0) msg="Username tidak ditemukan.";
-      else if (code.indexOf("wrong-password")>=0 || code.indexOf("invalid-credential")>=0) msg="Password salah.";
-      else if (code.indexOf("too-many-requests")>=0) msg="Terlalu banyak percobaan. Coba lagi nanti.";
-      else if (code.indexOf("network-request-failed")>=0) msg="Jaringan bermasalah. Coba lagi.";
+      else if (code.indexOf("user-not-found")>=0) msg="Username not found.";
+      else if (code.indexOf("wrong-password")>=0 || code.indexOf("invalid-credential")>=0) msg="Incorrect password.";
+      else if (code.indexOf("too-many-requests")>=0) msg="Too many attempts. Please try again later.";
+      else if (code.indexOf("network-request-failed")>=0) msg="Network problem. Please try again.";
       console.error(err);
       toast(msg, "error");
     } finally {
@@ -442,11 +442,11 @@ if (forgotForm){
     var key = String(Date.now()) + "_" + u;
 
     db.ref("reset_requests").child(key).set(payload).then(function(){
-      toast("Permintaan reset sudah terkirim ke admin.", "success");
+      toast("Reset request has been sent to admin.", "success");
       if ($("#fu")) $("#fu").value="";
       if ($("#fnotes")) $("#fnotes").value="";
     }).catch(function(){
-      toast("Tidak bisa mengirim permintaan. Coba lagi.", "error");
+      toast("Unable to send request. Please try again.", "error");
     });
   });
 }
@@ -459,11 +459,11 @@ if (changeForm){
   changeForm.addEventListener("submit", function(e){
     e.preventDefault();
     var user = auth.currentUser;
-    if (!user){ toast("Silakan login dulu.", "error"); return; }
+    if (!user){ toast("Please login first.", "error"); return; }
 
     var btn = e.submitter || e.target.querySelector('button[type="submit"]');
     var old = btn ? btn.textContent : '';
-    if (btn){ btn.disabled = true; btn.textContent = 'Menyimpan…'; }
+    if (btn){ btn.disabled = true; btn.textContent = 'Save…'; }
 
     var oldP = ($("#cp-old") && $("#cp-old").value) || "";
     var newP = ($("#cp-new") && $("#cp-new").value) || "";
@@ -478,15 +478,15 @@ if (changeForm){
     }).then(function(){
       return auth.signOut();
     }).then(function(){
-      toast("Password berhasil diubah. Silakan login ulang.", "success");
+      toast("Password changed successfully. Please log in again.", "success");
       if ($("#cp-old")) $("#cp-old").value = "";
       if ($("#cp-new")) $("#cp-new").value = "";
       if ($("#cp-re"))  $("#cp-re").value  = "";
       gotoTab("login");
     }).catch(function(err){
       var code = String(err && err.code || "");
-      var msg = "Gagal mengubah password.";
-      if (code.indexOf("wrong-password")>=0 || code.indexOf("invalid-credential")>=0) msg = "Password saat ini salah.";
+      var msg = "Error change password.";
+      if (code.indexOf("wrong-password")>=0 || code.indexOf("invalid-credential")>=0) msg = "Password wrong.";
       toast(msg, "error");
     }).finally(function(){
       if (btn){ btn.disabled=false; btn.textContent=old; }
@@ -500,8 +500,8 @@ if (changeForm){
 var pw  = document.getElementById('password');
 if (pw){
   pw.addEventListener('invalid', function(){
-    if (pw.validity.valueMissing) pw.setCustomValidity('Sila masukkan password.');
-    else if (pw.validity.tooShort) pw.setCustomValidity('Password minimal 6 karakter.');
+    if (pw.validity.valueMissing) pw.setCustomValidity('Please fill password.');
+    else if (pw.validity.tooShort) pw.setCustomValidity('Password minimum 6 letter.');
     else pw.setCustomValidity('');
   });
   pw.addEventListener('input', function(){ pw.setCustomValidity(''); });
@@ -522,7 +522,7 @@ if (pw && btnEye) {
     var showing = (pw.type === 'text');
     btnEye.innerHTML = showing ? eyeOff : eyeOpen;
     btnEye.setAttribute('aria-pressed', String(showing));
-    btnEye.setAttribute('aria-label', showing ? 'Sembunyikan password' : 'Tampilkan password');
+    btnEye.setAttribute('aria-label', showing ? 'Hidden' : 'Show password');
   }
   btnEye.addEventListener('click', function(){
     pw.type = (pw.type === 'password') ? 'text' : 'password';
