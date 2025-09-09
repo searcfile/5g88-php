@@ -37,24 +37,26 @@ body{
   align-items:center;                /* pusat vertikal */
   margin-inline:auto;
 }
-/* Actions: Back + Request (kanan, berdampingan) */
+/* === Actions: Back + Request (rapi, match lebar input) === */
 .row-split{
   display:flex;
-  justify-content:flex-end;   /* dorong ke kanan */
-  align-items:center;
-  gap:12px;
-  flex-wrap:wrap;             /* boleh turun baris kalau layar sempit */
-}
-.row-split > *{
-  flex:0 0 160px;             /* lebar tetap 160px (sesuaikan) */
+  gap:12px;                /* jarak antar tombol */
+  align-items:stretch;     /* tinggi konsisten */
 }
 
-@media (max-width: 420px){
+.row-split > *{
+  flex:1 1 0;              /* bagi rata, sama lebar, penuh mengikuti form */
+  min-width:140px;         /* jaga agar tidak terlalu kecil */
+}
+
+/* Mobile: kalau sempit, tombol turun jadi 2 baris, full width */
+@media (max-width: 480px){
   .row-split{
-    justify-content:space-between;
+    flex-direction:column;
   }
   .row-split > *{
-    flex:1 0 120px;           /* di layar kecil bisa melebar sama rata */
+    width:100%;
+    min-width:0;
   }
 }
 
