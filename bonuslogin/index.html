@@ -70,11 +70,10 @@
     height:44px; border-radius:10px; border:1px solid #2b3653; background:#0e1728;
     color:#e5e7eb; padding:0 12px; outline:none;
   }
-  input:hover{ border-color:#3c89e8 }
-  input:focus{ box-shadow: var(--ring); border-color:#1668dc }
+  input:hover{ border-color:#3c89e8 }input:focus{ border-color:#1668dc }input:active{ border-color:#1554ad }
 
   .btn{
-    height:44px; border-radius:10px; border:1px solid #c6a23a;
+    height:44px; border-radius:8px; border:1px solid #c6a23a;
     background: linear-gradient(180deg,var(--gold),var(--gold-2)); color:#111827;
     font-weight:800; letter-spacing:.3px; cursor:pointer; transition:.15s;
   }
@@ -89,7 +88,7 @@
   .row-split{ display:flex; gap:10px }
   .row-split > *{ flex:1 }
   .helper{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
-  .helper a{ color:#d6b24a; text-decoration:none; font-size:13px }
+  .helper a{ color:#1668dc; text-decoration:none; font-size:13px }
   .helper a:hover{ text-decoration:underline }
 
   .hint{ font-size:12px; color:var(--muted) }
@@ -165,10 +164,10 @@
   </div>
 </div>
       <div class="helper">
-        <span class="small">Gunakan username saja, tidak perlu email.</span>
+        <span class="small">Fill you Username Password.</span>
         <a href="#" data-goto="forgot">Lupa password?</a>
       </div>
-      <button class="btn" type="submit">Masuk</button>
+      <button class="btn" type="submit">Login</button>
     </form>
 
     <!-- FORGOT (tanpa email) -->
