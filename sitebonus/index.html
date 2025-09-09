@@ -623,6 +623,44 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 
 /* (opsional) lebar dialog */
 #cpModal .dialog.small{ max-width:560px; }
+/* Global loading */
+.loading-mask{
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,.45);
+  display: none;                 /* hidden by default */
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(2px);
+}
+.loading-mask.show{ display: flex; }
+
+.loading-box{
+  background: #1c1c1c; color: #fff;
+  padding: 14px 16px; border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.4);
+  display: grid; grid-auto-flow: row; gap: 10px; place-items: center;
+  min-width: 180px;
+}
+.loading-box .msg{ font-size: 14px; opacity: .9; }
+
+/* Spinner */
+.spin{
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 3px solid rgba(255,255,255,.25);
+  border-top-color: #fff;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin{ to { transform: rotate(360deg); } }
+
+/* Button loading (optional) */
+.btn.is-loading, .btn-exp.is-loading, .btn-unclaim.is-loading, .iconbtn.is-loading{
+  position: relative; pointer-events: none; opacity: .8;
+}
+.btn.is-loading::after, .btn-exp.is-loading::after, .btn-unclaim.is-loading::after, .iconbtn.is-loading::after{
+  content: ""; position: absolute; inset-inline-end: 10px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid currentColor; border-top-color: transparent;
+  animation: spin .8s linear infinite;
+}
 </style>
 </head>
 <body>
@@ -981,6 +1019,13 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
     </div>
   </div>
 </div>
+<!-- GLOBAL LOADING OVERLAY -->
+<div id="loadingMask" class="loading-mask" aria-hidden="true">
+  <div class="loading-box" role="status" aria-live="polite">
+    <div class="spin"></div>
+    <div id="loadingMsg" class="msg">Loading…</div>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <style>html.auth-wait body{visibility:hidden}</style>
@@ -1035,8 +1080,8 @@ async function syncUp(){
   if (!payload.updatedAt){ bumpUpdated(); payload.updatedAt = getUpdatedAt(); }
 
   try{
-    await db.ref(`users/${userKey}/state`).set(payload);
-    console.log('[syncUp OK]', userKey, 'updatedAt=', payload.updatedAt);
+    await Loading.wrap(db.ref(`users/${userKey}/state`).set(payload), 'Syncing…');
+    console.log('[syncUp OK]');
   }catch(e){
     console.error('[syncUp FAIL]', e);
   }
@@ -1322,6 +1367,43 @@ function keyForRange(fs, ts){
   }
 
   return null;
+}
+// ===== Global Loading helpers =====
+const Loading = {
+  show(msg = 'Loading…'){
+    const mask = document.getElementById('loadingMask');
+    const m = document.getElementById('loadingMsg');
+    if (m) m.textContent = msg;
+    mask?.classList.add('show');
+    mask?.setAttribute('aria-hidden','false');
+  },
+  hide(){
+    const mask = document.getElementById('loadingMask');
+    mask?.classList.remove('show');
+    mask?.setAttribute('aria-hidden','true');
+  },
+  // Wrap promise dengan auto show/hide
+  async wrap(promiseLike, msg='Loading…'){
+    try{
+      Loading.show(msg);
+      return await promiseLike;
+    } finally {
+      Loading.hide();
+    }
+  }
+};
+
+// ===== Button loading helper (optional) =====
+function setBtnLoading(btn, on=true, newLabel){
+  if (!btn) return;
+  if (on){
+    btn.dataset.old = btn.textContent;
+    if (newLabel) btn.textContent = newLabel;
+    btn.classList.add('is-loading'); btn.disabled = true;
+  } else {
+    btn.textContent = btn.dataset.old || btn.textContent;
+    btn.classList.remove('is-loading'); btn.disabled = false;
+  }
 }
 function applyQuickRange(kind){
   const now = new Date();
@@ -2165,126 +2247,140 @@ function prettyRange(f, t){
 }
 
 function render(){
-  const site   = $('#siteFilter').value;
-  const month  = $('#monthFilter').value;          // hanya untuk jump & label
-  const targets= readTarget();
-
-  // batas waktu dari input (00:00:00 s/d 23:59:59)
-  const fromStr = $('#rangeFrom')?.value;
-  const toStr   = $('#rangeTo')?.value;
-  const fromTS  = fromStr ? new Date(fromStr + 'T00:00:00').getTime() : -Infinity;
-  const toTS    = toStr   ? new Date(toStr   + 'T23:59:59').getTime() :  Infinity;
-
-  // ❗ Hapus filter r.month === month
-  const data = readStore()
-    .filter(r => site === 'ALL' ? true : r.site === site)
-    .filter(r => {
-      const ts = new Date(r.datetime).getTime();
-      return ts >= fromTS && ts <= toTS;
-    })
-    .sort((a,b) => new Date(b.datetime) - new Date(a.datetime));
-
-  // Map unclaim yang TERKAIT dengan record yang tampil
-  const dataIds = new Set(data.map(r => r.id));
-  const uc = readUnclaims();
-  const ucByRecord = {};
-  for (const u of uc) {
-    if (!dataIds.has(u.recordId)) continue;
-    if (!ucByRecord[u.recordId]) ucByRecord[u.recordId] = { pending:0, claimed:0 };
-    if (u.claimed) ucByRecord[u.recordId].claimed += safe(u.amount);
-    else           ucByRecord[u.recordId].pending += safe(u.amount);
+  // Fallback: kalau helper Loading belum wujud, jangan pecah — jadikan no-op
+  if (!window.Loading) {
+    window.Loading = { show(){}, hide(){} };
   }
 
-  // archive banner: sembunyikan ketika range lintas bulan
-  $('#archiveBanner').style.display = 'none';
-  $('#bannerMonth').textContent = prettyMonth(month);
+  Loading.show('Rendering…');
 
-  const tb = $('#tbody'); tb.innerHTML = '';
-  let totals = { d:0,w:0,b:0,f:0,m:0,r:0,s:0, bd:0, br:0, bsBase:0, uDisp:0, uPending:0, uClaimed:0, uAll:0 };
+  // Biar overlay sempat render sebelum kerja berat
+  requestAnimationFrame(() => {
+    try {
+      const site   = $('#siteFilter').value;
+      const month  = $('#monthFilter').value;          // hanya untuk jump & label
+      const targets= readTarget();
 
-  for (const r of data){
-    const dt = fmtDMYHMS(r.datetime);
+      // batas waktu dari input (00:00:00 s/d 23:59:59)
+      const fromStr = $('#rangeFrom')?.value;
+      const toStr   = $('#rangeTo')?.value;
+      const fromTS  = fromStr ? new Date(fromStr + 'T00:00:00').getTime() : -Infinity;
+      const toTS    = toStr   ? new Date(toStr   + 'T23:59:59').getTime() :  Infinity;
 
-    const bonusDep       = pickTierBonus(safe(r.deposit), targets.depositTiers);
-    const bonusRes       = pickTierBonus(safe(r.resit),   targets.resitTiers);
-    const bonusSalesBase = pickTierBonus(safe(r.sales),   targets.salesTiers);
+      // ❗ Hapus filter r.month === month
+      const data = readStore()
+        .filter(r => site === 'ALL' ? true : r.site === site)
+        .filter(r => {
+          const ts = new Date(r.datetime).getTime();
+          return ts >= fromTS && ts <= toTS;
+        })
+        .sort((a,b) => new Date(b.datetime) - new Date(a.datetime));
 
-    const ucs = ucByRecord[r.id] || { pending:0, claimed:0 };
-    const unclaimDisplay = safe(ucs.claimed) > 0 ? -safe(ucs.claimed) : safe(ucs.pending);
+      // Map unclaim yang TERKAIT dengan record yang tampil
+      const dataIds = new Set(data.map(r => r.id));
+      const uc = readUnclaims();
+      const ucByRecord = {};
+      for (const u of uc) {
+        if (!dataIds.has(u.recordId)) continue;
+        if (!ucByRecord[u.recordId]) ucByRecord[u.recordId] = { pending:0, claimed:0 };
+        if (u.claimed) ucByRecord[u.recordId].claimed += safe(u.amount);
+        else           ucByRecord[u.recordId].pending += safe(u.amount);
+      }
 
-    const tr = document.createElement('tr');
-tr.innerHTML = `
-  <td>${dt}</td>
-  <td style="text-align:center"><span class="pill ${r.site==='5G88'?'site-5g88':'site-spm888'}">${r.site}</span></td>
-  <td class="${r.deposit < 0 ? 'num red' : 'num green'}">${fmtNum(r.deposit)}</td>
-  <td class="num ${r.withdrawal === 0 ? '' : 'red'}">
-    ${ r.withdrawal === 0 ? fmtNum(0) : ('-' + fmtNum(Math.abs(r.withdrawal))) }
-  </td>
-  <td class="num cyan">${fmtNum(r.bonus)}</td>
-  <td>${fmtNum(r.forfeit)}</td>
-  <td>${fmtIntNoGroup(r.member)}</td>
-  <td>${fmtNumNoGroup(r.resit)}</td>
-  <td class="${r.sales < 0 ? 'num red' : 'num green'}">${fmtNum(r.sales)}</td>
-  <td class="num ${unclaimDisplay<0?'red':''}">${fmtNum(unclaimDisplay)}</td>
-  <td>${bonusDep.toLocaleString()}</td>
-  <td>${bonusRes.toLocaleString()}</td>
-  <td>
-    <div class="actions">
-      <button class="iconbtn" onclick="window.__edit('${r.id}')">Edit</button>
-      <button class="iconbtn-del" onclick="window.__del('${r.id}')">Delete</button>
-    </div>
-  </td>
-`;
-tb.appendChild(tr);
+      // archive banner: sembunyikan ketika range lintas bulan
+      $('#archiveBanner').style.display = 'none';
+      $('#bannerMonth').textContent = prettyMonth(month);
 
-    totals.uPending += safe(ucs.pending);
-    totals.uClaimed += safe(ucs.claimed);
-    totals.uAll     += safe(ucs.pending) + safe(ucs.claimed);
+      const tb = $('#tbody'); tb.innerHTML = '';
+      let totals = { d:0,w:0,b:0,f:0,m:0,r:0,s:0, bd:0, br:0, bsBase:0, uDisp:0, uPending:0, uClaimed:0, uAll:0 };
 
-    totals.d  += safe(r.deposit);
-    totals.w  += safe(r.withdrawal);
-    totals.b  += safe(r.bonus);
-    totals.f  += safe(r.forfeit);
-    totals.m  += safe(r.member);
-    totals.r  += safe(r.resit);
-    totals.s  += safe(r.sales);
+      for (const r of data){
+        const dt = fmtDMYHMS(r.datetime);
 
-    totals.bd += safe(bonusDep);
-    totals.br += safe(bonusRes);
-    totals.bsBase += safe(bonusSalesBase);
-  }
+        const bonusDep       = pickTierBonus(safe(r.deposit), targets.depositTiers);
+        const bonusRes       = pickTierBonus(safe(r.resit),   targets.resitTiers);
+        const bonusSalesBase = pickTierBonus(safe(r.sales),   targets.salesTiers);
 
-  $('#emptyState').style.display = data.length ? 'none' : 'block';
-  totals.uDisp = safe(totals.uPending);
+        const ucs = ucByRecord[r.id] || { pending:0, claimed:0 };
+        const unclaimDisplay = safe(ucs.claimed) > 0 ? -safe(ucs.claimed) : safe(ucs.pending);
 
-  // footer
-  $('#ft_deposit').textContent    = fmtNum(totals.d);
-  const wdTotalAbs = Math.abs(totals.w);
-  $('#ft_withdrawal').textContent = wdTotalAbs === 0 ? fmtNum(0) : `-${fmtNum(wdTotalAbs)}`;
-  $('#ft_bonus').textContent      = fmtNum(totals.b);
-  $('#ft_forfeit').textContent    = fmtNum(totals.f);
-  $('#ft_member').textContent     = fmtIntNoGroup(totals.m);
-  $('#ft_resit').textContent      = fmtNumNoGroup(totals.r);
-  $('#ft_sales').textContent      = fmtNum(totals.s);
-  $('#ft_unclaim').textContent    = fmtNum(totals.uDisp);
-  $('#ft_bonDep').textContent     = totals.bd.toLocaleString();
-  $('#ft_bonRes').textContent     = totals.br.toLocaleString();
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${dt}</td>
+          <td style="text-align:center"><span class="pill ${r.site==='5G88'?'site-5g88':'site-spm888'}">${r.site}</span></td>
+          <td class="${r.deposit < 0 ? 'num red' : 'num green'}">${fmtNum(r.deposit)}</td>
+          <td class="num ${r.withdrawal === 0 ? '' : 'red'}">
+            ${ r.withdrawal === 0 ? fmtNum(0) : ('-' + fmtNum(Math.abs(r.withdrawal))) }
+          </td>
+          <td class="num cyan">${fmtNum(r.bonus)}</td>
+          <td>${fmtNum(r.forfeit)}</td>
+          <td>${fmtIntNoGroup(r.member)}</td>
+          <td>${fmtNumNoGroup(r.resit)}</td>
+          <td class="${r.sales < 0 ? 'num red' : 'num green'}">${fmtNum(r.sales)}</td>
+          <td class="num ${unclaimDisplay<0?'red':''}">${fmtNum(unclaimDisplay)}</td>
+          <td>${bonusDep.toLocaleString()}</td>
+          <td>${bonusRes.toLocaleString()}</td>
+          <td>
+            <div class="actions">
+              <button class="iconbtn" onclick="window.__edit('${r.id}')">Edit</button>
+              <button class="iconbtn-del" onclick="window.__del('${r.id}')">Delete</button>
+            </div>
+          </td>
+        `;
+        tb.appendChild(tr);
 
-  const ftW = $('#ft_withdrawal');
-  ftW.className = ''; ftW.classList.add('num'); if (wdTotalAbs > 0) ftW.classList.add('red');
-  const ftS = $('#ft_sales');
-  ftS.className = ''; ftS.classList.add('num'); if (totals.s < 0) ftS.classList.add('red'); else if (totals.s > 0) ftS.classList.add('green');
+        totals.uPending += safe(ucs.pending);
+        totals.uClaimed += safe(ucs.claimed);
+        totals.uAll     += safe(ucs.pending) + safe(ucs.claimed);
 
-  // mini-cards: tampilkan range
-  setMiniMonthLabel();
-  $('#miniSite').textContent  = (site === 'ALL' ? 'All Sites' : site);
+        totals.d  += safe(r.deposit);
+        totals.w  += safe(r.withdrawal);
+        totals.b  += safe(r.bonus);
+        totals.f  += safe(r.forfeit);
+        totals.m  += safe(r.member);
+        totals.r  += safe(r.resit);
+        totals.s  += safe(r.sales);
 
-  renderSummaryRows(totals, data.length, site, month);
-  applyNumberTitles();
-  window.NumberClipper?.clip('#dataTable tbody td:nth-child(n+3):nth-child(-n+12)');
-  window.NumberClipper?.clip('#dataTable tfoot td:nth-child(n+3):nth-child(-n+12)');
-  window.NumberClipper?.clip('.card .val');
-  applyTableScrollLimit();
+        totals.bd += safe(bonusDep);
+        totals.br += safe(bonusRes);
+        totals.bsBase += safe(bonusSalesBase);
+      }
+
+      $('#emptyState').style.display = data.length ? 'none' : 'block';
+      totals.uDisp = safe(totals.uPending);
+
+      // footer
+      $('#ft_deposit').textContent    = fmtNum(totals.d);
+      const wdTotalAbs = Math.abs(totals.w);
+      $('#ft_withdrawal').textContent = wdTotalAbs === 0 ? fmtNum(0) : `-${fmtNum(wdTotalAbs)}`;
+      $('#ft_bonus').textContent      = fmtNum(totals.b);
+      $('#ft_forfeit').textContent    = fmtNum(totals.f);
+      $('#ft_member').textContent     = fmtIntNoGroup(totals.m);
+      $('#ft_resit').textContent      = fmtNumNoGroup(totals.r);
+      $('#ft_sales').textContent      = fmtNum(totals.s);
+      $('#ft_unclaim').textContent    = fmtNum(totals.uDisp);
+      $('#ft_bonDep').textContent     = totals.bd.toLocaleString();
+      $('#ft_bonRes').textContent     = totals.br.toLocaleString();
+
+      const ftW = $('#ft_withdrawal');
+      ftW.className = ''; ftW.classList.add('num'); if (wdTotalAbs > 0) ftW.classList.add('red');
+      const ftS = $('#ft_sales');
+      ftS.className = ''; ftS.classList.add('num'); if (totals.s < 0) ftS.classList.add('red'); else if (totals.s > 0) ftS.classList.add('green');
+
+      // mini-cards: tampilkan range
+      setMiniMonthLabel();
+      $('#miniSite').textContent  = (site === 'ALL' ? 'All Sites' : site);
+
+      renderSummaryRows(totals, data.length, site, month);
+      applyNumberTitles();
+      window.NumberClipper?.clip('#dataTable tbody td:nth-child(n+3):nth-child(-n+12)');
+      window.NumberClipper?.clip('#dataTable tfoot td:nth-child(n+3):nth-child(-n+12)');
+      window.NumberClipper?.clip('.card .val');
+      applyTableScrollLimit();
+    } finally {
+      Loading.hide();
+    }
+  });
 }
 function applyTableScrollLimit() {
   const scroller = document.querySelector('.table-scroller');
