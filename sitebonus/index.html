@@ -1845,9 +1845,9 @@ function readTarget(){
 
   // default sekali (tanpa bump/sync)
   const def = {
-    depositTiers:[{threshold:8000, bonus:20},{threshold:10000, bonus:25}],
-    resitTiers:[{threshold:250, bonus:30},{threshold:500, bonus:60}],
-    salesTiers:[{threshold:30000, bonus:300}]
+    depositTiers:[{threshold:8000, bonus:20},{threshold:10000, bonus:25},{threshold:12000, bonus:30},{threshold:15000, bonus:35},{threshold:20000, bonus:40},{threshold:25000, bonus:50}],
+    resitTiers:[{threshold:250, bonus:30},{threshold:300, bonus:40},{threshold:350, bonus:50},{threshold:400, bonus:60},{threshold:450, bonus:70}],
+    salesTiers:[{threshold:30000, bonus:300},{threshold:400000, bonus:350},{threshold:50000, bonus:400},{threshold:60000, bonus:450},{threshold:70000, bonus:500},{threshold:80000, bonus:800},{threshold:120000, bonus:900}]
   };
   localStorage.setItem(LS_TARGET, JSON.stringify(def));
   return def;
