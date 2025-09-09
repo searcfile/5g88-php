@@ -1100,9 +1100,8 @@ function __writeLocalState(s){
   if (!s) return;
   if (Array.isArray(s.records))  writeStore(s.records);
   if (Array.isArray(s.unclaims)) writeUnclaims(s.unclaims);
-  if (s.targets) localStorage.setItem(LS_TARGET, JSON.stringify(s.targets));
-  if (s.notes)   localStorage.setItem('bonusNotes.v1', JSON.stringify(s.notes));
-  // simpan timestamp cloud yg dipakai
+  if (s.targets !== undefined)   localStorage.setItem(LS_TARGET, JSON.stringify(s.targets)); // ⬅️
+  if (s.notes)                   localStorage.setItem('bonusNotes.v1', JSON.stringify(s.notes));
   localStorage.setItem(LS_UPDATED, String(Number(s.updatedAt || Date.now())));
 }
 
@@ -1212,6 +1211,7 @@ let __syncTimer = null;
 function safeSyncUp() {
   if (!auth.currentUser || BOOTING) return; // ⬅️ tahan saat boot
   clearTimeout(__syncTimer);
+  if (immediate) return syncUp();
   __syncTimer = setTimeout(syncUp, 300);
 }
 document.addEventListener('visibilitychange', () => {
@@ -2240,21 +2240,24 @@ function saveTiersLive(){
   bumpUpdated();  
   safeSyncUp();
 }
-  function saveTarget(){
-    const readRows=sel=>{
-      const rows=[...document.querySelectorAll(sel+' .tier-row')].slice(1);
-      const out=[]; for(const r of rows){ const [th,bo]=r.querySelectorAll('input'); const thr=+th.value||0; const bon=+bo.value||0; if(thr>0&&bon>0) out.push({threshold:thr,bonus:bon}); }
-      out.sort((a,b)=>a.threshold-b.threshold); return out;
-    };
-    const t={depositTiers:readRows('#depTierList'), resitTiers:readRows('#resTierList'), salesTiers:readRows('#salesTierList')};
-    writeTarget(t);
-    toast('Target saved', 'success');
-    closeTargetModal();
-    render();
-    bumpUpdated(); 
-    safeSyncUp();
-  }
+  // ganti function asal
+async function saveTarget(){
+  const t = {
+    depositTiers: readRowsFromEditor('#depTierList'),
+    resitTiers:   readRowsFromEditor('#resTierList'),
+    salesTiers:   readRowsFromEditor('#salesTierList'),
+  };
 
+  writeTarget(t);        // simpan ke local
+  bumpUpdated();         // update timestamp state
+
+  // ⬇️ penting: jangan tunggu debounce — push sekarang ke Firebase
+  await Loading.wrap(syncUp(), 'Saving…');
+
+  toast('Target saved', 'success');
+  closeTargetModal();
+  render();
+}
 function prettyRange(f, t){
   if (!f || !t) return '';
   const fd = new Date(f), td = new Date(t);
