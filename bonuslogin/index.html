@@ -6,113 +6,124 @@
 <title>Bonus-Login</title>
 <meta name="color-scheme" content="dark">
 <style>
-  :root{
-    --bg1:#0a0f1d; --bg2:#0d1326; --card:#0b1220cc;
-    --text:#e5e7eb; --muted:#9fb2d0; --sub:#cbd5e1;
-    --gold:#ffd166; --gold-2:#ffcf4d; --ok:#10b981; --danger:#ef4444;
-    --ring:0 0 0 3px rgba(255,209,102,.25);
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0; color:var(--text); font:15px/1.5 Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
-    background:
-      radial-gradient(1200px 800px at 10% -10%, #1b2a55 0%, transparent 60%),
-      radial-gradient(900px 700px at 110% 10%, #2b134f 0%, transparent 55%),
-      linear-gradient(160deg, var(--bg1), var(--bg2));
-    display:grid; place-items:center; padding:24px;
-  }
-  .wrap{ width:min(980px,100%); display:grid; grid-template-columns: 1.05fr .95fr; gap:18px; }
-  @media (max-width:860px){ .wrap{ grid-template-columns:1fr; } }
-
-  .brand .glow{
-    position:absolute; inset:-40%; background:
-      radial-gradient(closest-side, rgba(34,211,238,.12), transparent 70%) top left/60% 60% no-repeat,
-      radial-gradient(closest-side, rgba(167,139,250,.14), transparent 70%) 90% 10%/45% 45% no-repeat;
-    filter: blur(16px); pointer-events:none;
-  }
-  .brand h1{
-    margin:0 0 8px; font-size:28px; letter-spacing:.4px; font-weight:800;
-    background: linear-gradient(90deg, #fff, #ffe9a6);
-    -webkit-background-clip:text; background-clip:text; color:transparent;
-  }
-  .brand p{ margin:0; color:var(--muted) }
-  .badge{
-    margin-top:14px; display:inline-flex; align-items:center; gap:8px;
-    border:1px solid #2a2a2a; background:#0f172acc; padding:8px 12px; border-radius:999px; font-size:13px;
-  }
-
-  .card{
-    border:1px solid #223049; background: linear-gradient(180deg, #0e1629, #0a1020);
-    border-radius:16px; padding:22px; position:relative; overflow:hidden;
-    box-shadow:0 12px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.03);
-  }
-
-  .tabs{ display:flex; gap:6px; margin-bottom:14px; }
-  .tab{
-    height:38px; padding:0 12px; border-radius:10px; border:1px solid #2a3550; background:#0f172a;
-    color:#cbd5e1; cursor:pointer; display:inline-flex; align-items:center; gap:8px; user-select:none;
-  }
-  .tab[aria-selected="true"]{
-    color:#0a0a0a; border-color:#b58900; background: linear-gradient(180deg,var(--gold),var(--gold-2));
-    font-weight:700;
-  }
-
-  form{ display:grid; gap:12px; }
-  .row{ display:grid; gap:8px; }
-  label{ font-size:13px; color:var(--sub); }
-  input{
-    height:44px; border-radius:8px; border:1px solid #2b3653; background:#0e1728;
-    color:#e5e7eb; padding:0 12px; outline:none;transition: all 0.2s
-  }
-  input:hover{ border-color:#3c89e8 }input:focus{ border-color:#1668dc }input:active{ border-color:#1554ad }
-
-  .btn{
-    height:44px; border-radius:8px;
-    background: #1668dc; color:#fff;
-    font-weight:700; letter-spacing:.3px; cursor:pointer; transition:.15s;border:none;
-  }
-  .btn:hover{ background:#3c89e8; }.btn:active{ background:#1554ad; }
-
-  .btn-ghost{
-    height:44px; border-radius:8px; border:1px solid #2b3653; background:#0e1728; color:#cbd5e1;
-    cursor:pointer;
-  }
-
-  .row-split{ display:flex; gap:10px }
-  .row-split > *{ flex:1 }
-  .helper{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
-  .helper a{ color:#1668dc; text-decoration:none; font-size:13px }
-  .helper a:hover{ text-decoration:underline;color:#3c89e8; }.helper a:active{ text-decoration:underline;color:#1554ad; }
-
-  .hint{ font-size:12px; color:var(--muted) }
-  .small{ font-size:12px; color:var(--muted) }
-  .hidden{ display:none !important }
-
-  .toast{
-    position:fixed; bottom:26px; left:50%; transform:translateX(-50%);
-    background:#0b1220f0; border:1px solid #2b3653; color:#dbe7ff;
-    padding:12px 16px; border-radius:10px; box-shadow:0 10px 40px rgba(0,0,0,.4);
-    opacity:0; transition:opacity .3s ease; z-index:9999; min-width:260px; text-align:center;
-  }
-  .toast.show{ opacity:1 }
-.field{ position:relative; }
-.field input{
-  width:100%;
-  padding-right:44px;          /* ruang untuk tombol mata di kanan */
+:root{
+  --bg1:#0a0f1d; --bg2:#0d1326; --card:#0b1220cc;
+  --text:#e5e7eb; --muted:#9fb2d0; --sub:#cbd5e1;
+  --ok:#10b981; --danger:#ef4444;
+  --primary:#1668dc; --primary-2:#3c89e8; --primary-3:#1554ad;
+  --ring: 0 0 0 3px rgba(22,104,220,.25);
 }
-.field input::placeholder{ color: var(--muted); opacity:.95; }
-#u::placeholder { color: var(--muted); opacity:.95; }
-#fnotes::placeholder { color: var(--muted); opacity:.95; }
-#fu::placeholder { color: var(--muted); opacity:.95; }
-/* tombol mata (ini boleh tetap) */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; color:var(--text); font:15px/1.5 Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+  background:
+    radial-gradient(1200px 800px at 10% -10%, #1b2a55 0%, transparent 60%),
+    radial-gradient(900px 700px at 110% 10%, #2b134f 0%, transparent 55%),
+    linear-gradient(160deg, var(--bg1), var(--bg2));
+  /* center penuh */
+  min-height:100svh;
+  display:grid; place-items:center;
+  padding:24px;
+}
+
+/* ====== LAYOUT ====== */
+.wrap{
+  width:100%;
+  max-width: 520px;                  /* agar tidak terlalu lebar di layar besar */
+  height:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;                /* pusat vertikal */
+  margin-inline:auto;
+}
+
+/* ====== KARTU LOGIN ====== */
+.card{
+  width:100%;
+  max-width:420px;
+  border:1px solid #223049;
+  background:linear-gradient(180deg,#0e1629,#0a1020);
+  border-radius:16px;
+  padding:22px;
+  position:relative;
+  overflow:hidden;
+  box-shadow:
+    0 12px 40px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+/* ====== FORM ====== */
+form{ display:grid; gap:12px; }
+.row{ display:grid; gap:8px; }
+label{ font-size:13px; color:var(--sub); }
+input{
+  height:44px;
+  border-radius:8px;
+  border:1px solid #2b3653;
+  background:#0e1728;
+  color:#e5e7eb;
+  padding:0 12px;
+  outline:none;
+  transition:border-color .2s, box-shadow .2s, background-color .2s;
+}
+input::placeholder{ color:var(--muted); opacity:.95; }
+input:hover{ border-color: var(--primary-2); }
+input:focus{
+  border-color: var(--primary);
+  box-shadow: var(--ring);
+  background:#0f1a2f;
+}
+
+/* input + tombol mata */
+.field{ position:relative; }
+.field input{ width:100%; padding-right:44px; }
 .eye{
   position:absolute; right:10px; top:50%; transform:translateY(-50%);
   width:32px; height:32px; display:grid; place-items:center;
-  background:transparent; border:0; color:#1668dc; cursor:pointer;
+  background:transparent; border:0; color:var(--primary); cursor:pointer;
 }
 .eye:hover{ color:#ffffff; }
 .eye svg{ display:block; }
+
+/* helper baris bawah */
+.helper{
+  display:flex; justify-content:space-between; align-items:center;
+  gap:10px; flex-wrap:wrap;
+}
+.helper a{ color:var(--primary); text-decoration:none; font-size:13px }
+.helper a:hover{ text-decoration:underline; color:var(--primary-2); }
+.helper a:active{ color:var(--primary-3); }
+
+/* tombol */
+.btn{
+  height:44px; border-radius:8px;
+  background: var(--primary); color:#fff;
+  font-weight:700; letter-spacing:.3px; cursor:pointer;
+  border:none; transition:transform .06s ease, background .15s ease;
+}
+.btn:hover{ background: var(--primary-2); }
+.btn:active{ background: var(--primary-3); transform: translateY(1px); }
+
+.btn-ghost{
+  height:44px; border-radius:8px;
+  border:1px solid #2b3653; background:#0e1728; color:#cbd5e1;
+  cursor:pointer; transition:border-color .15s, background .15s;
+}
+.btn-ghost:hover{ border-color:#3c89e8; background:#102036; }
+
+/* util */
+.small{ font-size:12px; color:var(--muted) }
+.hidden{ display:none !important }
+
+/* toast */
+.toast{
+  position:fixed; bottom:26px; left:50%; transform:translateX(-50%);
+  background:#0b1220f0; border:1px solid #2b3653; color:#dbe7ff;
+  padding:12px 16px; border-radius:10px; box-shadow:0 10px 40px rgba(0,0,0,.4);
+  opacity:0; transition:opacity .3s ease; z-index:9999; min-width:260px; text-align:center;
+}
+.toast.show{ opacity:1 }
 </style>
 </head>
 <body>
