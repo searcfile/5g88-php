@@ -654,52 +654,40 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 /* ===== Loading: HUD ringan tanpa background ===== */
 .loading-mask{
   position: fixed; inset: 0; z-index: 9999;
-  /* default: tidak block halaman */
-  background: transparent;
+  background: transparent;               /* default non-overlay */
   backdrop-filter: none;
   pointer-events: none;
-
-  /* center both axes */
   display: none;
-  align-items: center;
-  justify-content: center;
+  align-items: center; justify-content: center;
 }
-.loading-mask.show{ display: flex; }       /* tampilkan */
+.loading-mask.show{ display: flex; }
+
+/* mode gelap (overlay) */
+.loading-mask.overlay{
+  background: rgba(0,0,0,.55);           /* <<< gelap saat refresh */
+  backdrop-filter: blur(2px);
+  pointer-events: auto;                  /* block klik */
+}
 
 .loading-box{
-  /* container spinner + teks */
   background: transparent;
   box-shadow: none;
   padding: 0;
-  display: grid; place-items: center; gap: 8px;
-  min-width: 0;
-  color: #fff;
-  font-weight: 600;
+  display: grid; place-items: center; gap: 10px;
+  color: #fff; font-weight: 700;
 }
 
 .spin{
   width: var(--spin-size);
   height: var(--spin-size);
   border-radius: 50%;
-  border: 3px solid #1668dc; /* cincin */
-  border-top-color: #fff;                 /* kepala */
+  border: 3px solid #1668dc;
+  border-top-color: #fff;
   animation: spin var(--spin-speed) linear infinite;
 }
-@keyframes spin{ to{ transform: rotate(360deg) } }
+@keyframes spin{ to{ transform: rotate(360deg); } }
 
-.loading-box .msg{
-  font-size: 14px;
-  letter-spacing: .2px;
-  text-shadow: 0 1px 0 rgba(0,0,0,.35);
-}
-
-/* ==== OPTIONAL: kalau mau block UI + gelap ====
-   tinggal tambah class "overlay" di #loadingMask */
-.loading-mask.overlay{
-  pointer-events: auto;
-  background: rgba(0,0,0,.45);
-  backdrop-filter: blur(2px);
-}
+.loading-box .msg{ font-size: 14px; letter-spacing:.2px; }
 </style>
 </head>
 <body>
