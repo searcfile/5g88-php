@@ -689,6 +689,32 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 @keyframes spin{ to{ transform: rotate(360deg); } }
 
 .loading-box .msg{ font-size: 14px; letter-spacing:.2px; }
+.best-tabs{
+  display:flex; flex-wrap:wrap; gap:8px; margin:6px 0 10px;
+}
+.best-tab{
+  height:32px; padding:0 10px; border-radius:8px;
+  border:1px solid #2a2a2a; background:#151515; color:#ddd;
+  cursor:pointer; transition:all .2s;
+}
+.best-tab:hover{ border-color:#3c89e8; color:#3c89e8; }
+.best-tab.active{ border-color:#1668dc; background:#141414; color:#1668dc; }
+
+.best-list{
+  border:1px solid #2a2a2a; border-radius:10px; background:#101010;
+  overflow:auto; max-height:calc(8 * 48px);   /* ≈ 8 baris, selebihnya scroll */
+}
+.best-row{
+  display:grid; grid-template-columns:1fr auto;
+  gap:8px; align-items:center; padding:10px;
+  border-bottom:1px solid #303030;
+}
+.best-row:last-child{ border-bottom:0; }
+.best-row .lbl{
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text);
+}
+.best-row .amt{ font-weight:700; }
+.best-row .amt.red{ color:var(--red); }
 </style>
 </head>
 <body>
@@ -706,7 +732,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 
     <!-- NEW: Unclaim button -->
     <button id="unclaimBtn" class="btn-unclaim" title="Kelola Unclaim">Unclaim</button>
-
+    <button id="bestBtn" class="btn-exp">Best Summary</button>
     <div class="spacer"></div>
     <button id="viewBtn" class="btn-exp">View</button>
     <button id="exportBtn" class="btn-exp">Export CSV</button>
@@ -914,6 +940,31 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
     </div>
   </div>
 
+  <!-- Best Summary Modal -->
+<div id="bestModal" class="modal" aria-hidden="true">
+  <div class="overlay" onclick="closeBestModal()"></div>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="bestTitle" tabindex="-1" style="max-width:640px">
+    <button class="modal-close" onclick="closeBestModal()" aria-label="Close">&times;</button>
+    <h3 id="bestTitle">Best Summary</h3>
+
+    <div class="best-tabs">
+      <button class="best-tab active" data-metric="sales">Sales</button>
+      <button class="best-tab" data-metric="deposit">Deposit</button>
+      <button class="best-tab" data-metric="withdrawal">Withdrawal</button>
+      <button class="best-tab" data-metric="bonus">Bonus</button>
+      <button class="best-tab" data-metric="forfeit">Forfeit</button>
+      <button class="best-tab" data-metric="member">Member</button>
+    </div>
+
+    <div id="bestNote" class="hint" style="margin:6px 0 8px"></div>
+
+    <div id="bestList" class="best-list"></div>
+
+    <div class="foot">
+      <button class="btn-cancel" onclick="closeBestModal()">Close</button>
+    </div>
+  </div>
+</div>
 <!-- Notes (Personal) -->
 <div id="notesModal" class="modal" aria-hidden="true">
   <div class="overlay" onclick="closeNotesModal()"></div>
@@ -1261,6 +1312,90 @@ const bumpUpdated = () => {
   if (BOOTING) return;                // tahan saat boot
   localStorage.setItem(LS_UPDATED, String(Date.now()));
 };
+function openBestModal(){
+  openModalA11y('#bestModal', '.best-tab.active');
+  renderBest('sales');                // default: Sales
+}
+function closeBestModal(){
+  closeModalA11y('#bestModal', '#bestBtn');
+}
+
+function metricLabel(m){
+  switch(m){
+    case 'deposit': return 'Deposit';
+    case 'withdrawal': return 'Withdrawal';
+    case 'bonus': return 'Bonus';
+    case 'forfeit': return 'Forfeit';
+    case 'member': return 'Member';
+    case 'sales': default: return 'Sales';
+  }
+}
+
+// Kira total per-bulan untuk metric terpilih (menghormati Site filter)
+function computeBestByMonth(metric){
+  const site = $('#siteFilter').value;
+  const data = readStore().filter(r => site==='ALL' ? true : r.site === site);
+
+  const byMonth = new Map(); // key: 'YYYY-MM' -> total
+  for (const r of data){
+    const m = r.month;
+    const v = safe(r[metric]);
+    if (!Number.isFinite(v)) continue;
+    byMonth.set(m, (byMonth.get(m) || 0) + v);
+  }
+
+  const arr = [...byMonth.entries()].map(([month, amount]) => ({ month, amount }));
+  arr.sort((a,b) => b.amount - a.amount); // desc
+  return arr;
+}
+
+function fmtAmountFor(metric, val){
+  if (metric === 'withdrawal'){
+    const abs = Math.abs(val);
+    return '-' + fmtNum(abs);          // konsisten dengan tabel (withdrawal bertanda minus)
+  }
+  if (metric === 'member'){
+    return fmtIntNoGroup(val);         // bilangan tanpa grouping ribuan lokal
+  }
+  return fmtNum(val);
+}
+
+function renderBest(metric){
+  // Tab state
+  document.querySelectorAll('#bestModal .best-tab').forEach(b=>{
+    const on = (b.dataset.metric === metric);
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', on);
+  });
+
+  $('#bestTitle').textContent = 'Best ' + metricLabel(metric) + ' (by month)';
+  $('#bestNote').textContent  =
+    'Site: ' + ($('#siteFilter').value === 'ALL' ? 'All Sites' : $('#siteFilter').value) +
+    ' • menampilkan total bulanan tertinggi';
+
+  const list = $('#bestList'); list.innerHTML = '';
+  const rows = computeBestByMonth(metric);
+
+  if (!rows.length){
+    list.innerHTML = '<div class="empty">No data.</div>';
+    return;
+  }
+
+  // Render semua (container sudah ada max-height≈8 baris + scroll)
+  for (const {month, amount} of rows){
+    const row = document.createElement('div');
+    row.className = 'best-row';
+
+    const lbl = `Best ${metricLabel(metric)} ${prettyMonth(month)} — Amount:`;
+    const amtCls = (metric === 'withdrawal') ? 'amt red' : 'amt';
+
+    row.innerHTML = `
+      <div class="lbl">${lbl}</div>
+      <div class="${amtCls}">${fmtAmountFor(metric, amount)}</div>
+    `;
+    list.appendChild(row);
+  }
+}
 function monthStartEnd(yyyyMM){
   const [y,m] = yyyyMM.split('-').map(Number);
   const start = new Date(y, m-1, 1);
@@ -1865,41 +2000,58 @@ function readTarget(){
   let editingId = null;
   let ucActiveTab = 'pending';
   window.NumberClipper = window.NumberClipper || { clip(){}, apply(){} };
-  window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', () => {
+  // === Bootstrap awal ===
   ensureRangeWrapAndInputs();
-  buildMonthOptions();          // bangun opsi bulan dari data
-  resetToCurrentOnLoad();       // ⬅️ paksa kembali ke bulan & range sekarang
-  initDateRangePicker();        // flatpickr akan pakai nilai dari LS
-  const savedSite = localStorage.getItem(LS_LAST_SITE);
-  $('#siteFilter').value = (savedSite === '5G88' || savedSite === 'SPM888' || savedSite === 'ALL') ? savedSite : 'ALL';
+  buildMonthOptions();          // opsi bulan dari data
+  resetToCurrentOnLoad();       // paksa balik ke bulan & range sekarang
+  initDateRangePicker();        // flatpickr pakai nilai LS
 
+  // Restore site filter
+  const savedSite = localStorage.getItem(LS_LAST_SITE);
+  const siteSel = $('#siteFilter');
+  if (siteSel) {
+    siteSel.value = (savedSite === '5G88' || savedSite === 'SPM888' || savedSite === 'ALL')
+      ? savedSite : 'ALL';
+  }
+
+  // Render pertama
   render();
-  // listeners
-  $('#createBtn').addEventListener('click', () => openModal());
-  $('#exportBtn').addEventListener('click',  exportCSV);
-  $('#siteFilter').addEventListener('change', () => {
+
+  // === Buttons ===
+  $('#createBtn')?.addEventListener('click', () => openModal());
+  $('#exportBtn')?.addEventListener('click',  exportCSV);
+  $('#targetBtn')?.addEventListener('click',  openTargetModal);
+  $('#unclaimBtn')?.addEventListener('click', openUnclaimModal);
+  $('#bestBtn')?.addEventListener('click',    openBestModal);      // ⬅️ NEW (Best Summary)
+
+  // === Filters ===
+  $('#siteFilter')?.addEventListener('change', () => {
     localStorage.setItem(LS_LAST_SITE, $('#siteFilter').value);
     render();
   });
 
-  $('#monthFilter').addEventListener('change', () => {
+  $('#monthFilter')?.addEventListener('change', () => {
     const m = $('#monthFilter').value;
     localStorage.setItem(LS_LAST_MONTH, m);
     jumpPickerToMonth(m);
-    setMonthAndRange(m);  // set 1..akhir bulan + render()
-    setMiniMonthLabel();  // label "Month" di mini-card
+    setMonthAndRange(m);        // set 1..akhir bulan + render()
+    setMiniMonthLabel();        // update mini label
   });
 
-  $('#targetBtn').addEventListener('click', openTargetModal);
-  $('#unclaimBtn').addEventListener('click', openUnclaimModal);
-  $('#tabPending').addEventListener('click', () => switchUcTab('pending'));
-  $('#tabHistory').addEventListener('click', () => switchUcTab('history'));
+  $('#tabPending')?.addEventListener('click', () => switchUcTab('pending'));
+  $('#tabHistory')?.addEventListener('click', () => switchUcTab('history'));
+
+  document.querySelectorAll('#bestModal .best-tab')?.forEach(btn => {
+    btn.addEventListener('click', () => renderBest(btn.dataset.metric));
+  });
   initQuickMenu();
   wireModalEscAndOverlay('#modal',        closeModal);            // Create/Edit
   wireModalEscAndOverlay('#targetModal',  closeTargetModal);      // Set Target
   wireModalEscAndOverlay('#unclaimModal', closeUnclaimModal);     // Unclaim
   wireModalEscAndOverlay('#notesModal',   closeNotesModal);       // Notes
   wireModalEscAndOverlay('#cpModal',      closeChangePwModal, doChangePassword);
+  wireModalEscAndOverlay('#bestModal',    closeBestModal);        // ⬅️ NEW (Best Summary)
 });
 
   function buildMonthOptions(){
