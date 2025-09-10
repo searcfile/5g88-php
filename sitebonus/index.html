@@ -510,19 +510,44 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 }
 /* === User dropdown === */
 .userbox{ position:relative; flex:0 0 auto; }
-.userbtn{
-  height:36px; border-radius:8px; border:1px solid #424242;
-  background:#141414; color:rgba(255,255,255,.85);
-  display:inline-flex; align-items:center; gap:8px; padding:0 10px; cursor:pointer;transition: all 0.2s;
+#userBtn.userbtn{
+  display:grid;                         /* dari inline-flex -> grid */
+  grid-template-columns: 20px 1fr 12px; /* ikon | nama | caret */
+  align-items:center;
+  column-gap:8px;
+  padding:0 10px;
+  height:36px;
+  border-radius:8px;
+  border:1px solid #424242;
+  background:#141414;
+  color:rgba(255,255,255,.85);
+  cursor:pointer;
+  transition:all .2s;
+  line-height:1;                        /* hilangkan “turun” baseline */
 }
-.userbtn:hover{ border-color:#3c89e8; color:#3c89e8; }.userbtn:active{ border-color:#1554ad; color:#1554ad; }
+#userBtn.userbtn:hover{ border-color:#3c89e8; color:#3c89e8; }
+#userBtn.userbtn:active{ border-color:#1554ad; color:#1554ad; }
 #userBtn .avatar{
-  width:18px; height:18px;
-  display:inline-flex; align-items:center; justify-content:center;
-  font-size:0;
+  width:20px; height:20px;
+  display:grid; place-items:center;
 }
 #userBtn .avatar .ico{
   width:18px; height:18px; display:block;
+}
+#userBtn #userBtnLabel{
+  font-weight:700;
+  letter-spacing:.2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  min-width:0;                           /* penting untuk ellipsis dalam grid */
+}
+#userBtn .caret{                          /* guna class caret kalau ada */
+  font-size:12px; line-height:1; opacity:.85; justify-self:end;
+}
+/* fallback kalau belum ada class caret */
+#userBtn > span:last-child{
+  font-size:12px; line-height:1; opacity:.85; justify-self:end;
 }
 .user-menu{
   position:absolute; right:0; left: auto;top:calc(100% + 8px);
@@ -685,15 +710,14 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
     <button id="exportBtn" class="btn-exp">Export CSV</button>
    <!-- USER DROPDOWN (di kanan tombol Export CSV) -->
 <div id="userBox" class="userbox">
-  <button id="userBtn" class="userbtn" aria-haspopup="true" aria-expanded="false" title="Account">
+<button id="userBtn" class="userbtn" aria-haspopup="true" aria-expanded="false" title="Account">
   <span class="avatar" aria-hidden="true">
     <svg viewBox="0 0 24 24" class="ico" aria-hidden="true" focusable="false">
-      <path fill="currentColor"
-        d="M13.689 11.132c1.155 1.222 1.953 2.879 2.183 4.748a1.007 1.007 0 0 1-1 1.12H3.007a1.005 1.005 0 0 1-1-1.12c.23-1.87 1.028-3.526 2.183-4.748c.247.228.505.442.782.633c-1.038 1.069-1.765 2.55-1.972 4.237L14.872 16c-.204-1.686-.93-3.166-1.966-4.235a7 7 0 0 0 .783-.633M8.939 1c1.9 0 3 2 4.38 2.633a2.48 2.48 0 0 1-1.88.867c-.298 0-.579-.06-.844-.157A3.73 3.73 0 0 1 7.69 5.75c-1.395 0-3.75.25-3.245-1.903C5.94 3 6.952 1 8.94 1"/>
+      <path fill="currentColor" d="M13.689 11.132c1.155 1.222 1.953 2.879 2.183 4.748a1.007 1.007 0 0 1-1 1.12H3.007a1.005 1.005 0 0 1-1-1.12c.23-1.87 1.028-3.526 2.183-4.748c.247.228.505.442.782.633c-1.038 1.069-1.765 2.55-1.972 4.237L14.872 16c-.204-1.686-.93-3.166-1.966-4.235a7 7 0 0 0 .783-.633M8.939 1c1.9 0 3 2 4.38 2.633a2.48 2.48 0 0 1-1.88.867c-.298 0-.579-.06-.844-.157A3.73 3.73 0 0 1 7.69 5.75c-1.395 0-3.75.25-3.245-1.903C5.94 3 6.952 1 8.94 1"/>
     </svg>
   </span>
   <span id="userBtnLabel">—</span>
-  <span aria-hidden="true">▾</span>
+  <span class="caret" aria-hidden="true">▾</span>
 </button>
 
   <div id="userMenu" class="user-menu" role="menu" aria-hidden="true">
