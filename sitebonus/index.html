@@ -1117,16 +1117,19 @@ function __writeLocalState(s){
 
 async function syncUp(){
   const u = auth.currentUser;
-  if (!u) return;
+  if (!u) throw new Error('Not signed in');       // biar ketahuan di caller
+
   const userKey = getUsername(u);
   const payload = __readLocalState();
   if (!payload.updatedAt){ bumpUpdated(); payload.updatedAt = getUpdatedAt(); }
 
   try{
-    await Loading.wrap(db.ref(`users/${userKey}/state`).set(payload), 'Syncing…');
-    console.log('[syncUp OK]');
+    await db.ref(`users/${userKey}/state`).set(payload);
+    console.log('[syncUp OK] path=', `users/${userKey}/state`);
+    return true;
   }catch(e){
     console.error('[syncUp FAIL]', e);
+    throw e;                                      // ⬅️ JANGAN ditelan
   }
 }
 
@@ -2261,40 +2264,27 @@ function saveTiersLive(){
   // ganti function asal
 async function saveTarget(){
   const btn = document.getElementById('saveTargetBtn');
-  setBtnLoading?.(btn, true, 'Saving…');   // disable tombol + label loading
+  setBtnLoading?.(btn, true, 'Saving…');
 
-  try {
-    if (!auth.currentUser){
-      toast('Not signed in. Please login and try again.', 'error', 3500);
-      return;
-    }
+  try{
+    if (!auth.currentUser) { toast('Not signed in. Please login and try again.', 'error'); return; }
 
     const t = {
       depositTiers: readRowsFromEditor('#depTierList'),
       resitTiers:   readRowsFromEditor('#resTierList'),
       salesTiers:   readRowsFromEditor('#salesTierList'),
     };
+    writeTarget(t);
+    bumpUpdated();
 
-    // validasi simple: kosongkan array kosong agar tetap berbentuk object valid
-    const isArr = Array.isArray;
-    if (!isArr(t.depositTiers) || !isArr(t.resitTiers) || !isArr(t.salesTiers)){
-      toast('Tier data is invalid. Please try again.', 'error', 3000);
-      return;
-    }
-
-    writeTarget(t);      // simpan lokal
-    bumpUpdated();       // update timestamp sinkron
-
-    // dorong ke Firebase (pakai overlay loading kamu)
-    await Loading.wrap(syncUp(), 'Saving…');
+    await Loading.wrap(syncUp(), 'Saving…');      // ⬅️ kalau gagal, akan masuk catch
 
     toast('Target saved', 'success');
-    closeTargetModal();  // tutup modal hanya kalau sukses
-    render();            // refresh UI
-  } catch (e){
-    console.error('[saveTarget] fail', e);
-    toast('Failed to save to cloud. Check connection and try again.', 'error', 4000);
-  } finally {
+    closeTargetModal();
+    render();
+  }catch(e){
+    toast('Failed to save to cloud. Check login/rules/koneksi.', 'error', 4000);
+  }finally{
     setBtnLoading?.(btn, false);
   }
 }
