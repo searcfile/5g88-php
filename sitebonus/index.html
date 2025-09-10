@@ -8,7 +8,9 @@
 <style>
 :root{
   --bg:#0a0a0a; --card:#121212; --text:#e6e6e6; --sub:#a7a7a7;
-  --gold:#ffd166; --gold-2:#ffcf4d; --red:#ff0000; --green:#008000; --cyan:#60a5fa; --ring:rgba(255,209,102,.55);
+  --gold:#ffd166; --gold-2:#ffcf4d; --red:#ff0000; --green:#008000; --cyan:#60a5fa; --ring:rgba(255,209,102,.55);  --primary:#1668dc;
+  --spin-size:28px;
+  --spin-speed:.8s;
 }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -652,64 +654,51 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 /* ===== Loading: HUD ringan tanpa background ===== */
 .loading-mask{
   position: fixed; inset: 0; z-index: 9999;
-  background: transparent;               /* tiada overlay */
+  /* default: tidak block halaman */
+  background: transparent;
   backdrop-filter: none;
-  display: none;                          /* hidden by default */
-  pointer-events: none;                   /* biar page tetap clickable */
+  pointer-events: none;
+
+  /* center both axes */
+  display: none;
+  align-items: center;
+  justify-content: center;
 }
+.loading-mask.show{ display: flex; }       /* tampilkan */
 
-/* show/hide */
-.loading-mask.show{ display: block; }
-
-/* kotak isi (spinner + msg) */
 .loading-box{
-  position: fixed;
-  left: 50%; top: 14px;                  /* default: top center */
-  transform: translateX(-50%);
-  display: grid; place-items: center; gap: 6px;
+  /* container spinner + teks */
+  background: transparent;
+  box-shadow: none;
   padding: 0;
+  display: grid; place-items: center; gap: 8px;
   min-width: 0;
-  background: transparent; box-shadow: none;
-  color: #fff;                            /* warna teks */
+  color: #fff;
   font-weight: 600;
 }
 
-/* spinner */
 .spin{
-  width: var(--loading-size); height: var(--loading-size);
+  width: var(--spin-size);
+  height: var(--spin-size);
   border-radius: 50%;
-  border: 3px solid var(--primary);       /* cincin */
-  border-top-color: #fff;                  /* kepala putih */
-  animation: spin var(--loading-speed) linear infinite;
+  border: 3px solid rgba(22,104,220,.35); /* cincin */
+  border-top-color: #fff;                 /* kepala */
+  animation: spin var(--spin-speed) linear infinite;
 }
 @keyframes spin{ to{ transform: rotate(360deg) } }
 
 .loading-box .msg{
-  font-size: 14px; letter-spacing: .2px;
+  font-size: 14px;
+  letter-spacing: .2px;
   text-shadow: 0 1px 0 rgba(0,0,0,.35);
 }
 
-/* ===== Modifiers ===== */
-/* 1) Posisi */
-.loading-mask.bottom  .loading-box{ top: auto; bottom: 14px; transform: translateX(-50%); }
-.loading-mask.center  .loading-box{ top: 50%; transform: translate(-50%, -50%); }
-.loading-mask.left    .loading-box{ left: 14px; transform: none; }
-.loading-mask.right   .loading-box{ left: auto; right: 14px; transform: none; }
-
-/* 2) Saiz */
-.loading-mask.lg .spin{ --loading-size: 36px; }
-.loading-mask.sm .spin{ --loading-size: 20px; }
-
-/* 3) Mode blocking (kalau nak lock UI + blur) */
-.loading-mask.is-blocking{
-  pointer-events: auto;                   /* block klik */
-  background: rgba(0,0,0,.45);            /* overlay gelap */
+/* ==== OPTIONAL: kalau mau block UI + gelap ====
+   tinggal tambah class "overlay" di #loadingMask */
+.loading-mask.overlay{
+  pointer-events: auto;
+  background: rgba(0,0,0,.45);
   backdrop-filter: blur(2px);
-}
-
-/* Aksesibiliti */
-@media (prefers-reduced-motion: reduce){
-  .spin{ animation: none; }
 }
 </style>
 </head>
