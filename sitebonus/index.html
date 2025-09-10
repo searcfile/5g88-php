@@ -1155,19 +1155,23 @@ function __hasLocalData(){
     return (a.length > 0) || (b.length > 0) || isValidTargets(t) || !!n;
   }catch{ return false; }
 }
-
+let CLOUD_HAS_STATE = false;
 async function syncDown(){
   const u = auth.currentUser;
   if (!u) return;
   const userKey = getUsername(u);
-
   try{
     let snap = await db.ref(`users/${userKey}/state`).get();
-    if (!snap || !snap.exists()){
-      // Cloud kosong. Biarkan lokal jalan dulu—nanti safeSyncUp() akan dorong.
+    CLOUD_HAS_STATE = !!(snap && snap.exists()); // tandai apakah cloud ada
+    if (!CLOUD_HAS_STATE){
       console.log('[syncDown] no cloud state yet; keeping local until first save');
       return;
     }
+    // ... (lanjutan syncDown kamu yang sekarang)
+  }catch(e){
+    console.error('[syncDown FAIL]', e);
+  }
+}
 
     const cloud  = snap.val() || {};
     const local  = __readLocalState();
@@ -1206,21 +1210,20 @@ auth.onAuthStateChanged(async (user) => {
   if (!user) { location.replace(LOGIN_URL); return; }
 
   try {
-    setUserUI(getUsername(user));
-    await syncDown();                 // tarik state dari Cloud dulu
-  } catch (e) {
-    console.error('syncDown error', e);
-  } finally {
-    BOOTING = false;                  // LEPAS guard boot supaya safeSyncUp boleh jalan
-  }
+  setUserUI(getUsername(user));
+  await syncDown();
+} finally {
+  BOOTING = false;
+}
+// (opsional) ensure notes
+if (typeof ensureNotes === 'function') ensureNotes();
 
-  // (opsional tapi disarankan) pastikan Notes ada, lalu dorong ke Cloud
-  if (typeof ensureNotes === 'function') ensureNotes();
-  if (typeof safeSyncUp  === 'function') safeSyncUp();
+// ⬇️ HANYA dorong kalau cloud memang kosong (pertama kali pakai)
+if (!CLOUD_HAS_STATE) safeSyncUp(true);
 
-  document.documentElement.classList.remove('auth-wait');
-  if (typeof render === 'function') render();
-});
+// render dsb.
+document.documentElement.classList.remove('auth-wait');
+if (typeof render === 'function') render();
 // ==== LOGOUT ====
 window.doLogout = async ()=>{
   await auth.signOut();
@@ -1231,8 +1234,12 @@ window.doLogout = async ()=>{
 let __syncTimer = null;
 function safeSyncUp(immediate = false) {
   if (!auth.currentUser || BOOTING) return;
+  // ⬇️ tambahkan guard ini:
+  if (!__hasLocalData()) return;            // jangan kirim kalau lokal kosong/default
+  // opsional: kalau cloud ada & lokal jelas bukan terbaru, jangan push
+  // (kalau kamu mau lebih ketat berdasarkan timestamp)
   clearTimeout(__syncTimer);
-  if (immediate) return syncUp();   // flush sekarang
+  if (immediate) return syncUp();
   __syncTimer = setTimeout(syncUp, 300);
 }
 document.addEventListener('visibilitychange', () => {
