@@ -664,6 +664,13 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 </style>
 </head>
 <body>
+  <!-- GLOBAL LOADING OVERLAY -->
+<div id="loadingMask" class="loading-mask" aria-hidden="true">
+  <div class="loading-box" role="status" aria-live="polite">
+    <div class="spin"></div>
+    <div id="loadingMsg" class="msg">Loading…</div>
+  </div>
+</div>
   <!-- Header filters -->
   <div class="header">
     <div class="brand"><span class="dot"></span><span>Bonus Recorder</span></div>
@@ -1019,16 +1026,12 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
     </div>
   </div>
 </div>
-<!-- GLOBAL LOADING OVERLAY -->
-<div id="loadingMask" class="loading-mask" aria-hidden="true">
-  <div class="loading-box" role="status" aria-live="polite">
-    <div class="spin"></div>
-    <div id="loadingMsg" class="msg">Loading…</div>
-  </div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<style>html.auth-wait body{visibility:hidden}</style>
+<style>
+html.auth-wait body > :not(#loadingMask){ visibility: hidden; }
+html.auth-wait #loadingMask{ opacity: 1; pointer-events: auto; }
+</style>
 <script>document.documentElement.classList.add('auth-wait');</script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
@@ -1152,20 +1155,29 @@ auth.onAuthStateChanged(async (user) => {
   if (!user) { location.replace(LOGIN_URL); return; }
 
   try {
+    Loading.show('Syncing…');                 // NEW: tampilkan mask dulu
     setUserUI(getUsername(user));
-    await syncDown();                 // tarik state dari Cloud dulu
+    await syncDown();                          // tarik cloud
   } catch (e) {
     console.error('syncDown error', e);
   } finally {
-    BOOTING = false;                  // LEPAS guard boot supaya safeSyncUp boleh jalan
+    BOOTING = false;
+
+    // Lepas auth-wait lebih awal agar overlay terlihat; jangan sembunyikan overlay dulu.
+    document.documentElement.classList.remove('auth-wait');  // NEW
+
+    // Jalankan render setelah satu frame supaya overlay sempat ter‑paint
+    requestAnimationFrame(() => {
+      // (opsional) ubah pesan sebentar
+      Loading.show('Rendering…');
+      if (typeof render === 'function') render();
+      // Sembunyikan overlay setelah render selesai menjadwalkan repaint
+      requestAnimationFrame(() => Loading.hide());
+    });
   }
 
-  // (opsional tapi disarankan) pastikan Notes ada, lalu dorong ke Cloud
   if (typeof ensureNotes === 'function') ensureNotes();
   if (typeof safeSyncUp  === 'function') safeSyncUp();
-
-  document.documentElement.classList.remove('auth-wait');
-  if (typeof render === 'function') render();
 });
 // ==== LOGOUT ====
 window.doLogout = async ()=>{
