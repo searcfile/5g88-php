@@ -652,33 +652,31 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 /* ===== Loading: HUD ringan tanpa background ===== */
 .loading-mask{
   position: fixed; inset: 0; z-index: 9999;
-  background: transparent !important;     /* tiada overlay */
+  background: transparent !important;
   backdrop-filter: none !important;
-  display: none;
-  pointer-events: none;                    /* tidak block klik halaman */
+  pointer-events: none;
+  display: block !important;     /* jangan flex */
 }
 .loading-mask.show{ display: flex; }       /* center di tengah (boleh tukar ke corner di bawah) */
 
 .loading-box{
-  background: transparent !important;      /* buang kotak merah */
+  position: fixed !important;
+  left: 50%;
+  transform: translateX(-50%);   /* center X */
+  top: 14px;
+  background: transparent !important;
   box-shadow: none !important;
   padding: 0;
   display: grid; gap: 8px; place-items: center;
-  min-width: 0;                            /* hilang bentuk box */
-  color: #fff;                             /* warna teks */
+  min-width: 0;
+  color: #fff;
 }
 
 .spin{
   width: 28px; height: 28px; border-radius: 50%;
-  border: 3px solid #1668dc;              /* cincin */
-  border-top-color: #fff;                 /* “kepala” */
-  animation: spin 0.8s linear infinite;
-}
-.loading-mask{ display:block; }           /* bukan flex */
-.loading-mask.show{ display:block; }
-.loading-box{
-  position: fixed; top: 14px; right: 14px;   /* sudut kanan atas */
-  place-items: center;
+  border: 3px solid #1668dc;
+  border-top-color: #fff;
+  animation: spin .8s linear infinite;
 }
 @keyframes spin{ to { transform: rotate(360deg); } }
 
