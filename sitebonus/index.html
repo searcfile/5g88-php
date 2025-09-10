@@ -2289,27 +2289,20 @@ function prettyRange(f, t){
 }
 
 function render(){
-  // Fallback: kalau helper Loading belum wujud, jangan pecah — jadikan no-op
-  if (!window.Loading) {
-    window.Loading = { show(){}, hide(){} };
-  }
-
+  if (!window.Loading) { window.Loading = { show(){}, hide(){} }; }
   Loading.show('Rendering…');
 
-  // Biar overlay sempat render sebelum kerja berat
   requestAnimationFrame(() => {
     try {
-      const site   = $('#siteFilter').value;
-      const month  = $('#monthFilter').value;          // hanya untuk jump & label
-      const targets= readTarget();
+      const site    = $('#siteFilter').value;
+      const month   = $('#monthFilter').value;
+      const targets = readTarget();
 
-      // batas waktu dari input (00:00:00 s/d 23:59:59)
       const fromStr = $('#rangeFrom')?.value;
       const toStr   = $('#rangeTo')?.value;
       const fromTS  = fromStr ? new Date(fromStr + 'T00:00:00').getTime() : -Infinity;
       const toTS    = toStr   ? new Date(toStr   + 'T23:59:59').getTime() :  Infinity;
 
-      // ❗ Hapus filter r.month === month
       const data = readStore()
         .filter(r => site === 'ALL' ? true : r.site === site)
         .filter(r => {
@@ -2318,7 +2311,6 @@ function render(){
         })
         .sort((a,b) => new Date(b.datetime) - new Date(a.datetime));
 
-      // Map unclaim yang TERKAIT dengan record yang tampil
       const dataIds = new Set(data.map(r => r.id));
       const uc = readUnclaims();
       const ucByRecord = {};
@@ -2329,7 +2321,6 @@ function render(){
         else           ucByRecord[u.recordId].pending += safe(u.amount);
       }
 
-      // archive banner: sembunyikan ketika range lintas bulan
       $('#archiveBanner').style.display = 'none';
       $('#bannerMonth').textContent = prettyMonth(month);
 
@@ -2339,9 +2330,9 @@ function render(){
       for (const r of data){
         const dt = fmtDMYHMS(r.datetime);
 
-        const bonusDep       = pickTierBonus(safe(r.deposit), targets.depositTiers);
-        const bonusRes       = pickTierBonus(safe(r.resit),   targets.resitTiers);
-        const bonusSalesBase = pickTierBonus(safe(r.sales),   targets.salesTiers);
+        const bonusDep = pickTierBonus(safe(r.deposit), targets.depositTiers);
+        const bonusRes = pickTierBonus(safe(r.resit),   targets.resitTiers);
+        // ⛔️ DULU ada: const bonusSalesBase = pickTierBonus(safe(r.sales), targets.salesTiers);
 
         const ucs = ucByRecord[r.id] || { pending:0, claimed:0 };
         const unclaimDisplay = safe(ucs.claimed) > 0 ? -safe(ucs.claimed) : safe(ucs.pending);
@@ -2351,9 +2342,7 @@ function render(){
           <td>${dt}</td>
           <td style="text-align:center"><span class="pill ${r.site==='5G88'?'site-5g88':'site-spm888'}">${r.site}</span></td>
           <td class="${r.deposit < 0 ? 'num red' : 'num green'}">${fmtNum(r.deposit)}</td>
-          <td class="num ${r.withdrawal === 0 ? '' : 'red'}">
-            ${ r.withdrawal === 0 ? fmtNum(0) : ('-' + fmtNum(Math.abs(r.withdrawal))) }
-          </td>
+          <td class="num ${r.withdrawal === 0 ? '' : 'red'}">${ r.withdrawal === 0 ? fmtNum(0) : ('-' + fmtNum(Math.abs(r.withdrawal))) }</td>
           <td class="num cyan">${fmtNum(r.bonus)}</td>
           <td>${fmtNum(r.forfeit)}</td>
           <td>${fmtIntNoGroup(r.member)}</td>
@@ -2385,8 +2374,11 @@ function render(){
 
         totals.bd += safe(bonusDep);
         totals.br += safe(bonusRes);
-        totals.bsBase += safe(bonusSalesBase);
+        // ⛔️ DULU ada: totals.bsBase += safe(bonusSalesBase);
       }
+
+      // ✅ BARU: kira Bonus Sales sekali berdasarkan TOTAL sales dalam range
+      totals.bsBase = pickTierBonus(Math.max(0, safe(totals.s)), targets.salesTiers);
 
       $('#emptyState').style.display = data.length ? 'none' : 'block';
       totals.uDisp = safe(totals.uPending);
@@ -2409,9 +2401,8 @@ function render(){
       const ftS = $('#ft_sales');
       ftS.className = ''; ftS.classList.add('num'); if (totals.s < 0) ftS.classList.add('red'); else if (totals.s > 0) ftS.classList.add('green');
 
-      // mini-cards: tampilkan range
       setMiniMonthLabel();
-      $('#miniSite').textContent  = (site === 'ALL' ? 'All Sites' : site);
+      $('#miniSite').textContent = (site === 'ALL' ? 'All Sites' : site);
 
       renderSummaryRows(totals, data.length, site, month);
       applyNumberTitles();
