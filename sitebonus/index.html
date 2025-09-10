@@ -651,44 +651,24 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 /* Global loading */
 /* ===== Loading: HUD ringan tanpa background ===== */
 .loading-mask{
-  position: fixed; inset: 0; z-index: 9999;
-  background: transparent !important;
-  backdrop-filter: none !important;
-  pointer-events: none;
-  display: block !important;     /* jangan flex */
+  position:fixed; inset:0; z-index:9999; background:transparent !important;
+  backdrop-filter:none !important; display:block !important; pointer-events:none;
 }
-.loading-mask.show{ display: flex; }       /* center di tengah (boleh tukar ke corner di bawah) */
-
+.loading-mask.show{ display:block !important }
 .loading-box{
-  position: fixed !important;
-  left: 50%;
-  transform: translateX(-50%);   /* center X */
-  top: 14px;
-  background: transparent !important;
-  box-shadow: none !important;
-  padding: 0;
-  display: grid; gap: 8px; place-items: center;
-  min-width: 0;
-  color: #fff;
+  position:fixed !important; left:50%; transform:translateX(-50%);
+  top:14px;  /* tukar ke bottom:14px; kalau nak bawah */
+  display:grid; place-items:center; gap:6px; padding:0;
+  background:transparent !important; box-shadow:none !important; min-width:0; color:#fff;
 }
-
 .spin{
-  width: 28px; height: 28px; border-radius: 50%;
-  border: 3px solid #1668dc;
-  border-top-color: #fff;
-  animation: spin .8s linear infinite;
+  width:28px; height:28px; border-radius:50%;
+  border:3px solid var(--primary); border-top-color:#fff; animation: spin .8s linear infinite;
 }
-@keyframes spin{ to { transform: rotate(360deg); } }
-
-/* Button loading (optional) */
-.btn.is-loading, .btn-exp.is-loading, .btn-unclaim.is-loading, .iconbtn.is-loading{
-  position: relative; pointer-events: none; opacity: .8;
-}
-.btn.is-loading::after, .btn-exp.is-loading::after, .btn-unclaim.is-loading::after, .iconbtn.is-loading::after{
-  content: ""; position: absolute; inset-inline-end: 10px; top: 50%; transform: translateY(-50%);
-  width: 16px; height: 16px; border-radius: 50%;
-  border: 2px solid currentColor; border-top-color: transparent;
-  animation: spin .8s linear infinite;
+.loading-box .msg{ font-size:14px; opacity:.92 }
+@keyframes spin{ to{ transform: rotate(360deg) } }
+@media (prefers-reduced-motion: reduce){
+  .spin{ animation: none }
 }
 </style>
 </head>
