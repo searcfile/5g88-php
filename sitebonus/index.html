@@ -682,7 +682,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
   height: var(--spin-size);
   border-radius: 50%;
   border: 3px solid #1668dc;
-  border-top-color: #fff;
+  border-top-color: #fff; 
   animation: spin var(--spin-speed) linear infinite;
 }
 @keyframes spin{ to{ transform: rotate(360deg); } }
@@ -3348,13 +3348,10 @@ function placeMenu(){
     if (userMenu.classList.contains('show')) closeMenu();
     else openMenu();
   });
-
-  // actions
-  // actions (GANTI JADI INI)
 document.getElementById('udChangePw')?.addEventListener('click', (e)=>{
   e.preventDefault();
-  closeMenu();            // tutup dropdown dulu
-  openChangePwModal();    // lalu buka popup
+  closeMenu(); 
+  openChangePwModal(); 
 });
 document.getElementById('udLogout')?.addEventListener('click', (e)=>{
   e.preventDefault();
