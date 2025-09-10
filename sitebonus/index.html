@@ -651,24 +651,65 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 /* Global loading */
 /* ===== Loading: HUD ringan tanpa background ===== */
 .loading-mask{
-  position:fixed; inset:0; z-index:9999; background:transparent !important;
-  backdrop-filter:none !important; display:block !important; pointer-events:none;
+  position: fixed; inset: 0; z-index: 9999;
+  background: transparent;               /* tiada overlay */
+  backdrop-filter: none;
+  display: none;                          /* hidden by default */
+  pointer-events: none;                   /* biar page tetap clickable */
 }
-.loading-mask.show{ display:block !important }
+
+/* show/hide */
+.loading-mask.show{ display: block; }
+
+/* kotak isi (spinner + msg) */
 .loading-box{
-  position:fixed !important; left:50%; transform:translateX(-50%);
-  top:14px;  /* tukar ke bottom:14px; kalau nak bawah */
-  display:grid; place-items:center; gap:6px; padding:0;
-  background:transparent !important; box-shadow:none !important; min-width:0; color:#fff;
+  position: fixed;
+  left: 50%; top: 14px;                  /* default: top center */
+  transform: translateX(-50%);
+  display: grid; place-items: center; gap: 6px;
+  padding: 0;
+  min-width: 0;
+  background: transparent; box-shadow: none;
+  color: #fff;                            /* warna teks */
+  font-weight: 600;
 }
+
+/* spinner */
 .spin{
-  width:28px; height:28px; border-radius:50%;
-  border:3px solid var(--primary); border-top-color:#fff; animation: spin .8s linear infinite;
+  width: var(--loading-size); height: var(--loading-size);
+  border-radius: 50%;
+  border: 3px solid var(--primary);       /* cincin */
+  border-top-color: #fff;                  /* kepala putih */
+  animation: spin var(--loading-speed) linear infinite;
 }
-.loading-box .msg{ font-size:14px; opacity:.92 }
 @keyframes spin{ to{ transform: rotate(360deg) } }
+
+.loading-box .msg{
+  font-size: 14px; letter-spacing: .2px;
+  text-shadow: 0 1px 0 rgba(0,0,0,.35);
+}
+
+/* ===== Modifiers ===== */
+/* 1) Posisi */
+.loading-mask.bottom  .loading-box{ top: auto; bottom: 14px; transform: translateX(-50%); }
+.loading-mask.center  .loading-box{ top: 50%; transform: translate(-50%, -50%); }
+.loading-mask.left    .loading-box{ left: 14px; transform: none; }
+.loading-mask.right   .loading-box{ left: auto; right: 14px; transform: none; }
+
+/* 2) Saiz */
+.loading-mask.lg .spin{ --loading-size: 36px; }
+.loading-mask.sm .spin{ --loading-size: 20px; }
+
+/* 3) Mode blocking (kalau nak lock UI + blur) */
+.loading-mask.is-blocking{
+  pointer-events: auto;                   /* block klik */
+  background: rgba(0,0,0,.45);            /* overlay gelap */
+  backdrop-filter: blur(2px);
+}
+
+/* Aksesibiliti */
 @media (prefers-reduced-motion: reduce){
-  .spin{ animation: none }
+  .spin{ animation: none; }
 }
 </style>
 </head>
