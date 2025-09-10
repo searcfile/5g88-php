@@ -694,24 +694,24 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 }
 .best-tab{
   height:32px; padding:0 10px; border-radius:8px;
-  border:1px solid #2a2a2a; background:#151515; color:#ddd;
+  border:1px solid #424242; background:#141414; color:#ddd;
   cursor:pointer; transition:all .2s;
 }
-.best-tab:hover{ border-color:#3c89e8; color:#3c89e8; }
+.best-tab:hover{ border-color:#3c89e8; color:#3c89e8; }.best-tab:active{ border-color:#1554ad; color:#1554ad; }
 .best-tab.active{ border-color:#1668dc; background:#141414; color:#1668dc; }
 
 .best-list{
-  border:1px solid #2a2a2a; border-radius:10px; background:#101010;
+  border:1px solid #424242; border-radius:10px; background:#141414;
   overflow:auto; max-height:calc(8 * 48px);   /* ≈ 8 baris, selebihnya scroll */
 }
 .best-row{
   display:grid; grid-template-columns:1fr auto;
   gap:8px; align-items:center; padding:10px;
-  border-bottom:1px solid #303030;
+  border-bottom:1px solid #424242;
 }
 .best-row:last-child{ border-bottom:0; }
 .best-row .lbl{
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text);
+  white-space:nowrap; overflow:hidden; color:var(--text);
 }
 .best-row .amt{ font-weight:700; }
 .best-row .amt.red{ color:var(--red); }
