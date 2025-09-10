@@ -653,39 +653,26 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 /* Global loading */
 /* ===== Loading: HUD ringan tanpa background ===== */
 .loading-mask{
-  position: fixed; inset: 0; z-index: 9999;
-  background: transparent;               /* default non-overlay */
-  backdrop-filter: none;
-  pointer-events: none;
-  display: none;
-  align-items: center; justify-content: center;
+  position:fixed; inset:0; z-index:9999;
+  display:none; align-items:center; justify-content:center;
+  background:transparent; backdrop-filter:none; pointer-events:none;
 }
-.loading-mask.show{ display: flex; }
+.loading-mask.show{ display:flex; }
 
-/* mode gelap (overlay) */
 .loading-mask.overlay{
-  background: rgba(0,0,0,.55);           /* <<< gelap saat refresh */
-  backdrop-filter: blur(2px);
-  pointer-events: auto;                  /* block klik */
+  background:rgba(0,0,0,.55); backdrop-filter:blur(2px);
+  pointer-events:auto;
 }
 
-.loading-box{
-  background: transparent;
-  box-shadow: none;
-  padding: 0;
-  display: grid; place-items: center; gap: 10px;
-  color: #fff; font-weight: 700;
+.loading-box{ background:transparent; box-shadow:none; padding:0;
+  display:grid; place-items:center; gap:10px; color:#fff; font-weight:700;
 }
-
 .spin{
-  width: var(--spin-size);
-  height: var(--spin-size);
-  border-radius: 50%;
-  border: 3px solid #1668dc;
-  border-top-color: #fff; 
-  animation: spin var(--spin-speed) linear infinite;
+  width:var(--spin-size); height:var(--spin-size); border-radius:50%;
+  border:3px solid rgba(22,104,220,.35); border-top-color:#fff;
+  animation:spin var(--spin-speed) linear infinite;
 }
-@keyframes spin{ to{ transform: rotate(360deg); } }
+@keyframes spin{ to{ transform:rotate(360deg); } }
 
 .loading-box .msg{ font-size: 14px; letter-spacing:.2px; }
 </style>
@@ -1184,24 +1171,22 @@ auth.onAuthStateChanged(async (user) => {
   if (!user) { location.replace(LOGIN_URL); return; }
 
   try {
-    Loading.show('Syncing…');                 // NEW: tampilkan mask dulu
+    Loading.show('Syncing…');           // boot: otomatis gelap (BOOTING = true)
     setUserUI(getUsername(user));
-    await syncDown();                          // tarik cloud
+    await syncDown();
   } catch (e) {
     console.error('syncDown error', e);
   } finally {
     BOOTING = false;
 
-    // Lepas auth-wait lebih awal agar overlay terlihat; jangan sembunyikan overlay dulu.
-    document.documentElement.classList.remove('auth-wait');  // NEW
-
-    // Jalankan render setelah satu frame supaya overlay sempat ter‑paint
     requestAnimationFrame(() => {
-      // (opsional) ubah pesan sebentar
-      Loading.show('Rendering…');
+      Loading.show('Rendering…');       // masih gelap
       if (typeof render === 'function') render();
-      // Sembunyikan overlay setelah render selesai menjadwalkan repaint
-      requestAnimationFrame(() => Loading.hide());
+      requestAnimationFrame(() => {
+        Loading.hide();
+        // 👉 Mulai sekarang show() tidak gelap, kecuali kamu minta {dim:true}
+        document.getElementById('loadingMask')?.classList.remove('overlay');
+      });
     });
   }
 
@@ -1410,11 +1395,17 @@ function keyForRange(fs, ts){
   return null;
 }
 // ===== Global Loading helpers =====
+let BOOTING = true;
 const Loading = {
-  show(msg = 'Loading…'){
+  show(msg='Loading…', { dim } = {}){
     const mask = document.getElementById('loadingMask');
     const m = document.getElementById('loadingMsg');
     if (m) m.textContent = msg;
+
+    // Saat boot, pakai overlay gelap; di aksi biasa bisa kirim {dim:true/false}
+    if ((dim ?? BOOTING)) mask?.classList.add('overlay');
+    else                  mask?.classList.remove('overlay');
+
     mask?.classList.add('show');
     mask?.setAttribute('aria-hidden','false');
   },
@@ -1423,14 +1414,9 @@ const Loading = {
     mask?.classList.remove('show');
     mask?.setAttribute('aria-hidden','true');
   },
-  // Wrap promise dengan auto show/hide
-  async wrap(promiseLike, msg='Loading…'){
-    try{
-      Loading.show(msg);
-      return await promiseLike;
-    } finally {
-      Loading.hide();
-    }
+  async wrap(p, msg='Loading…', opts){
+    try{ Loading.show(msg, opts); return await p; }
+    finally{ Loading.hide(); }
   }
 };
 
