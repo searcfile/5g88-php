@@ -77,18 +77,19 @@ span.flatpickr-weekday {
 .header{position:sticky; top:0; z-index:200;background:linear-gradient(180deg,#0063ab,#001c31);border-bottom:1px solid #242424; padding:12px 14px;display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
 .brand{display:flex; gap:10px; align-items:center; font-weight:700;padding:6px 10px; border-radius:10px; background:#0f0f0f; border:1px solid #222;}
 .input {height:36px; border-radius:8px; outline:none; border:1px solid #424242; background:#141414; color:var(--text);padding:6px 10px; transition: all 0.2s;}
-.input:hover { border-color:#3c89e8; }.input:active { border-color:#1554ad !important; }.input:focus { border-color:#1668dc; }
-.brand .dot{width:8px; height:8px; border-radius:50%; background:#1668dc; box-shadow:0 0 12px #3c89e8;}
+.input:hover { border-color:#3c89e8; }
+.input:focus { border-color:#1668dc; }
+.brand .dot{width:8px; height:8px; border-radius:50%; background:var(--gold); box-shadow:0 0 12px var(--gold)}
 .spacer{flex: 1 1 auto !important;min-width: 12px;}
-.select {height:36px; border-radius:8px; border:1px solid #424242;cursor:pointer; outline:none; background:#141414; color:rgba(255,255,255,0.85);padding:6px 10px; transition: all 0.2s;}
+.select {height:36px; border-radius:8px; border:1px solid #424242; outline:none; background:#141414; color:rgba(255,255,255,0.85);padding:6px 10px; transition: all 0.2s;}
 .select:hover{border-color:#3c89e8;color:#3c89e8}
 .select:focus{border-color:#1668dc; box-shadow:0 0 0 4px #1668dc}
 .btn{background:#1668dc;white-space:nowrap;color:white;border:none;padding:6px 10px;height:36px;font-size: 14px; cursor:pointer;transition: all 0.2s;border-radius:6px;}
 .btn:hover{background:#3c89e8;} .btn:active{background:#1554ad;}
 .btn-cancel{background:#141414;height:36px;padding:6px 10px;font-size: 14px;cursor:pointer; color:rgba(255, 255, 255, 0.85); border-radius:6px;border: 1px solid#424242;transition: all 0.2s;}.btn-cancel:hover{background:#141414;color:#3c89e8;border-color:#3c89e8}.btn-cancel:active{background:#141414;color:#1554ad;border-color:#1554ad}
-.btn-unclaim {height:36px; border-radius:8px;cursor:pointer; border:1px solid #424242; background:#141414; color:rgba(255,255,255,0.85);padding:6px 10px; transition: all 0.2s;}
+.btn-unclaim {height:36px; border-radius:8px; border:1px solid #424242; background:#141414; color:rgba(255,255,255,0.85);padding:6px 10px; transition: all 0.2s;}
 .btn-unclaim:hover{border-color:#3c89e8;color:#3c89e8;}.btn-unclaim:active{border-color:#1554ad;color:#1554ad;}
-.btn-exp {height:36px; border-radius:8px;cursor:pointer; border:1px solid #424242; background:#141414; color:rgba(255,255,255,0.85);padding:6px 10px; transition: all 0.2s;}
+.btn-exp {height:36px; border-radius:8px; border:1px solid #424242; background:#141414; color:rgba(255,255,255,0.85);padding:6px 10px; transition: all 0.2s;}
 .btn-exp:hover{border-color:#3c89e8;color:#3c89e8;}.btn-exp:active{border-color:#1554ad;color:#1554ad;}
 .hint{color:#1668dc; font-size:12px}
 
@@ -150,7 +151,7 @@ span.flatpickr-weekday {
 .mini-card{
   height:36px; display:flex; align-items:center; gap:8px;
   padding:0 12px; border-radius:8px;
-  border:1px solid #424242; background:#141414; min-width:160px;flex: 0 0 auto;white-space: nowrap;
+  border:1px solid #2a2a2a; background:#141414; min-width:160px;flex: 0 0 auto;white-space: nowrap;
 }
 .mini-label{font-size:12px; color:#1668dc}
 .mini-value{
@@ -265,7 +266,7 @@ span.flatpickr-weekday {
   background:#141414; border:1px solid #424242; border-radius:16px; padding:14px;
   box-shadow: 0 30px 80px rgba(0,0,0,.55);
   max-height: 85vh; overflow: auto;
-  display: flex; flex-direction: column;transition: all 0.2s;
+  display: flex; flex-direction: column;
   pointer-events: auto !important; /* isi dialog bisa diklik/fokus */
 }
 .dialog h3{margin:0 0 10px; font-size:18px}
@@ -510,57 +511,24 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 /* === User dropdown === */
 .userbox{ position:relative; flex:0 0 auto; }
 .userbtn{
-  display: grid !important;
-  grid-template-columns: 18px auto 12px;
-  align-items: center;
-  gap: 6px;
-  height: 36px;
-  padding: 0 12px;
-  border-radius: 8px;
-  background: #141414;color:rgba(255,255,255,.85);border: 1px solid #424242;
-  cursor:pointer;transition: all 0.2s;
+  height:36px; border-radius:8px; border:1px solid #424242;
+  background:#141414; color:rgba(255,255,255,.85);
+  display:inline-flex; align-items:center; gap:8px; padding:0 10px; cursor:pointer;transition: all 0.2s;
 }
-
 .userbtn:hover{ border-color:#3c89e8; color:#3c89e8; }.userbtn:active{ border-color:#1554ad; color:#1554ad; }
 #userBtn .avatar{
-  width: 18px; height: 18px;
-  display: inline-flex;
-  align-items: center; justify-content: center;
+  width:18px; height:18px;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:0;
+}
+#userBtn .avatar .ico{
+  width:18px; height:18px; display:block;
 }
 .user-menu{
   position:absolute; right:0; left: auto;top:calc(100% + 8px);
   width: min(240px, 90vw); background:#141414; border:1px solid #424242; border-radius:6px;
   padding:10px; box-shadow:0 20px 50px rgba(0,0,0,.55); display:none;
   z-index:2147483645;max-height: 80vh; overflow: auto;transition: all 0.2s;
-}
-#userBtn .avatar .ico{
-  width: 16px; height: 16px;   /* ukuran svg konsisten */
-  display: block;              /* hindari whitespace inline */
-  vertical-align: middle;
-}
-#userBtnLabel{
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1;              /* hindari teks “turun” */
-}
-.userbtn > span[aria-hidden="true"]{
-  /* caret (▾) rata kanan */
-  justify-self: end;
-  font-size: 12px;
-  opacity: .85;
-}
-
-/* opsional: lebih kompak di layar kecil */
-@media (max-width: 480px){
-  .userbtn{
-    grid-template-columns: 16px auto 10px;
-    gap: 6px;
-    padding: 0 10px;
-    height: 36px;
-  }
-  #userBtn .avatar{ width:16px; height:16px; }
-  #userBtn .avatar .ico{ width:14px; height:14px; }
 }
 #userMenu{
   transform: none !important;
@@ -725,6 +693,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
     <div class="ud-head">Signed in as<br><b id="userMenuName">user</b></div>
     <div class="ud-sep"></div>
     <button id="udChangePw" class="ud-item">Change Password</button>
+    <button id="udForgot"   class="ud-item">Forgot / Reset…</button>
     <div class="ud-sep"></div>
     <button id="udLogout"   class="ud-item danger">Logout</button>
   </div>
@@ -775,7 +744,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
       <button id="createBtn" class="btn">Create</button>
     </div>
 
-    <div id="archiveBanner" class="badge" style="display:none; margin:8px 0">You're looking at the moon<b id="bannerMonth" style="margin-left:6px"></b></div>
+    <div id="archiveBanner" class="badge" style="display:none; margin:8px 0">Anda sedang melihat bulan <b id="bannerMonth" style="margin-left:6px"></b></div>
 
 <!-- Table -->
 <div class="table">
@@ -850,11 +819,8 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
     <h3 id="modalTitle">Create Record</h3>
       <div class="grid">
         <div class="group"><label for="m_site">Site</label>
-          <select id="m_site" class="select" required>
-           <option value="" selected disabled hidden>Select Site…</option>
-           <option value="5G88">5G88</option>
-           <option value="SPM888">SPM888</option>
-          </select>
+          <select id="m_site" class="select"><option value="" selected disabled>Select Site…</option><option value="5G88">5G88</option><option value="SPM888">SPM888</option>
+        </select>
         </div>
         <div class="group"><label for="m_dt">Date & Time</label><input id="m_dt" class="input" type="datetime-local" step="1"></div>
         <div class="group"><label for="m_deposit">Total Deposit</label><input id="m_deposit" class="input" type="number" step="0.01" min="0"></div>
@@ -1030,7 +996,7 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 
     <!-- hint di atas tombol + tombol kanan, urutan Cancel lalu Change -->
     <div class="dlg-actions stack">
-      <div class="hint">Min. 6 letter.</div>
+      <div class="hint">Min. 6 karakter.</div>
       <div class="btnrow">
         <button id="cpCancel" type="button" class="btn-cancel">Cancel</button>
         <button id="cpOk" class="btn">Change</button>
@@ -1089,47 +1055,35 @@ function __readLocalState(){
   return {
     records:  readStore?.()    || [],
     unclaims: readUnclaims?.() || [],
-    targets:  readTarget(),
+    targets:  JSON.parse(localStorage.getItem(LS_TARGET) || 'null'),
     notes:    JSON.parse(localStorage.getItem('bonusNotes.v1') || 'null'),
     updatedAt: getUpdatedAt(),   // ⬅️ pakai nilai persisten
   };
 }
-function isValidTargets(x){
-  return x && typeof x === 'object'
-    && Array.isArray(x.depositTiers)
-    && Array.isArray(x.resitTiers)
-    && Array.isArray(x.salesTiers);
-}
+
 // Tulis semua state ke localStorage
 function __writeLocalState(s){
   if (!s) return;
   if (Array.isArray(s.records))  writeStore(s.records);
   if (Array.isArray(s.unclaims)) writeUnclaims(s.unclaims);
-  // hanya tulis kalau valid; kalau invalid, biarkan nilai lokal yang lama
-  if (isValidTargets(s.targets)) {
-    localStorage.setItem(LS_TARGET, JSON.stringify(s.targets));
-  }
-  if (s.notes !== undefined) {
-    localStorage.setItem('bonusNotes.v1', JSON.stringify(s.notes));
-  }
+  if (s.targets) localStorage.setItem(LS_TARGET, JSON.stringify(s.targets));
+  if (s.notes)   localStorage.setItem('bonusNotes.v1', JSON.stringify(s.notes));
+  // simpan timestamp cloud yg dipakai
   localStorage.setItem(LS_UPDATED, String(Number(s.updatedAt || Date.now())));
 }
 
 async function syncUp(){
   const u = auth.currentUser;
-  if (!u) throw new Error('Not signed in');       // biar ketahuan di caller
-
+  if (!u) return;
   const userKey = getUsername(u);
   const payload = __readLocalState();
   if (!payload.updatedAt){ bumpUpdated(); payload.updatedAt = getUpdatedAt(); }
 
   try{
-    await db.ref(`users/${userKey}/state`).set(payload);
-    console.log('[syncUp OK] path=', `users/${userKey}/state`);
-    return true;
+    await Loading.wrap(db.ref(`users/${userKey}/state`).set(payload), 'Syncing…');
+    console.log('[syncUp OK]');
   }catch(e){
     console.error('[syncUp FAIL]', e);
-    throw e;                                      // ⬅️ JANGAN ditelan
   }
 }
 
@@ -1150,54 +1104,42 @@ function __hasLocalData(){
   try{
     const a = readStore?.() || [];
     const b = readUnclaims?.() || [];
-    let t = null; try { t = JSON.parse(localStorage.getItem(LS_TARGET)); } catch {}
+    const t = localStorage.getItem(LS_TARGET);
     const n = localStorage.getItem('bonusNotes.v1');
-    return (a.length > 0) || (b.length > 0) || isValidTargets(t) || !!n;
+    return (a.length > 0) || (b.length > 0) || !!t || !!n;
   }catch{ return false; }
 }
-let CLOUD_HAS_STATE = false;
+
 async function syncDown(){
   const u = auth.currentUser;
   if (!u) return;
   const userKey = getUsername(u);
+
   try{
     let snap = await db.ref(`users/${userKey}/state`).get();
-    CLOUD_HAS_STATE = !!(snap && snap.exists()); // tandai apakah cloud ada
-    if (!CLOUD_HAS_STATE){
+    if (!snap || !snap.exists()){
+      // Cloud kosong. JANGAN push kosong.
+      // Biarkan saja; nanti setelah user menyimpan sesuatu, safeSyncUp() akan jalan.
       console.log('[syncDown] no cloud state yet; keeping local until first save');
       return;
     }
-    // ... (lanjutan syncDown kamu yang sekarang)
-  }catch(e){
-    console.error('[syncDown FAIL]', e);
-  }
-}
 
-    const cloud  = snap.val() || {};
+    const cloud  = snap.val();
     const local  = __readLocalState();
     const tCloud = Number(cloud?.updatedAt || 0);
-    const tLocal = Number(local?.updatedAt || 0);
-
-    // --- SELF HEAL: kalau targets cloud invalid tapi lokal valid, perbaiki cloud ---
-    if (!isValidTargets(cloud?.targets) && isValidTargets(local?.targets)) {
-      await db.ref(`users/${userKey}/state`).update({
-        targets: local.targets,
-        updatedAt: getUpdatedAt() || Date.now(),
-      });
-      cloud.targets = local.targets; // lanjut pakai yang sehat
-      console.log('[syncDown] healed cloud targets from local');
-    }
+    const tLocal = Number(local.updatedAt || 0);
 
     if (tCloud >= tLocal){
-      __writeLocalState(cloud);                     // tarik dari cloud
+      __writeLocalState(cloud);
       console.log('[syncDown → LOCAL from CLOUD]', {tCloud, tLocal});
     } else {
-      // hanya dorong ke cloud bila benar2 ada data lokal
+      // Hanya kalau benar-benar ada data lokal yang lebih baru
       if (__hasLocalData()){
         await db.ref(`users/${userKey}/state`).set(local);
         console.log('[syncDown → CLOUD from LOCAL]', {tCloud, tLocal});
       } else {
-        __writeLocalState(cloud);                   // lokal kosong → pakai cloud
+        // Local kosong tapi timestamp kebetulan lebih besar — abaikan, pakai cloud
+        __writeLocalState(cloud);
         console.log('[syncDown → force CLOUD]', {tCloud, tLocal});
       }
     }
@@ -1210,20 +1152,21 @@ auth.onAuthStateChanged(async (user) => {
   if (!user) { location.replace(LOGIN_URL); return; }
 
   try {
-  setUserUI(getUsername(user));
-  await syncDown();
-} finally {
-  BOOTING = false;
-}
-// (opsional) ensure notes
-if (typeof ensureNotes === 'function') ensureNotes();
+    setUserUI(getUsername(user));
+    await syncDown();                 // tarik state dari Cloud dulu
+  } catch (e) {
+    console.error('syncDown error', e);
+  } finally {
+    BOOTING = false;                  // LEPAS guard boot supaya safeSyncUp boleh jalan
+  }
 
-// ⬇️ HANYA dorong kalau cloud memang kosong (pertama kali pakai)
-if (!CLOUD_HAS_STATE) safeSyncUp(true);
+  // (opsional tapi disarankan) pastikan Notes ada, lalu dorong ke Cloud
+  if (typeof ensureNotes === 'function') ensureNotes();
+  if (typeof safeSyncUp  === 'function') safeSyncUp();
 
-// render dsb.
-document.documentElement.classList.remove('auth-wait');
-if (typeof render === 'function') render();
+  document.documentElement.classList.remove('auth-wait');
+  if (typeof render === 'function') render();
+});
 // ==== LOGOUT ====
 window.doLogout = async ()=>{
   await auth.signOut();
@@ -1232,14 +1175,9 @@ window.doLogout = async ()=>{
 
 // ==== AUTO SYNC SAAT TUTUP TAB ====
 let __syncTimer = null;
-function safeSyncUp(immediate = false) {
-  if (!auth.currentUser || BOOTING) return;
-  // ⬇️ tambahkan guard ini:
-  if (!__hasLocalData()) return;            // jangan kirim kalau lokal kosong/default
-  // opsional: kalau cloud ada & lokal jelas bukan terbaru, jangan push
-  // (kalau kamu mau lebih ketat berdasarkan timestamp)
+function safeSyncUp() {
+  if (!auth.currentUser || BOOTING) return; // ⬅️ tahan saat boot
   clearTimeout(__syncTimer);
-  if (immediate) return syncUp();
   __syncTimer = setTimeout(syncUp, 300);
 }
 document.addEventListener('visibilitychange', () => {
@@ -1856,19 +1794,27 @@ function readTarget(){
       return t;
     }
   } catch {}
+
+  // migrasi v2 -> v3 (tanpa bump/sync)
   try {
     const old = JSON.parse(localStorage.getItem('bonusTargets.v2'));
     if (old) {
       const upgraded = {
-        depositTiers: Array.isArray(old.depositTiers) ? old.depositTiers : [],
-        resitTiers:   Array.isArray(old.resitTiers)   ? old.resitTiers   : [],
-        salesTiers:   Array.isArray(old.salesTiers)   ? old.salesTiers   : [],
+        depositTiers: old.depositTiers || [{threshold:8000, bonus:20}],
+        resitTiers:   old.resitTiers   || [{threshold:250,  bonus:30}],
+        salesTiers:   old.salesTiers   || [{threshold:30000, bonus:300}],
       };
       localStorage.setItem(LS_TARGET, JSON.stringify(upgraded));
       return upgraded;
     }
   } catch {}
-  const def = { depositTiers: [], resitTiers: [], salesTiers: [] };
+
+  // default sekali (tanpa bump/sync)
+  const def = {
+    depositTiers:[{threshold:8000, bonus:20},{threshold:10000, bonus:25}],
+    resitTiers:[{threshold:250, bonus:30},{threshold:500, bonus:60}],
+    salesTiers:[{threshold:30000, bonus:300}]
+  };
   localStorage.setItem(LS_TARGET, JSON.stringify(def));
   return def;
 }
@@ -2264,37 +2210,32 @@ function saveTiersLive(){
     resitTiers:   readRowsFromEditor('#resTierList'),
     salesTiers:   readRowsFromEditor('#salesTierList'),
   };
+  // fallback minimal agar tidak kosong total
+  if(!t.depositTiers.length) t.depositTiers=[{threshold:8000,bonus:20}];
+  if(!t.resitTiers.length)   t.resitTiers=[{threshold:250, bonus:30}];
+  if(!t.salesTiers.length)   t.salesTiers=[{threshold:30000, bonus:300}];
   writeTarget(t);
   bumpUpdated();  
   safeSyncUp();
 }
-  // ganti function asal
-async function saveTarget(){
-  const btn = document.getElementById('saveTargetBtn');
-  setBtnLoading?.(btn, true, 'Saving…');
-
-  try{
-    if (!auth.currentUser) { toast('Not signed in. Please login and try again.', 'error'); return; }
-
-    const t = {
-      depositTiers: readRowsFromEditor('#depTierList'),
-      resitTiers:   readRowsFromEditor('#resTierList'),
-      salesTiers:   readRowsFromEditor('#salesTierList'),
+  function saveTarget(){
+    const readRows=sel=>{
+      const rows=[...document.querySelectorAll(sel+' .tier-row')].slice(1);
+      const out=[]; for(const r of rows){ const [th,bo]=r.querySelectorAll('input'); const thr=+th.value||0; const bon=+bo.value||0; if(thr>0&&bon>0) out.push({threshold:thr,bonus:bon}); }
+      out.sort((a,b)=>a.threshold-b.threshold); return out;
     };
+    const t={depositTiers:readRows('#depTierList'), resitTiers:readRows('#resTierList'), salesTiers:readRows('#salesTierList')};
+    if(!t.depositTiers.length) t.depositTiers=[{threshold:8000,bonus:20}];
+    if(!t.resitTiers.length)   t.resitTiers=[{threshold:250, bonus:30}];
+    if(!t.salesTiers.length)   t.salesTiers=[{threshold:30000, bonus:300}];
     writeTarget(t);
-    bumpUpdated();
-
-    await Loading.wrap(syncUp(), 'Saving…');      // ⬅️ kalau gagal, akan masuk catch
-
     toast('Target saved', 'success');
     closeTargetModal();
     render();
-  }catch(e){
-    toast('Failed to save to cloud. Check login/rules/koneksi.', 'error', 4000);
-  }finally{
-    setBtnLoading?.(btn, false);
+    bumpUpdated(); 
+    safeSyncUp();
   }
-}
+
 function prettyRange(f, t){
   if (!f || !t) return '';
   const fd = new Date(f), td = new Date(t);
@@ -2326,6 +2267,7 @@ function render(){
       const fromTS  = fromStr ? new Date(fromStr + 'T00:00:00').getTime() : -Infinity;
       const toTS    = toStr   ? new Date(toStr   + 'T23:59:59').getTime() :  Infinity;
 
+      // ❗ Hapus filter r.month === month
       const data = readStore()
         .filter(r => site === 'ALL' ? true : r.site === site)
         .filter(r => {
@@ -2345,6 +2287,7 @@ function render(){
         else           ucByRecord[u.recordId].pending += safe(u.amount);
       }
 
+      // archive banner: sembunyikan ketika range lintas bulan
       $('#archiveBanner').style.display = 'none';
       $('#bannerMonth').textContent = prettyMonth(month);
 
@@ -2424,6 +2367,7 @@ function render(){
       const ftS = $('#ft_sales');
       ftS.className = ''; ftS.classList.add('num'); if (totals.s < 0) ftS.classList.add('red'); else if (totals.s > 0) ftS.classList.add('green');
 
+      // mini-cards: tampilkan range
       setMiniMonthLabel();
       $('#miniSite').textContent  = (site === 'ALL' ? 'All Sites' : site);
 
@@ -2446,6 +2390,7 @@ function applyTableScrollLimit() {
 
   if (!scroller || !head) return;
 
+  // ≤ 10 baris → biar tanpa scroll paksa
   if (rows.length <= 10) {
     scroller.style.maxHeight = '';
     scroller.style.overflowY = 'visible';
@@ -2473,9 +2418,9 @@ function renderSummaryRows(t, count, site, month){
     { title: 'Total Bonus',          val: fmtNum(t.b),                                   cls: 'cyan' },
     { title: 'Total Sales',          val: fmtNum(t.s),                                   cls: t.s < 0 ? 'red' : 'green' },
     { title: 'Total Forfeit',        val: fmtNum(t.f) },
-    { title: 'Total Resit In',       val: fmtNumNoGroup(t.r) },
+    { title: 'Total Resit In',       val: fmtNumNoGroup(t.r) },     // ⬅️ no grouping
     { title: 'Total Unclaim (Σ)',    val: fmtNum(t.uDisp) },
-    { title: 'Total Member',         val: fmtIntNoGroup(t.m) },
+    { title: 'Total Member',         val: fmtIntNoGroup(t.m) },     // ⬅️ no grouping
     { title: 'Records',              val: count.toLocaleString() },
   ].forEach(c => {
     const d = document.createElement('div');
@@ -2554,6 +2499,7 @@ function renderSummaryRows(t, count, site, month){
   document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
 }
 
+ // ===== C. Unclaim Modal =====
 function openUnclaimModal(){
   openModalA11y('#unclaimModal', '#tabPending');
   switchUcTab(ucActiveTab);
@@ -2581,7 +2527,7 @@ function renderUnclaimList(which = 'pending'){
   if (!items.length){
     const e = document.createElement('div');
     e.className = 'empty';
-    e.textContent = (which === 'history') ? 'No History.' : 'No Unclaim.';
+    e.textContent = (which === 'history') ? 'Belum ada riwayat claim.' : 'Belum ada Unclaim.';
     list.appendChild(e);
     return;
   }
