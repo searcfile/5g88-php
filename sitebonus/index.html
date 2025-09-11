@@ -807,9 +807,9 @@ html[data-theme="light"] .flatpickr-calendar .flatpickr-day.nextMonthDay{ color:
 html[data-theme="light"] #userMenu .theme-row{ background:#ffffff; border-color:#e5e7eb; }
 .theme-toggle{
   position:relative;
-  width:148px; height:32px;
+  width:148px; height:20px;
   border-radius:999px;
-  background:#1668dc; color:#fff; font-weight:700; font-size:14px;
+  background:#1668dc; color:#fff; font-weight:600; font-size:14px;
   display:flex; align-items:center; justify-content:center;
   padding:0 6px; border:0; cursor:pointer; outline:0;
   overflow:hidden;                 /* <— penting: potong lebihan */
@@ -823,10 +823,10 @@ html[data-theme="light"] #userMenu .theme-row{ background:#ffffff; border-color:
 }
 .theme-toggle .knob{
   position:absolute; top:50%;
-  width:22px; height:22px; border-radius:50%;
+  width:15px; height:15px; border-radius:50%;
   background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.35);
   transform:translateY(-50%);      /* hanya Y, bukan X */
-  transition:left .18s ease, right .18s ease;
+  transition:left .25s ease, right .25s ease;
 }
 .theme-toggle[aria-checked="false"] .knob{ left:6px;  right:auto; }
 .theme-toggle[aria-checked="true"]  .knob{ right:6px; left:auto; }
