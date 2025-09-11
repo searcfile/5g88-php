@@ -15,7 +15,7 @@
 }
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0; background:#000; color:var(--text);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial;}
+body{margin:0; background:var(--bg); color:var(--text);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial;}
 ::-webkit-scrollbar { width: 10px; }
 ::-webkit-scrollbar-track { background: #141414; }
 ::-webkit-scrollbar-thumb {background: #424242;border-radius: 8px;border: 2px solid transparent;background-clip: content-box;}
@@ -715,6 +715,109 @@ input[type="number"]{-moz-appearance: textfield;appearance: textfield;}
 }
 .best-row .amt{ font-weight:700; color:#008000;}
 .best-row .amt.red{ color:var(--red); }
+html[data-theme="light"]{
+  --bg:#f6f7fb; 
+  --card:#ffffff; 
+  --text:#111827; 
+  --sub:#6b7280;
+  --gold:#b38600; --gold-2:#c29b0a;
+  --red:#b91c1c; --green:#047857; --cyan:#2563eb;
+  --ring:rgba(37,99,235,.35);
+  --primary:#1668dc;
+  --picker-blue:#1668dc;
+  --picker-blue-ghost:rgba(22,104,220,.15);
+}
+
+/* Permukaan utama yang sebelum ini #141414/#101010 → ikut var(--card) */
+html[data-theme="light"] .card,
+html[data-theme="light"] .input,
+html[data-theme="light"] .select,
+html[data-theme="light"] .btn-unclaim,
+html[data-theme="light"] .btn-exp,
+html[data-theme="light"] .mini-card,
+html[data-theme="light"] .range-wrap .range,
+html[data-theme="light"] .range-quick-btn,
+html[data-theme="light"] .range-quick-menu,
+html[data-theme="light"] .user-menu,
+html[data-theme="light"] #userBtn.userbtn,
+html[data-theme="light"] .modal .dialog,
+html[data-theme="light"] .table,
+html[data-theme="light"] .table thead,
+html[data-theme="light"] .table tfoot td,
+html[data-theme="light"] .tier-list,
+html[data-theme="light"] .uc-item,
+html[data-theme="light"] .notes-table input,
+html[data-theme="light"] .note-table-wrap{
+  background:#ffffff;
+  color:var(--text);
+  border-color:#e5e7eb;
+}
+
+/* Header grad yang lebih cerah */
+html[data-theme="light"] .header{
+  background:linear-gradient(180deg,#e9eefc,#dfe7fb);
+  border-bottom-color:#e5e7eb;
+}
+
+/* Table head/footer */
+html[data-theme="light"] #dataTable thead th{
+  background:linear-gradient(180deg,#eef2ff,#e0e7ff);
+  color:#111827;
+  box-shadow:0 2px 0 rgba(0,0,0,.06);
+}
+html[data-theme="light"] #dataTable tfoot td{
+  background:#f3f4f6;
+  box-shadow:0 -2px 0 rgba(0,0,0,.06);
+}
+
+/* Hover row lebih lembut */
+html[data-theme="light"] #dataTable tbody tr:hover > td{
+  background:#f8fafc;
+  border-color:transparent;
+}
+
+/* Pills & menu border */
+html[data-theme="light"] .pill{ background:#fff; border-color:#e5e7eb; }
+html[data-theme="light"] .pill.site-5g88{ background:#fff; border-color:#1668dc; color:#1668dc; }
+html[data-theme="light"] .pill.site-spm888{ background:#fff; border-color:#bf0010; color:#bf0010; }
+
+/* Flatpickr palet terang (ikut var picker) */
+html[data-theme="light"] .flatpickr-calendar,
+html[data-theme="light"] .flatpickr-calendar .flatpickr-months,
+html[data-theme="light"] .flatpickr-calendar .flatpickr-weekdays,
+html[data-theme="light"] .flatpickr-calendar .dayContainer{
+  background:#ffffff !important;
+}
+html[data-theme="light"] span.flatpickr-weekday{ background:#eef2ff !important; color:#2563eb !important; }
+html[data-theme="light"] .flatpickr-calendar{ border-color:#e5e7eb !important; box-shadow:0 20px 60px rgba(0,0,0,.12) !important; }
+html[data-theme="light"] .flatpickr-calendar .flatpickr-day{ color:#111827 !important; }
+html[data-theme="light"] .flatpickr-calendar .flatpickr-day.prevMonthDay,
+html[data-theme="light"] .flatpickr-calendar .flatpickr-day.nextMonthDay{ color:#94a3b8 !important; }
+
+/* User menu fade */
+#userMenu{ opacity:0; transition:opacity .12s ease; }
+#userMenu.show{ opacity:1; }
+
+/* ===== Toggle di user menu (rupa seperti gambar) ===== */
+#userMenu .theme-row{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:12px; padding:8px 10px; border:1px solid #424242; border-radius:10px; background:#0f0f0f;
+  margin:0 0 10px;
+}
+html[data-theme="light"] #userMenu .theme-row{ background:#ffffff; border-color:#e5e7eb; }
+.theme-toggle{
+  position:relative; width:148px; height:32px; border-radius:999px;
+  background:#1668dc; color:#fff; font-weight:700; font-size:14px;
+  display:flex; align-items:center; justify-content:center;
+  padding:0 6px; cursor:pointer; border:0; outline:0;
+}
+.theme-toggle .knob{
+  position:absolute; right:6px; width:22px; height:22px; border-radius:50%;
+  background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.35); transition:transform .18s ease;
+}
+.theme-toggle[aria-checked="false"] .knob{ transform:translateX(-116px); } /* Light → knop kiri */
+.theme-toggle:focus-visible{ box-shadow:0 0 0 3px var(--ring); }
+.theme-row .label{ font-size:13px; color:var(--sub); }
 </style>
 </head>
 <body>
@@ -2812,7 +2915,90 @@ function claimUnclaim(ucId){
     if (list) list.scrollTop = 0;
   }
 }
+/* ===== Theme helpers ===== */
+const THEME_KEY = 'bonus.theme.v1';
 
+function getSavedTheme(){
+  const v = localStorage.getItem(THEME_KEY);
+  if (v === 'dark' || v === 'light') return v;
+  // fallback ke system preference
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches
+    ? 'light' : 'dark';
+}
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem(THEME_KEY, t);
+}
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme') || getSavedTheme();
+  const nxt = (cur === 'dark') ? 'light' : 'dark';
+  applyTheme(nxt);
+  updateThemeToggleUI();
+}
+function updateThemeToggleUI(){
+  const btn = document.getElementById('themeToggle');
+  if (!btn) return;
+  const cur = document.documentElement.getAttribute('data-theme') || getSavedTheme();
+  const isDark = (cur === 'dark');
+  btn.setAttribute('aria-checked', String(isDark));
+  btn.querySelector('.text').textContent = isDark ? 'Dark Mode' : 'Light Mode';
+}
+
+/* Apply on load */
+applyTheme(getSavedTheme());
+
+/* ===== Inject toggle inside user menu (above Change Password) ===== */
+function ensureThemeToggle(){
+  const menu = document.getElementById('userMenu');
+  if (!menu || document.getElementById('themeRow')) return;
+
+  // Cari anchor "Change Password"
+  const anchor = document.getElementById('udChangePw')?.closest('button, .ud-item, .item, li, a, div') || null;
+
+  // Row container
+  const row = document.createElement('div');
+  row.className = 'theme-row';
+  row.id = 'themeRow';
+  row.innerHTML = `
+    <span class="label">Appearance</span>
+    <button id="themeToggle" type="button" role="switch" aria-checked="true" class="theme-toggle">
+      <span class="text">Dark Mode</span>
+      <span class="knob" aria-hidden="true"></span>
+    </button>
+  `;
+
+  if (anchor) menu.insertBefore(row, anchor);
+  else menu.prepend(row);
+
+  // Events
+  const btn = row.querySelector('#themeToggle');
+  btn.addEventListener('click', toggleTheme);
+  btn.addEventListener('keydown', (e)=>{
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTheme(); }
+  });
+
+  updateThemeToggleUI();
+}
+
+/* ===== Hook into your existing menu open logic ===== */
+/* Kau sudah ada applyUserMenuTweaks(), panggil ensureThemeToggle() lepas tu */
+(function hookThemeIntoMenu(){
+  // kalau function sedia ada, wrap
+  if (typeof applyUserMenuTweaks === 'function'){
+    const orig = applyUserMenuTweaks;
+    window.applyUserMenuTweaks = function(){
+      orig();            // jalankan tweak asal kamu
+      ensureThemeToggle();
+      updateThemeToggleUI();
+    };
+  } else {
+    // fallback: cuba inject bila DOM ready
+    document.addEventListener('DOMContentLoaded', () => {
+      ensureThemeToggle();
+      updateThemeToggleUI();
+    });
+  }
+})();
 async function deleteUnclaim(ucId){
   const ucAll = readUnclaims();
   const idx = ucAll.findIndex(x => x.id === ucId);
