@@ -752,7 +752,7 @@ html[data-theme="light"] .note-table-wrap{
   color:var(--text);
   border-color:#e5e7eb;
 }
-
+html[data-theme="light"] .#dataTable tfoot td:first-child {color:var(--text);}
 /* Header grad yang lebih cerah */
 html[data-theme="light"] .header{
   background:linear-gradient(180deg,#e9eefc,#dfe7fb);
@@ -828,8 +828,8 @@ html[data-theme="light"] #userMenu .theme-row{ background:#ffffff; border-color:
   transform:translateY(-50%);      /* hanya Y, bukan X */
   transition:left .25s ease, right .25s ease;
 }
-.theme-toggle[aria-checked="false"] .knob{ left:6px;  right:auto; }
-.theme-toggle[aria-checked="true"]  .knob{ right:6px; left:auto; }
+.theme-toggle[aria-checked="false"] .knob{ left:3px;  right:auto; }
+.theme-toggle[aria-checked="true"]  .knob{ right:3px; left:auto; }
 .theme-toggle:focus-visible{ box-shadow:0 0 0 3px var(--ring); }
 .theme-row .label{ font-size:13px; color:var(--sub); }
 </style>
