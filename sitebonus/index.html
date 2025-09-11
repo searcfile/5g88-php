@@ -11,7 +11,7 @@
   --bg:#0a0a0a; --card:#121212; --text:#e6e6e6; --sub:#a7a7a7;
   --gold:#ffd166; --gold-2:#ffcf4d; --red:#ff0000; --green:#008000; --cyan:#60a5fa; --ring:rgba(255,209,102,.55);  --primary:#1668dc;
   --spin-size:28px; --textk:#ffffff; --tk:rgba(255, 255, 255, 0.85);
-  --spin-speed:.8s;
+  --spin-speed:.8s; --bg-2:#141414;
 }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -118,7 +118,7 @@ span.flatpickr-weekday {
 /* Summary rows */
 .cards-row{display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; scrollbar-width:thin;min-width:0;}
 .card{background:#141414;border:1px solid #424242; border-radius:10px; padding:12px;min-width:120px; flex:1 1 220px;}
-.card h4{margin:0 0 2px; font-size:12px; color:var(--tk); font-weight:600}
+.card h4{margin:0 0 2px; font-size:12px; color:var(--tk); font-weight:600;background:var(--bg-2)}
 .card .val{font-size:14px; font-weight:700}
 
 /* Ellipsis khusus kartu */
