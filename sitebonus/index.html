@@ -726,10 +726,12 @@ html[data-theme="light"]{
   --primary:#1668dc;
   --picker-blue:#1668dc;
   --picker-blue-ghost:rgba(22,104,220,.15);
+  --bg-3:#ffffff;
+  --bd:#757575;
 }
 
 /* Permukaan utama yang sebelum ini #141414/#101010 → ikut var(--card) */
-html[data-theme="light"] .card,.card h4,
+html[data-theme="light"] .card,
 html[data-theme="light"] .input,
 html[data-theme="light"] .select,
 html[data-theme="light"] .btn-unclaim,
@@ -757,7 +759,7 @@ html[data-theme="light"] .header{
   background:linear-gradient(180deg,#022587,#4e7df1);
   border-bottom-color:#e5e7eb;
 }
-
+html[data-theme="light"] .card h4 {background:var(--bg-3);color:var(--text);border-color:var(--bd)}
 /* Table head/footer */
 html[data-theme="light"] #dataTable thead th{
   background:linear-gradient(180deg,#eef2ff,#e0e7ff);
