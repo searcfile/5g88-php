@@ -10,7 +10,7 @@
 :root{
   --bg:#0a0a0a; --card:#121212; --text:#e6e6e6; --sub:#a7a7a7;
   --gold:#ffd166; --gold-2:#ffcf4d; --red:#ff0000; --green:#008000; --cyan:#60a5fa; --ring:rgba(255,209,102,.55);  --primary:#1668dc;
-  --spin-size:28px;
+  --spin-size:28px; --textk:#ffffff;
   --spin-speed:.8s;
 }
 *{box-sizing:border-box}
@@ -240,7 +240,7 @@ span.flatpickr-weekday {
 #dataTable thead th:last-child { text-align: center !important; }
 #dataTable tbody td:last-child { text-align: center !important; }
 #dataTable td:last-child .actions{display:flex; width:100%; justify-content:center !important; align-items:center;}
-#dataTable tfoot td:first-child {text-align: center !important; vertical-align: middle !important;font-weight: bold; letter-spacing: 0.3px; color: white;}
+#dataTable tfoot td:first-child {text-align: center !important; vertical-align: middle !important;font-weight: bold; letter-spacing: 0.3px; color:var(--textk);}
 #dataTable thead th{ box-shadow: 0 2px 0 rgba(0,0,0,.35);color:white;}
 #dataTable tfoot td{ box-shadow: 0 -2px 0 rgba(0,0,0,.35);}
 #dataTable tbody td{transition: background-color .15s ease;}
