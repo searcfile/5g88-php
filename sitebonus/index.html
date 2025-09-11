@@ -2920,20 +2920,12 @@ const THEME_KEY = 'bonus.theme.v1';
 
 function getSavedTheme(){
   const v = localStorage.getItem(THEME_KEY);
-  if (v === 'dark' || v === 'light') return v;
-  // fallback ke system preference
-  return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches
-    ? 'light' : 'dark';
+  if (v==='dark' || v==='light') return v;
+  return (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
 }
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
   localStorage.setItem(THEME_KEY, t);
-}
-function toggleTheme(){
-  const cur = document.documentElement.getAttribute('data-theme') || getSavedTheme();
-  const nxt = (cur === 'dark') ? 'light' : 'dark';
-  applyTheme(nxt);
-  updateThemeToggleUI();
 }
 function updateThemeToggleUI(){
   const btn = document.getElementById('themeToggle');
@@ -2943,19 +2935,22 @@ function updateThemeToggleUI(){
   btn.setAttribute('aria-checked', String(isDark));
   btn.querySelector('.text').textContent = isDark ? 'Dark Mode' : 'Light Mode';
 }
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme') || getSavedTheme();
+  applyTheme(cur === 'dark' ? 'light' : 'dark');
+  updateThemeToggleUI();
+}
 
-/* Apply on load */
+// Apply on load
 applyTheme(getSavedTheme());
 
-/* ===== Inject toggle inside user menu (above Change Password) ===== */
+// Inject switch inside #userMenu (above Change Password)
 function ensureThemeToggle(){
   const menu = document.getElementById('userMenu');
   if (!menu || document.getElementById('themeRow')) return;
 
-  // Cari anchor "Change Password"
   const anchor = document.getElementById('udChangePw')?.closest('button, .ud-item, .item, li, a, div') || null;
 
-  // Row container
   const row = document.createElement('div');
   row.className = 'theme-row';
   row.id = 'themeRow';
@@ -2966,39 +2961,26 @@ function ensureThemeToggle(){
       <span class="knob" aria-hidden="true"></span>
     </button>
   `;
+  if (anchor) menu.insertBefore(row, anchor); else menu.prepend(row);
 
-  if (anchor) menu.insertBefore(row, anchor);
-  else menu.prepend(row);
-
-  // Events
   const btn = row.querySelector('#themeToggle');
   btn.addEventListener('click', toggleTheme);
-  btn.addEventListener('keydown', (e)=>{
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTheme(); }
-  });
+  btn.addEventListener('keydown', (e)=>{ if (e.key==='Enter' || e.key===' ') { e.preventDefault(); toggleTheme(); } });
 
   updateThemeToggleUI();
 }
 
-/* ===== Hook into your existing menu open logic ===== */
-/* Kau sudah ada applyUserMenuTweaks(), panggil ensureThemeToggle() lepas tu */
-(function hookThemeIntoMenu(){
-  // kalau function sedia ada, wrap
-  if (typeof applyUserMenuTweaks === 'function'){
-    const orig = applyUserMenuTweaks;
-    window.applyUserMenuTweaks = function(){
-      orig();            // jalankan tweak asal kamu
-      ensureThemeToggle();
-      updateThemeToggleUI();
-    };
-  } else {
-    // fallback: cuba inject bila DOM ready
-    document.addEventListener('DOMContentLoaded', () => {
-      ensureThemeToggle();
-      updateThemeToggleUI();
-    });
-  }
-})();
+/* Sambung pada fungsi tweak menu kau */
+if (typeof applyUserMenuTweaks === 'function'){
+  const _orig = applyUserMenuTweaks;
+  window.applyUserMenuTweaks = function(){
+    _orig();
+    ensureThemeToggle();
+    updateThemeToggleUI();
+  };
+} else {
+  document.addEventListener('DOMContentLoaded', ()=>{ ensureThemeToggle(); updateThemeToggleUI(); });
+}
 async function deleteUnclaim(ucId){
   const ucAll = readUnclaims();
   const idx = ucAll.findIndex(x => x.id === ucId);
