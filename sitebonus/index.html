@@ -752,7 +752,7 @@ html[data-theme="light"] .note-table-wrap{
   color:var(--text);
   border-color:#e5e7eb;
 }
-html[data-theme="light"] #dataTable tfoot td:first-child {color:#111827;background:linear-gradient(180deg,#eef2ff,#e0e7ff);}
+html[data-theme="light"] #dataTable tbody td {color:rgba(0, 0, 0, 0.88);}
 /* Header grad yang lebih cerah */
 html[data-theme="light"] .header{
   background:linear-gradient(180deg,#e9eefc,#dfe7fb);
@@ -765,9 +765,10 @@ html[data-theme="light"] #dataTable thead th{
   color:#111827;
   box-shadow:0 2px 0 rgba(0,0,0,.06);
 }
+html[data-theme="light"] #dataTable tfoot td:first-child {color:#111827;}
 html[data-theme="light"] #dataTable tfoot td{
   background:#f3f4f6;
-  box-shadow:0 -2px 0 rgba(0,0,0,.06);
+  box-shadow:0 -2px 0 rgba(0,0,0,.06);background:linear-gradient(180deg,#eef2ff,#e0e7ff);
 }
 
 /* Hover row lebih lembut */
