@@ -92,36 +92,54 @@ input[type=file]{display:none}
 
 <script>
 // =====================================================
-// USER LIVECHAT — UPGRADED (keep '@' in keys: name@gmail_com)
+// USER LIVECHAT — FINAL UPGRADED (RTDB-safe, keep '@')
 // =====================================================
 
-// ---- global ----
+// ---------- Global ----------
 let chatInitialized = false;
 let userHasInteracted = false;
 ["click","keydown","scroll","touchstart"].forEach(ev =>
   document.addEventListener(ev, () => userHasInteracted = true, { once:true })
 );
 
-// ---- helpers (email, key, path) ----
+// ---------- Helpers (email, key, path) ----------
 function normalizeEmail(raw){
   if(!raw) return null;
   return String(raw).trim().toLowerCase();
 }
 
-// RTDB-safe: pertahankan '@', ganti hanya token terlarang . # $ [ ] /
+// RTDB-safe: biarkan '@', ganti '.' jadi '_' dan tolak token terlarang # $ [ ] /
 function sanitizeEmailKeepAt(rawEmail){
   const norm = normalizeEmail(rawEmail);
-  return norm ? norm.replace(/[.#$\[\]\/]/g, "_").replace(/_+/g,"_") : null;
+  if(!norm) return null;
+  // jika ada token terlarang selain '.', langsung error biar ketahuan sumbernya
+  const forbidden = /[#$\[\]\/]/;
+  if(forbidden.test(norm)){
+    const hit = norm.match(/[#$\[\]\/]/g).join(" ");
+    throw new Error(`[RTDB] Email mengandung token terlarang: ${hit} -> "${norm}"`);
+  }
+  // ganti titik → underscore
+  const key = norm.replace(/\./g,"_").replace(/_+/g,"_");
+  return key;
 }
 
-// Storage-safe untuk nama file/folder (hindari [] # * ? dan /)
-function storageSafeName(name){
-  return String(name||"").trim().replace(/[#[\]*?]/g,"_").replace(/\//g,"_");
+// validasi akhir untuk semua key RTDB
+function assertValidRtdbKey(key, label="key"){
+  if(!key || /[.#$\[\]\/]/.test(key)){
+    console.error(`[RTDB] ${label} tidak valid:`, key);
+    throw new Error(`[RTDB] ${label} mengandung token terlarang`);
+  }
 }
 
 function getChatPath(rawEmail){
-  const key = sanitizeEmailKeepAt(rawEmail);
-  return key ? `chats/${key}` : null;
+  const key = sanitizeEmailKeepAt(rawEmail);        // contoh: auudposting1@gmail_com
+  assertValidRtdbKey(key, "emailKey(getChatPath)");
+  return `chats/${key}`;
+}
+
+// Storage-safe: hilangkan karakter yang bermasalah untuk nama file/folder
+function storageSafeName(name){
+  return String(name||"").trim().replace(/[#[\]*?]/g,"_").replace(/\//g,"_");
 }
 
 // sumber email user (localStorage -> query ?email= -> cache postMessage)
@@ -139,7 +157,7 @@ function resolveUserEmail(){
   return null;
 }
 
-// ---- firebase init (guard) ----
+// ---------- Firebase init ----------
 (function initFirebase(){
   if(!window.firebase){ console.error("Firebase SDK belum dimuat."); return; }
   const cfg = {
@@ -154,13 +172,15 @@ function resolveUserEmail(){
   if(!firebase.apps.length) firebase.initializeApp(cfg);
   window.db = firebase.database();
   window.storage = firebase.storage();
+
+  // nyalakan log firebase saat debug (boleh dimatikan nanti)
+  try { firebase.database.enableLogging(true); } catch(e){}
 })();
 
-// ---- UI helpers ----
+// ---------- UI helpers ----------
 function cleanDuplicateName(name){
   name = (name||"").trim();
-  const parts = name.split(/\s+/);
-  const half = parts.length/2;
+  const parts = name.split(/\s+/), half = parts.length/2;
   if(parts.length%2===0){
     const a = parts.slice(0,half).join(" ");
     const b = parts.slice(half).join(" ");
@@ -182,7 +202,7 @@ function playNotificationSound(){
   if(audio && userHasInteracted){ audio.currentTime=0; audio.play().catch(()=>{}); }
 }
 
-// ---- terima data dari parent (opsional) ----
+// ---------- Terima data dari parent (opsional) ----------
 window.addEventListener("message", (event)=>{
   if(event.data?.type==="user-login" && event.data.user){
     const name  = event.data.user.name  || "User";
@@ -200,7 +220,7 @@ window.addEventListener("message", (event)=>{
   }
 });
 
-// ---- delivered / read (untuk pesan ADMIN) ----
+// ---------- Delivered / Read (untuk pesan ADMIN) ----------
 function markAdminMsgsDelivered(chatRef){
   chatRef.on("child_added", snap=>{
     const m = snap.val();
@@ -225,7 +245,7 @@ function scheduleMarkAdminMsgsRead(chatRef){
   }, 600);
 }
 
-// ---- main init ----
+// ---------- Main init ----------
 function initChatWithUserData(){
   if(chatInitialized || !window.db) return;
   const userEmail = resolveUserEmail();
@@ -248,7 +268,6 @@ function initChatWithUserData(){
   const chatRef  = db.ref(chatPath);
   console.log("[init] RTDB path:", chatPath);
 
-  // delivered & read
   markAdminMsgsDelivered(chatRef);
   ["focus","visibilitychange"].forEach(ev=>{
     window.addEventListener(ev, ()=>{
@@ -293,7 +312,7 @@ function initChatWithUserData(){
   listenToChat(userEmail, chatRef);
 }
 
-// ---- send (user -> admin) ----
+// ---------- Send (user -> admin) ----------
 async function sendMessage(userEmail){
   const msgInput  = document.getElementById("msg");
   const fileInput = document.getElementById("fileInput");
@@ -307,7 +326,8 @@ async function sendMessage(userEmail){
   if(!connected.val()){ alert("Koneksi offline. Coba lagi saat online."); return; }
 
   const emailNorm = normalizeEmail(userEmail);
-  const emailKey  = sanitizeEmailKeepAt(userEmail); // contoh: auudposting1@gmail_com
+  const emailKey  = sanitizeEmailKeepAt(userEmail);   // contoh: auudposting1@gmail_com
+  assertValidRtdbKey(emailKey, "emailKey(send)");
   const chatPath  = `chats/${emailKey}`;
   console.log("[sendMessage] RTDB path:", chatPath);
 
@@ -329,7 +349,7 @@ async function sendMessage(userEmail){
     await chatRef.push({
       from: "user",
       name: userName,
-      email: emailNorm,                 // email asli (lowercase)
+      email: emailNorm,
       photoURL: userPhoto,
       text: msg || null,
       image: imageUrl || null,
@@ -349,7 +369,7 @@ async function sendMessage(userEmail){
   }
 }
 
-// ---- listen & render ----
+// ---------- Listen & render ----------
 function listenToChat(userEmail, chatRef){
   const chatBox  = document.getElementById("chatBox");
   const notifDot = document.getElementById("notifDot");
@@ -461,9 +481,11 @@ function renderChats(chatGroup, today){
   });
 }
 
-// ---- presence & notifications ----
+// ---------- Presence & notifications ----------
 function setupPresenceAndNotif(email){
   const sanitized = sanitizeEmailKeepAt(email);
+  assertValidRtdbKey(sanitized, "emailKey(presence)");
+
   const connectedRef = firebase.database().ref(".info/connected");
   const userRef = firebase.database().ref("users/" + sanitized);
 
@@ -490,7 +512,7 @@ function setupPresenceAndNotif(email){
   });
 }
 
-// ---- boot ----
+// ---------- Boot ----------
 window.addEventListener("DOMContentLoaded", ()=>{
   updateUserHeader();
   const email = resolveUserEmail();
@@ -499,10 +521,9 @@ window.addEventListener("DOMContentLoaded", ()=>{
     initChatWithUserData();
     setupPresenceAndNotif(email);
   }else{
-    console.warn("Email user belum tersedia. Kirim via postMessage {type:'user-login', user:{name,email,photo}} atau tambahkan ?email= di URL.");
+    console.warn("Email user belum tersedia. Kirim via postMessage {type:'user-login', user:{name,email,photo}} atau tambah ?email= di URL.");
   }
 });
 </script>
-
 </body>
 </html>
