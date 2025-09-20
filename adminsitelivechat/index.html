@@ -3,1142 +3,321 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LiveChat - Admin</title>
+  <title>LiveChat - Admin (Ticks)</title>
   <style>
-    :root {
-  --bg-color: #29858f;
-  --text-color: #f1f1f1;
-  --primary-color: #facc15;
-}
-body {
-  background: #111;
-  color: #111;
-  font-family: 'Segoe UI', sans-serif;
-  margin: 0;
-  padding: 0;
-}
+    :root { --bg-color:#29858f; --text-color:#f1f1f1; --primary-color:#facc15; }
+    body{background:#111;color:#111;font-family:'Segoe UI',sans-serif;margin:0;padding:0}
+    .header{background-color:#1668dc;font-size:30px;height:90px;display:flex;justify-content:center;align-items:center;color:#fff;font-weight:bold}
+    #containerChatBox{background:#f9f9f9;border-radius:12px;box-shadow:0 0 10px #1668dc;padding:15px;max-width:640px;margin:0 auto;border:1px solid #1668dc}
+    #chatHeader{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(to right,#1668dc,#c5ff4a);padding:12px 18px;border-radius:10px;border:1px solid #e0e0e0;box-shadow:0 3px 6px rgba(0,0,0,.1);font-size:1rem;color:#333;margin-bottom:10px}
+    #chatUserName{font-weight:bold;font-size:16px;color:#000}
+    #searchMessage{border:1px solid #ccc;padding:6px 12px 6px 36px;border-radius:6px;font-size:14px;background:url('https://cdn-icons-png.flaticon.com/512/622/622669.png') no-repeat 10px center;background-size:16px;background-color:#fff8dc;color:#333;width:50%;transition:.3s}
+    #searchMessage:focus{outline:none;border-color:#d4af37;background-color:#fff9e3}
+    .chat-box{height:60vh;overflow-y:auto;border:1px solid #1668dc;padding:15px;background:#000;color:#fff;border-radius:10px;box-shadow:inset 0 0 5px rgba(255,255,255,.05);scroll-behavior:smooth}
+    .chat-box::-webkit-scrollbar{width:6px}
+    .chat-box::-webkit-scrollbar-thumb{background:#1668dc;border-radius:6px}
+    .message{padding:.5rem;margin:.5rem 0;border-radius:10px;max-width:70%;white-space:normal;word-wrap:break-word;overflow-wrap:break-word;color:#000;font-weight:bold;position:relative}
+    .mine{background-image:linear-gradient(to bottom,#1668dc,#d7e9ff,#c5ff4a);margin-left:auto}
+    .theirs{background-image:linear-gradient(to bottom,#1668dc,#fff)}
+    /* ticks */
+    .ticks{display:inline-flex;align-items:center;margin-left:6px}
+    .tick{width:16px;height:16px;display:inline-block;line-height:0}
+    .tick svg{width:100%;height:100%}
+    .tick.gray path{fill:#9aa0a6}
+    .tick.blue path{fill:#1da1f2}
+    .msg-meta{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:.75rem;color:#0b6906;font-weight:600}
 
-/* ===== Header ===== */
-.header {
-  background-color: #1668dc;
-  font-size: 30px;
-  height: 90px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: white;
-  font-weight: bold;
-}
+    .send-box{display:flex;width:100%;margin:10px auto 0;border:2px solid #3c89e8;border-radius:6px;overflow:hidden;background:#fff}
+    #msg{flex:1;padding:10px;font-size:14px;border:none;outline:none;resize:none;font-family:'Segoe UI',sans-serif}
+    #msg:focus{border:1px solid #1668dc;outline:none}
+    .send-box button{padding:0 16px;font-size:14px;background:#1668dc;border:none;color:#fff;cursor:pointer;transition:background .3s ease}
+    .send-box button:hover{background:#3c89e8}.send-box button:active{background:#1554ad}
 
-/* ===== Container Chat Box ===== */
-#containerChatBox {
-  background: #f9f9f9;
-  border-radius: 12px;
-  box-shadow: 0 0 10px #1668dc;
-  padding: 15px;
-  max-width: 640px;
-  margin: 0 auto;
-  border: 1px solid #1668dc;
-}
+    .user-item{border:1px solid #424242;border-radius:6px;padding:8px 10px;cursor:pointer;display:flex;align-items:center;background:#141414;color:rgba(255,255,255,.85)}
+    .user-item:hover{background:rgba(255,255,255,.25);color:#fff}
+    .user-item.active{background-color:#1668dc;color:#fff;border:1px solid #1668dc}
 
-/* ===== Chat Header ===== */
-#chatHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: linear-gradient(to right, #1668dc, #c5ff4a);
-  padding: 12px 18px;
-  border-radius: 10px;
-  border: 1px solid #e0e0e0;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-  font-size: 1rem;
-  color: #333;
-  margin-bottom: 10px;
-}
+    .date-label{text-align:center;margin:20px 0}
+    .date-label-inner{display:inline-block;background-color:lightgreen;padding:2px 22px;border-radius:30px;font-size:14px;color:#333;box-shadow:0 2px 4px rgba(0,0,0,.1);text-align:center;line-height:1;white-space:nowrap}
+    .date-label-inner .day-label{font-weight:bold;display:block;font-size:16px}
+    .date-label-inner .full-date-label{font-size:14px;color:#555;display:block;margin-top:2px;text-transform:capitalize}
 
-#chatUserName {
-  font-weight: bold;
-  font-size: 16px;
-  color: black;
-}
-
-/* ===== Search Message ===== */
-#searchMessage {
-  border: 1px solid #ccc;
-  padding: 6px 12px 6px 36px;
-  border-radius: 6px;
-  font-size: 14px;
-  background: url('https://cdn-icons-png.flaticon.com/512/622/622669.png') no-repeat 10px center;
-  background-size: 16px;
-  background-color: #fff8dc;
-  color: #333;
-  width: 50%;
-  transition: 0.3s;
-}
-
-#searchMessage:focus {
-  outline: none;
-  border-color: #d4af37;
-  background-color: #fff9e3;
-}
-
-/* ===== Chat Box ===== */
-.chat-box {
-  height: 60vh;
-  overflow-y: auto;
-  border: 1px solid #1668dc;
-  padding: 15px;
-  background: #000;
-  color: white;
-  border-radius: 10px;
-  box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.05);
-  scroll-behavior: smooth;
-}
-
-.chat-box::-webkit-scrollbar {
-  width: 6px;
-}
-
-.chat-box::-webkit-scrollbar-thumb {
-  background: #1668dc;
-  border-radius: 6px;
-}
-
-.chat-box::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* ===== Message Bubble ===== */
-.message {
-  padding: 0.5rem;
-  margin: 0.5rem 0;
-  border-radius: 10px;
-  max-width: 70%;
-  white-space: normal;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  color:black;
-  font-weight: bold;
-}
-
-.mine {
-  background-image: linear-gradient(to bottom, #1668dc, #d7e9ff, #c5ff4a);
-  color: #000;
-  margin-left: auto;
-}
-
-.theirs {
-  background-image: linear-gradient(to bottom, #1668dc, white);
-}
-
-/* ===== Send Box ===== */
-.send-box {
-  display: flex;
-  width: 100%;
-  margin: 10px auto 0;
-  border: 2px solid #3c89e8;
-  border-radius: 6px;
-  overflow: hidden;
-  background: white;
-}
-
-#msg {
-  flex: 1;
-  padding: 10px;
-  font-size: 14px;
-  border: none;
-  outline: none;
-  resize: none;
-  font-family: 'Segoe UI', sans-serif;
-}
-#msg:focus {
- border: 1px solid #1668dc;
- outline: none;
-}
-
-.send-box button {
-  padding: 0 16px;
-  font-size: 14px;
-  background: #1668dc;
-  border: none;
-  color: white;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.send-box button:hover {
-  background: #3c89e8;
-}
-
-.send-box button:active {
-  background: #1554ad;
-}
-
-/* ===== User List ===== */
-.user-item {
-  border: 1px solid #424242;
-  border-radius: 6px;
-  padding: 8px 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  background: #141414;
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.user-item:hover {
-  background: rgba(255, 255, 255, 0.25);
-  color: white;
-}
-
-.user-item.active {
-  background-color: #1668dc;
-  color: white;
-  border: 1px solid #1668dc;
-}
-
-/* ===== Date Label ===== */
-.date-label {
-  text-align: center;
-  margin: 20px 0;
-}
-
-.date-label-inner {
-  display: inline-block;
-  background-color: lightgreen;
-  padding: 2px 22px;
-  border-radius: 30px;
-  font-size: 14px;
-  color: #333;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  text-align: center;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.date-label-inner .day-label {
-  font-weight: bold;
-  display: block;
-  font-size: 16px;
-}
-
-.date-label-inner .full-date-label {
-  font-size: 14px;
-  color: #555;
-  display: block;
-  margin-top: 2px;
-  text-transform: capitalize;
-}
-
-/* ===== Panel Optional ===== */
-.chat-panel {
-  flex: 1;
-  max-width: 400px;
-  padding: 1rem;
-}
-    #chatHeaderUser img {
-  object-fit: cover;
-  border: 1px solid #ccc;
-}
-#searchUser {
- padding: 10px 5px; margin-bottom: 10px; border-radius: 6px;
- border:1px solid #424242;
- background: #141414;
- color: rgba(255, 255, 255, 0.85);
- width: 100%;
- transition: border 0.2s ease;
-}
-#searchUser:hover {
- border: 1px solid #3c89e8;
- transition: border 0.2s ease;
-}
-#searchUser:focus {
- border: 1px solid #1668dc;
- transition: border 0.2s ease;
- outline: none;
-}
-.user-list-header {
-  position: sticky;
-  top: 0;
-  background: #111;
-  z-index: 10;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-}
-.user-list-panel {
-  width: 500px;
-  border-right: 1px solid #424242;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  color: white; 
-  background: #111;
-}
-.user-list-header {
-  padding: 1rem;
-  background: #111;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-.user-scroll-box {
-  overflow-y: auto;
-  max-height: calc(80vh - 140px);
-  padding: 1rem;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.user-scroll-box::-webkit-scrollbar {
-  display: none;
-}
-#filterAll, #filterUnread {
-  border:1px solid #424242;
-  background-color: #141414;     /* warna latar */
-  color: white;                  /* warna teks */
-  padding: 6px 14px;
-  border-radius: 6px;            /* buat lengkung */
-  cursor: pointer;
-  font-weight: bold;
-  transition: background 0.3s ease;
-  transition: border 0.2s ease;
-}
-
-#filterAll:hover,
-#filterUnread:hover {
-  border:1px solid #3c89e8 !important;
-  background-color: #141414;
-  color: #3c89e8;   /* warna hover */
-  transition: border 0.2s ease !important;
-}
-#filterAll:active,
-#filterUnread:active {
-  border:1px solid #1554ad !important;
-  background-color: #141414;
-  color: #1554ad;   /* warna hover */
-  transition: border 0.2s ease !important;
-}
-.active-filter {
-  border:1px solid #1668dc !important;
-  background-color: #141414 !important;
-  color: #1668dc !important;
-  transition: border 0.2s ease !important;
-}
-.online-indicator {
-  float: right;
-  margin-left: auto;
-}
-#chatUserStatus {
-  display: block;             /* ⬅️ Ganti jadi block agar tidak terlalu dipaksa horizontal */
-  white-space: nowrap;        /* Tetap cegah baris baru */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-  line-height: 1;
-}
-
-.status-main {
-  font-size: 12px;
-  font-weight: bold;
-  color: #0f0;
-}
-
-.status-sub {
-  font-size: 12px;
-  color: #bbb;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1;
-}
-.status-main {
-  color: #00ff00;
-  font-weight: bold;
-}
-.status-sub {
-  color: #aaa;
-  font-size: 12px;
-}
-.status-typing {
-  color: orange;
-  font-weight: bold;
-}
+    .chat-panel{flex:1;max-width:400px;padding:1rem}
+    #chatHeaderUser img{object-fit:cover;border:1px solid #ccc}
+    #searchUser{padding:10px 5px;margin-bottom:10px;border-radius:6px;border:1px solid #424242;background:#141414;color:rgba(255,255,255,.85);width:100%;transition:border .2s ease}
+    #searchUser:hover{border:1px solid #3c89e8}#searchUser:focus{border:1px solid #1668dc;outline:none}
+    .user-list-header{position:sticky;top:0;background:#111;z-index:10;padding-top:1rem;padding-bottom:1rem}
+    .user-list-panel{width:500px;border-right:1px solid #424242;padding:0;display:flex;flex-direction:column;color:#fff;background:#111}
+    .user-scroll-box{overflow-y:auto;max-height:calc(80vh - 140px);padding:1rem;scrollbar-width:none;-ms-overflow-style:none}
+    .user-scroll-box::-webkit-scrollbar{display:none}
+    #filterAll,#filterUnread{border:1px solid #424242;background:#141414;color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:bold;transition:background .3s ease,border .2s ease}
+    #filterAll:hover,#filterUnread:hover{border:1px solid #3c89e8;background:#141414;color:#3c89e8}
+    #filterAll:active,#filterUnread:active{border:1px solid #1554ad;background:#141414;color:#1554ad}
+    .active-filter{border:1px solid #1668dc !important;background:#141414 !important;color:#1668dc !important}
+    .online-indicator{float:right;margin-left:auto}
+    #chatUserStatus{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1}
+    .status-main{font-size:12px;font-weight:bold;color:#0f0}
+    .status-sub{font-size:12px;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1}
+    .status-typing{color:orange;font-weight:bold}
   </style>
 </head>
 <body>
 <div class="header">Admin LiveChat</div>
-
-<main style="display: flex;">
-  <!-- Panel User -->
+<main style="display:flex">
   <div id="userList" class="user-list-panel">
     <div class="user-list-header">
       <h3>User List</h3>
       <input type="text" id="searchUser" placeholder="Search user..." />
-      <div style="display: flex; gap: 10px; margin-top: 10px; align-items: center;">
+      <div style="display:flex;gap:10px;margin-top:10px;align-items:center">
         <button id="filterAll" class="active-filter">All</button>
         <button id="filterUnread">Unread</button>
-        
-        <div style="margin-left: auto; color:#fff; font-size: 14px;">
-          Total Users: <span id="totalUsers">0</span> | Online: <span id="onlineUsers">0</span>
-        </div>
+        <div style="margin-left:auto;color:#fff;font-size:14px">Total Users: <span id="totalUsers">0</span> | Online: <span id="onlineUsers">0</span></div>
       </div>
     </div>
+    <div id="userListBox" class="user-scroll-box"></div>
+  </div>
 
-  <div id="userListBox" class="user-scroll-box"></div>
-</div>
-
- <div style="flex: 0.5; padding: 1rem;">
-  <div id="containerChatBox">
-    <!-- Header Chat -->
-    <div id="chatHeader">
- <div id="chatHeaderUser" style="display: flex; flex-direction: column;">
-  <div style="display: flex; align-items: center; gap: 10px;">
-    <img id="chatUserAvatar" src="" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; display: none;" />
-    <div>
-      <strong id="chatUserName">Select a user</strong>
-      <div id="chatUserStatus" style="font-size: 12px; color: #aaa;">Offline</div>
+  <div style="flex:.5;padding:1rem">
+    <div id="containerChatBox">
+      <div id="chatHeader">
+        <div id="chatHeaderUser" style="display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;gap:10px">
+            <img id="chatUserAvatar" src="" alt="Avatar" style="width:32px;height:32px;border-radius:50%;display:none" />
+            <div>
+              <strong id="chatUserName">Select a user</strong>
+              <div id="chatUserStatus" style="font-size:12px;color:#aaa">Offline</div>
+            </div>
+          </div>
+        </div>
+        <input type="text" id="searchMessage" placeholder="Search messages..." />
+      </div>
+      <div class="chat-box" id="chatBox"></div>
+      <div class="send-box">
+        <textarea id="msg" placeholder="Type your message" rows="2"></textarea>
+        <button id="sendBtn" disabled>Send</button>
+      </div>
     </div>
   </div>
-</div>
-  <input
-    type="text"
-    id="searchMessage"
-    placeholder="Search messages..."
-  />
-</div>
-
-    <!-- Chat Box -->
-    <div class="chat-box" id="chatBox"></div>
-
-    <!-- Send Box -->
-    <div class="send-box">
-      <textarea id="msg" placeholder="Type your message" rows="2"></textarea>
-      <button id="sendBtn" disabled>Send</button>
-    </div>
-  </div>
-</div>
 </main>
 
-  
 <audio id="notifSound" src="https://searcfile.github.io/5G88-audio/notifsound/notification.wav" preload="auto"></audio>
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-
-  <script>
-let isLoadingUserList = true;
-let renderedUserIds = new Set();
- // Firebase config & init
-const firebaseConfig = {
-  apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
-  authDomain: "blurphp.firebaseapp.com",
-  databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "blurphp",
-  storageBucket: "blurphp.firebasedatabase.app",
-  messagingSenderId: "593904200464",
-  appId: "1:593904200464:web:cea7bc1360532c20d99395",
-  measurementId: "G-R494S2DPZ5"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-    
-function updateUserCounts() {
-  const totalUsersElem = document.getElementById('totalUsers');
-  const onlineUsersElem = document.getElementById('onlineUsers');
-
-  db.ref('users').on('value', snapshot => {
-    const users = snapshot.val() || {};
-    const totalUsers = Object.keys(users).length;
-    const onlineUsers = Object.values(users).filter(user => user.online).length;
-
-    totalUsersElem.textContent = totalUsers;
-    onlineUsersElem.textContent = onlineUsers;
-  });
-}
-
-function formatUserName(name) {
-  if (!name) return 'Unknown';
-
-  const words = name.trim().split(' ');
-  if (words.length === 2 && words[0] === words[1]) {
-    return words[0]; // kalau sama, ambil satu
-  }
-  return name; // kalau beda, tampilkan semua
-}
-let userHasInteracted = false;
-document.body.addEventListener('click', () => {
-  userHasInteracted = true;
-});
-  
-let currentFilterMode = 'all';
-let activeUserIdSanitized = '';
-let activeUserIdEmail = '';
-let allUsersData = [];
-let lastMessageTimestamps = {};
-let selectedUserId = null;
-let allMessages = [];
-let isInitialChatLoad = true;
-// User ID sanitize/desanitize helpers
-
-function sanitizeUserId(email) {
-  return email.toLowerCase().replace(/\./g, '_');
-}
-
-function desanitizeUserId(sanitized) {
-  return sanitized.replace(/_/g, '.');
-}
-// Play notification sound
-function playNotificationSound() {
-  const audio = document.getElementById("notifSound");
-  if (audio && userHasInteracted) {
-    audio.currentTime = 0;
-    audio.play().catch(err => {
-      console.warn("🔇 Audio play blocked:", err);
-    });
-  }
-}
-
-document.getElementById('filterAll').onclick = () => {
-  currentFilterMode = 'all';
-  document.getElementById('filterAll').classList.add('active-filter');
-  document.getElementById('filterUnread').classList.remove('active-filter');
-  renderUserList(allUsersData, 'all', document.getElementById('searchUser').value);
-};
-
-document.getElementById('filterUnread').onclick = () => {
-  currentFilterMode = 'unread';
-  document.getElementById('filterUnread').classList.add('active-filter');
-  document.getElementById('filterAll').classList.remove('active-filter');
-  renderUserList(allUsersData, 'unread', document.getElementById('searchUser').value);
-};
-
-function formatDateLabel(dateStr) {
-  const today = new Date();
-  const date = new Date(dateStr);
-
-  function resetTime(d) {
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  }
-
-  const todayReset = resetTime(today);
-  const dateReset = resetTime(date);
-
-  const diffTime = todayReset - dateReset;
-
-  // Capitalize helper
-  const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
-
-  if (diffTime === 0) {
-    return {
-      day: "Today",
-      full: date.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
-      }),
-    };
-  } else if (diffTime === 86400000) {
-    return {
-      day: "Yesterday",
-      full: date.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
-      }),
-    };
-  } else {
-    return {
-      day: capitalize(date.toLocaleDateString("en-GB", { weekday: "long" })),
-      full: date.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
-      }),
-    };
-  }
-}
-
-function renderChatMessages(messages) {
-  const chatBox = document.getElementById("chatBox");
-  chatBox.innerHTML = "";
-
-  let lastDate = null;
-
-  messages.forEach(msg => {
-    const msgDate = new Date(msg.time);
-    const dateLabels = formatDateLabel(msgDate);
-    const dateStr = dateLabels.day + ', ' + dateLabels.full;
-
-    if (lastDate !== dateStr) {
-      lastDate = dateStr;
-
-      const dateLabelDiv = document.createElement("div");
-      dateLabelDiv.className = "date-label";
-      dateLabelDiv.innerHTML = `
-        <div class="date-label-inner">
-          <span class="day-label">${dateLabels.day}</span>
-          <span class="full-date-label">${dateLabels.full}</span>
-        </div>
-      `;
-      chatBox.appendChild(dateLabelDiv);
-    }
-
-    const div = document.createElement("div");
-    div.className = 'message ' + (msg.from === 'admin' ? 'mine' : 'theirs');
-
-    const timeStr = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    const isUser = msg.from !== 'admin';
-    const rawName = isUser ? (msg.name || msg.email || 'User') : 'Admin';
-    const senderName = formatUserName(rawName);
-
-    // Gunakan avatar dari data, jika tidak ada pakai default masing-masing
-    const avatarURL = msg.photoURL || (isUser ? 'https://i.pravatar.cc/40' : 'https://i.imgur.com/UhV9EWa.png');
-    const avatarImg = `
-    <img 
-    src="${avatarURL}" 
-    alt="Avatar" 
-    style="width: 24px; height: 24px; object-fit: cover; border-radius: 50%; border: 1px solid white; margin-right: 6px;background-color: currentcolor;"
-  >
-`;
-    // HTML isi pesan
-    let messageHTML = `
-      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-        ${avatarImg}
-        <div style="font-weight: bold;">
-          ${senderName}
-          <small style="font-size: 0.75rem; color: #0b6906;">${timeStr}</small>
-        </div>
-      </div>`;
-
-    if (msg.text) {
-      messageHTML += `<div>${msg.text}</div>`;
-    }
-
-    if (msg.image) {
-      messageHTML += `<img src="${msg.image}" alt="Image" style="max-width: 100%; border-radius: 8px; margin-top: 4px;">`;
-    }
-
-    div.innerHTML = messageHTML;
-    chatBox.appendChild(div);
-  });
-
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-function listenToChat() {
-  if (!activeUserIdSanitized) return;
-  const chatRef = db.ref('chats/' + activeUserIdSanitized);
-  const chatBox = document.getElementById('chatBox');
-
-  chatRef.off();
-  chatBox.innerHTML = '<p style="text-align:center; color:white;">Loading...</p>';
-
-  chatRef.on('value', snapshot => {
-    const chats = snapshot.val();
-    if (!chats) {
-      chatBox.innerHTML = '<p style="text-align:center; color:white;">Start Message.</p>';
-      allMessages = [];
-      return;
-    }
-
-    const chatEntries = Object.entries(chats).sort((a, b) => (a[1].time || 0) - (b[1].time || 0));
-    let shouldUpdatePosition = false;
-    let messagesToMarkRead = [];
-
-    allMessages = chatEntries.map(([key, msg]) => {
-      const isUnread = msg.from === 'user' && !msg.readByAdmin;
-      const isFromUserAndNew = isUnread && !justOpenedChat;
-
-      if (isFromUserAndNew) {
-        shouldUpdatePosition = true;
-      }
-
-      if (isUnread) {
-        messagesToMarkRead.push(key);
-
-        if (
-          !lastMessageTimestamps[activeUserIdSanitized] ||
-          msg.time > lastMessageTimestamps[activeUserIdSanitized]
-        ) {
-          lastMessageTimestamps[activeUserIdSanitized] = msg.time;
-
-          if (!isInitialChatLoad) {
-            playNotificationSound();
-          }
-        }
-      }
-
-      return msg;
-    });
-
-    renderChatMessages(allMessages);
-    isInitialChatLoad = false;
-
-    // ✅ Set readByAdmin hanya kalau user benar-benar sedang aktif (diklik sekarang)
-    if (justOpenedChat) {
-      justOpenedChat = false;
-      messagesToMarkRead.forEach(key => {
-        db.ref(`chats/${activeUserIdSanitized}/${key}/readByAdmin`).set(true);
-      });
-      if (messagesToMarkRead.length > 0) updateUserListFlags();
-    }
-
-    // 🔁 Hanya update posisi jika memang ada pesan baru dari user (bukan karena klik)
-    if (shouldUpdatePosition) {
-      const userIndex = allUsersData.findIndex(([id]) => id === activeUserIdSanitized);
-      if (userIndex !== -1) {
-        const lastMsg = allMessages[allMessages.length - 1];
-        const lastTime = lastMsg?.time || 0;
-        allUsersData[userIndex][2] = lastTime;
-
-        allUsersData.sort((a, b) => b[2] - a[2]);
-        const displayList = allUsersData.map(([s, d]) => [s, d]);
-        renderUserList(displayList, 'all', document.getElementById('searchUser')?.value || '');
-      }
-    }
-  });
-}
-function renderUserList(userList, filter = 'all', searchTerm = '') {
-  const userListBox = document.getElementById('userListBox');
-  userListBox.innerHTML = '';
-
-  renderedUserIds.clear();
-
-  userList.forEach(([sanitized, userData]) => {
-   const email = userData.email || desanitizeUserId(sanitized);
-   const name = userData.name || email;
-   const emailName = email.split('@')[0].trim();
-   const cleanName = formatUserName(name.trim());
-
-// ✅ Jika sama (case-insensitive), tunjuk sekali saja
-   const finalName = cleanName.toLowerCase() === emailName.toLowerCase()
-  ? emailName
-  : cleanName;
-
-  const label = `${finalName} (${email})`;
-
-    if (searchTerm && !label.toLowerCase().includes(searchTerm.toLowerCase())) return;
-
-    db.ref(`chats/${sanitized}`).once('value', snapshot => {
-      const chatEntries = Object.values(snapshot.val() || []);
-      const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
-      if (filter === 'unread' && !hasUnread) return;
-
-      const userDiv = document.createElement('div');
-      userDiv.className = 'user-item';
-      if (sanitized === activeUserIdSanitized) {
-         userDiv.classList.add('active'); // ✅ Pastikan warna aktif tetap ada
-     }
-      userDiv.setAttribute('data-sanitized', sanitized);
-
-      // ✅ Teks nama & email saja tanpa foto
-      const userLabel = document.createElement('span');
-      userLabel.innerHTML = `
-  ${label} 
-  ${hasUnread ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="red" style="margin-left:4px;"><path d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 4a1 1 0 0 0-1 1v6a1 1 0 1 0 2 0V7a1 1 0 0 0-1-1zm0 10a1.5 1.5 0 1 0 0 3a1.5 1.5 0 0 0 0-3z"/></svg>' : ''}
-  <svg class="online-indicator" width="10" height="10" viewBox="0 0 24 24" fill="#00ff00" style="margin-left:6px; display:none;">
-    <circle cx="12" cy="12" r="10"/>
-  </svg>
-`;
-      userLabel.style.fontWeight = hasUnread ? 'bold' : 'normal';
-
-      userDiv.appendChild(userLabel);
-      const indicatorSvg = userLabel.querySelector(".online-indicator");
-if (indicatorSvg) {
-  db.ref("users/" + sanitized + "/online").on("value", snap => {
-    const isOnline = snap.val();
-    indicatorSvg.style.display = isOnline ? "inline-block" : "none";
-  });
-}
-
-      userDiv.onclick = () => {
-        justOpenedChat = true; 
-        
-        activeUserIdEmail = email;
-        activeUserIdSanitized = sanitized;
-        selectedUserId = sanitized;
-
-        document.getElementById("chatUserName").textContent = formatUserName(name);
-        const avatarImg = document.getElementById("chatUserAvatar");
-        avatarImg.src = userData.photoURL || 'https://i.pravatar.cc/40';
-        avatarImg.style.display = 'block';
-
-        document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
-        userDiv.classList.add('active');
-
-        document.getElementById("searchMessage").value = '';
-        updateUserOnlineStatus(email);
-        listenToChat();
-      };
-
-      userListBox.appendChild(userDiv);
-      renderedUserIds.add(sanitized); // ✅ Tambahkan ke daftar rendered
-    });
-  });
-}
-// Load user list initially and watch new users
-function loadUserList() {
-  const userListBox = document.getElementById('userListBox');
-  userListBox.innerHTML = '<p style="text-align:center; color:gray;">Memuat...</p>';
-
-  renderedUserIds.clear(); // ✅ reset ID user yang sudah ditampilkan
-
-  db.ref('users').once('value', snapshot => {
-    const users = snapshot.val() || {};
-    const userEntries = Object.entries(users);
-
-    if (userEntries.length === 0) {
-      userListBox.innerHTML = '<p style="text-align:center; color:gray;">Belum ada user login</p>';
-      return;
-    }
-
-    // ✅ Filter user unik berdasarkan email lowercase
-    const uniqueEmailMap = new Map();
-    userEntries.forEach(([sanitized, data]) => {
-      const email = (data.email || desanitizeUserId(sanitized)).toLowerCase();
-      if (!uniqueEmailMap.has(email)) {
-        uniqueEmailMap.set(email, { sanitized, data });
-      }
-    });
-
-    const filteredEntries = Array.from(uniqueEmailMap.values());
-
-    const promises = filteredEntries.map(({ sanitized, data }) => {
-      return db.ref(`chats/${sanitized}`)
-        .orderByChild('time')
-        .limitToLast(1)
-        .once('value')
-        .then(snap => {
-          let lastTime = 0;
-          snap.forEach(msg => {
-            lastTime = msg.val()?.time || 0;
-          });
-          return { sanitized, data, lastTime };
-        })
-        .catch(() => ({ sanitized, data, lastTime: 0 }));
-    });
-
-    Promise.all(promises).then(results => {
-      results.sort((a, b) => b.lastTime - a.lastTime);
-
-      allUsersData = results.map(u => [u.sanitized, u.data, u.lastTime]);
-      const formattedList = allUsersData.map(([s, d]) => [s, d]);
-
-      userListBox.innerHTML = '';
-      renderUserList(formattedList);
-
-      // ✅ Simpan ID user yang sudah dirender
-      formattedList.forEach(([sanitized]) => renderedUserIds.add(sanitized));
-      isLoadingUserList = false;
-      initialUserListLoaded = true;
-    });
-  });
-}
-db.ref("chats").on("child_changed", (snapshot) => {
-  const sanitizedId = snapshot.key;
-  const messages = snapshot.val();
-
-  if (!messages) return;
-
-  const messageEntries = Object.entries(messages);
-  const latestEntry = messageEntries.reduce((a, b) => (a[1].time > b[1].time ? a : b), [null, { time: 0 }]);
-  const latestTime = latestEntry[1]?.time || 0;
-
-  // ✅ Update waktu user di list
-  const userIndex = allUsersData.findIndex(([id]) => id === sanitizedId);
-  if (userIndex !== -1) {
-    allUsersData[userIndex][2] = latestTime;
-
-    allUsersData.sort((a, b) => b[2] - a[2]);
-
-    const searchValue = document.getElementById('searchUser')?.value || '';
-    const displayList = allUsersData.map(([s, d]) => [s, d]);
-    renderUserList(displayList, currentFilterMode, searchValue);
-  }
-});
-// Update unread flags on user list periodically
-function updateUserListFlags() {
-  const items = document.querySelectorAll('.user-item');
-  items.forEach(item => {
-    const sanitized = item.getAttribute('data-sanitized');
-    const span = item.querySelector('span');
-    if (!span) return;
-
-    db.ref(`chats/${sanitized}`).once('value', snapshot => {
-      const chatEntries = Object.values(snapshot.val() || []);
-      const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
-
-      const email = desanitizeUserId(sanitized);
-      const emailName = email.split('@')[0].trim();
-      const firstMsg = chatEntries.find(m => m.from === 'user');
-      if (!firstMsg) return;
-
-      const rawName = firstMsg.name || email;
-      const cleanName = formatUserName(rawName.trim());
-      const finalName = cleanName.toLowerCase() === emailName.toLowerCase()
-        ? emailName
-        : cleanName;
-
-      const labelBase = `${finalName} (${email})`;
-      span.textContent = labelBase + (hasUnread ? ' ❗' : '');
-      span.style.fontWeight = hasUnread ? 'bold' : 'normal';
-    });
-  });
-}
-
-// Filter chat messages by query
-function filterMessages(query) {
-  if (!query) {
-    renderChatMessages(allMessages);
-    return;
-  }
-  const filtered = allMessages.filter(m => m.text.toLowerCase().includes(query.toLowerCase()));
-  renderChatMessages(filtered);
-}
-
-function sendMessage() {
-  const msgInput = document.getElementById('msg');
-  const msg = msgInput.value.trim();
-  if (!selectedUserId || !msg) return alert("Pilih user dan tulis pesan dulu!");
-
-  const now = Date.now();
-
-  const newMsg = {
-    from: 'admin',
-    name: 'Admin',
-    email: 'admin@domain.com',
-    photoURL: 'https://i.imgur.com/qiZFOs9.png',
-    text: msg,
-    time: now,
-    readByAdmin: true
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script>
+  // ===== GLOBAL STATE =====
+  let isLoadingUserList = true;
+  let renderedUserIds = new Set();
+  let userHasInteracted = false; document.body.addEventListener('click',()=>userHasInteracted=true);
+  let currentFilterMode='all';
+  let activeUserIdSanitized='';
+  let activeUserIdEmail='';
+  let allUsersData=[]; // [sanitized, data, lastTime]
+  let lastMessageTimestamps={};
+  let selectedUserId=null;
+  let allMessages=[]; // array of { _key, ...msg }
+  let isInitialChatLoad=true;
+  let justOpenedChat=false;
+
+  // ===== FIREBASE INIT =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
+    authDomain: "blurphp.firebaseapp.com",
+    databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "blurphp",
+    storageBucket: "blurphp.firebasedatabase.app",
+    messagingSenderId: "593904200464",
+    appId: "1:593904200464:web:cea7bc1360532c20d99395",
+    measurementId: "G-R494S2DPZ5"
   };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-  db.ref(`chats/${selectedUserId}`).push(newMsg, err => {
-    if (!err) {
-      msgInput.value = '';
-
-      // ✅ Kirim notifikasi ke user (dot merah + sound)
-      db.ref(`notifications/${selectedUserId}`).set({
-        from: 'admin',
-        text: msg,
-        time: now,
-        unread: true
-      });
-
-      // ✅ Update posisi user di list
-      const userIndex = allUsersData.findIndex(([id]) => id === selectedUserId);
-      if (userIndex !== -1) {
-        allUsersData[userIndex][2] = now;
-        allUsersData.sort((a, b) => b[2] - a[2]);
-
-        const displayList = allUsersData.map(([s, d]) => [s, d]);
-        renderUserList(displayList, 'all', document.getElementById('searchUser')?.value || '');
-      }
-
-    } else {
-      alert('Gagal mengirim pesan');
-    }
-  });
-}
-// --- Init on window load ---
-let msgInput;
-let sendBtn;
-
-window.onload = () => {
-  selectedUserId = null;
-  activeUserIdSanitized = '';
-  activeUserIdEmail = '';
-  loadUserList();
-  updateUserCounts();
-  
-  msgInput = document.getElementById('msg');
-  sendBtn = document.getElementById('sendBtn');
-
-  if (msgInput) {
-    msgInput.addEventListener('input', updateSendButtonState);
-    msgInput.addEventListener('keydown', e => {
-      if ((e.key === 'Enter') && !(e.shiftKey || e.ctrlKey)) {
-        e.preventDefault();
-        const text = msgInput.value.trim();
-        if (!selectedUserId || !text) return;
-        sendMessage();
-      }
+  // ===== COUNTS =====
+  function updateUserCounts(){
+    const totalUsersElem=document.getElementById('totalUsers');
+    const onlineUsersElem=document.getElementById('onlineUsers');
+    db.ref('users').on('value',snap=>{
+      const users=snap.val()||{};
+      const total=Object.keys(users).length;
+      const online=Object.values(users).filter(u=>u.online).length;
+      totalUsersElem.textContent=total; onlineUsersElem.textContent=online;
     });
   }
 
-  if (sendBtn) {
-    sendBtn.addEventListener('click', sendMessage);
+  function sanitizeUserId(email){return email.toLowerCase().replace(/\./g,'_')}
+  function desanitizeUserId(s){return s.replace(/_/g,'.')}
+  function formatUserName(name){if(!name) return 'Unknown'; const w=name.trim().split(' '); if(w.length===2 && w[0]===w[1]) return w[0]; return name}
+  function playNotificationSound(){const a=document.getElementById('notifSound'); if(a && userHasInteracted){a.currentTime=0; a.play().catch(()=>{})}}
+
+  // ===== FILTER BUTTONS =====
+  document.getElementById('filterAll').onclick=()=>{currentFilterMode='all';
+    document.getElementById('filterAll').classList.add('active-filter');
+    document.getElementById('filterUnread').classList.remove('active-filter');
+    renderUserList(allUsersData.map(([s,d])=>[s,d]),'all',document.getElementById('searchUser').value)}
+  document.getElementById('filterUnread').onclick=()=>{currentFilterMode='unread';
+    document.getElementById('filterUnread').classList.add('active-filter');
+    document.getElementById('filterAll').classList.remove('active-filter');
+    renderUserList(allUsersData.map(([s,d])=>[s,d]),'unread',document.getElementById('searchUser').value)}
+
+  // ===== DATE LABELS =====
+  function formatDateLabel(date){const today=new Date();const d=new Date(date);
+    function reset(x){return new Date(x.getFullYear(),x.getMonth(),x.getDate())}
+    const diff=reset(today)-reset(d);
+    const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+    if(diff===0){return{day:'Today',full:d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}}
+    if(diff===86400000){return{day:'Yesterday',full:d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}}
+    return{day:cap(d.toLocaleDateString('en-GB',{weekday:'long'})),full:d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}
   }
 
-  const searchUserInput = document.getElementById('searchUser');
-  if (searchUserInput) {
-    searchUserInput.addEventListener('input', e => {
-      const filterType = document.querySelector('input[name="filter"]:checked')?.value || 'all';
-      document.getElementById('userListBox').innerHTML = '';
-      renderUserList(allUsersData, filterType, e.target.value);
-    });
+  // ===== TICKS (WhatsApp-style) =====
+  const PATH_SINGLE = "M21 6.285l-11.16 12.733-6.84-6.018 1.319-1.49 5.341 4.686 9.865-11.196 1.475 1.285z";
+  const PATH_DOUBLE = "M24 6.278l-11.16 12.722-6.84-6 1.319-1.49 5.341 4.686 9.865-11.196 1.475 1.278zm-22.681 5.232l6.835 6.01-1.314 1.48-6.84-6 1.319-1.49zm9.278.218l5.921-6.728 1.482 1.285-5.921 6.756-1.482-1.313z";
+
+  function getMsgState(m){ if(m.readAt) return 'read'; if(m.deliveredAt) return 'delivered'; return 'sent'; }
+  function svgTick(path,cls,title=''){return `<span class="tick ${cls}" title="${title}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"/></svg></span>`}
+  function renderTicks(el,msg){const s=getMsgState(msg); let html='';
+    if(s==='read') html=svgTick(PATH_DOUBLE,'blue','Read');
+    else if(s==='delivered') html=svgTick(PATH_DOUBLE,'gray','Delivered');
+    else html=svgTick(PATH_SINGLE,'gray','Sent');
+    el.innerHTML=html;
   }
 
-  const searchMessageInput = document.getElementById('searchMessage');
-  if (searchMessageInput) {
-    searchMessageInput.addEventListener('input', e => {
-      filterMessages(e.target.value);
-    });
-  }
+  // ===== RENDER CHAT MESSAGES =====
+  function renderChatMessages(messages){
+    const chatBox=document.getElementById('chatBox'); chatBox.innerHTML='';
+    let lastDate=null;
+    messages.forEach(msg=>{
+      const msgDate=new Date(msg.time);
+      const labels=formatDateLabel(msgDate); const dateStr=labels.day+', '+labels.full;
+      if(lastDate!==dateStr){ lastDate=dateStr; const lb=document.createElement('div'); lb.className='date-label'; lb.innerHTML=`<div class="date-label-inner"><span class="day-label">${labels.day}</span><span class="full-date-label">${labels.full}</span></div>`; chatBox.appendChild(lb);}    
+      const div=document.createElement('div'); div.className='message '+(msg.from==='admin'?'mine':'theirs');
+      const timeStr=msgDate.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      const isUser=msg.from!=='admin';
+      const rawName=isUser?(msg.name||msg.email||'User'):'Admin';
+      const senderName=formatUserName(rawName);
+      const avatarURL=msg.photoURL || (isUser? 'https://i.pravatar.cc/40' : 'https://i.imgur.com/UhV9EWa.png');
+      const avatarImg=`<img src="${avatarURL}" alt="Avatar" style="width:24px;height:24px;object-fit:cover;border-radius:50%;border:1px solid #fff;margin-right:6px;background-color:currentcolor">`;
 
-  db.ref('users').on('child_added', (snap) => {
-    const sanitized = snap.key;
-    const data = snap.val();
-    if (!isLoadingUserList && !renderedUserIds.has(sanitized)) {
-      addOrUpdateUser(sanitized, data);
-      renderedUserIds.add(sanitized);
-    }
-  });
+      let html=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">${avatarImg}<div style="font-weight:bold">${senderName}</div></div>`;
+      if(msg.text) html+=`<div>${msg.text}</div>`;
+      if(msg.image) html+=`<img src="${msg.image}" alt="Image" style="max-width:100%;border-radius:8px;margin-top:4px">`;
+      // meta (time + ticks for admin-sent messages)
+      html+=`<div class="msg-meta"><small>${timeStr}</small>${msg.from==='admin'?'<span class="ticks"></span>':''}</div>`;
+      div.innerHTML=html;
+      chatBox.appendChild(div);
 
-  db.ref('users').on('child_changed', (snap) => {
-    const sanitized = snap.key;
-    const data = snap.val();
-    addOrUpdateUser(sanitized, data);
-  });
-
-  db.ref("chats").on("child_changed", (snapshot) => {
-    updateUserLastTime(snapshot.key, snapshot.val());
-  });
-
-  db.ref("chats").on("child_added", (snapshot) => {
-    updateUserLastTime(snapshot.key, snapshot.val());
-  });
-};
-
-function updateSendButtonState() {
-  const msg = msgInput?.value.trim();
-  const isUserSelected = !!selectedUserId;
-  if (sendBtn) sendBtn.disabled = !(isUserSelected && msg);
-}
-
-function addOrUpdateUser(sanitized, data) {
-  if (renderedUserIds.has(sanitized)) return;
-  if (allUsersData.some(([id]) => id === sanitized)) return;
-
-  const email = desanitizeUserId(sanitized);
-  data.email = email;
-
-  db.ref(`chats/${sanitized}`)
-    .orderByChild('time')
-    .limitToLast(1)
-    .once('value')
-    .then(lastSnap => {
-      let lastTime = 0;
-      lastSnap.forEach(msg => {
-        lastTime = msg.val()?.time || 0;
-      });
-
-      if (lastTime === 0) lastTime = Date.now();
-      const existingIndex = allUsersData.findIndex(([id]) => id === sanitized);
-      if (existingIndex !== -1) {
-        allUsersData.splice(existingIndex, 1);
-      }
-
-      allUsersData.push([sanitized, data, lastTime]);
-      allUsersData.sort((a, b) => b[2] - a[2]);
-
-      const displayList = allUsersData.map(([id, user]) => [id, user]);
-      renderUserList(displayList, 'all', document.getElementById("searchUser")?.value || '');
-
-      renderedUserIds.add(sanitized);
-    });
-}
-
-function updateUserLastTime(sanitizedId, messages) {
-  const messageEntries = Object.entries(messages || {});
-  if (messageEntries.length === 0) return;
-
-  const latestEntry = messageEntries.reduce((a, b) => (a[1].time > b[1].time ? a : b), [null, { time: 0 }]);
-  const latestTime = latestEntry[1]?.time || 0;
-
-  const userIndex = allUsersData.findIndex(([id]) => id === sanitizedId);
-  if (userIndex !== -1) {
-    allUsersData[userIndex][2] = latestTime;
-    allUsersData.sort((a, b) => b[2] - a[2]);
-
-    const displayList = allUsersData.map(([s, d]) => [s, d]);
-    renderUserList(displayList, currentFilterMode, document.getElementById('searchUser')?.value || '');
-  }
-}
-
-function updateUserOnlineStatus(email) {
-  const sanitized = sanitizeUserId(email);
-  const userRef = db.ref('users/' + sanitized);
-  const typingRef = db.ref('users/' + sanitized + '/typing');
-  const statusElem = document.getElementById('chatUserStatus');
-
-  if (!statusElem) return;
-
-  // 🔁 Pantau status online biasa
-  userRef.on('value', (snapshot) => {
-    const data = snapshot.val();
-    const isOnline = data?.online;
-    const lastSeen = data?.lastLoginTime;
-
-    // Kalau sedang mengetik, kita biarkan fungsi `typingRef` yang handle
-    if (!data?.typing) {
-      if (isOnline) {
-        statusElem.innerHTML = `<span class="status-main">Online</span>`;
-      } else {
-        let timeString = '';
-        if (lastSeen) {
-          const dateObj = new Date(lastSeen);
-          const now = new Date();
-          const isToday = dateObj.toDateString() === now.toDateString();
-
-          const hours = dateObj.getHours();
-          const minutes = dateObj.getMinutes().toString().padStart(2, '0');
-          const ampm = hours >= 12 ? 'PM' : 'AM';
-          const displayHour = hours % 12 || 12;
-
-          timeString = `${isToday ? 'today' : dateObj.toLocaleDateString()} at ${displayHour}:${minutes} ${ampm}`;
+      if(msg.from==='admin'){
+        const ticksEl=div.querySelector('.ticks');
+        if(ticksEl){ renderTicks(ticksEl,msg); // live updates for this message
+          db.ref(`chats/${activeUserIdSanitized}/${msg._key}`).on('value', (s)=>{ const mm=s.val(); if(mm) renderTicks(ticksEl,mm); });
         }
-
-        statusElem.innerHTML = timeString ? `<span class="status-sub">Last seen ${timeString}</span>` : '';
       }
-    }
-  });
+    });
+    chatBox.scrollTop=chatBox.scrollHeight;
+  }
 
-  // 🔁 Pantau status "Typing..."
-  typingRef.on('value', (snapshot) => {
-    const isTyping = snapshot.val();
-    if (isTyping) {
-      statusElem.innerHTML = `<span class="status-typing">Typing...</span>`;
-    } else {
-      // Setelah selesai typing, kita tunggu status online yang isi balik statusElem
-      // (biar tidak saling tumpang)
-      userRef.once('value').then((snap) => {
-        const data = snap.val();
-        if (!data) return;
+  // ===== LISTEN TO CHAT =====
+  function listenToChat(){
+    if(!activeUserIdSanitized) return; const chatRef=db.ref('chats/'+activeUserIdSanitized); const chatBox=document.getElementById('chatBox');
+    chatRef.off(); chatBox.innerHTML='<p style="text-align:center;color:#fff;">Loading...</p>';
+    chatRef.on('value', snapshot=>{
+      const chats=snapshot.val(); if(!chats){ chatBox.innerHTML='<p style="text-align:center;color:#fff;">Start Message.</p>'; allMessages=[]; return; }
+      const entries=Object.entries(chats).sort((a,b)=>(a[1].time||0)-(b[1].time||0));
+      let shouldUpdate=false; const toMarkRead=[];
+      allMessages=entries.map(([key,msg])=>{ const isUnread=msg.from==='user' && !msg.readByAdmin; const isNew=isUnread && !justOpenedChat; if(isNew) shouldUpdate=true; if(isUnread) toMarkRead.push(key); return { _key:key, ...msg }; });
+      renderChatMessages(allMessages); isInitialChatLoad=false;
+      if(justOpenedChat){ justOpenedChat=false; toMarkRead.forEach(key=>db.ref(`chats/${activeUserIdSanitized}/${key}/readByAdmin`).set(true)); if(toMarkRead.length>0) updateUserListFlags(); }
+      if(shouldUpdate){ const idx=allUsersData.findIndex(([id])=>id===activeUserIdSanitized); if(idx!==-1){ const last=allMessages[allMessages.length-1]; const t=last?.time||0; allUsersData[idx][2]=t; allUsersData.sort((a,b)=>b[2]-a[2]); const display=allUsersData.map(([s,d])=>[s,d]); renderUserList(display,'all',document.getElementById('searchUser').value||''); }}
+    });
+  }
 
-        const isOnline = data.online;
-        const lastSeen = data.lastLoginTime;
-
-        if (isOnline) {
-          statusElem.innerHTML = `<span class="status-main">Online</span>`;
-        } else if (lastSeen) {
-          const dateObj = new Date(lastSeen);
-          const now = new Date();
-          const isToday = dateObj.toDateString() === now.toDateString();
-
-          const hours = dateObj.getHours();
-          const minutes = dateObj.getMinutes().toString().padStart(2, '0');
-          const ampm = hours >= 12 ? 'PM' : 'AM';
-          const displayHour = hours % 12 || 12;
-
-          const timeString = `${isToday ? 'today' : dateObj.toLocaleDateString()} at ${displayHour}:${minutes} ${ampm}`;
-          statusElem.innerHTML = `<span class="status-sub">Last seen ${timeString}</span>`;
-        } else {
-          statusElem.innerHTML = '';
-        }
+  // ===== USER LIST RENDER =====
+  function renderUserList(list,filter='all',search=''){
+    const box=document.getElementById('userListBox'); box.innerHTML=''; renderedUserIds.clear();
+    list.forEach(([sanitized,ud])=>{
+      const email=ud.email || desanitizeUserId(sanitized); const name=ud.name || email; const emailName=email.split('@')[0].trim(); const clean=formatUserName(name.trim()); const finalName=clean.toLowerCase()===emailName.toLowerCase()?emailName:clean; const label=`${finalName} (${email})`;
+      if(search && !label.toLowerCase().includes(search.toLowerCase())) return;
+      db.ref(`chats/${sanitized}`).once('value',snap=>{
+        const arr=Object.values(snap.val()||{}); const hasUnread=arr.some(m=>m.from==='user' && !m.readByAdmin); if(filter==='unread' && !hasUnread) return;
+        const el=document.createElement('div'); el.className='user-item'; if(sanitized===activeUserIdSanitized) el.classList.add('active'); el.setAttribute('data-sanitized',sanitized);
+        const span=document.createElement('span'); span.innerHTML=`${label} ${hasUnread?'<svg width="14" height="14" viewBox="0 0 24 24" fill="red" style="margin-left:4px"><path d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 4a1 1 0 0 0-1 1v6a1 1 0 1 0 2 0V7a1 1 0 0 0-1-1zm0 10a1.5 1.5 0 1 0 0 3a1.5 1.5 0 0 0 0-3z"/></svg>':''}
+        <svg class="online-indicator" width="10" height="10" viewBox="0 0 24 24" fill="#00ff00" style="margin-left:6px;display:none"><circle cx="12" cy="12" r="10"/></svg>`;
+        span.style.fontWeight=hasUnread?'bold':'normal'; el.appendChild(span);
+        const indicator=span.querySelector('.online-indicator'); if(indicator){ db.ref('users/'+sanitized+'/online').on('value',s=>{indicator.style.display=s.val()? 'inline-block':'none';}) }
+        el.onclick=()=>{ justOpenedChat=true; activeUserIdEmail=email; activeUserIdSanitized=sanitized; selectedUserId=sanitized; document.getElementById('chatUserName').textContent=formatUserName(name); const a=document.getElementById('chatUserAvatar'); a.src=ud.photoURL||'https://i.pravatar.cc/40'; a.style.display='block'; document.querySelectorAll('.user-item').forEach(x=>x.classList.remove('active')); el.classList.add('active'); document.getElementById('searchMessage').value=''; updateUserOnlineStatus(email); listenToChat(); };
+        box.appendChild(el); renderedUserIds.add(sanitized);
       });
-    }
+    });
+  }
+
+  function loadUserList(){
+    const box=document.getElementById('userListBox'); box.innerHTML='<p style="text-align:center;color:gray;">Memuat...</p>';
+    renderedUserIds.clear();
+    db.ref('users').once('value',snap=>{
+      const users=snap.val()||{}; const entries=Object.entries(users); if(entries.length===0){ box.innerHTML='<p style="text-align:center;color:gray;">Belum ada user login</p>'; return; }
+      const map=new Map(); entries.forEach(([sanitized,data])=>{ const email=(data.email||desanitizeUserId(sanitized)).toLowerCase(); if(!map.has(email)) map.set(email,{sanitized,data}); });
+      const filtered=[...map.values()];
+      const promises=filtered.map(({sanitized,data})=> db.ref(`chats/${sanitized}`).orderByChild('time').limitToLast(1).once('value').then(s=>{let t=0; s.forEach(m=>{t=m.val()?.time||0}); return {sanitized,data,lastTime:t}}).catch(()=>({sanitized,data,lastTime:0})) );
+      Promise.all(promises).then(results=>{ results.sort((a,b)=>b.lastTime-a.lastTime); allUsersData=results.map(u=>[u.sanitized,u.data,u.lastTime]); const list=allUsersData.map(([s,d])=>[s,d]); box.innerHTML=''; renderUserList(list); renderedUserIds=new Set(list.map(([s])=>s)); isLoadingUserList=false; });
+    });
+  }
+
+  db.ref('chats').on('child_changed',snapshot=>{updateUserLastTime(snapshot.key,snapshot.val())});
+  db.ref('chats').on('child_added',snapshot=>{updateUserLastTime(snapshot.key,snapshot.val())});
+
+  function updateUserLastTime(sanitizedId,msgs){ const entries=Object.entries(msgs||{}); if(entries.length===0) return; const latest=entries.reduce((a,b)=> (a[1].time>b[1].time?a:b), [null,{time:0}]); const t=latest[1]?.time||0; const idx=allUsersData.findIndex(([id])=>id===sanitizedId); if(idx!==-1){ allUsersData[idx][2]=t; allUsersData.sort((a,b)=>b[2]-a[2]); const list=allUsersData.map(([s,d])=>[s,d]); renderUserList(list,currentFilterMode,document.getElementById('searchUser').value||''); } }
+
+  function updateUserOnlineStatus(email){ const sanitized=sanitizeUserId(email); const userRef=db.ref('users/'+sanitized); const typingRef=db.ref('users/'+sanitized+'/typing'); const el=document.getElementById('chatUserStatus'); if(!el) return; userRef.on('value',snap=>{ const d=snap.val(); if(!d?.typing){ if(d?.online){ el.innerHTML='<span class="status-main">Online</span>'; }else{ let s=''; const ls=d?.lastLoginTime; if(ls){const dt=new Date(ls); const now=new Date(); const isToday=dt.toDateString()===now.toDateString(); const h=dt.getHours(); const m=String(dt.getMinutes()).padStart(2,'0'); const ampm=h>=12?'PM':'AM'; const hh=(h%12)||12; s=`${isToday?'today':dt.toLocaleDateString()} at ${hh}:${m} ${ampm}`;} el.innerHTML=s?`<span class="status-sub">Last seen ${s}</span>`:''; } } }); typingRef.on('value',snap=>{ if(snap.val()){ el.innerHTML='<span class="status-typing">Typing...</span>'; }else{ userRef.once('value').then(s=>{ const d=s.val(); if(!d) return; if(d.online){ el.innerHTML='<span class="status-main">Online</span>'; }else if(d.lastLoginTime){ const dt=new Date(d.lastLoginTime); const now=new Date(); const isToday=dt.toDateString()===now.toDateString(); const h=dt.getHours(); const m=String(dt.getMinutes()).padStart(2,'0'); const ampm=h>=12?'PM':'AM'; const hh=(h%12)||12; const s=`${isToday?'today':dt.toLocaleDateString()} at ${hh}:${m} ${ampm}`; el.innerHTML=`<span class="status-sub">Last seen ${s}</span>`; } else { el.innerHTML=''; } }); } }); }
+
+  // ===== FILTER MESSAGES =====
+  function filterMessages(q){ if(!q){ renderChatMessages(allMessages); return;} const f=allMessages.filter(m=> (m.text||'').toLowerCase().includes(q.toLowerCase())); renderChatMessages(f); }
+
+  // ===== SEND MESSAGE (set sentAt; deliveredAt/readAt null) =====
+  function sendMessage(){ const msgInput=document.getElementById('msg'); const text=(msgInput.value||'').trim(); if(!selectedUserId || !text) return alert('Pilih user dan tulis pesan dulu!'); const now=Date.now(); const msg={ from:'admin', name:'Admin', email:'admin@domain.com', photoURL:'https://i.imgur.com/qiZFOs9.png', text, time:now, readByAdmin:true, sentAt: firebase.database.ServerValue.TIMESTAMP, deliveredAt:null, readAt:null };
+    db.ref(`chats/${selectedUserId}`).push(msg, err=>{ if(!err){ msgInput.value=''; db.ref(`notifications/${selectedUserId}`).set({from:'admin',text, time:now, unread:true}); const idx=allUsersData.findIndex(([id])=>id===selectedUserId); if(idx!==-1){ allUsersData[idx][2]=now; allUsersData.sort((a,b)=>b[2]-a[2]); const list=allUsersData.map(([s,d])=>[s,d]); renderUserList(list,'all',document.getElementById('searchUser').value||''); } } else { alert('Gagal mengirim pesan'); } }); }
+
+  // ===== INIT =====
+  let msgInputEl, sendBtnEl;
+  window.onload=()=>{
+    selectedUserId=null; activeUserIdSanitized=''; activeUserIdEmail=''; loadUserList(); updateUserCounts();
+    msgInputEl=document.getElementById('msg'); sendBtnEl=document.getElementById('sendBtn');
+    if(msgInputEl){ msgInputEl.addEventListener('input', updateSendButtonState); msgInputEl.addEventListener('keydown', e=>{ if(e.key==='Enter' && !(e.shiftKey||e.ctrlKey)){ e.preventDefault(); const text=msgInputEl.value.trim(); if(!selectedUserId||!text) return; sendMessage(); } }); }
+    if(sendBtnEl) sendBtnEl.addEventListener('click', sendMessage);
+    const su=document.getElementById('searchUser'); if(su){ su.addEventListener('input', e=>{ const display=allUsersData.map(([s,d])=>[s,d]); renderUserList(display, currentFilterMode, e.target.value); }); }
+    const sm=document.getElementById('searchMessage'); if(sm){ sm.addEventListener('input', e=>filterMessages(e.target.value)); }
+    db.ref('users').on('child_added',snap=>{ const sanitized=snap.key; const data=snap.val(); if(!isLoadingUserList && !renderedUserIds.has(sanitized)){ addOrUpdateUser(sanitized,data); renderedUserIds.add(sanitized);} });
+    db.ref('users').on('child_changed',snap=>{ addOrUpdateUser(snap.key, snap.val()); });
+    db.ref('chats').on('child_changed', s=> updateUserLastTime(s.key, s.val()));
+    db.ref('chats').on('child_added', s=> updateUserLastTime(s.key, s.val()));
+  }
+
+  function updateSendButtonState(){ const text=(msgInputEl?.value||'').trim(); const ok=!!selectedUserId && !!text; if(sendBtnEl) sendBtnEl.disabled=!ok; }
+
+  function addOrUpdateUser(sanitized,data){ if(renderedUserIds.has(sanitized)) return; if(allUsersData.some(([id])=>id===sanitized)) return; const email=desanitizeUserId(sanitized); data.email=email; db.ref(`chats/${sanitized}`).orderByChild('time').limitToLast(1).once('value').then(last=>{ let t=0; last.forEach(m=>{t=m.val()?.time||0}); if(t===0) t=Date.now(); const idx=allUsersData.findIndex(([id])=>id===sanitized); if(idx!==-1) allUsersData.splice(idx,1); allUsersData.push([sanitized,data,t]); allUsersData.sort((a,b)=>b[2]-a[2]); const list=allUsersData.map(([id,user])=>[id,user]); renderUserList(list,'all',document.getElementById('searchUser').value||''); renderedUserIds.add(sanitized); }); }
+
+  function updateUserListFlags(){ document.querySelectorAll('.user-item').forEach(item=>{ const sanitized=item.getAttribute('data-sanitized'); const span=item.querySelector('span'); if(!span) return; db.ref('chats/'+sanitized).once('value',snap=>{ const arr=Object.values(snap.val()||{}); const hasUnread=arr.some(m=>m.from==='user' && !m.readByAdmin); const email=desanitizeUserId(sanitized); const emailName=email.split('@')[0].trim(); const first=arr.find(m=>m.from==='user'); if(!first) return; const rawName=first.name||email; const clean=formatUserName(rawName.trim()); const finalName=clean.toLowerCase()===emailName.toLowerCase()?emailName:clean; const base=`${finalName} (${email})`; span.textContent=base+(hasUnread?' ❗':''); span.style.fontWeight=hasUnread?'bold':'normal'; }); }); }
+</script>
+
+<!-- ========================
+  USER PAGE SNIPPET (WAJIB) — untuk menandai delivered/read
+  Tambahkan di halaman user (bukan admin) setelah inisialisasi Firebase.
+======================== -->
+<script>
+/*
+// --- di halaman USER ---
+const chatRef = firebase.database().ref('chats/'+ sanitizeUserId(currentUserEmail));
+// tandai delivered saat pesan baru masuk ke user
+afterLoginInit();
+function afterLoginInit(){
+  chatRef.on('child_added', s=>{ const m=s.val(); if(m.to === sanitizeUserId(currentUserEmail) || m.from==='admin'){ if(!m.deliveredAt){ s.ref.child('deliveredAt').set(firebase.database.ServerValue.TIMESTAMP); } } });
+}
+// tandai read saat chat dibuka / terlihat
+function markAllAdminMsgsRead(){
+  chatRef.orderByChild('from').equalTo('admin').once('value').then(snap=>{
+    snap.forEach(ch=>{ const m=ch.val(); if(!m.readAt){ ch.ref.child('readAt').set(firebase.database.ServerValue.TIMESTAMP); } });
   });
 }
-  </script>
+*/
+</script>
 </body>
 </html>
