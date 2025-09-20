@@ -5,523 +5,740 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LiveChat - User</title>
   <style>
-:root { --bg-color:#111; --text-color:#fff; --primary-color:#facc15; }
-body{background:var(--bg-color);color:#000;font-family:'Segoe UI',sans-serif;margin:0;padding:0;scrollbar-width:none;-ms-overflow-style:none}
-body::-webkit-scrollbar{display:none}
-header{background:#1668dc;padding:0 10px;display:flex;justify-content:space-between;align-items:center;color:var(--bg-color);height:90px}
-h1{color:#fff;margin:0;font-size:30px}
-.chat-wrapper{background:#fff;max-width:640px;margin:1rem auto 30px;border-radius:12px;display:flex;flex-direction:column;height:85vh;overflow:hidden;box-shadow:0 0 10px #1668dc;border:1px solid #1668dc;padding:15px}
-.chat-header{background:linear-gradient(to right,#1668dc,#c5ff4a);padding:12px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #fff3;border-radius:10px;font-size:1rem;color:#fff;margin-bottom:10px;justify-content:space-between}
-.chat-header .profile{display:flex;align-items:center;gap:10px}
-.chat-header .profile img{width:36px;height:36px;border-radius:50%;border:2px solid #fff}
-.chat-header .profile span{font-weight:bold;font-size:16px;color:#000}
-.search-wrapper{flex-grow:1;display:flex;justify-content:flex-end}
-#searchChat{padding:8px 12px;font-size:14px;border-radius:6px;border:1px solid #ccc;min-width:200px;max-width:300px}
-.chat-box{flex-grow:1;overflow-y:auto;padding:15px;background:#000;scrollbar-width:none;-ms-overflow-style:none;height:60vh;border-radius:10px;border:1px solid #3c89e8}
-.chat-box::-webkit-scrollbar{display:none}
-.message{padding:.5rem .75rem;margin:.5rem 0;border-radius:12px;max-width:80%;word-wrap:break-word;box-shadow:0 2px 4px rgba(0,0,0,.4)}
-.mine{margin-left:auto;background:linear-gradient(to bottom,#1668dc,#fff);color:#000;font-weight:bold}
-.theirs{margin-right:auto;background:linear-gradient(to bottom,#1668dc,#d7e9ff,#c5ff4a)}
-.send-box{display:flex;gap:10px;padding:1rem;border:1px solid #3c89e8;background:#111;border-radius:10px;align-items:stretch}
-#msg{flex:2;min-height:40px;padding:10px;font-size:16px;border-radius:6px;border:2px solid #3c89e8;resize:vertical;box-sizing:border-box}
-.file-label{flex-shrink:0;background:#1668dc;color:#fff;padding:0 16px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;height:100%;font-weight:bold;white-space:nowrap}
-input[type=file]{display:none}
-.send-box button{flex:1;background:#1668dc;color:#fff;font-weight:bold;border:none;border-radius:8px;cursor:pointer;height:100%}
-.send-box button:active,.file-label:active{color:#fff;background:#1554ad!important}
-.send-box button:hover,.file-label:hover{color:#fff;background:#3c89e8}
-.msg-header{display:flex;align-items:center;gap:6px;margin-bottom:2px;font-weight:bold}
-.msg-header small{font-size:.75rem;color:#0b6906}
-.msg-text{margin:0;padding:0;font-weight:bold}
-.date-label{text-align:center;margin:20px 0}
-.date-label-inner{display:inline-block;background:#90ee90;padding:2px 30px;border-radius:20px;font-size:14px;color:#333;box-shadow:0 2px 4px rgba(0,0,0,.1)}
-.date-label-inner .day-label{font-weight:bold}
-.date-label-inner .full-date-label{font-size:12px;color:#555}
-#logoutBtn{background:#141414;color:#fff;padding:0 15px;border-radius:6px;font-weight:bold;cursor:pointer;border-color:#fff;transition:.3s;font-size:14px;height:32px;width:100%}
-#logoutBtn:hover{border-color:#3c89e8;background:#141414;color:#3c89e8}
-#logoutBtn:active{border-color:#3c89e8;background:#141414;color:#1554ad}
-.msg-avatar{width:24px;height:24px;border-radius:50%;margin-right:6px;object-fit:cover;border:1px solid #fff;background:#000}
-#startMessage{transition:opacity .5s ease;font-size:16px}
-@media(max-width:600px){.chat-header{flex-direction:column;align-items:flex-start}#searchChat{width:100%}.send-box{flex-direction:column}#msg{width:100%}}
-  </style>
-</head>
+    :root {
+  --bg-color: #111111;
+  --text-color: #ffffff;
+  --primary-color: #facc15;
+}
+body {
+  background: var(--bg-color);
+  color: #000;
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+}
+
+  header {
+    background-color: #1668dc;
+    padding: 0px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--bg-color);
+    height: 90px;
+  }
+
+  h1 {
+    color: white;
+    margin: 0;
+    font-size: 30px;
+  }
+
+  .chat-container {
+    max-width: 700px;
+    margin: 2rem auto;
+    border: 2px solid gold;
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: #000;
+    display: flex;
+    flex-direction: column;
+    height: 85vh;
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.2);
+  }
+
+  .chat-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: #222;
+    padding: 10px 14px;
+    color: gold;
+    font-weight: bold;
+    font-family: Arial, sans-serif;
+  }
+
+  .chat-header .profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .chat-header .profile img {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    border: 2px solid gold;
+  }
+
+  #searchChat {
+    flex-grow: 1;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: none;
+    font-size: 14px;
+  }
+
+  .chat-box {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 15px;
+  background: #000;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  height: 60vh;
+     border-radius: 10px;
+    border: 1px solid #3c89e8;
+}
+
+.chat-box::-webkit-scrollbar {
+  display: none;
+}
+  .message {
+    padding: 0.5rem 0.75rem;
+    margin: 0.5rem 0;
+    border-radius: 12px;
+    max-width: 80%;
+    word-wrap: break-word;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  }
+
+  .mine {
+    margin-left: auto;
+    background: linear-gradient(to bottom, #1668dc, white);
+    color: black;
+    font-weight: bold;
+  }
+
+  .theirs {
+    margin-right: auto;
+    background: linear-gradient(to bottom, #1668dc, #d7e9ff, #c5ff4a);
+  }
+
+  .send-box {
+  display: flex;
+  gap: 10px;
+  padding: 1rem;
+  border: 1px solid #3c89e8;
+  background: #111;
+  border-radius: 10px;
+  align-items: stretch;
+}
+
+  #msg {
+  flex: 2;
+  min-height: 40px;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 6px;
+  border: 2px solid #3c89e8;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+  .file-label {
+  flex-shrink: 0;
+  background: #1668dc;
+  color: white;
+  padding: 0 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+
+  input[type="file"] {
+    display: none;
+  }
+
+  .send-box button {
+  flex: 1;
+  background: #1668dc;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  height: 100%;
+}
+.send-box button:active,
+.file-label:active {
+  color:white;
+  background: #1554ad !important;
+}
+.send-box button:hover,
+.file-label:hover {
+  color:white;
+  background: #3c89e8;
+}
+ 
+  .msg-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+    font-weight: bold;
+  }
+
+  .msg-header small {
+    font-size: 0.75rem;
+    color: #0b6906;
+  }
+
+  .msg-text {
+    margin: 0;
+    padding: 0;
+    font-weight: bold;
+  }
+
+  .date-label {
+    text-align: center;
+    margin: 20px 0;
+  }
+
+  .date-label-inner {
+    display: inline-block;
+    background-color: lightgreen;
+    padding: 2px 30px;
+    border-radius: 20px;
+    font-size: 14px;
+    color: #333;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .date-label-inner .day-label {
+    font-weight: bold;
+  }
+
+  .date-label-inner .full-date-label {
+    font-size: 12px;
+    color: #555;
+  }
+
+  #logoutBtn {
+    background-color: #141414;
+    color: white;
+    padding: 0px 15px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    border-color: #ffffff;
+    transition: 0.3s;
+    font-size: 14px;
+    height: 32px;
+    width: 100%;
+  }
+
+  #logoutBtn:hover {
+    border-color: #3c89e8;
+    background-color: #141414;
+    color: #3c89e8;
+  }
+    #logoutBtn:active {
+    border-color: #3c89e8;
+    background-color: #141414;
+    color: #1554ad;
+  }
+
+  @media (max-width: 600px) {
+    .chat-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    #searchChat {
+      width: 100%;
+    }
+
+    .send-box {
+      flex-direction: column;
+    }
+
+    #msg {
+      width: 100%;
+    }
+  }
+  .chat-wrapper {
+  background: white;
+  max-width: 640px;
+  margin: 1rem auto 30px auto;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  height: 85vh; /* Tambah ini */
+  overflow: hidden;
+  box-shadow: 0 0 10px #1668dc;
+  border: 1px solid #1668dc;
+    padding: 15px;
+}
+
+.chat-header {
+  background: linear-gradient(to right,#1668dc, #c5ff4a);
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #fff3;
+    border-radius: 10px;
+      font-size: 1rem;
+      color: white;
+  margin-bottom: 10px;
+  justify-content: space-between;
+}
+
+.chat-header .profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chat-header .profile img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.chat-header .profile span {
+  font-weight: bold;
+  font-size: 16px;
+  color: black;
+}
+
+.search-wrapper {
+  flex-grow: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+#searchChat {
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  min-width: 200px;
+  max-width: 300px;
+}
+.msg-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  margin-right: 6px;
+  object-fit: cover;
+  border: 1px solid white;
+background-color:black;
+}
+#startMessage {
+  transition: opacity 0.5s ease;
+  font-size: 16px;
+}
+</style>
+
 <body>
-  <header>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <h1>USER LIVECHAT</h1>
-      <div id="notifDot" style="width:12px;height:12px;background:red;border-radius:50%;display:none;"></div>
-    </div>
-  </header>
+  <!-- Header Atas -->
+ <header>
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <h1>USER LIVECHAT</h1>
+    <div id="notifDot" style="width: 12px; height: 12px; background: red; border-radius: 50%; display: none;"></div>
+  </div>
+</header>
 
-  <main>
-    <div class="chat-wrapper">
-      <div class="chat-header">
-        <div class="profile">
-          <img id="headerUserPhoto" src="https://i.pravatar.cc/40" alt="User" />
-          <div>
-            <span id="headerUserName">5G 88</span><br />
-            <small id="typingStatus" style="font-size:12px;font-weight:normal;color:#fff;">Offline</small>
-          </div>
-        </div>
-        <div class="search-wrapper">
-          <input type="text" id="searchChat" placeholder="🔍 Search messages..." />
-        </div>
-      </div>
 
-      <div class="chat-box" id="chatBox">
-        <div id="startMessage" style="text-align:center;color:#fff;opacity:.6;margin-top:10px;font-size:14px;">
-          No messages yet. Start the conversation!
+<main>
+  <div class="chat-wrapper">
+    <!-- CHAT HEADER -->
+    <div class="chat-header">
+      <div class="profile">
+        <img id="headerUserPhoto" src="https://i.pravatar.cc/40" alt="User" />
+        <div>
+          <span id="headerUserName">5G 88</span><br />
+          <small id="typingStatus" style="font-size: 12px; font-weight: normal; color: white;">Offline</small>
         </div>
       </div>
-
-      <div class="send-box">
-        <textarea id="msg" placeholder="Type your message" rows="2"></textarea>
-        <label class="file-label">Upload Image<input type="file" id="fileInput" accept="image/*"></label>
-        <button type="button" disabled>Send</button>
+      <div class="search-wrapper">
+        <input type="text" id="searchChat" placeholder="🔍 Search messages..." />
       </div>
     </div>
-  </main>
 
-  <!-- notif sound -->
-  <audio id="notifSound" src="https://searcfile.github.io/5G88-audio/notifsound/notification.wav" preload="auto"></audio>
+ <div class="chat-box" id="chatBox">
+  <div id="startMessage" style="text-align:center; color:white; opacity:0.6; margin-top:10px; font-size:14px;">
+    No messages yet. Start the conversation!
+  </div>
+</div>
 
-  <!-- Firebase SDKs (compat) -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+    <!-- SEND BOX -->
+    <div class="send-box">
+      <textarea id="msg" placeholder="Type your message" rows="2"></textarea>
+      <label class="file-label">
+        Upload Image
+        <input type="file" id="fileInput" accept="image/*">
+      </label>
+      <button type="button" disabled>Send</button>
+    </div>
+  </div>
+</main>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
 
 <script>
-// =====================================================
-// USER LIVECHAT — FINAL UPGRADED (RTDB-safe, keep '@')
-// =====================================================
-
-// ---------- Global ----------
-let chatInitialized = false;
-let userHasInteracted = false;
-["click","keydown","scroll","touchstart"].forEach(ev =>
-  document.addEventListener(ev, () => userHasInteracted = true, { once:true })
-);
-
-// ---------- Helpers (email, key, path) ----------
-function normalizeEmail(raw){
-  if(!raw) return null;
-  return String(raw).trim().toLowerCase();
-}
-
-// RTDB-safe: biarkan '@', ganti '.' jadi '_' dan tolak token terlarang # $ [ ] /
-function sanitizeEmailKeepAt(rawEmail){
-  const norm = normalizeEmail(rawEmail);
-  if(!norm) return null;
-  // jika ada token terlarang selain '.', langsung error biar ketahuan sumbernya
-  const forbidden = /[#$\[\]\/]/;
-  if(forbidden.test(norm)){
-    const hit = norm.match(/[#$\[\]\/]/g).join(" ");
-    throw new Error(`[RTDB] Email mengandung token terlarang: ${hit} -> "${norm}"`);
-  }
-  // ganti titik → underscore
-  const key = norm.replace(/\./g,"_").replace(/_+/g,"_");
-  return key;
-}
-
-// validasi akhir untuk semua key RTDB
-function assertValidRtdbKey(key, label="key"){
-  if(!key || /[.#$\[\]\/]/.test(key)){
-    console.error(`[RTDB] ${label} tidak valid:`, key);
-    throw new Error(`[RTDB] ${label} mengandung token terlarang`);
-  }
-}
-
-function getChatPath(rawEmail){
-  const key = sanitizeEmailKeepAt(rawEmail);        // contoh: auudposting1@gmail_com
-  assertValidRtdbKey(key, "emailKey(getChatPath)");
-  return `chats/${key}`;
-}
-
-// Storage-safe: hilangkan karakter yang bermasalah untuk nama file/folder
-function storageSafeName(name){
-  return String(name||"").trim().replace(/[#[\]*?]/g,"_").replace(/\//g,"_");
-}
-
-// sumber email user (localStorage -> query ?email= -> cache postMessage)
-function resolveUserEmail(){
-  let email = normalizeEmail(localStorage.getItem("useremail"));
-  if(email) return email;
-
-  const params = new URLSearchParams(location.search);
-  const qEmail = normalizeEmail(params.get("email"));
-  if(qEmail){ localStorage.setItem("useremail", qEmail); return qEmail; }
-
-  const cached = normalizeEmail(sessionStorage.getItem("last_useremail_msg"));
-  if(cached){ localStorage.setItem("useremail", cached); return cached; }
-
-  return null;
-}
-
-// ---------- Firebase init ----------
-(function initFirebase(){
-  if(!window.firebase){ console.error("Firebase SDK belum dimuat."); return; }
-  const cfg = {
-    apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
-    authDomain: "blurphp.firebaseapp.com",
-    databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "blurphp",
-    storageBucket: "blurphp.appspot.com",
-    messagingSenderId: "593904200464",
-    appId: "1:593904200464:web:cea7bc1360532c20d99395"
+document.addEventListener("contextmenu", e => e.preventDefault());
+  document.onkeydown = function (e) {
+    if (e.key === "F12" || (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key.toUpperCase()))) {
+      return false;
+    }
   };
-  if(!firebase.apps.length) firebase.initializeApp(cfg);
-  window.db = firebase.database();
-  window.storage = firebase.storage();
+let chatInitialized = false;
 
-  // nyalakan log firebase saat debug (boleh dimatikan nanti)
-  try { firebase.database.enableLogging(true); } catch(e){}
-})();
+function sanitizeEmail(email) {
+  return email.toLowerCase().replace(/\./g, "_");
+}
+function getChatPath(email) {
+  return 'chats/' + sanitizeEmail(email);
+}
+const firebaseConfig = {
+  apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
+  authDomain: "blurphp.firebaseapp.com",
+  databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "blurphp",
+  storageBucket: "blurphp.appspot.com",
+  messagingSenderId: "593904200464",
+  appId: "1:593904200464:web:cea7bc1360532c20d99395"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const storage = firebase.storage();
 
-// ---------- UI helpers ----------
-function cleanDuplicateName(name){
-  name = (name||"").trim();
-  const parts = name.split(/\s+/), half = parts.length/2;
-  if(parts.length%2===0){
-    const a = parts.slice(0,half).join(" ");
-    const b = parts.slice(half).join(" ");
-    if(a && a===b) return a;
+let currentUserEmail = null;
+let userHasInteracted = false;
+
+function cleanDuplicateName(name) {
+  const parts = name.trim().split(/\s+/);
+  const half = parts.length / 2;
+  if (parts.length % 2 === 0) {
+    const firstHalf = parts.slice(0, half).join(' ');
+    const secondHalf = parts.slice(half).join(' ');
+    if (firstHalf === secondHalf) return firstHalf;
   }
-  return name || "User";
-}
-function updateUserHeader(){
-  let userName = localStorage.getItem("username") || "User";
-  const userPhoto = localStorage.getItem("userphoto") || "https://i.pravatar.cc/40";
-  userName = cleanDuplicateName(userName);
-  const nameEl  = document.getElementById("headerUserName");
-  const photoEl = document.getElementById("headerUserPhoto");
-  if(nameEl)  nameEl.textContent = userName;
-  if(photoEl) photoEl.src = userPhoto;
-}
-function playNotificationSound(){
-  const audio = document.getElementById("notifSound");
-  if(audio && userHasInteracted){ audio.currentTime=0; audio.play().catch(()=>{}); }
+  return name;
 }
 
-// ---------- Terima data dari parent (opsional) ----------
-window.addEventListener("message", (event)=>{
-  if(event.data?.type==="user-login" && event.data.user){
-    const name  = event.data.user.name  || "User";
-    const email = normalizeEmail(event.data.user.email);
-    const photo = event.data.user.photo || "";
-    if(email){
+function updateUserHeader() {
+  let userName = localStorage.getItem("username") || "User";  // GANTI const → let
+  const userPhoto = localStorage.getItem("userphoto") || "https://i.pravatar.cc/40";
+  const nameEl = document.getElementById("headerUserName");
+  const photoEl = document.getElementById("headerUserPhoto");
+
+  userName = cleanDuplicateName(userName);  // ✅ Tidak error lagi
+  if (nameEl) nameEl.textContent = userName;
+  if (photoEl) photoEl.src = userPhoto;
+}
+
+// 🔁 Data dikirim dari parent (main page)
+window.addEventListener("message", (event) => {
+  if (event.data?.type === "user-login" && event.data.user) {
+    const { name, email, photo } = event.data.user;
+    if (email) {
       localStorage.setItem("username", name);
       localStorage.setItem("useremail", email);
-      localStorage.setItem("userphoto", photo);
-      sessionStorage.setItem("last_useremail_msg", email);
+      localStorage.setItem("userphoto", photo || "");
       updateUserHeader();
       initChatWithUserData();
-      setupPresenceAndNotif(email);
     }
   }
 });
 
-// ---------- Delivered / Read (untuk pesan ADMIN) ----------
-function markAdminMsgsDelivered(chatRef){
-  chatRef.on("child_added", snap=>{
-    const m = snap.val();
-    if(m && m.from==="admin" && !m.deliveredAt){
-      snap.ref.child("deliveredAt").set(firebase.database.ServerValue.TIMESTAMP);
-    }
-  });
-}
-let markReadScheduled=null;
-function scheduleMarkAdminMsgsRead(chatRef){
-  if(markReadScheduled) return;
-  markReadScheduled = setTimeout(()=>{
-    markReadScheduled=null;
-    chatRef.orderByChild("from").equalTo("admin").once("value").then(snap=>{
-      snap.forEach(ch=>{
-        const m = ch.val();
-        if(m && !m.readAt){
-          ch.ref.child("readAt").set(firebase.database.ServerValue.TIMESTAMP);
-        }
-      });
-    });
-  }, 600);
-}
-
-// ---------- Main init ----------
-function initChatWithUserData(){
-  if(chatInitialized || !window.db) return;
-  const userEmail = resolveUserEmail();
-  if(!userEmail){ console.warn("User email belum ada. Sertakan via postMessage atau ?email="); return; }
+function initChatWithUserData() {
+  if (chatInitialized) return;
   chatInitialized = true;
 
-  localStorage.setItem("useremail", userEmail);
+  const userEmail = localStorage.getItem("useremail");
+  if (!userEmail) return;
+  currentUserEmail = userEmail;
+
   updateUserHeader();
+  document.getElementById('typingStatus').textContent = 'Online';
 
-  const typingEl   = document.getElementById("typingStatus");
-  const msgInput   = document.getElementById("msg");
-  const sendBtn    = document.querySelector(".send-box button");
-  const fileInput  = document.getElementById("fileInput");
-  const searchInput= document.getElementById("searchChat");
-  const chatBox    = document.getElementById("chatBox");
+  const msgInput = document.getElementById('msg');
+  const sendBtn = document.querySelector('.send-box button');
+  const fileInput = document.getElementById('fileInput');
+  const searchInput = document.getElementById('searchChat');
+  const chatBox = document.getElementById('chatBox');
 
-  if(typingEl) typingEl.textContent = "Online";
-
-  const chatPath = getChatPath(userEmail);
-  const chatRef  = db.ref(chatPath);
-  console.log("[init] RTDB path:", chatPath);
-
-  markAdminMsgsDelivered(chatRef);
-  ["focus","visibilitychange"].forEach(ev=>{
-    window.addEventListener(ev, ()=>{
-      if(document.visibilityState!=="hidden") scheduleMarkAdminMsgsRead(chatRef);
-    });
-  });
-
-  // input
   let typingTimer;
   const typingDelay = 2000;
-  msgInput.addEventListener("keydown", e=>{
-    if(e.key==="Enter" && !(e.shiftKey||e.ctrlKey)){
-      e.preventDefault(); sendMessage(userEmail);
+
+  msgInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      if (e.shiftKey || e.ctrlKey) return;
+      e.preventDefault();
+      sendMessage(currentUserEmail);
     }
-  });
-  msgInput.addEventListener("input", ()=>{
-    sendBtn.disabled = !msgInput.value.trim() && !fileInput.files.length;
-    if(typingEl) typingEl.textContent = msgInput.value.trim()? "Typing..." : "Online";
-    clearTimeout(typingTimer);
-    if(msgInput.value.trim()){
-      typingTimer = setTimeout(()=>{ if(typingEl) typingEl.textContent="Online"; }, typingDelay);
-    }
-    scheduleMarkAdminMsgsRead(chatRef);
   });
 
-  sendBtn.addEventListener("click", ()=>sendMessage(userEmail));
+  msgInput.addEventListener('input', () => {
+    sendBtn.disabled = !msgInput.value.trim() && !fileInput.files.length;
+    document.getElementById('typingStatus').textContent = msgInput.value.trim() ? 'Typing...' : 'Online';
+    clearTimeout(typingTimer);
+    if (msgInput.value.trim()) {
+      typingTimer = setTimeout(() => {
+        document.getElementById('typingStatus').textContent = 'Online';
+      }, typingDelay);
+    }
+  });
+
+  sendBtn.addEventListener('click', () => sendMessage(currentUserEmail));
   sendBtn.disabled = true;
 
-  searchInput.addEventListener("input", ()=>{
+  searchInput.addEventListener('input', () => {
     const filter = searchInput.value.toLowerCase();
-    chatBox.querySelectorAll(".message").forEach(m=>{
-      m.style.display = m.textContent.toLowerCase().includes(filter) ? "" : "none";
+    chatBox.querySelectorAll('.message').forEach(msg => {
+      msg.style.display = msg.textContent.toLowerCase().includes(filter) ? '' : 'none';
     });
   });
 
-  chatBox.addEventListener("scroll", ()=>{
-    if(chatBox.scrollTop + chatBox.clientHeight >= chatBox.scrollHeight - 4){
-      scheduleMarkAdminMsgsRead(chatRef);
-    }
-  });
-
-  listenToChat(userEmail, chatRef);
+  listenToChat(currentUserEmail);
 }
 
-// ---------- Send (user -> admin) ----------
-async function sendMessage(userEmail){
-  const msgInput  = document.getElementById("msg");
-  const fileInput = document.getElementById("fileInput");
-  const msg  = (msgInput.value||"").trim();
+async function sendMessage(userEmail) {
+  if (!userEmail) return;
+
+  const msgInput = document.getElementById('msg');
+  const fileInput = document.getElementById('fileInput');
+  const msg = msgInput.value.trim();
   const file = fileInput.files[0];
 
-  if(!userEmail || (!msg && !file)) return;
+  if ((!msg || msg === "") && !file) return;
 
-  // cek online
-  const connected = await firebase.database().ref(".info/connected").get();
-  if(!connected.val()){ alert("Koneksi offline. Coba lagi saat online."); return; }
-
-  const emailNorm = normalizeEmail(userEmail);
-  const emailKey  = sanitizeEmailKeepAt(userEmail);   // contoh: auudposting1@gmail_com
-  assertValidRtdbKey(emailKey, "emailKey(send)");
-  const chatPath  = `chats/${emailKey}`;
-  console.log("[sendMessage] RTDB path:", chatPath);
-
-  const userName  = localStorage.getItem("username")  || "User";
+  const userName = localStorage.getItem("username") || "User";
   const userPhoto = localStorage.getItem("userphoto") || "";
   const time = Date.now();
-  const chatRef = db.ref(chatPath);
+  const chatRef = db.ref(getChatPath(userEmail));
 
   let imageUrl = null;
-  try{
-    if(file){
-      const safeName = storageSafeName(file.name);
-      const filePath = `chat_images/${emailKey}/${time}_${safeName}`;
-      console.log("[upload] storage path:", filePath);
-      const snap = await storage.ref(filePath).put(file);
-      imageUrl = await snap.ref.getDownloadURL();
+
+  try {
+    if (file) {
+      const fileRef = storage.ref(`chat_images/${sanitizeEmail(userEmail)}/${time}_${file.name}`);
+      const snapshot = await fileRef.put(file);
+      imageUrl = await snapshot.ref.getDownloadURL();
     }
 
     await chatRef.push({
-      from: "user",
+      from: 'user',
       name: userName,
-      email: emailNorm,
+      email: userEmail,
       photoURL: userPhoto,
       text: msg || null,
       image: imageUrl || null,
       time,
-      readByAdmin: false,
-      sentAt: firebase.database.ServerValue.TIMESTAMP,
-      deliveredAt: null,
-      readAt: null
+      readByAdmin: false // ✅ WAJIB agar dot merah muncul
     });
 
-    msgInput.value = "";
-    fileInput.value = "";
-    document.querySelector(".send-box button").disabled = true;
-  }catch(err){
-    console.error("Error sending message:", err);
+    msgInput.value = '';
+    fileInput.value = '';
+    document.querySelector('.send-box button').disabled = true;
+
+  } catch (error) {
+    console.error("Error sending message:", error);
     alert("❌ Gagal mengirim pesan.");
   }
 }
 
-// ---------- Listen & render ----------
-function listenToChat(userEmail, chatRef){
-  const chatBox  = document.getElementById("chatBox");
-  const notifDot = document.getElementById("notifDot");
+function listenToChat(userEmail) {
+  const chatBox = document.getElementById('chatBox');
+  const notifDot = document.getElementById('notifDot');
+  const chatRef = db.ref(getChatPath(userEmail));
+  const lastSeenKey = `lastSeenByUser_${sanitizeEmail(userEmail)}`;
   const startMsg = document.getElementById("startMessage");
-  const lastSeenKey = `lastSeenByUser_${sanitizeEmailKeepAt(userEmail)}`;
 
-  chatRef.on("value", snapshot=>{
+  chatRef.on('value', snapshot => {
     const chats = snapshot.val();
 
-    if(!chats || Object.keys(chats).length===0){
-      if(startMsg) startMsg.style.display="block";
-      if(notifDot) notifDot.style.display="none";
-      if(window.parent!==window){ window.parent.postMessage({action:"hide-livechat-notif"}, "*"); }
-      return;
+    // 🔁 Hapus semua pesan lama (tapi jangan hapus #startMessage)
+    const oldMessages = chatBox.querySelectorAll(".message, .date-label");
+    oldMessages.forEach(el => el.remove());
+
+    // ✅ Jika tidak ada chat, tampilkan pesan awal
+    if (!chats || Object.keys(chats).length === 0) {
+      if (startMsg) startMsg.style.display = "block";
+      notifDot.style.display = 'none';
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: "hide-livechat-notif" }, "*");
+      }
+      return; // Stop rendering karena tidak ada chat
     }
 
-    chatBox.querySelectorAll(".message, .date-label").forEach(el=>el.remove());
-    if(startMsg) startMsg.style.display="none";
+    // ✅ Kalau ada chat, sembunyikan pesan awal
+    if (startMsg) startMsg.style.display = "none";
 
-    const lastSeenTime = parseInt(localStorage.getItem(lastSeenKey)||"0");
+    const lastSeenTime = parseInt(localStorage.getItem(lastSeenKey) || '0');
     let latestAdminMsgTime = 0;
+    const chatArray = Object.values(chats).sort((a, b) => a.time - b.time);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const pastChats = [], todayChats = [];
 
-    const chatArray = Object.entries(chats)
-      .map(([k,v])=>({_key:k, ...v}))
-      .sort((a,b)=>a.time-b.time);
-
-    const today = new Date(); today.setHours(0,0,0,0);
-    const pastChats=[], todayChats=[];
-    chatArray.forEach(c=>{
-      const d = new Date(c.time); d.setHours(0,0,0,0);
-      (d.getTime()===today.getTime()? todayChats: pastChats).push(c);
-      if(c.from==="admin" && c.time>latestAdminMsgTime) latestAdminMsgTime=c.time;
+    chatArray.forEach(c => {
+      const msgDateOnly = new Date(c.time); msgDateOnly.setHours(0, 0, 0, 0);
+      (msgDateOnly.getTime() === today.getTime() ? todayChats : pastChats).push(c);
+      if (c.from === 'admin' && c.time > latestAdminMsgTime) {
+        latestAdminMsgTime = c.time;
+      }
     });
 
-    const latestTime = chatArray[chatArray.length-1]?.time || 0;
+    // ⏱️ Simpan waktu terakhir lihat
+    const latestTime = chatArray[chatArray.length - 1]?.time || 0;
     localStorage.setItem(lastSeenKey, latestTime);
 
-    if(latestAdminMsgTime>lastSeenTime){
-      if(notifDot) notifDot.style.display="inline-block";
+    // 🔴 Dot notifikasi + bunyi
+    if (latestAdminMsgTime > lastSeenTime) {
+      notifDot.style.display = 'inline-block';
       playNotificationSound();
-      if(window.parent!==window){ window.parent.postMessage({action:"show-livechat-notif"}, "*"); }
-    }else{
-      if(notifDot) notifDot.style.display="none";
-      if(window.parent!==window){ window.parent.postMessage({action:"hide-livechat-notif"}, "*"); }
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: "show-livechat-notif" }, "*");
+      }
+    } else {
+      notifDot.style.display = 'none';
+      if (window.parent !== window) {
+        window.parent.postMessage({ action: "hide-livechat-notif" }, "*");
+      }
     }
 
     renderChats(pastChats, today);
     renderChats(todayChats, today);
     chatBox.scrollTop = chatBox.scrollHeight;
-    scheduleMarkAdminMsgsRead(chatRef);
   });
 }
+function renderChats(chatGroup, today) {
+  const chatBox = document.getElementById('chatBox');
+  let lastDateKey = '';
 
-function renderChats(chatGroup, today){
-  const chatBox = document.getElementById("chatBox");
-  let lastDateKey = "";
-
-  chatGroup.forEach(c=>{
-    if(!c.time || isNaN(new Date(c.time).getTime())) return;
-
+  chatGroup.forEach(c => {
+    if (!c.time || isNaN(new Date(c.time).getTime())) return;
     const msgDate = new Date(c.time);
-    const timeFormatted = msgDate.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",hour12:true});
+    const timeFormatted = msgDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
     const dateKey = msgDate.toDateString();
-    const yesterday = new Date(today); yesterday.setDate(yesterday.getDate()-1);
+    const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
 
-    let dayLabel =
-      dateKey===today.toDateString()? "Today" :
-      dateKey===yesterday.toDateString()? "Yesterday" :
-      msgDate.toLocaleDateString("en-GB",{weekday:"long"});
+    let dayLabel = (dateKey === today.toDateString()) ? 'Today' :
+                   (dateKey === yesterday.toDateString()) ? 'Yesterday' :
+                   msgDate.toLocaleDateString('en-GB', { weekday: 'long' });
 
-    const fullDateLabel = msgDate.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
+    const fullDateLabel = msgDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
-    if(dateKey!==lastDateKey){
-      const dl = document.createElement("div");
-      dl.className = "date-label";
-      dl.innerHTML = `
+    if (dateKey !== lastDateKey) {
+      const dateLabelDiv = document.createElement('div');
+      dateLabelDiv.className = 'date-label';
+      dateLabelDiv.innerHTML = `
         <div class="date-label-inner">
           <div class="day-label">${dayLabel}</div>
           <div class="full-date-label">${fullDateLabel}</div>
-        </div>`;
-      chatBox.appendChild(dl);
+        </div>
+      `;
+      chatBox.appendChild(dateLabelDiv);
       lastDateKey = dateKey;
     }
 
-    const div = document.createElement("div");
-    div.className = "message " + (c.from==="user" ? "mine" : "theirs");
-    const rawName = c.from==="user" ? (c.name||"You") : (c.name||"Admin");
+    const div = document.createElement('div');
+    div.className = 'message ' + (c.from === 'user' ? 'mine' : 'theirs');
+    const rawName = c.from === 'user' ? (c.name || 'You') : (c.name || 'Admin');
     const senderLabel = cleanDuplicateName(rawName);
     const senderPhoto = c.photoURL || "https://i.pravatar.cc/40";
 
-    if(c.text){
+    if (c.text) {
       div.innerHTML = `
         <div class="msg-header">
           <img src="${senderPhoto}" class="msg-avatar" alt="user" />
           <span class="msg-info">${senderLabel}</span>
           <small>${timeFormatted}</small>
         </div>
-        <p class="msg-text">${c.text}</p>`;
-    }else if(c.image){
+        <p class="msg-text">${c.text}</p>
+      `;
+    } else if (c.image) {
       div.innerHTML = `
         <div class="msg-header">
           <img src="${senderPhoto}" class="msg-avatar" alt="user" />
           <span class="msg-info">${senderLabel}</span>
           <small>${timeFormatted}</small>
         </div>
-        <img src="${c.image}" alt="Image" style="max-width:100%;border-radius:8px;margin-top:4px">`;
+        <img src="${c.image}" alt="Image" style="max-width: 100%; border-radius: 8px; margin-top: 4px;">
+      `;
     }
+
     chatBox.appendChild(div);
   });
 }
 
-// ---------- Presence & notifications ----------
-function setupPresenceAndNotif(email){
-  const sanitized = sanitizeEmailKeepAt(email);
-  assertValidRtdbKey(sanitized, "emailKey(presence)");
+['click','keydown','scroll','touchstart'].forEach(event =>
+  document.addEventListener(event, () => userHasInteracted = true, { once: true })
+);
 
-  const connectedRef = firebase.database().ref(".info/connected");
-  const userRef = firebase.database().ref("users/" + sanitized);
-
-  connectedRef.on("value", snap=>{
-    if(snap.val()===true){
-      userRef.update({online:true});
-      userRef.onDisconnect().update({ online:false, lastLoginTime: Date.now() });
-    }
-  });
-  window.addEventListener("beforeunload", ()=>{
-    userRef.update({ online:false, lastLoginTime: Date.now() });
-  });
-
-  const notifRef = firebase.database().ref("notifications/" + sanitized);
-  notifRef.on("value", snapshot=>{
-    const notif = snapshot.val();
-    if(notif && notif.unread){
-      const dot = document.getElementById("notifDot");
-      if(dot) dot.style.display="inline-block";
-      playNotificationSound();
-      if(window.parent!==window){ window.parent.postMessage({action:"show-livechat-notif"}, "*"); }
-      setTimeout(()=>{ firebase.database().ref("notifications/" + sanitized + "/unread").set(false); }, 2000);
-    }
-  });
+function playNotificationSound() {
+  const audio = document.getElementById("notifSound");
+  if (audio && userHasInteracted) {
+    audio.currentTime = 0;
+    audio.play().catch(e => console.warn("🔇 Audio autoplay blocked:", e));
+  }
 }
 
-// ---------- Boot ----------
-window.addEventListener("DOMContentLoaded", ()=>{
-  updateUserHeader();
-  const email = resolveUserEmail();
-  if(email){
-    localStorage.setItem("useremail", email);
+window.addEventListener("DOMContentLoaded", () => {
+  const email = localStorage.getItem("useremail");
+  if (email) {
+    updateUserHeader();
     initChatWithUserData();
-    setupPresenceAndNotif(email);
-  }else{
-    console.warn("Email user belum tersedia. Kirim via postMessage {type:'user-login', user:{name,email,photo}} atau tambah ?email= di URL.");
+
+    const sanitized = sanitizeEmail(email);
+    const connectedRef = firebase.database().ref(".info/connected");
+    const userRef = firebase.database().ref("users/" + sanitized);
+
+    connectedRef.on("value", (snap) => {
+      if (snap.val() === true) {
+        userRef.update({ online: true });
+        userRef.onDisconnect().update({
+          online: false,
+          lastLoginTime: Date.now()
+        });
+      }
+    });
+
+    window.addEventListener("beforeunload", () => {
+      userRef.update({
+        online: false,
+        lastLoginTime: Date.now()
+      });
+    });
+
+    // ✅ 🔔 Listener Notifikasi dari Admin (dot merah + bunyi)
+    const notifRef = firebase.database().ref("notifications/" + sanitized);
+    notifRef.on("value", (snapshot) => {
+      const notif = snapshot.val();
+      if (notif && notif.unread) {
+        const notifDot = document.getElementById("notifDot");
+        if (notifDot) notifDot.style.display = "inline-block";
+
+        playNotificationSound();
+
+        if (window.parent !== window) {
+          window.parent.postMessage({ action: "show-livechat-notif" }, "*");
+        }
+
+        setTimeout(() => {
+          firebase.database().ref("notifications/" + sanitized + "/unread").set(false);
+        }, 2000);
+      }
+    });
   }
 });
 </script>
