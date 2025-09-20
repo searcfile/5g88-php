@@ -104,220 +104,489 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 <script>
-  // ===== GLOBAL STATE =====
-  let isLoadingUserList = true;
-  let renderedUserIds = new Set();
-  let userHasInteracted = false; document.body.addEventListener('click',()=>userHasInteracted=true);
-  let currentFilterMode='all';
-  let activeUserIdSanitized='';
-  let activeUserIdEmail='';
-  let allUsersData=[]; // [sanitized, data, lastTime]
-  let lastMessageTimestamps={};
-  let selectedUserId=null;
-  let allMessages=[]; // array of { _key, ...msg }
-  let isInitialChatLoad=true;
-  let justOpenedChat=false;
+// ===============================
+// ADMIN LIVECHAT — UPGRADED
+// ===============================
 
-  // ===== FIREBASE INIT =====
-  const firebaseConfig = {
-    apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
-    authDomain: "blurphp.firebaseapp.com",
-    databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "blurphp",
-    storageBucket: "blurphp.firebasedatabase.app",
-    messagingSenderId: "593904200464",
-    appId: "1:593904200464:web:cea7bc1360532c20d99395",
-    measurementId: "G-R494S2DPZ5"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+// ---------- GLOBAL ----------
+let isLoadingUserList = true;
+let renderedUserIds = new Set();
+let userHasInteracted = false; document.body.addEventListener('click',()=>userHasInteracted=true);
+let currentFilterMode='all';
+let activeUserIdSanitized='';
+let activeUserIdEmail='';
+let allUsersData=[]; // [sanitized, data, lastTime]
+let lastMessageTimestamps={};
+let selectedUserId=null;
+let allMessages=[];  // array of { _key, ...msg }
+let isInitialChatLoad=true;
+let justOpenedChat=false;
 
-  // ===== COUNTS =====
-  function updateUserCounts(){
-    const totalUsersElem=document.getElementById('totalUsers');
-    const onlineUsersElem=document.getElementById('onlineUsers');
-    db.ref('users').on('value',snap=>{
-      const users=snap.val()||{};
-      const total=Object.keys(users).length;
-      const online=Object.values(users).filter(u=>u.online).length;
-      totalUsersElem.textContent=total; onlineUsersElem.textContent=online;
-    });
-  }
+// ---------- FIREBASE INIT ----------
+const firebaseConfig = {
+  apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
+  authDomain: "blurphp.firebaseapp.com",
+  databaseURL: "https://blurphp-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "blurphp",
+  storageBucket: "blurphp.appspot.com",              // ✅ perbaikan
+  messagingSenderId: "593904200464",
+  appId: "1:593904200464:web:cea7bc1360532c20d99395",
+  measurementId: "G-R494S2DPZ5"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-  function sanitizeUserId(email){return email.toLowerCase().replace(/\./g,'_')}
-  function desanitizeUserId(s){return s.replace(/_/g,'.')}
-  function formatUserName(name){if(!name) return 'Unknown'; const w=name.trim().split(' '); if(w.length===2 && w[0]===w[1]) return w[0]; return name}
-  function playNotificationSound(){const a=document.getElementById('notifSound'); if(a && userHasInteracted){a.currentTime=0; a.play().catch(()=>{})}}
-
-  // ===== FILTER BUTTONS =====
-  document.getElementById('filterAll').onclick=()=>{currentFilterMode='all';
-    document.getElementById('filterAll').classList.add('active-filter');
-    document.getElementById('filterUnread').classList.remove('active-filter');
-    renderUserList(allUsersData.map(([s,d])=>[s,d]),'all',document.getElementById('searchUser').value)}
-  document.getElementById('filterUnread').onclick=()=>{currentFilterMode='unread';
-    document.getElementById('filterUnread').classList.add('active-filter');
-    document.getElementById('filterAll').classList.remove('active-filter');
-    renderUserList(allUsersData.map(([s,d])=>[s,d]),'unread',document.getElementById('searchUser').value)}
-
-  // ===== DATE LABELS =====
-  function formatDateLabel(date){const today=new Date();const d=new Date(date);
-    function reset(x){return new Date(x.getFullYear(),x.getMonth(),x.getDate())}
-    const diff=reset(today)-reset(d);
-    const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
-    if(diff===0){return{day:'Today',full:d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}}
-    if(diff===86400000){return{day:'Yesterday',full:d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}}
-    return{day:cap(d.toLocaleDateString('en-GB',{weekday:'long'})),full:d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}
-  }
-
-  // ===== TICKS (WhatsApp-style) =====
-  const PATH_SINGLE = "M21 6.285l-11.16 12.733-6.84-6.018 1.319-1.49 5.341 4.686 9.865-11.196 1.475 1.285z";
-  const PATH_DOUBLE = "M24 6.278l-11.16 12.722-6.84-6 1.319-1.49 5.341 4.686 9.865-11.196 1.475 1.278zm-22.681 5.232l6.835 6.01-1.314 1.48-6.84-6 1.319-1.49zm9.278.218l5.921-6.728 1.482 1.285-5.921 6.756-1.482-1.313z";
-
-  function getMsgState(m){ if(m.readAt) return 'read'; if(m.deliveredAt) return 'delivered'; return 'sent'; }
-  function svgTick(path,cls,title=''){return `<span class="tick ${cls}" title="${title}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"/></svg></span>`}
-  function renderTicks(el,msg){const s=getMsgState(msg); let html='';
-    if(s==='read') html=svgTick(PATH_DOUBLE,'blue','Read');
-    else if(s==='delivered') html=svgTick(PATH_DOUBLE,'gray','Delivered');
-    else html=svgTick(PATH_SINGLE,'gray','Sent');
-    el.innerHTML=html;
-  }
-
-  // ===== RENDER CHAT MESSAGES =====
-  function renderChatMessages(messages){
-    const chatBox=document.getElementById('chatBox'); chatBox.innerHTML='';
-    let lastDate=null;
-    messages.forEach(msg=>{
-      const msgDate=new Date(msg.time);
-      const labels=formatDateLabel(msgDate); const dateStr=labels.day+', '+labels.full;
-      if(lastDate!==dateStr){ lastDate=dateStr; const lb=document.createElement('div'); lb.className='date-label'; lb.innerHTML=`<div class="date-label-inner"><span class="day-label">${labels.day}</span><span class="full-date-label">${labels.full}</span></div>`; chatBox.appendChild(lb);}    
-      const div=document.createElement('div'); div.className='message '+(msg.from==='admin'?'mine':'theirs');
-      const timeStr=msgDate.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-      const isUser=msg.from!=='admin';
-      const rawName=isUser?(msg.name||msg.email||'User'):'Admin';
-      const senderName=formatUserName(rawName);
-      const avatarURL=msg.photoURL || (isUser? 'https://i.pravatar.cc/40' : 'https://i.imgur.com/UhV9EWa.png');
-      const avatarImg=`<img src="${avatarURL}" alt="Avatar" style="width:24px;height:24px;object-fit:cover;border-radius:50%;border:1px solid #fff;margin-right:6px;background-color:currentcolor">`;
-
-      let html=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">${avatarImg}<div style="font-weight:bold">${senderName}</div></div>`;
-      if(msg.text) html+=`<div>${msg.text}</div>`;
-      if(msg.image) html+=`<img src="${msg.image}" alt="Image" style="max-width:100%;border-radius:8px;margin-top:4px">`;
-      // meta (time + ticks for admin-sent messages)
-      html+=`<div class="msg-meta"><small>${timeStr}</small>${msg.from==='admin'?'<span class="ticks"></span>':''}</div>`;
-      div.innerHTML=html;
-      chatBox.appendChild(div);
-
-      if(msg.from==='admin'){
-        const ticksEl=div.querySelector('.ticks');
-        if(ticksEl){ renderTicks(ticksEl,msg); // live updates for this message
-          db.ref(`chats/${activeUserIdSanitized}/${msg._key}`).on('value', (s)=>{ const mm=s.val(); if(mm) renderTicks(ticksEl,mm); });
-        }
-      }
-    });
-    chatBox.scrollTop=chatBox.scrollHeight;
-  }
-
-  // ===== LISTEN TO CHAT =====
-  function listenToChat(){
-    if(!activeUserIdSanitized) return; const chatRef=db.ref('chats/'+activeUserIdSanitized); const chatBox=document.getElementById('chatBox');
-    chatRef.off(); chatBox.innerHTML='<p style="text-align:center;color:#fff;">Loading...</p>';
-    chatRef.on('value', snapshot=>{
-      const chats=snapshot.val(); if(!chats){ chatBox.innerHTML='<p style="text-align:center;color:#fff;">Start Message.</p>'; allMessages=[]; return; }
-      const entries=Object.entries(chats).sort((a,b)=>(a[1].time||0)-(b[1].time||0));
-      let shouldUpdate=false; const toMarkRead=[];
-      allMessages=entries.map(([key,msg])=>{ const isUnread=msg.from==='user' && !msg.readByAdmin; const isNew=isUnread && !justOpenedChat; if(isNew) shouldUpdate=true; if(isUnread) toMarkRead.push(key); return { _key:key, ...msg }; });
-      renderChatMessages(allMessages); isInitialChatLoad=false;
-      if(justOpenedChat){ justOpenedChat=false; toMarkRead.forEach(key=>db.ref(`chats/${activeUserIdSanitized}/${key}/readByAdmin`).set(true)); if(toMarkRead.length>0) updateUserListFlags(); }
-      if(shouldUpdate){ const idx=allUsersData.findIndex(([id])=>id===activeUserIdSanitized); if(idx!==-1){ const last=allMessages[allMessages.length-1]; const t=last?.time||0; allUsersData[idx][2]=t; allUsersData.sort((a,b)=>b[2]-a[2]); const display=allUsersData.map(([s,d])=>[s,d]); renderUserList(display,'all',document.getElementById('searchUser').value||''); }}
-    });
-  }
-
-  // ===== USER LIST RENDER =====
-  function renderUserList(list,filter='all',search=''){
-    const box=document.getElementById('userListBox'); box.innerHTML=''; renderedUserIds.clear();
-    list.forEach(([sanitized,ud])=>{
-      const email=ud.email || desanitizeUserId(sanitized); const name=ud.name || email; const emailName=email.split('@')[0].trim(); const clean=formatUserName(name.trim()); const finalName=clean.toLowerCase()===emailName.toLowerCase()?emailName:clean; const label=`${finalName} (${email})`;
-      if(search && !label.toLowerCase().includes(search.toLowerCase())) return;
-      db.ref(`chats/${sanitized}`).once('value',snap=>{
-        const arr=Object.values(snap.val()||{}); const hasUnread=arr.some(m=>m.from==='user' && !m.readByAdmin); if(filter==='unread' && !hasUnread) return;
-        const el=document.createElement('div'); el.className='user-item'; if(sanitized===activeUserIdSanitized) el.classList.add('active'); el.setAttribute('data-sanitized',sanitized);
-        const span=document.createElement('span'); span.innerHTML=`${label} ${hasUnread?'<svg width="14" height="14" viewBox="0 0 24 24" fill="red" style="margin-left:4px"><path d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 4a1 1 0 0 0-1 1v6a1 1 0 1 0 2 0V7a1 1 0 0 0-1-1zm0 10a1.5 1.5 0 1 0 0 3a1.5 1.5 0 0 0 0-3z"/></svg>':''}
-        <svg class="online-indicator" width="10" height="10" viewBox="0 0 24 24" fill="#00ff00" style="margin-left:6px;display:none"><circle cx="12" cy="12" r="10"/></svg>`;
-        span.style.fontWeight=hasUnread?'bold':'normal'; el.appendChild(span);
-        const indicator=span.querySelector('.online-indicator'); if(indicator){ db.ref('users/'+sanitized+'/online').on('value',s=>{indicator.style.display=s.val()? 'inline-block':'none';}) }
-        el.onclick=()=>{ justOpenedChat=true; activeUserIdEmail=email; activeUserIdSanitized=sanitized; selectedUserId=sanitized; document.getElementById('chatUserName').textContent=formatUserName(name); const a=document.getElementById('chatUserAvatar'); a.src=ud.photoURL||'https://i.pravatar.cc/40'; a.style.display='block'; document.querySelectorAll('.user-item').forEach(x=>x.classList.remove('active')); el.classList.add('active'); document.getElementById('searchMessage').value=''; updateUserOnlineStatus(email); listenToChat(); };
-        box.appendChild(el); renderedUserIds.add(sanitized);
-      });
-    });
-  }
-
-  function loadUserList(){
-    const box=document.getElementById('userListBox'); box.innerHTML='<p style="text-align:center;color:gray;">Memuat...</p>';
-    renderedUserIds.clear();
-    db.ref('users').once('value',snap=>{
-      const users=snap.val()||{}; const entries=Object.entries(users); if(entries.length===0){ box.innerHTML='<p style="text-align:center;color:gray;">Belum ada user login</p>'; return; }
-      const map=new Map(); entries.forEach(([sanitized,data])=>{ const email=(data.email||desanitizeUserId(sanitized)).toLowerCase(); if(!map.has(email)) map.set(email,{sanitized,data}); });
-      const filtered=[...map.values()];
-      const promises=filtered.map(({sanitized,data})=> db.ref(`chats/${sanitized}`).orderByChild('time').limitToLast(1).once('value').then(s=>{let t=0; s.forEach(m=>{t=m.val()?.time||0}); return {sanitized,data,lastTime:t}}).catch(()=>({sanitized,data,lastTime:0})) );
-      Promise.all(promises).then(results=>{ results.sort((a,b)=>b.lastTime-a.lastTime); allUsersData=results.map(u=>[u.sanitized,u.data,u.lastTime]); const list=allUsersData.map(([s,d])=>[s,d]); box.innerHTML=''; renderUserList(list); renderedUserIds=new Set(list.map(([s])=>s)); isLoadingUserList=false; });
-    });
-  }
-
-  db.ref('chats').on('child_changed',snapshot=>{updateUserLastTime(snapshot.key,snapshot.val())});
-  db.ref('chats').on('child_added',snapshot=>{updateUserLastTime(snapshot.key,snapshot.val())});
-
-  function updateUserLastTime(sanitizedId,msgs){ const entries=Object.entries(msgs||{}); if(entries.length===0) return; const latest=entries.reduce((a,b)=> (a[1].time>b[1].time?a:b), [null,{time:0}]); const t=latest[1]?.time||0; const idx=allUsersData.findIndex(([id])=>id===sanitizedId); if(idx!==-1){ allUsersData[idx][2]=t; allUsersData.sort((a,b)=>b[2]-a[2]); const list=allUsersData.map(([s,d])=>[s,d]); renderUserList(list,currentFilterMode,document.getElementById('searchUser').value||''); } }
-
-  function updateUserOnlineStatus(email){ const sanitized=sanitizeUserId(email); const userRef=db.ref('users/'+sanitized); const typingRef=db.ref('users/'+sanitized+'/typing'); const el=document.getElementById('chatUserStatus'); if(!el) return; userRef.on('value',snap=>{ const d=snap.val(); if(!d?.typing){ if(d?.online){ el.innerHTML='<span class="status-main">Online</span>'; }else{ let s=''; const ls=d?.lastLoginTime; if(ls){const dt=new Date(ls); const now=new Date(); const isToday=dt.toDateString()===now.toDateString(); const h=dt.getHours(); const m=String(dt.getMinutes()).padStart(2,'0'); const ampm=h>=12?'PM':'AM'; const hh=(h%12)||12; s=`${isToday?'today':dt.toLocaleDateString()} at ${hh}:${m} ${ampm}`;} el.innerHTML=s?`<span class="status-sub">Last seen ${s}</span>`:''; } } }); typingRef.on('value',snap=>{ if(snap.val()){ el.innerHTML='<span class="status-typing">Typing...</span>'; }else{ userRef.once('value').then(s=>{ const d=s.val(); if(!d) return; if(d.online){ el.innerHTML='<span class="status-main">Online</span>'; }else if(d.lastLoginTime){ const dt=new Date(d.lastLoginTime); const now=new Date(); const isToday=dt.toDateString()===now.toDateString(); const h=dt.getHours(); const m=String(dt.getMinutes()).padStart(2,'0'); const ampm=h>=12?'PM':'AM'; const hh=(h%12)||12; const s=`${isToday?'today':dt.toLocaleDateString()} at ${hh}:${m} ${ampm}`; el.innerHTML=`<span class="status-sub">Last seen ${s}</span>`; } else { el.innerHTML=''; } }); } }); }
-
-  // ===== FILTER MESSAGES =====
-  function filterMessages(q){ if(!q){ renderChatMessages(allMessages); return;} const f=allMessages.filter(m=> (m.text||'').toLowerCase().includes(q.toLowerCase())); renderChatMessages(f); }
-
-  // ===== SEND MESSAGE (set sentAt; deliveredAt/readAt null) =====
-  function sendMessage(){ const msgInput=document.getElementById('msg'); const text=(msgInput.value||'').trim(); if(!selectedUserId || !text) return alert('Pilih user dan tulis pesan dulu!'); const now=Date.now(); const msg={ from:'admin', name:'Admin', email:'admin@domain.com', photoURL:'https://i.imgur.com/qiZFOs9.png', text, time:now, readByAdmin:true, sentAt: firebase.database.ServerValue.TIMESTAMP, deliveredAt:null, readAt:null };
-    db.ref(`chats/${selectedUserId}`).push(msg, err=>{ if(!err){ msgInput.value=''; db.ref(`notifications/${selectedUserId}`).set({from:'admin',text, time:now, unread:true}); const idx=allUsersData.findIndex(([id])=>id===selectedUserId); if(idx!==-1){ allUsersData[idx][2]=now; allUsersData.sort((a,b)=>b[2]-a[2]); const list=allUsersData.map(([s,d])=>[s,d]); renderUserList(list,'all',document.getElementById('searchUser').value||''); } } else { alert('Gagal mengirim pesan'); } }); }
-
-  // ===== INIT =====
-  let msgInputEl, sendBtnEl;
-  window.onload=()=>{
-    selectedUserId=null; activeUserIdSanitized=''; activeUserIdEmail=''; loadUserList(); updateUserCounts();
-    msgInputEl=document.getElementById('msg'); sendBtnEl=document.getElementById('sendBtn');
-    if(msgInputEl){ msgInputEl.addEventListener('input', updateSendButtonState); msgInputEl.addEventListener('keydown', e=>{ if(e.key==='Enter' && !(e.shiftKey||e.ctrlKey)){ e.preventDefault(); const text=msgInputEl.value.trim(); if(!selectedUserId||!text) return; sendMessage(); } }); }
-    if(sendBtnEl) sendBtnEl.addEventListener('click', sendMessage);
-    const su=document.getElementById('searchUser'); if(su){ su.addEventListener('input', e=>{ const display=allUsersData.map(([s,d])=>[s,d]); renderUserList(display, currentFilterMode, e.target.value); }); }
-    const sm=document.getElementById('searchMessage'); if(sm){ sm.addEventListener('input', e=>filterMessages(e.target.value)); }
-    db.ref('users').on('child_added',snap=>{ const sanitized=snap.key; const data=snap.val(); if(!isLoadingUserList && !renderedUserIds.has(sanitized)){ addOrUpdateUser(sanitized,data); renderedUserIds.add(sanitized);} });
-    db.ref('users').on('child_changed',snap=>{ addOrUpdateUser(snap.key, snap.val()); });
-    db.ref('chats').on('child_changed', s=> updateUserLastTime(s.key, s.val()));
-    db.ref('chats').on('child_added', s=> updateUserLastTime(s.key, s.val()));
-  }
-
-  function updateSendButtonState(){ const text=(msgInputEl?.value||'').trim(); const ok=!!selectedUserId && !!text; if(sendBtnEl) sendBtnEl.disabled=!ok; }
-
-  function addOrUpdateUser(sanitized,data){ if(renderedUserIds.has(sanitized)) return; if(allUsersData.some(([id])=>id===sanitized)) return; const email=desanitizeUserId(sanitized); data.email=email; db.ref(`chats/${sanitized}`).orderByChild('time').limitToLast(1).once('value').then(last=>{ let t=0; last.forEach(m=>{t=m.val()?.time||0}); if(t===0) t=Date.now(); const idx=allUsersData.findIndex(([id])=>id===sanitized); if(idx!==-1) allUsersData.splice(idx,1); allUsersData.push([sanitized,data,t]); allUsersData.sort((a,b)=>b[2]-a[2]); const list=allUsersData.map(([id,user])=>[id,user]); renderUserList(list,'all',document.getElementById('searchUser').value||''); renderedUserIds.add(sanitized); }); }
-
-  function updateUserListFlags(){ document.querySelectorAll('.user-item').forEach(item=>{ const sanitized=item.getAttribute('data-sanitized'); const span=item.querySelector('span'); if(!span) return; db.ref('chats/'+sanitized).once('value',snap=>{ const arr=Object.values(snap.val()||{}); const hasUnread=arr.some(m=>m.from==='user' && !m.readByAdmin); const email=desanitizeUserId(sanitized); const emailName=email.split('@')[0].trim(); const first=arr.find(m=>m.from==='user'); if(!first) return; const rawName=first.name||email; const clean=formatUserName(rawName.trim()); const finalName=clean.toLowerCase()===emailName.toLowerCase()?emailName:clean; const base=`${finalName} (${email})`; span.textContent=base+(hasUnread?' ❗':''); span.style.fontWeight=hasUnread?'bold':'normal'; }); }); }
-</script>
-
-<!-- ========================
-  USER PAGE SNIPPET (WAJIB) — untuk menandai delivered/read
-  Tambahkan di halaman user (bukan admin) setelah inisialisasi Firebase.
-======================== -->
-<script>
-/*
-// --- di halaman USER ---
-const chatRef = firebase.database().ref('chats/'+ sanitizeUserId(currentUserEmail));
-// tandai delivered saat pesan baru masuk ke user
-afterLoginInit();
-function afterLoginInit(){
-  chatRef.on('child_added', s=>{ const m=s.val(); if(m.to === sanitizeUserId(currentUserEmail) || m.from==='admin'){ if(!m.deliveredAt){ s.ref.child('deliveredAt').set(firebase.database.ServerValue.TIMESTAMP); } } });
+// ---------- HELPERS (sanitizer / validator) ----------
+function normalizeEmail(raw){
+  if(!raw) return null;
+  return String(raw).trim().toLowerCase();
 }
-// tandai read saat chat dibuka / terlihat
-function markAllAdminMsgsRead(){
-  chatRef.orderByChild('from').equalTo('admin').once('value').then(snap=>{
-    snap.forEach(ch=>{ const m=ch.val(); if(!m.readAt){ ch.ref.child('readAt').set(firebase.database.ServerValue.TIMESTAMP); } });
+// simpan sebagai "name@gmail_com" (biarkan '@', ganti '.'→'_', tolak token RTDB terlarang)
+function sanitizeUserId(email){
+  const e = normalizeEmail(email) || "";
+  if(/[#$\[\]\/]/.test(e)){  // karakter yang dilarang RTDB
+    console.error("RTDB key mengandung token terlarang:", e);
+    throw new Error("Invalid token in RTDB key");
+  }
+  return e.replace(/\./g,'_').replace(/_+/g,'_');
+}
+function desanitizeUserId(key){ return (key||"").replace(/_/g,'.'); }
+
+// guard sebelum dipakai di path
+function assertValidKey(key, label="key"){
+  if(!key || /[.#$\[\]\/]/.test(key)){
+    console.error(`RTDB ${label} tidak valid:`, key);
+    throw new Error(`Invalid token in path for ${label}`);
+  }
+  return key;
+}
+
+function formatUserName(name){
+  if(!name) return 'Unknown';
+  const w=name.trim().split(' ');
+  if(w.length===2 && w[0]===w[1]) return w[0];
+  return name;
+}
+function playNotificationSound(){
+  const a=document.getElementById('notifSound');
+  if(a && userHasInteracted){a.currentTime=0; a.play().catch(()=>{})}
+}
+
+// ---------- COUNTS ----------
+function updateUserCounts(){
+  const totalUsersElem=document.getElementById('totalUsers');
+  const onlineUsersElem=document.getElementById('onlineUsers');
+  db.ref('users').on('value',snap=>{
+    const users=snap.val()||{};
+    const total=Object.keys(users).length;
+    const online=Object.values(users).filter(u=>u.online).length;
+    totalUsersElem.textContent=total; onlineUsersElem.textContent=online;
   });
 }
-*/
+
+// ---------- DATE LABELS ----------
+function formatDateLabel(date){
+  const today=new Date(); const d=new Date(date);
+  function reset(x){return new Date(x.getFullYear(),x.getMonth(),x.getDate())}
+  const diff=reset(today)-reset(d);
+  const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+  if(diff===0){return{day:'Today',full:d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}}
+  if(diff===86400000){return{day:'Yesterday',full:d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}}
+  return{day:cap(d.toLocaleDateString('en-GB',{weekday:'long'})),full:d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}
+}
+
+// ---------- TICKS ----------
+const PATH_SINGLE = "M21 6.285l-11.16 12.733-6.84-6.018 1.319-1.49 5.341 4.686 9.865-11.196 1.475 1.285z";
+const PATH_DOUBLE = "M24 6.278l-11.16 12.722-6.84-6 1.319-1.49 5.341 4.686 9.865-11.196 1.475 1.278zm-22.681 5.232l6.835 6.01-1.314 1.48-6.84-6 1.319-1.49zm9.278.218l5.921-6.728 1.482 1.285-5.921 6.756-1.482-1.313z";
+function getMsgState(m){ if(m.readAt) return 'read'; if(m.deliveredAt) return 'delivered'; return 'sent'; }
+function svgTick(path,cls,title=''){return `<span class="tick ${cls}" title="${title}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"/></svg></span>`}
+function renderTicks(el,msg){
+  const s=getMsgState(msg); let html='';
+  if(s==='read') html=svgTick(PATH_DOUBLE,'blue','Read');
+  else if(s==='delivered') html=svgTick(PATH_DOUBLE,'gray','Delivered');
+  else html=svgTick(PATH_SINGLE,'gray','Sent');
+  el.innerHTML=html;
+}
+
+// ---------- RENDER CHAT ----------
+function renderChatMessages(messages){
+  const chatBox=document.getElementById('chatBox'); chatBox.innerHTML='';
+  let lastDate=null;
+  messages.forEach(msg=>{
+    const msgDate=new Date(msg.time);
+    const labels=formatDateLabel(msgDate); const dateStr=labels.day+', '+labels.full;
+    if(lastDate!==dateStr){
+      lastDate=dateStr;
+      const lb=document.createElement('div');
+      lb.className='date-label';
+      lb.innerHTML=`<div class="date-label-inner"><span class="day-label">${labels.day}</span><span class="full-date-label">${labels.full}</span></div>`;
+      chatBox.appendChild(lb);
+    }
+    const div=document.createElement('div'); div.className='message '+(msg.from==='admin'?'mine':'theirs');
+    const timeStr=msgDate.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    const isUser=msg.from!=='admin';
+    const rawName=isUser?(msg.name||msg.email||'User'):'Admin';
+    const senderName=formatUserName(rawName);
+    const avatarURL=msg.photoURL || (isUser? 'https://i.pravatar.cc/40' : 'https://i.imgur.com/UhV9EWa.png');
+    const avatarImg=`<img src="${avatarURL}" alt="Avatar" style="width:24px;height:24px;object-fit:cover;border-radius:50%;border:1px solid #fff;margin-right:6px;background-color:currentcolor">`;
+
+    let html=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">${avatarImg}<div style="font-weight:bold">${senderName}</div></div>`;
+    if(msg.text)  html+=`<div>${msg.text}</div>`;
+    if(msg.image) html+=`<img src="${msg.image}" alt="Image" style="max-width:100%;border-radius:8px;margin-top:4px">`;
+    html+=`<div class="msg-meta"><small>${timeStr}</small>${msg.from==='admin'?'<span class="ticks"></span>':''}</div>`;
+    div.innerHTML=html;
+    chatBox.appendChild(div);
+
+    if(msg.from==='admin'){
+      const ticksEl=div.querySelector('.ticks');
+      if(ticksEl){
+        renderTicks(ticksEl,msg);
+        const k = assertValidKey(activeUserIdSanitized,'activeUserIdSanitized');
+        db.ref(`chats/${k}/${msg._key}`).on('value', (s)=>{ const mm=s.val(); if(mm) renderTicks(ticksEl,mm); });
+      }
+    }
+  });
+  chatBox.scrollTop=chatBox.scrollHeight;
+}
+
+// ---------- LISTEN TO CHAT ----------
+function listenToChat(){
+  if(!activeUserIdSanitized) return;
+  const k = assertValidKey(activeUserIdSanitized,'activeUserIdSanitized');
+  const chatRef=db.ref('chats/'+k);
+  const chatBox=document.getElementById('chatBox');
+
+  chatRef.off(); chatBox.innerHTML='<p style="text-align:center;color:#fff;">Loading...</p>';
+  chatRef.on('value', snapshot=>{
+    const chats=snapshot.val();
+    if(!chats){
+      chatBox.innerHTML='<p style="text-align:center;color:#fff;">Start Message.</p>';
+      allMessages=[]; return;
+    }
+    const entries=Object.entries(chats).sort((a,b)=>(a[1].time||0)-(b[1].time||0));
+    let shouldUpdate=false; const toMarkRead=[];
+    allMessages=entries.map(([key,msg])=>{
+      const isUnread=msg.from==='user' && !msg.readByAdmin;
+      const isNew=isUnread && !justOpenedChat;
+      if(isNew) shouldUpdate=true;
+      if(isUnread) toMarkRead.push(key);
+      return { _key:key, ...msg };
+    });
+    renderChatMessages(allMessages); isInitialChatLoad=false;
+
+    if(justOpenedChat){
+      justOpenedChat=false;
+      toMarkRead.forEach(key=> db.ref(`chats/${k}/${key}/readByAdmin`).set(true));
+      if(toMarkRead.length>0) updateUserListFlags();
+    }
+    if(shouldUpdate){
+      const idx=allUsersData.findIndex(([id])=>id===k);
+      if(idx!==-1){
+        const last=allMessages[allMessages.length-1];
+        const t=last?.time||0;
+        allUsersData[idx][2]=t;
+        allUsersData.sort((a,b)=>b[2]-a[2]);
+        const display=allUsersData.map(([s,d])=>[s,d]);
+        renderUserList(display,'all',document.getElementById('searchUser').value||'');
+      }
+    }
+  });
+}
+
+// ---------- USER LIST ----------
+function renderUserList(list,filter='all',search=''){
+  const box=document.getElementById('userListBox'); box.innerHTML=''; renderedUserIds.clear();
+  list.forEach(([sanitized,ud])=>{
+    const key = assertValidKey(sanitized,'userListItem');
+    const email=ud.email || desanitizeUserId(key);
+    const name=ud.name || email;
+    const emailName=email.split('@')[0].trim();
+    const clean=formatUserName(name.trim());
+    const finalName=clean.toLowerCase()===emailName.toLowerCase()?emailName:clean;
+    const label=`${finalName} (${email})`;
+    if(search && !label.toLowerCase().includes(search.toLowerCase())) return;
+
+    db.ref(`chats/${key}`).once('value',snap=>{
+      const arr=Object.values(snap.val()||{});
+      const hasUnread=arr.some(m=>m.from==='user' && !m.readByAdmin);
+      if(filter==='unread' && !hasUnread) return;
+
+      const el=document.createElement('div'); el.className='user-item';
+      if(key===activeUserIdSanitized) el.classList.add('active');
+      el.setAttribute('data-sanitized',key);
+
+      const span=document.createElement('span');
+      span.innerHTML=`${label} ${hasUnread?'<svg width="14" height="14" viewBox="0 0 24 24" fill="red" style="margin-left:4px"><path d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 4a1 1 0 0 0-1 1v6a1 1 0 1 0 2 0V7a1 1 0 0 0-1-1zm0 10a1.5 1.5 0 1 0 0 3a1.5 1.5 0 0 0 0-3z"/></svg>':''}
+      <svg class="online-indicator" width="10" height="10" viewBox="0 0 24 24" fill="#00ff00" style="margin-left:6px;display:none"><circle cx="12" cy="12" r="10"/></svg>`;
+      span.style.fontWeight=hasUnread?'bold':'normal';
+      el.appendChild(span);
+
+      const indicator=span.querySelector('.online-indicator');
+      if(indicator){
+        db.ref('users/'+key+'/online').on('value',s=>{
+          indicator.style.display=s.val()? 'inline-block':'none';
+        });
+      }
+
+      el.onclick=()=>{
+        justOpenedChat=true;
+        activeUserIdEmail=email;
+        activeUserIdSanitized=key;
+        selectedUserId=key;
+
+        document.getElementById('chatUserName').textContent=formatUserName(name);
+        const a=document.getElementById('chatUserAvatar');
+        a.src=ud.photoURL||'https://i.pravatar.cc/40';
+        a.style.display='block';
+
+        document.querySelectorAll('.user-item').forEach(x=>x.classList.remove('active'));
+        el.classList.add('active');
+
+        document.getElementById('searchMessage').value='';
+        updateUserOnlineStatus(email);
+        listenToChat();
+      };
+
+      box.appendChild(el); renderedUserIds.add(key);
+    });
+  });
+}
+
+function loadUserList(){
+  const box=document.getElementById('userListBox'); box.innerHTML='<p style="text-align:center;color:gray;">Memuat...</p>';
+  renderedUserIds.clear();
+  db.ref('users').once('value',snap=>{
+    const users=snap.val()||{};
+    const entries=Object.entries(users);
+    if(entries.length===0){ box.innerHTML='<p style="text-align:center;color:gray;">Belum ada user login</p>'; return; }
+
+    const map=new Map();
+    entries.forEach(([sanitized,data])=>{
+      const email=(data.email||desanitizeUserId(sanitized)).toLowerCase();
+      if(!map.has(email)) map.set(email,{sanitized,data});
+    });
+
+    const filtered=[...map.values()];
+    const promises=filtered.map(({sanitized,data})=>
+      db.ref(`chats/${assertValidKey(sanitized,'userKey')}`)
+        .orderByChild('time').limitToLast(1).once('value')
+        .then(s=>{let t=0; s.forEach(m=>{t=m.val()?.time||0}); return {sanitized,data,lastTime:t}})
+        .catch(()=>({sanitized,data,lastTime:0}))
+    );
+
+    Promise.all(promises).then(results=>{
+      results.sort((a,b)=>b.lastTime-a.lastTime);
+      allUsersData=results.map(u=>[u.sanitized,u.data,u.lastTime]);
+      const list=allUsersData.map(([s,d])=>[s,d]);
+      box.innerHTML='';
+      renderUserList(list);
+      renderedUserIds=new Set(list.map(([s])=>s));
+      isLoadingUserList=false;
+    });
+  });
+}
+
+// ---------- UPDATE LAST TIME ----------
+function updateUserLastTime(sanitizedId,msgs){
+  const entries=Object.entries(msgs||{}); if(entries.length===0) return;
+  const latest=entries.reduce((a,b)=> (a[1].time>b[1].time?a:b), [null,{time:0}]);
+  const t=latest[1]?.time||0;
+  const idx=allUsersData.findIndex(([id])=>id===sanitizedId);
+  if(idx!==-1){
+    allUsersData[idx][2]=t;
+    allUsersData.sort((a,b)=>b[2]-a[2]);
+    const list=allUsersData.map(([s,d])=>[s,d]);
+    renderUserList(list,currentFilterMode,document.getElementById('searchUser').value||'');
+  }
+}
+
+// ---------- PRESENCE & TYPING ----------
+function updateUserOnlineStatus(email){
+  const key = assertValidKey(sanitizeUserId(email),'presenceKey');
+  const userRef=db.ref('users/'+key);
+  const typingRef=db.ref('users/'+key+'/typing');
+  const el=document.getElementById('chatUserStatus'); if(!el) return;
+
+  userRef.on('value',snap=>{
+    const d=snap.val();
+    if(!d?.typing){
+      if(d?.online){
+        el.innerHTML='<span class="status-main">Online</span>';
+      }else{
+        let s=''; const ls=d?.lastLoginTime;
+        if(ls){
+          const dt=new Date(ls); const now=new Date();
+          const isToday=dt.toDateString()===now.toDateString();
+          const h=dt.getHours(); const m=String(dt.getMinutes()).padStart(2,'0');
+          const ampm=h>=12?'PM':'AM'; const hh=(h%12)||12;
+          s=`${isToday?'today':dt.toLocaleDateString()} at ${hh}:${m} ${ampm}`;
+        }
+        el.innerHTML=s?`<span class="status-sub">Last seen ${s}</span>`:'';
+      }
+    }
+  });
+
+  typingRef.on('value',snap=>{
+    if(snap.val()){
+      el.innerHTML='<span class="status-typing">Typing...</span>';
+    }else{
+      userRef.once('value').then(s=>{
+        const d=s.val(); if(!d) return;
+        if(d.online){
+          el.innerHTML='<span class="status-main">Online</span>';
+        }else if(d.lastLoginTime){
+          const dt=new Date(d.lastLoginTime); const now=new Date();
+          const isToday=dt.toDateString()===now.toDateString();
+          const h=dt.getHours(); const m=String(dt.getMinutes()).padStart(2,'0');
+          const ampm=h>=12?'PM':'AM'; const hh=(h%12)||12;
+          const s=`${isToday?'today':dt.toLocaleDateString()} at ${hh}:${m} ${ampm}`;
+          el.innerHTML=`<span class="status-sub">Last seen ${s}</span>`;
+        } else { el.innerHTML=''; }
+      });
+    }
+  });
+}
+
+// ---------- FILTER MESSAGES ----------
+function filterMessages(q){
+  if(!q){ renderChatMessages(allMessages); return;}
+  const f=allMessages.filter(m=> (m.text||'').toLowerCase().includes(q.toLowerCase()));
+  renderChatMessages(f);
+}
+
+// ---------- SEND (admin -> user) ----------
+function sendMessage(){
+  const msgInput=document.getElementById('msg');
+  const text=(msgInput.value||'').trim();
+  if(!selectedUserId || !text) return alert('Pilih user dan tulis pesan dulu!');
+
+  const key = assertValidKey(selectedUserId,'selectedUserId');
+  const now=Date.now();
+  const msg={
+    from:'admin',
+    name:'Admin',
+    email:'admin@domain.com',
+    photoURL:'https://i.imgur.com/qiZFOs9.png',
+    text,
+    time:now,
+    readByAdmin:true,
+    sentAt: firebase.database.ServerValue.TIMESTAMP,
+    deliveredAt:null,
+    readAt:null
+  };
+
+  db.ref(`chats/${key}`).push(msg, err=>{
+    if(!err){
+      msgInput.value='';
+      db.ref(`notifications/${key}`).set({from:'admin',text, time:now, unread:true});
+      const idx=allUsersData.findIndex(([id])=>id===key);
+      if(idx!==-1){
+        allUsersData[idx][2]=now;
+        allUsersData.sort((a,b)=>b[2]-a[2]);
+        const list=allUsersData.map(([s,d])=>[s,d]);
+        renderUserList(list,'all',document.getElementById('searchUser').value||'');
+      }
+    } else {
+      alert('Gagal mengirim pesan');
+    }
+  });
+}
+
+// ---------- INIT ----------
+let msgInputEl, sendBtnEl;
+window.onload=()=>{
+  selectedUserId=null; activeUserIdSanitized=''; activeUserIdEmail='';
+  loadUserList(); updateUserCounts();
+
+  msgInputEl=document.getElementById('msg');
+  sendBtnEl=document.getElementById('sendBtn');
+
+  if(msgInputEl){
+    msgInputEl.addEventListener('input', updateSendButtonState);
+    msgInputEl.addEventListener('keydown', e=>{
+      if(e.key==='Enter' && !(e.shiftKey||e.ctrlKey)){
+        e.preventDefault();
+        const text=msgInputEl.value.trim();
+        if(!selectedUserId||!text) return;
+        sendMessage();
+      }
+    });
+  }
+  if(sendBtnEl) sendBtnEl.addEventListener('click', sendMessage);
+
+  const su=document.getElementById('searchUser');
+  if(su){ su.addEventListener('input', e=>{
+    const display=allUsersData.map(([s,d])=>[s,d]);
+    renderUserList(display, currentFilterMode, e.target.value);
+  }); }
+
+  const sm=document.getElementById('searchMessage');
+  if(sm){ sm.addEventListener('input', e=>filterMessages(e.target.value)); }
+
+  // listener untuk daftar users & chats (dipasang SEKALI)
+  db.ref('users').on('child_added',snap=>{
+    const sanitized=snap.key;
+    const data=snap.val();
+    if(!isLoadingUserList && !renderedUserIds.has(sanitized)){
+      addOrUpdateUser(sanitized,data);
+      renderedUserIds.add(sanitized);
+    }
+  });
+  db.ref('users').on('child_changed',snap=>{ addOrUpdateUser(snap.key, snap.val()); });
+
+  db.ref('chats').on('child_changed', s=> updateUserLastTime(s.key, s.val()));
+  db.ref('chats').on('child_added', s=> updateUserLastTime(s.key, s.val()));
+};
+
+function updateSendButtonState(){
+  const text=(msgInputEl?.value||'').trim();
+  const ok=!!selectedUserId && !!text;
+  if(sendBtnEl) sendBtnEl.disabled=!ok;
+}
+
+// tambah/update user ke list (urut berdasarkan last message)
+function addOrUpdateUser(sanitized,data){
+  if(renderedUserIds.has(sanitized)) return;
+  if(allUsersData.some(([id])=>id===sanitized)) return;
+
+  const key = assertValidKey(sanitized,'addUserKey');
+  const email=desanitizeUserId(key);
+  data.email=email;
+
+  db.ref(`chats/${key}`).orderByChild('time').limitToLast(1).once('value').then(last=>{
+    let t=0; last.forEach(m=>{t=m.val()?.time||0});
+    if(t===0) t=Date.now();
+    const idx=allUsersData.findIndex(([id])=>id===key);
+    if(idx!==-1) allUsersData.splice(idx,1);
+    allUsersData.push([key,data,t]);
+    allUsersData.sort((a,b)=>b[2]-a[2]);
+    const list=allUsersData.map(([id,user])=>[id,user]);
+    renderUserList(list,'all',document.getElementById('searchUser').value||'');
+    renderedUserIds.add(key);
+  });
+}
+
+function updateUserListFlags(){
+  document.querySelectorAll('.user-item').forEach(item=>{
+    const sanitized=item.getAttribute('data-sanitized');
+    const key = assertValidKey(sanitized,'flagKey');
+    const span=item.querySelector('span'); if(!span) return;
+
+    db.ref('chats/'+key).once('value',snap=>{
+      const arr=Object.values(snap.val()||{});
+      const hasUnread=arr.some(m=>m.from==='user' && !m.readByAdmin);
+      const email=desanitizeUserId(key);
+      const emailName=email.split('@')[0].trim();
+      const first=arr.find(m=>m.from==='user'); if(!first) return;
+      const rawName=first.name||email;
+      const clean=formatUserName(rawName.trim());
+      const finalName=clean.toLowerCase()===emailName.toLowerCase()?emailName:clean;
+      const base=`${finalName} (${email})`;
+      span.textContent=base+(hasUnread?' ❗':'');
+      span.style.fontWeight=hasUnread?'bold':'normal';
+    });
+  });
+}
 </script>
 </body>
 </html>
