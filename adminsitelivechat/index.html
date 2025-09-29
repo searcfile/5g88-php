@@ -1068,7 +1068,8 @@ window.onload = ()=>{
   const searchUserInput = document.getElementById('searchUser');
   searchUserInput?.addEventListener('input', e=>{
     const filterType = currentFilterMode;
-    document.getElementById('userListBox')?.innerHTML = '';
+    const box = document.getElementById('userListBox');
+    if (box) box.innerHTML = '';
     renderUserList(allUsersData, filterType, e.target.value);
   });
 
