@@ -418,12 +418,6 @@ body {
 </div>
 </main>
 
-  
-<audio id="notifSound" src="https://searcfile.github.io/5G88-audio/notifsound/notification.wav" preload="auto"></audio>
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-
 <audio id="notifSound" src="https://searcfile.github.io/5G88-audio/notifsound/notification.wav" preload="auto"></audio>
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -498,6 +492,8 @@ function playNotificationSound(){
 }
 
 document.addEventListener('click', () => { userHasInteracted = true; });
+document.addEventListener('touchstart', () => { userHasInteracted = true; });
+document.addEventListener('keydown', () => { userHasInteracted = true; });
 
 /* ======================= COUNTERS (opsional) ======================= */
 function updateUserCounts(){
@@ -599,6 +595,7 @@ function renderChatMessages(messages){
 function listenToChat(){
   if (!activeUserIdSanitized) return;
   const chatRef = db.ref('chats/' + activeUserIdSanitized);
+  isInitialChatLoad = true;
   const chatBox = document.getElementById('chatBox');
   if (chatBox) chatBox.innerHTML = '<p style="text-align:center;color:white;">Loading...</p>';
 
@@ -719,6 +716,10 @@ function renderUserList(userList, filter='all', searchTerm=''){
 
       userListBox.appendChild(userDiv);
       renderedUserIds.add(sanitized);
+      db.ref("users/" + sanitized + "/online").once('value').then(s => {
+  const indicator = userDiv.querySelector('.online-indicator');
+  if (indicator) indicator.style.display = s.val() ? 'inline-block' : 'none';
+});
     });
   });
 }
@@ -732,20 +733,55 @@ function loadUserList(){
   db.ref('users').once('value', snapshot=>{
     const users = snapshot.val() || {};
     const entries = Object.entries(users); // [ [id, data], ... ]
+
+    // === KASUS: /users KOSONG → fallback dari /chats ===
     if (entries.length === 0){
-      if (userListBox) userListBox.innerHTML = '<p style="text-align:center;color:gray;">Belum ada user</p>';
-      return;
+      // JANGAN lupa matikan "loading" supaya listener child_added jalan
+      isLoadingUserList = false;
+      initialUserListLoaded = true;
+
+      db.ref('chats').once('value').then(s=>{
+        const chats = s.val() || {};
+        const ids = Object.keys(chats);
+        if (ids.length === 0){
+          if (userListBox) userListBox.innerHTML = '<p style="text-align:center;color:gray;">Belum ada user</p>';
+          return;
+        }
+
+        const jobs = ids.map(id =>
+          db.ref(`chats/${id}`).orderByChild('time').limitToLast(1).once('value')
+            .then(s2=>{
+              let lastTime = 0, lastMsg = {};
+              s2.forEach(m => { lastTime = m.val()?.time || 0; lastMsg = m.val() || {}; });
+              const identity = { name:lastMsg.name, email:lastMsg.email, photoURL:lastMsg.photoURL };
+              return { sanitized:id, data: identity, lastTime };
+            })
+        );
+
+        Promise.all(jobs).then(results=>{
+          results.sort((a,b)=> b.lastTime - a.lastTime);
+          allUsersData = results.map(u => [u.sanitized, u.data, u.lastTime]);
+
+          if (userListBox) userListBox.innerHTML = '';
+          renderUserList(allUsersData.map(([s,d])=>[s,d]));
+
+          allUsersData.forEach(([sid])=> renderedUserIds.add(sid));
+          updateUserListFlags();
+        });
+      });
+      return; // selesai di fallback
     }
 
-    const jobs = entries.map(([sanitized, data])=>{
-      return db.ref(`chats/${sanitized}`).orderByChild('time').limitToLast(1).once('value')
+    // === KASUS NORMAL: /users ADA ===
+    const jobs = entries.map(([sanitized, data])=>
+      db.ref(`chats/${sanitized}`).orderByChild('time').limitToLast(1).once('value')
         .then(snap=>{
           let lastTime = 0;
           snap.forEach(msg => { lastTime = msg.val()?.time || 0; });
           return { sanitized, data, lastTime };
         })
-        .catch(()=>({ sanitized, data, lastTime: 0 }));
-    });
+        .catch(()=>({ sanitized, data, lastTime: 0 }))
+    );
 
     Promise.all(jobs).then(results=>{
       results.sort((a,b)=> b.lastTime - a.lastTime);
@@ -755,9 +791,9 @@ function loadUserList(){
       renderUserList(allUsersData.map(([s,d])=>[s,d]));
 
       allUsersData.forEach(([sanitized])=> renderedUserIds.add(sanitized));
-      isLoadingUserList = false;
-      initialUserListLoaded = true;
-      updateUserListFlags(); // set unread badge/label pertama kali
+      isLoadingUserList = false;           // ⬅️ penting
+      initialUserListLoaded = true;        // ⬅️ penting
+      updateUserListFlags();
     });
   });
 }
@@ -924,14 +960,15 @@ function updateUserPresenceById(id){
 }
 
 /* ======================= LISTENER GLOBAL ONLINE (tanpa numpuk) ======================= */
-/* Ini menggantikan listener per-item. Begitu ada user online/offline, kita cari itemnya dan update ikon. */
 db.ref('users').on('child_changed', snap=>{
   const id = snap.key;
   const isOnline = !!(snap.val() || {}).online;
   const item = document.querySelector(`.user-item[data-sanitized="${id}"]`);
-  if (!item) return;
-  const indicator = item.querySelector('.online-indicator');
-  if (indicator) indicator.style.display = isOnline ? 'inline-block' : 'none';
+  if (item) {
+    const indicator = item.querySelector('.online-indicator');
+    if (indicator) indicator.style.display = isOnline ? 'inline-block' : 'none';
+  }
+  updateUserListFlags(); 
 });
 
 /* ======================= UTIL KECIL ======================= */
@@ -1043,7 +1080,7 @@ window.onload = ()=>{
   db.ref('users').on('child_added', snap=>{
     const sanitized = snap.key;
     const data = snap.val();
-    if (!isLoadingUserList && !renderedUserIds.has(sanitized)){
+    if (!renderedUserIds.has(sanitized)){
       addOrUpdateUser(sanitized, data);
       renderedUserIds.add(sanitized);
     }
@@ -1063,6 +1100,5 @@ window.onload = ()=>{
   });
 };
 </script>
-
 </body>
 </html>
