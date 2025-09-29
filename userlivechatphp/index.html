@@ -478,7 +478,50 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 const storage = firebase.storage();
-  
+
+function getOrCreateLocalGuestId(){
+  let id = localStorage.getItem('guest.uid');
+  if (!id){
+    id = 'g_' + Array.from(crypto.getRandomValues(new Uint32Array(4))).join('');
+    localStorage.setItem('guest.uid', id);
+  }
+  return id;
+}
+
+async function ensureGuestLocalIdentity(){
+  try{
+    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    if (!auth.currentUser) await auth.signInAnonymously();
+    const u = auth.currentUser;
+    if (!u) throw new Error('no-user');
+    currentIsGuest = true;
+    currentUserEmail = null;
+    currentActiveId = String(u.uid);
+  }catch(e){
+    // Fallback TANPA Auth → tetap bikin ID unik per device
+    if (e?.code === 'auth/admin-restricted-operation' || e?.code === 'auth/operation-not-allowed'){
+      console.warn('Anonymous disabled — using local guest id');
+      currentIsGuest   = true;
+      currentUserEmail = null;
+      currentActiveId  = getOrCreateLocalGuestId();
+    } else {
+      throw e;
+    }
+  }
+
+  // default nama/foto & lanjut init
+  if (!localStorage.getItem("username")){
+    const code = (currentActiveId || '').slice(-5).toUpperCase();
+    localStorage.setItem("username", `Guest-${code}`);
+  }
+  if (!localStorage.getItem("userphoto")) localStorage.setItem("userphoto", "");
+
+  updateUserHeader();
+  writeUserProfile();       // pastikan rules RTDB mengizinkan path ini
+  bindPresenceAndNotif();
+  initChatWithUserData();
+  notifyRead();
+}
 async function ensureGuestLocalIdentity(){
   try{
     await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
