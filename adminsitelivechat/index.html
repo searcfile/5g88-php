@@ -469,7 +469,15 @@ function desanitizeUserId(sanitized){
   const domain = str.slice(at + 1).replace(/_/g,'.'); // hanya domain yang diubah
   return `${local}@${domain}`;
 }
-
+function dedupeName(str){
+  const s = String(str || '').trim().replace(/\s+/g, ' ');
+  const parts = s.split(' ');
+  // Jika tepat 2 kata dan sama (abaikan huruf besar/kecil), ambil satu saja
+  if (parts.length === 2 && parts[0].toLowerCase() === parts[1].toLowerCase()) {
+    return parts[0];
+  }
+  return s;
+}
 function formatUserName(name){
   if(!name) return 'Unknown';
   const words = String(name).trim().split(' ');
@@ -480,14 +488,16 @@ function formatUserName(name){
 function getLabelParts(id, data){
   const tryEmailFromId = desanitizeUserId(id);
 
-  // Ambil email dari data, kalau kosong pakai hasil desanitize dari key
+  // email: dari data > dari id (jika id memang email yang disanitasi)
   const email = (data?.email || '').trim() || (tryEmailFromId.includes('@') ? tryEmailFromId : '');
 
-  const name = (data?.name || '').trim();
+  const rawName  = (data?.name || '').trim();
   const photoURL = data?.photoURL || '';
 
-  // Display name: name > local-part email > Guest-XXXXX
-  let displayName = name || (email ? email.split('@')[0] : '');
+  // displayName: name > local-part email > Guest-XXXXX
+  let displayName = rawName || (email ? email.split('@')[0] : '');
+  displayName = dedupeName(displayName); // ⬅️ hilangkan duplikasi "A A"
+
   if (!displayName){
     const code = String(id).slice(-5).toUpperCase();
     displayName = `Guest-${code}`;
