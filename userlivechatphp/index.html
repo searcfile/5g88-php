@@ -445,7 +445,7 @@ background-color:black;
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
-
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script>
 function escapeHTML(s){
   return String(s).replace(/[&<>"']/g, m => ({
@@ -456,9 +456,10 @@ let chatInitialized = false;
 let currentUserEmail = null;
 let currentActiveId  = null;
 let currentIsGuest   = false;
+let presenceBoundFor = null;
 
 function sanitizeEmail(email) {
-  return email.toLowerCase().replace(/\./g, "_");
+  return String(email || '').toLowerCase().replace(/\./g, "_");
 }
 function getChatPath(){ return currentActiveId ? 'chats/' + currentActiveId : null; }
 function getUserPath(){ return currentActiveId ? 'users/' + currentActiveId : null; }
@@ -474,9 +475,93 @@ const firebaseConfig = {
   appId: "1:593904200464:web:cea7bc1360532c20d99395"
 };
 firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 const db = firebase.database();
 const storage = firebase.storage();
+  
+async function ensureGuestLocalIdentity(){
+  try{
+    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    if (!auth.currentUser) await auth.signInAnonymously();
 
+    const u = auth.currentUser;
+    if (!u) return;
+
+    // gunakan UID ini sebagai kunci chat
+    currentIsGuest   = true;
+    currentUserEmail = null;
+    currentActiveId  = String(u.uid);
+
+    // Default nama/foto
+    if (!localStorage.getItem("username")){
+      const code = (u.uid || '').slice(-5).toUpperCase();
+      localStorage.setItem("username", `Guest-${code}`);
+    }
+    if (!localStorage.getItem("userphoto")){
+      localStorage.setItem("userphoto", "");
+    }
+
+    updateUserHeader();
+    writeUserProfile();       // simpan ke /users/<id>
+    bindPresenceAndNotif();
+    initChatWithUserData();
+    notifyRead();
+  }catch(e){ console.warn("ensureGuestLocalIdentity error:", e); }
+}
+function bindPresenceAndNotif(){
+  if (!currentActiveId) return;
+  if (presenceBoundFor === currentActiveId) return;      // jangan dobel
+  presenceBoundFor = currentActiveId;
+
+  const userPath  = getUserPath();
+  const notifPath = getNotifPath();
+  if (!userPath) return;
+
+  const connectedRef = firebase.database().ref(".info/connected");
+  const userRef      = firebase.database().ref(userPath);
+
+  // pastikan tidak dobel listener
+  connectedRef.off();
+  userRef.off();
+
+  connectedRef.on("value", (snap) => {
+    if (snap.val() === true) {
+      userRef.update({ online: true });
+      userRef.onDisconnect().update({ online: false, lastLoginTime: Date.now() });
+    }
+  });
+
+  // update offline saat tab ditutup
+  window.addEventListener("beforeunload", () => {
+    firebase.database().ref(userPath).update({ online: false, lastLoginTime: Date.now() });
+  });
+
+  // notifikasi admin -> user
+  if (notifPath){
+    const nr = firebase.database().ref(notifPath);
+    nr.off();
+    nr.on("value", (snapshot) => {
+      const notif = snapshot.val();
+      if (notif && notif.unread) {
+        playNotificationSound();
+        notifyUnread();
+        setTimeout(() => { nr.child("unread").set(false); }, 2000);
+      } else {
+        notifyRead();
+      }
+    });
+  }
+}
+  function writeUserProfile(){
+  const upath = getUserPath();
+  if (!upath) return;
+  const data = {
+    name:     localStorage.getItem("username") || (currentIsGuest ? "Guest" : "User"),
+    email:    currentUserEmail || null,
+    photoURL: localStorage.getItem("userphoto") || null
+  };
+  db.ref(upath).update(data).catch(()=>{});
+}
 // ===== parent origins yang diizinkan =====
 const ALLOWED_PARENTS = [
   "https://5g88-login.vercel.app",
@@ -515,6 +600,8 @@ window.addEventListener("message", (e) => {
     }
 
     updateUserHeader();
+    writeUserProfile(); 
+    bindPresenceAndNotif();
     initChatWithUserData();
     notifyRead();
   }
@@ -655,6 +742,7 @@ function listenToChat() {
   if (!chatBox || !chatPath) return;
 
   const chatRef = db.ref(chatPath);
+  chatRef.off();
   const lastSeenKey = `lastSeenByUser_${currentActiveId}`;
   const startMsg = document.getElementById("startMessage");
 
@@ -802,9 +890,7 @@ function playNotificationSound() {
   }
 }
 
-// PATCH START: DOMContentLoaded universal
 window.addEventListener("DOMContentLoaded", () => {
-  // Optional: recovery kalau parent belum kirim message
   const email = localStorage.getItem("useremail");
   if (!currentActiveId && email){
     currentIsGuest   = false;
@@ -812,38 +898,14 @@ window.addEventListener("DOMContentLoaded", () => {
     currentActiveId  = sanitizeEmail(email);
   }
 
-  if (!currentActiveId) return; // tunggu postMessage dari parent
+  // fallback: jika parent tak kirim identitas
+  setTimeout(async () => {
+    if (!currentActiveId) await ensureGuestLocalIdentity();
+    bindPresenceAndNotif();         // <<— panggil di sini setelah ada ID
+  }, 800);
 
   updateUserHeader();
   initChatWithUserData();
-
-  const connectedRef = firebase.database().ref(".info/connected");
-  const userRef = firebase.database().ref(getUserPath());
-
-  connectedRef.on("value", (snap) => {
-    if (snap.val() === true) {
-      userRef.update({ online: true });
-      userRef.onDisconnect().update({ online: false, lastLoginTime: Date.now() });
-    }
-  });
-
-  window.addEventListener("beforeunload", () => {
-    userRef.update({ online: false, lastLoginTime: Date.now() });
-  });
-
-  const notifRef = firebase.database().ref(getNotifPath());
-  notifRef.on("value", (snapshot) => {
-    const notif = snapshot.val();
-    if (notif && notif.unread) {
-      playNotificationSound();
-      notifyUnread();
-      setTimeout(() => {
-        firebase.database().ref(getNotifPath() + "/unread").set(false);
-      }, 2000);
-    } else {
-      notifyRead();
-    }
-  });
 });
 </script>
 </body>
