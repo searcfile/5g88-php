@@ -461,7 +461,14 @@ const db = firebase.database();
 
 /* ======================= HELPERS ======================= */
 function sanitizeUserId(email){ return String(email||'').toLowerCase().replace(/\./g,'_'); }
-function desanitizeUserId(sanitized){ return String(sanitized||'').replace(/_/g,'.'); }
+function desanitizeUserId(sanitized){
+  const str = String(sanitized || '');
+  const at = str.indexOf('@');
+  if (at === -1) return str.replace(/_/g, '.'); // fallback kalau bukan email
+  const local  = str.slice(0, at);                  // biarkan underscore di local-part
+  const domain = str.slice(at + 1).replace(/_/g,'.'); // hanya domain yang diubah
+  return `${local}@${domain}`;
+}
 
 function formatUserName(name){
   if(!name) return 'Unknown';
@@ -471,14 +478,21 @@ function formatUserName(name){
 }
 
 function getLabelParts(id, data){
-  const name     = (data?.name || '').trim();
-  const email    = (data?.email || '').trim();   // boleh kosong utk guest
+  const tryEmailFromId = desanitizeUserId(id);
+
+  // Ambil email dari data, kalau kosong pakai hasil desanitize dari key
+  const email = (data?.email || '').trim() || (tryEmailFromId.includes('@') ? tryEmailFromId : '');
+
+  const name = (data?.name || '').trim();
   const photoURL = data?.photoURL || '';
+
+  // Display name: name > local-part email > Guest-XXXXX
   let displayName = name || (email ? email.split('@')[0] : '');
   if (!displayName){
     const code = String(id).slice(-5).toUpperCase();
     displayName = `Guest-${code}`;
   }
+
   const label = email ? `${displayName} (${email})` : displayName;
   return { displayName, email, photoURL, label };
 }
