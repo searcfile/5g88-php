@@ -447,6 +447,7 @@ background-color:black;
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script>
+const IS_EMBEDDED = window.top !== window.self;
 function escapeHTML(s){
   return String(s).replace(/[&<>"']/g, m => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
@@ -522,35 +523,7 @@ async function ensureGuestLocalIdentity(){
   initChatWithUserData();
   notifyRead();
 }
-async function ensureGuestLocalIdentity(){
-  try{
-    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-    if (!auth.currentUser) await auth.signInAnonymously();
-
-    const u = auth.currentUser;
-    if (!u) return;
-
-    // gunakan UID ini sebagai kunci chat
-    currentIsGuest   = true;
-    currentUserEmail = null;
-    currentActiveId  = String(u.uid);
-
-    // Default nama/foto
-    if (!localStorage.getItem("username")){
-      const code = (u.uid || '').slice(-5).toUpperCase();
-      localStorage.setItem("username", `Guest-${code}`);
-    }
-    if (!localStorage.getItem("userphoto")){
-      localStorage.setItem("userphoto", "");
-    }
-
-    updateUserHeader();
-    writeUserProfile();       // simpan ke /users/<id>
-    bindPresenceAndNotif();
-    initChatWithUserData();
-    notifyRead();
-  }catch(e){ console.warn("ensureGuestLocalIdentity error:", e); }
-}
+  
 function bindPresenceAndNotif(){
   if (!currentActiveId) return;
   if (presenceBoundFor === currentActiveId) return;      // jangan dobel
@@ -933,7 +906,8 @@ function playNotificationSound() {
   }
 }
 
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
+  // 1) kalau sebelumnya sudah login email, pakai dulu
   const email = localStorage.getItem("useremail");
   if (!currentActiveId && email){
     currentIsGuest   = false;
@@ -941,14 +915,42 @@ window.addEventListener("DOMContentLoaded", () => {
     currentActiveId  = sanitizeEmail(email);
   }
 
-  // fallback: jika parent tak kirim identitas
-  setTimeout(async () => {
-    if (!currentActiveId) await ensureGuestLocalIdentity();
-    bindPresenceAndNotif();         // <<— panggil di sini setelah ada ID
-  }, 800);
+  if (IS_EMBEDDED) {
+    // 2) di iframe: tunggu parent. kalau 2.5s masih belum ada ID, pakai ID lokal
+    if (!currentActiveId) {
+      setTimeout(() => {
+        if (!currentActiveId) {
+          const id = getOrCreateLocalGuestId();
+          currentIsGuest  = true;
+          currentActiveId = id;
+          if (!localStorage.getItem("username")) {
+            localStorage.setItem("username", "Guest-" + id.slice(-5).toUpperCase());
+          }
+          updateUserHeader();
+          bindPresenceAndNotif();
+          initChatWithUserData();
+        }
+      }, 2500);
+    } else {
+      // sudah ada ID dari email/parent → langsung jalan
+      updateUserHeader();
+      bindPresenceAndNotif();
+      initChatWithUserData();
+    }
+  } else {
+    // 3) dibuka langsung (bukan iframe)
+    if (!currentActiveId) {
+      await ensureGuestLocalIdentity();  // akan set guest UID / ID lokal
+    } else {
+      // sudah ada ID dari email → jangan override dengan guest
+      updateUserHeader();
+      bindPresenceAndNotif();
+      initChatWithUserData();
+    }
+  }
 
+  // header tetap di-update
   updateUserHeader();
-  initChatWithUserData();
 });
 </script>
 </body>
