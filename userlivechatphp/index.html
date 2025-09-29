@@ -447,25 +447,23 @@ background-color:black;
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
 
 <script>
-document.addEventListener("contextmenu", e => e.preventDefault());
-  document.onkeydown = function (e) {
-    if (e.key === "F12" || (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key.toUpperCase()))) {
-      return false;
-    }
-  };
 function escapeHTML(s){
   return String(s).replace(/[&<>"']/g, m => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
   }[m]));
 }
 let chatInitialized = false;
+let currentUserEmail = null;
+let currentActiveId  = null;
+let currentIsGuest   = false;
 
 function sanitizeEmail(email) {
   return email.toLowerCase().replace(/\./g, "_");
 }
-function getChatPath(email) {
-  return 'chats/' + sanitizeEmail(email);
-}
+function getChatPath(){ return currentActiveId ? 'chats/' + currentActiveId : null; }
+function getUserPath(){ return currentActiveId ? 'users/' + currentActiveId : null; }
+function getNotifPath(){ return currentActiveId ? 'notifications/' + currentActiveId : null; }
+  
 const firebaseConfig = {
   apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
   authDomain: "blurphp.firebaseapp.com",
@@ -491,29 +489,42 @@ function getParentOrigin(){
 }
 const PARENT_ORIGIN = getParentOrigin();
 
-// ===== SATU-SATUNYA message handler di child =====
+// PATCH START: postMessage handler
 window.addEventListener("message", (e) => {
-  if (!ALLOWED_PARENTS.includes(e.origin)) return;       // keamanan wajib
+  if (!ALLOWED_PARENTS.includes(e.origin)) return;
 
   const data = e.data || {};
   if (data.type === "user-login" && data.user){
-    const { name, email, photo } = data.user;
-    if (email){
-      localStorage.setItem("username", name || "User");
+    const { name, email, photo, uid, isGuest } = data.user;
+
+    localStorage.setItem("username", name || (isGuest ? "Guest" : "User"));
+    localStorage.setItem("userphoto", photo || "");
+
+    if (isGuest && uid) {
+      currentIsGuest   = true;
+      currentActiveId  = String(uid);          // gunakan UID guest
+      currentUserEmail = null;
+      localStorage.removeItem("useremail");
+    } else if (email) {
+      currentIsGuest   = false;
+      currentUserEmail = email;
+      currentActiveId  = sanitizeEmail(email); // email_sanitized
       localStorage.setItem("useremail", email);
-      localStorage.setItem("userphoto", photo || "");
-      updateUserHeader();
-      initChatWithUserData();          // mulai chat untuk user ini
-      notifyRead();                    // anggap terbaca saat panel dibuka
+    } else {
+      return; // identitas tak valid
     }
+
+    updateUserHeader();
+    initChatWithUserData();
+    notifyRead();
   }
 
-  // (opsional, kalau parent nanti mau kirim status)
+  // opsional status dari parent
   if (data.action === "panel-open")  notifyRead();
   if (data.action === "panel-close") {/* no-op */}
 });
   
-let currentUserEmail = null;
+
 let userHasInteracted = false;
 
 function cleanDuplicateName(name) {
@@ -538,9 +549,13 @@ function updateUserHeader() {
   if (photoEl) photoEl.src = userPhoto;
 }
 
+// PATCH START: initChatWithUserData universal
 function initChatWithUserData() {
   if (chatInitialized) return;
-  const userEmail   = localStorage.getItem("useremail");
+
+  // wajib ada activeId (uid guest atau email_sanitized)
+  if (!currentActiveId) return;
+
   const msgInput    = document.getElementById('msg');
   const sendBtn     = document.querySelector('.send-box button');
   const fileInput   = document.getElementById('fileInput');
@@ -548,12 +563,9 @@ function initChatWithUserData() {
   const chatBox     = document.getElementById('chatBox');
   const typingEl    = document.getElementById('typingStatus');
 
-  // Guard: kalau belum lengkap, jangan lanjut
-  if (!userEmail || !msgInput || !sendBtn || !fileInput || !searchInput || !chatBox) return;
+  if (!msgInput || !sendBtn || !fileInput || !searchInput || !chatBox) return;
 
-  chatInitialized   = true;
-  currentUserEmail  = userEmail;
-
+  chatInitialized = true;
   updateUserHeader();
   if (typingEl) typingEl.textContent = 'Online';
 
@@ -563,7 +575,7 @@ function initChatWithUserData() {
   msgInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
       e.preventDefault();
-      sendMessage(currentUserEmail);
+      sendMessage(); // tanpa arg
     }
   });
 
@@ -578,39 +590,37 @@ function initChatWithUserData() {
     }
   });
 
-  sendBtn.addEventListener('click', () => sendMessage(currentUserEmail));
+  sendBtn.addEventListener('click', () => sendMessage());
   sendBtn.disabled = true;
 
-  searchInput.addEventListener('input', () => {
-    const filter = searchInput.value.toLowerCase();
-    chatBox.querySelectorAll('.message').forEach(msg => {
-      msg.style.display = msg.textContent.toLowerCase().includes(filter) ? '' : 'none';
-    });
-  });
-
-  listenToChat(currentUserEmail);
+  // mulai dengarkan chat saya
+  listenToChat(); // tanpa arg
 }
 
-async function sendMessage(userEmail) {
-  if (!userEmail) return;
+// PATCH START: sendMessage universal
+async function sendMessage() {
+  if (!currentActiveId) return;
 
   const msgInput = document.getElementById('msg');
   const fileInput = document.getElementById('fileInput');
-  const msg = msgInput.value.trim();
+  const msg  = (msgInput.value || '').trim();
   const file = fileInput.files[0];
 
-  if ((!msg || msg === "") && !file) return;
+  if (!msg && !file) return;
 
-  const userName = localStorage.getItem("username") || "User";
+  const userName  = localStorage.getItem("username") || (currentIsGuest ? "Guest" : "User");
   const userPhoto = localStorage.getItem("userphoto") || "";
   const time = Date.now();
-  const chatRef = db.ref(getChatPath(userEmail));
+
+  const chatPath = getChatPath();
+  if (!chatPath) return;
+  const chatRef = db.ref(chatPath);
 
   let imageUrl = null;
 
   try {
     if (file) {
-      const fileRef = storage.ref(`chat_images/${sanitizeEmail(userEmail)}/${time}_${file.name}`);
+      const fileRef = storage.ref(`chat_images/${currentActiveId}/${time}_${file.name}`);
       const snapshot = await fileRef.put(file);
       imageUrl = await snapshot.ref.getDownloadURL();
     }
@@ -618,12 +628,12 @@ async function sendMessage(userEmail) {
     await chatRef.push({
       from: 'user',
       name: userName,
-      email: userEmail,
-      photoURL: userPhoto,
+      email: currentUserEmail || null,   // null untuk guest
+      photoURL: userPhoto || null,
       text: msg || null,
       image: imageUrl || null,
       time,
-      readByAdmin: false // ✅ WAJIB agar dot merah muncul
+      readByAdmin: false
     });
 
     msgInput.value = '';
@@ -636,10 +646,16 @@ async function sendMessage(userEmail) {
   }
 }
 
-function listenToChat(userEmail) {
+// PATCH START: listenToChat universal
+function listenToChat() {
+  if (!currentActiveId) return;
+
   const chatBox = document.getElementById('chatBox');
-  const chatRef = db.ref(getChatPath(userEmail));
-  const lastSeenKey = `lastSeenByUser_${sanitizeEmail(userEmail)}`;
+  const chatPath = getChatPath();
+  if (!chatBox || !chatPath) return;
+
+  const chatRef = db.ref(chatPath);
+  const lastSeenKey = `lastSeenByUser_${currentActiveId}`;
   const startMsg = document.getElementById("startMessage");
 
   chatRef.on('value', snapshot => {
@@ -649,10 +665,9 @@ function listenToChat(userEmail) {
     const oldMessages = chatBox.querySelectorAll(".message, .date-label");
     oldMessages.forEach(el => el.remove());
 
-    // jika belum ada chat
     if (!chats || Object.keys(chats).length === 0) {
       if (startMsg) startMsg.style.display = "block";
-      notifyRead();          // tidak ada unread
+      notifyRead();
       return;
     }
     if (startMsg) startMsg.style.display = "none";
@@ -660,26 +675,25 @@ function listenToChat(userEmail) {
     const lastSeenTime = parseInt(localStorage.getItem(lastSeenKey) || '0', 10);
     let latestAdminMsgTime = 0;
 
-    const chatArray = Object.values(chats).sort((a, b) => a.time - b.time);
+    const chatArray = Object.values(chats).sort((a, b) => (a.time || 0) - (b.time || 0));
     const today = new Date(); today.setHours(0,0,0,0);
     const pastChats = [], todayChats = [];
 
     chatArray.forEach(c => {
-      const msgDateOnly = new Date(c.time); msgDateOnly.setHours(0,0,0,0);
+      const t = Number(c.time) || 0;
+      const msgDateOnly = new Date(t); msgDateOnly.setHours(0,0,0,0);
       (msgDateOnly.getTime() === today.getTime() ? todayChats : pastChats).push(c);
-      if (c.from === 'admin' && c.time > latestAdminMsgTime) latestAdminMsgTime = c.time;
+      if (c.from === 'admin' && t > latestAdminMsgTime) latestAdminMsgTime = t;
     });
 
-    // simpan waktu terakhir lihat (pakai timestamp pesan terakhir)
     const latestTime = chatArray[chatArray.length - 1]?.time || 0;
     localStorage.setItem(lastSeenKey, String(latestTime));
 
-    // kirim sinyal notif ke parent
     if (latestAdminMsgTime > lastSeenTime) {
       playNotificationSound();
-      notifyUnread();   // tampilkan dot di parent
+      notifyUnread();
     } else {
-      notifyRead();     // sembunyikan dot di parent
+      notifyRead();
     }
 
     renderChats(pastChats, today);
@@ -788,47 +802,48 @@ function playNotificationSound() {
   }
 }
 
+// PATCH START: DOMContentLoaded universal
 window.addEventListener("DOMContentLoaded", () => {
+  // Optional: recovery kalau parent belum kirim message
   const email = localStorage.getItem("useremail");
-  if (email) {
-    updateUserHeader();
-    initChatWithUserData();
-
-    const sanitized = sanitizeEmail(email);
-    const connectedRef = firebase.database().ref(".info/connected");
-    const userRef = firebase.database().ref("users/" + sanitized);
-
-    connectedRef.on("value", (snap) => {
-      if (snap.val() === true) {
-        userRef.update({ online: true });
-        userRef.onDisconnect().update({
-          online: false,
-          lastLoginTime: Date.now()
-        });
-      }
-    });
-
-    window.addEventListener("beforeunload", () => {
-      userRef.update({
-        online: false,
-        lastLoginTime: Date.now()
-      });
-    });
-
-const notifRef = firebase.database().ref("notifications/" + sanitized);
-notifRef.on("value", (snapshot) => {
-  const notif = snapshot.val();
-  if (notif && notif.unread) {
-    playNotificationSound();
-    notifyUnread(); // 👉 kasih tau parent
-    setTimeout(() => {
-      firebase.database().ref("notifications/" + sanitized + "/unread").set(false);
-    }, 2000);
-  } else {
-    notifyRead();
+  if (!currentActiveId && email){
+    currentIsGuest   = false;
+    currentUserEmail = email;
+    currentActiveId  = sanitizeEmail(email);
   }
-});
-  }
+
+  if (!currentActiveId) return; // tunggu postMessage dari parent
+
+  updateUserHeader();
+  initChatWithUserData();
+
+  const connectedRef = firebase.database().ref(".info/connected");
+  const userRef = firebase.database().ref(getUserPath());
+
+  connectedRef.on("value", (snap) => {
+    if (snap.val() === true) {
+      userRef.update({ online: true });
+      userRef.onDisconnect().update({ online: false, lastLoginTime: Date.now() });
+    }
+  });
+
+  window.addEventListener("beforeunload", () => {
+    userRef.update({ online: false, lastLoginTime: Date.now() });
+  });
+
+  const notifRef = firebase.database().ref(getNotifPath());
+  notifRef.on("value", (snapshot) => {
+    const notif = snapshot.val();
+    if (notif && notif.unread) {
+      playNotificationSound();
+      notifyUnread();
+      setTimeout(() => {
+        firebase.database().ref(getNotifPath() + "/unread").set(false);
+      }, 2000);
+    } else {
+      notifyRead();
+    }
+  });
 });
 </script>
 </body>
