@@ -915,7 +915,11 @@ function doSearch(q){
     if (noResults) noResults.style.display = 'block';
   }
 }
-searchBox.addEventListener('input', e=> doSearch(e.target.value));
+let searchTimer;
+searchBox.addEventListener('input', e=>{
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(()=> doSearch(e.target.value), 120);
+});
 searchBox.addEventListener('keydown', e=>{
   if (e.key === 'Enter' && searchHits.length){
     e.preventDefault();
@@ -924,8 +928,6 @@ searchBox.addEventListener('keydown', e=>{
   }
 });
 // refresh highlight bila DOM pesan berubah
-const mo = new MutationObserver(()=> { if (lastQuery) doSearch(lastQuery); });
-mo.observe(chatBody, {childList:true, subtree:true});
 function renderChats(chatGroup, today) {
   const chatBox = document.getElementById('chatBox');
   if (!chatBox) return;
