@@ -403,20 +403,20 @@ mark.__hit{ background:#ffe58a; padding:0 2px; border-radius:3px; }
 /* === Tombol scroll ke bawah (gaya bulat dengan ring) === */
 #toBottomBtn{
   position: absolute;
-  right: 5px;
-  bottom: calc(var(--composer-h, 64px) + 20px); /* 12px di atas composer */
+  right: 25px;
+  bottom: calc(var(--composer-h, 64px) + 23px); /* 12px di atas composer */
   z-index: 20; /* di atas send-box */
   width:44px; height:44px; border-radius:9999px;
-  background: linear-gradient(to bottom, #c5ff4a, #1668dc);
+  background: linear-gradient(to bottom, #c5ff4a, #1668dc,#fff);
   border:1px solid rgba(255,255,255,.18);
   box-shadow:0 4px 14px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.06);
   display:none; align-items:center; justify-content:center;
   cursor:pointer; outline:none;
   -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
-  transition: transform .1s ease, background .15s ease, border-color .15s ease;
+  transition: transform .1s ease, background .15s ease, border-color .15s ease;transition: all 0.2s;
 }
 #toBottomBtn svg{ width:22px; height:22px; stroke:#fff; stroke-width:2; fill:none; display:block; }
-#toBottomBtn:hover{ background:rgba(28,28,28,.96); border-color:rgba(255,255,255,.28); }
+#toBottomBtn:hover{ background: linear-gradient(to bottom, #c5ff4a, #1668dc,#fff); border-color:#c5ff4a; }
 #toBottomBtn:active{ transform: translateY(1px); }
 #toBottomBtn.show{ display:flex; }
 @media (max-width:520px){
