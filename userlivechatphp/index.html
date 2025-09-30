@@ -415,7 +415,7 @@ mark.__hit{ background:#ffe58a; padding:0 2px; border-radius:3px; }
 #toBottomBtn:hover{ background:rgba(28,28,28,.96); border-color:rgba(255,255,255,.28); }
 #toBottomBtn:active{ transform: translateY(1px); }
 @media (max-width:520px){
-  #toBottomBtn{ width:40px; height:40px; right:10px; bottom:10px; }
+  #toBottomBtn{ width:40px; height:40px; right:10px; bottom:10px;z-index: 10; }
   #toBottomBtn svg{ width:20px; height:20px; }
 }
 .chat-wrapper{ position: relative; }   /* supaya absolute nempel ke wrapper */
@@ -1015,6 +1015,7 @@ function renderChats(chatGroup, today) {
 );
 // ===== Scroll-To-Bottom =====
 const toBottomBtn = document.getElementById('toBottomBtn');
+const chatBody    = document.getElementById('chatBox'); // pastikan ada
 
 function isAtBottom(el, pad=10){
   return el && (el.scrollTop + el.clientHeight >= el.scrollHeight - pad);
@@ -1023,19 +1024,26 @@ function scrollToBottom(smooth=true){
   if (!chatBody) return;
   chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
 }
+
+// helper: show/hide FAB sesuai posisi scroll
+function updateFab(){
+  if (!toBottomBtn || !chatBody) return;
+  toBottomBtn.classList.toggle('show', !isAtBottom(chatBody));
+}
+
 if (toBottomBtn){
   toBottomBtn.addEventListener('click', ()=> scrollToBottom(true));
 }
 if (chatBody){
-  chatBody.addEventListener('scroll', ()=>{
-    if (!toBottomBtn) return;
-    toBottomBtn.classList.toggle('show', !isAtBottom(chatBody));
-  });
+  chatBody.addEventListener('scroll', updateFab);
+  // set state awal
+  updateFab();
 }
 
 // panggil setiap selesai render/append pesan
 function onNewMessageRendered({forceToBottom=false} = {}){
   if (forceToBottom || isAtBottom(chatBody)) scrollToBottom(true);
+  updateFab();                 // <- tambahkan baris ini
   if (lastQuery) doSearch(lastQuery);
 }
 function notifyUnread(){
