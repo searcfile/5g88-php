@@ -95,7 +95,7 @@ body::-webkit-scrollbar {
   height: 60vh;
      border-radius: 10px;
     border: 1px solid #3c89e8;
-     position: relative;
+    
 }
 
 .chat-box::-webkit-scrollbar {
@@ -402,10 +402,10 @@ mark.__hit{ background:#ffe58a; padding:0 2px; border-radius:3px; }
 
 /* === Tombol scroll ke bawah (gaya bulat dengan ring) === */
 #toBottomBtn{
-  position: absolute; 
-  right: 12px; 
-  bottom: 12px;             /* pas di pojok kanan bawah area chat */
-  z-index: 4;               /* di atas bubble, gak kehalang */
+  position: absolute;
+  right: 12px;
+  bottom: calc(var(--composer-h, 64px) + 12px); /* 12px di atas composer */
+  z-index: 20; /* di atas send-box */
   width:44px; height:44px; border-radius:9999px;
   background:rgba(16,16,16,.92);
   border:1px solid rgba(255,255,255,.18);
@@ -418,12 +418,12 @@ mark.__hit{ background:#ffe58a; padding:0 2px; border-radius:3px; }
 #toBottomBtn svg{ width:22px; height:22px; stroke:#fff; stroke-width:2; fill:none; display:block; }
 #toBottomBtn:hover{ background:rgba(28,28,28,.96); border-color:rgba(255,255,255,.28); }
 #toBottomBtn:active{ transform: translateY(1px); }
+#toBottomBtn.show{ display:flex; }
 @media (max-width:520px){
-  #toBottomBtn{ width:40px; height:40px; right:10px; bottom:10px;z-index: 10; }
+  #toBottomBtn{width:40px; height:40px; right:10px;bottom: calc(var(--composer-h, 64px) + 10px);z-index: 20;}
   #toBottomBtn svg{ width:20px; height:20px; }
 }
-.chat-wrapper{ position: relative; }   /* supaya absolute nempel ke wrapper */
-#toBottomBtn.show{ display:flex; }  
+.chat-wrapper{ position: relative; }   /* supaya absolute nempel ke wrapper */ 
 </style>
 <body>
   <!-- Header Atas -->
@@ -455,13 +455,12 @@ mark.__hit{ background:#ffe58a; padding:0 2px; border-radius:3px; }
   <div id="startMessage" style="text-align:center; color:white; opacity:0.6; margin-top:10px; font-size:14px;">
     No messages yet. Start the conversation!
   </div>
+</div>
 <button id="toBottomBtn" aria-label="Scroll to latest" title="Go to latest">
   <svg viewBox="0 0 24 24" aria-hidden="true">
     <path d="M6 10l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
 </button>
-</div>
-
 <div id="noResults" style="display:none;position:absolute;top:62px;right:16px;background:#222;color:#fff;border:1px solid #444;border-radius:8px;padding:6px 10px;font-size:12px;">
   No data
 </div>
@@ -1017,8 +1016,7 @@ function renderChats(chatGroup, today) {
 ['click','keydown','scroll','touchstart'].forEach(event =>
   document.addEventListener(event, () => userHasInteracted = true, { once: true })
 );
-// ===== Scroll-To-Bottom =====
-const toBottomBtn = document.getElementById('toBottomBtn'); // pakai chatBody yang sudah ada
+const toBottomBtn = document.getElementById('toBottomBtn'); // chatBody sudah ada dari bagian SEARCH
 
 function isAtBottom(el, pad=10){
   return el && (el.scrollTop + el.clientHeight >= el.scrollHeight - pad);
@@ -1028,24 +1026,26 @@ function scrollToBottom(smooth=true){
   chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
 }
 
-// helper: show/hide FAB sesuai posisi scroll
 function updateFab(){
   if (!toBottomBtn || !chatBody) return;
-  toBottomBtn.classList.toggle('show', !isAtBottom(chatBody));
+  toBottomBtn.classList.toggle('show', !isAtBottom(chatBody, 80)); // 80px tolerance biar gak “kedap-kedip”
 }
 
 if (toBottomBtn){
-  toBottomBtn.addEventListener('click', ()=> scrollToBottom(true));
+  toBottomBtn.addEventListener('click', ()=>{
+    scrollToBottom(true);
+    toBottomBtn.classList.remove('show'); // sembunyikan segera
+  });
 }
 if (chatBody){
   chatBody.addEventListener('scroll', updateFab);
-  updateFab(); // set state awal
+  updateFab();
 }
 
-// panggil setiap selesai render/append pesan
+// dipanggil tiap selesai render
 function onNewMessageRendered({forceToBottom=false} = {}){
-  if (forceToBottom || isAtBottom(chatBody)) scrollToBottom(true);
-  updateFab(); // <- penting, agar tombol muncul/hilang sesuai kondisi
+  if (forceToBottom || isAtBottom(chatBody, 80)) scrollToBottom(true);
+  updateFab();
   if (lastQuery) doSearch(lastQuery);
 }
 function notifyUnread(){
@@ -1065,6 +1065,17 @@ function playNotificationSound() {
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
+const sendBoxEl = document.querySelector('.send-box');
+function setFabOffset(){
+  if (!sendBoxEl) return;
+  document.documentElement.style.setProperty('--composer-h', sendBoxEl.offsetHeight + 'px');
+}
+setFabOffset();
+if (window.ResizeObserver && sendBoxEl) {
+  new ResizeObserver(() => setFabOffset()).observe(sendBoxEl);
+} else {
+  window.addEventListener('resize', setFabOffset);
+}
   // 1) kalau sebelumnya sudah login email, pakai dulu
   const email = localStorage.getItem("useremail");
   if (!currentActiveId && email){
