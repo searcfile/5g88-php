@@ -1014,8 +1014,7 @@ function renderChats(chatGroup, today) {
   document.addEventListener(event, () => userHasInteracted = true, { once: true })
 );
 // ===== Scroll-To-Bottom =====
-const toBottomBtn = document.getElementById('toBottomBtn');
-const chatBody    = document.getElementById('chatBox'); // pastikan ada
+const toBottomBtn = document.getElementById('toBottomBtn'); // pakai chatBody yang sudah ada
 
 function isAtBottom(el, pad=10){
   return el && (el.scrollTop + el.clientHeight >= el.scrollHeight - pad);
@@ -1036,14 +1035,13 @@ if (toBottomBtn){
 }
 if (chatBody){
   chatBody.addEventListener('scroll', updateFab);
-  // set state awal
-  updateFab();
+  updateFab(); // set state awal
 }
 
 // panggil setiap selesai render/append pesan
 function onNewMessageRendered({forceToBottom=false} = {}){
   if (forceToBottom || isAtBottom(chatBody)) scrollToBottom(true);
-  updateFab();                 // <- tambahkan baris ini
+  updateFab(); // <- penting, agar tombol muncul/hilang sesuai kondisi
   if (lastQuery) doSearch(lastQuery);
 }
 function notifyUnread(){
