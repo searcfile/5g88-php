@@ -95,6 +95,7 @@ body::-webkit-scrollbar {
   height: 60vh;
      border-radius: 10px;
     border: 1px solid #3c89e8;
+     position: relative;
 }
 
 .chat-box::-webkit-scrollbar {
@@ -401,7 +402,10 @@ mark.__hit{ background:#ffe58a; padding:0 2px; border-radius:3px; }
 
 /* === Tombol scroll ke bawah (gaya bulat dengan ring) === */
 #toBottomBtn{
-  position:absolute; right:12px; bottom:12px;
+  position: absolute; 
+  right: 12px; 
+  bottom: 12px;             /* pas di pojok kanan bawah area chat */
+  z-index: 4;               /* di atas bubble, gak kehalang */
   width:44px; height:44px; border-radius:9999px;
   background:rgba(16,16,16,.92);
   border:1px solid rgba(255,255,255,.18);
@@ -451,13 +455,13 @@ mark.__hit{ background:#ffe58a; padding:0 2px; border-radius:3px; }
   <div id="startMessage" style="text-align:center; color:white; opacity:0.6; margin-top:10px; font-size:14px;">
     No messages yet. Start the conversation!
   </div>
-</div>
-
 <button id="toBottomBtn" aria-label="Scroll to latest" title="Go to latest">
   <svg viewBox="0 0 24 24" aria-hidden="true">
     <path d="M6 10l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
 </button>
+</div>
+
 <div id="noResults" style="display:none;position:absolute;top:62px;right:16px;background:#222;color:#fff;border:1px solid #444;border-radius:8px;padding:6px 10px;font-size:12px;">
   No data
 </div>
