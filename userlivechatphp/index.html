@@ -418,6 +418,8 @@ mark.__hit{ background:#ffe58a; padding:0 2px; border-radius:3px; }
   #toBottomBtn{ width:40px; height:40px; right:10px; bottom:10px; }
   #toBottomBtn svg{ width:20px; height:20px; }
 }
+.chat-wrapper{ position: relative; }   /* supaya absolute nempel ke wrapper */
+#toBottomBtn.show{ display:flex; }  
 </style>
 <body>
   <!-- Header Atas -->
@@ -445,17 +447,20 @@ mark.__hit{ background:#ffe58a; padding:0 2px; border-radius:3px; }
       </div>
     </div>
 
- <div class="chat-box" id="chatBox">
+<div class="chat-box" id="chatBox">
   <div id="startMessage" style="text-align:center; color:white; opacity:0.6; margin-top:10px; font-size:14px;">
     No messages yet. Start the conversation!
   </div>
-  <button id="toBottomBtn" aria-label="Scroll to latest" title="Go to latest">
+</div>
+
+<button id="toBottomBtn" aria-label="Scroll to latest" title="Go to latest">
   <svg viewBox="0 0 24 24" aria-hidden="true">
     <path d="M6 10l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
 </button>
+<div id="noResults" style="display:none;position:absolute;top:62px;right:16px;background:#222;color:#fff;border:1px solid #444;border-radius:8px;padding:6px 10px;font-size:12px;">
+  No data
 </div>
-
     <!-- SEND BOX -->
     <div class="send-box">
       <textarea id="msg" placeholder="Type your message" rows="2"></textarea>
@@ -732,7 +737,6 @@ function initChatWithUserData() {
   listenToChat(); // tanpa arg
 }
 
-// PATCH START: sendMessage universal
 async function sendMessage() {
   if (!currentActiveId) return;
 
@@ -763,13 +767,16 @@ async function sendMessage() {
     await chatRef.push({
       from: 'user',
       name: userName,
-      email: currentUserEmail || null,   // null untuk guest
+      email: currentUserEmail || null,
       photoURL: userPhoto || null,
       text: msg || null,
       image: imageUrl || null,
       time,
       readByAdmin: false
     });
+
+    // 👉 paksa scroll ke bawah setelah pesan kita terkirim
+    setTimeout(() => onNewMessageRendered({ forceToBottom: true }), 0);
 
     msgInput.value = '';
     fileInput.value = '';
@@ -795,6 +802,7 @@ function listenToChat() {
   const startMsg = document.getElementById("startMessage");
 
   chatRef.on('value', snapshot => {
+    const wasAtBottom = isAtBottom(chatBox);
     const chats = snapshot.val();
 
     // bersihkan pesan lama (kecuali startMessage)
@@ -834,7 +842,9 @@ function listenToChat() {
 
     renderChats(pastChats, today);
     renderChats(todayChats, today);
-    onNewMessageRendered();
+    const lastMsg = (Array.isArray(chatArray) && chatArray[chatArray.length - 1]) || {};
+    const mustForce = wasAtBottom || lastMsg.from === 'user';
+    onNewMessageRendered({ forceToBottom: mustForce });
   });
 }
 // ====== SEARCH ======
@@ -851,29 +861,58 @@ function clearSearchMarks(){
 }
 function doSearch(q){
   q = (q||'').trim();
-  if (q === lastQuery) return;
-  lastQuery = q.toLowerCase();
-  clearSearchMarks(); searchHits=[]; hitIndex=0;
-  if (!q) return;
+  const noResults = document.getElementById('noResults');
+  if (noResults) noResults.style.display = 'none';
 
-  const nodes = chatBody.querySelectorAll('.msg-text, .msg-info');
-  nodes.forEach(el=>{
-    const txt = el.textContent, low = txt.toLowerCase();
-    if (!low.includes(lastQuery)) return;
-    const frag = document.createDocumentFragment();
-    let i=0, m;
-    while ((m = low.indexOf(lastQuery, i)) !== -1){
-      if (m>i) frag.appendChild(document.createTextNode(txt.slice(i,m)));
-      const mark = document.createElement('mark'); mark.className='__hit';
-      mark.textContent = txt.slice(m, m+q.length);
-      frag.appendChild(mark); searchHits.push(mark);
-      i = m + q.length;
-    }
-    if (i < txt.length) frag.appendChild(document.createTextNode(txt.slice(i)));
-    el.replaceChildren(frag);
+  // reset highlight dulu
+  clearSearchMarks();
+  searchHits = []; hitIndex = 0;
+
+  // jika kosong → tampilkan semua bubble
+  if (!q){
+    chatBody.querySelectorAll('.message').forEach(b => b.style.display = '');
+    return;
+  }
+
+  lastQuery = q.toLowerCase();
+  let matches = 0;
+
+  chatBody.querySelectorAll('.message').forEach(bubble=>{
+    const nameEl = bubble.querySelector('.msg-info');
+    const textEl = bubble.querySelector('.msg-text');
+    const nameTxt = (nameEl?.textContent || '');
+    const msgTxt  = (textEl?.textContent || '');
+    const isMatch = (nameTxt + ' ' + msgTxt).toLowerCase().includes(lastQuery);
+
+    // filter tampilan
+    bubble.style.display = isMatch ? '' : 'none';
+    if (!isMatch) return;
+    matches++;
+
+    // highlight di elemen nama & teks
+    [nameEl, textEl].forEach(el=>{
+      if (!el) return;
+      const raw = el.textContent;
+      const low = raw.toLowerCase();
+      const frag = document.createDocumentFragment();
+      let i=0, m;
+      while ((m = low.indexOf(lastQuery, i)) !== -1){
+        if (m>i) frag.appendChild(document.createTextNode(raw.slice(i,m)));
+        const mark = document.createElement('mark');
+        mark.className='__hit';
+        mark.textContent = raw.slice(m, m+q.length);
+        frag.appendChild(mark); searchHits.push(mark);
+        i = m + q.length;
+      }
+      if (i < raw.length) frag.appendChild(document.createTextNode(raw.slice(i)));
+      el.replaceChildren(frag);
+    });
   });
-  if (searchHits.length){
-    searchHits[0].scrollIntoView({behavior:'smooth', block:'center'});
+
+  if (matches){
+    (searchHits[0] || chatBody.firstElementChild)?.scrollIntoView({behavior:'smooth', block:'center'});
+  }else{
+    if (noResults) noResults.style.display = 'block';
   }
 }
 searchBox.addEventListener('input', e=> doSearch(e.target.value));
@@ -976,20 +1015,25 @@ function renderChats(chatGroup, today) {
 const toBottomBtn = document.getElementById('toBottomBtn');
 
 function isAtBottom(el, pad=10){
-  return el.scrollTop + el.clientHeight >= el.scrollHeight - pad;
+  return el && (el.scrollTop + el.clientHeight >= el.scrollHeight - pad);
 }
-function scrollToBottom(){
-  chatBody.scrollTo({top: chatBody.scrollHeight, behavior:'smooth'});
+function scrollToBottom(smooth=true){
+  if (!chatBody) return;
+  chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
 }
-toBottomBtn.addEventListener('click', scrollToBottom);
-
-chatBody.addEventListener('scroll', ()=>{
-  toBottomBtn.classList.toggle('show', !isAtBottom(chatBody));
-});
+if (toBottomBtn){
+  toBottomBtn.addEventListener('click', ()=> scrollToBottom(true));
+}
+if (chatBody){
+  chatBody.addEventListener('scroll', ()=>{
+    if (!toBottomBtn) return;
+    toBottomBtn.classList.toggle('show', !isAtBottom(chatBody));
+  });
+}
 
 // panggil setiap selesai render/append pesan
-function onNewMessageRendered(){
-  if (isAtBottom(chatBody)) scrollToBottom();
+function onNewMessageRendered({forceToBottom=false} = {}){
+  if (forceToBottom || isAtBottom(chatBody)) scrollToBottom(true);
   if (lastQuery) doSearch(lastQuery);
 }
 function notifyUnread(){
