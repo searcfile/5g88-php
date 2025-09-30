@@ -396,8 +396,29 @@ background-color:black;
   .file-label,
   .send-box button { padding: 0 8px; }
 }
-</style>
+/* === SEARCH highlight === */
+mark.__hit{ background:#ffe58a; padding:0 2px; border-radius:3px; }
 
+/* === Tombol scroll ke bawah (gaya bulat dengan ring) === */
+#toBottomBtn{
+  position:absolute; right:12px; bottom:12px;
+  width:44px; height:44px; border-radius:9999px;
+  background:rgba(16,16,16,.92);
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 4px 14px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.06);
+  display:none; align-items:center; justify-content:center;
+  cursor:pointer; outline:none;
+  -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+  transition: transform .1s ease, background .15s ease, border-color .15s ease;
+}
+#toBottomBtn svg{ width:22px; height:22px; stroke:#fff; stroke-width:2; fill:none; display:block; }
+#toBottomBtn:hover{ background:rgba(28,28,28,.96); border-color:rgba(255,255,255,.28); }
+#toBottomBtn:active{ transform: translateY(1px); }
+@media (max-width:520px){
+  #toBottomBtn{ width:40px; height:40px; right:10px; bottom:10px; }
+  #toBottomBtn svg{ width:20px; height:20px; }
+}
+</style>
 <body>
   <!-- Header Atas -->
  <header>
@@ -428,6 +449,11 @@ background-color:black;
   <div id="startMessage" style="text-align:center; color:white; opacity:0.6; margin-top:10px; font-size:14px;">
     No messages yet. Start the conversation!
   </div>
+  <button id="toBottomBtn" aria-label="Scroll to latest" title="Go to latest">
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M6 10l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</button>
 </div>
 
     <!-- SEND BOX -->
@@ -640,7 +666,13 @@ function cleanDuplicateName(name) {
   }
   return name;
 }
-
+function nameOnly(s){
+  if (!s) return 'User';
+  s = String(s).trim();
+  const at = s.indexOf('@');
+  if (at > -1) s = s.slice(0, at);
+  return s.replace(/\./g, ' ');
+}
 function updateUserHeader() {
   let userName = localStorage.getItem("username") || "User";  // GANTI const → let
   const userPhoto = localStorage.getItem("userphoto") || "https://i.pravatar.cc/40";
@@ -802,9 +834,59 @@ function listenToChat() {
 
     renderChats(pastChats, today);
     renderChats(todayChats, today);
-    chatBox.scrollTop = chatBox.scrollHeight;
+    onNewMessageRendered();
   });
 }
+// ====== SEARCH ======
+const chatBody   = document.getElementById('chatBox');
+const searchBox  = document.getElementById('searchChat');
+let lastQuery    = '';
+let searchHits   = [];
+let hitIndex     = 0;
+
+function clearSearchMarks(){
+  chatBody.querySelectorAll('mark.__hit').forEach(m=>{
+    const p = m.parentNode; m.replaceWith(document.createTextNode(m.textContent)); p.normalize();
+  });
+}
+function doSearch(q){
+  q = (q||'').trim();
+  if (q === lastQuery) return;
+  lastQuery = q.toLowerCase();
+  clearSearchMarks(); searchHits=[]; hitIndex=0;
+  if (!q) return;
+
+  const nodes = chatBody.querySelectorAll('.msg-text, .msg-info');
+  nodes.forEach(el=>{
+    const txt = el.textContent, low = txt.toLowerCase();
+    if (!low.includes(lastQuery)) return;
+    const frag = document.createDocumentFragment();
+    let i=0, m;
+    while ((m = low.indexOf(lastQuery, i)) !== -1){
+      if (m>i) frag.appendChild(document.createTextNode(txt.slice(i,m)));
+      const mark = document.createElement('mark'); mark.className='__hit';
+      mark.textContent = txt.slice(m, m+q.length);
+      frag.appendChild(mark); searchHits.push(mark);
+      i = m + q.length;
+    }
+    if (i < txt.length) frag.appendChild(document.createTextNode(txt.slice(i)));
+    el.replaceChildren(frag);
+  });
+  if (searchHits.length){
+    searchHits[0].scrollIntoView({behavior:'smooth', block:'center'});
+  }
+}
+searchBox.addEventListener('input', e=> doSearch(e.target.value));
+searchBox.addEventListener('keydown', e=>{
+  if (e.key === 'Enter' && searchHits.length){
+    e.preventDefault();
+    hitIndex = (hitIndex + 1) % searchHits.length;
+    searchHits[hitIndex].scrollIntoView({behavior:'smooth', block:'center'});
+  }
+});
+// refresh highlight bila DOM pesan berubah
+const mo = new MutationObserver(()=> { if (lastQuery) doSearch(lastQuery); });
+mo.observe(chatBody, {childList:true, subtree:true});
 function renderChats(chatGroup, today) {
   const chatBox = document.getElementById('chatBox');
   if (!chatBox) return;
@@ -851,7 +933,7 @@ function renderChats(chatGroup, today) {
     div.className = 'message ' + (c.from === 'user' ? 'mine' : 'theirs');
 
     const rawName = (c.from === 'user') ? (c.name || 'You') : (c.name || 'Admin');
-    const senderLabel = cleanDuplicateName(rawName);
+    const senderLabel = nameOnly(cleanDuplicateName(rawName));
     const senderPhoto = c.photoURL || 'https://i.pravatar.cc/40';
 
     // header bubble tanpa src (src diset via property biar aman)
@@ -890,6 +972,26 @@ function renderChats(chatGroup, today) {
 ['click','keydown','scroll','touchstart'].forEach(event =>
   document.addEventListener(event, () => userHasInteracted = true, { once: true })
 );
+// ===== Scroll-To-Bottom =====
+const toBottomBtn = document.getElementById('toBottomBtn');
+
+function isAtBottom(el, pad=10){
+  return el.scrollTop + el.clientHeight >= el.scrollHeight - pad;
+}
+function scrollToBottom(){
+  chatBody.scrollTo({top: chatBody.scrollHeight, behavior:'smooth'});
+}
+toBottomBtn.addEventListener('click', scrollToBottom);
+
+chatBody.addEventListener('scroll', ()=>{
+  toBottomBtn.classList.toggle('show', !isAtBottom(chatBody));
+});
+
+// panggil setiap selesai render/append pesan
+function onNewMessageRendered(){
+  if (isAtBottom(chatBody)) scrollToBottom();
+  if (lastQuery) doSearch(lastQuery);
+}
 function notifyUnread(){
   const target = ALLOWED_PARENTS.includes(PARENT_ORIGIN) ? PARENT_ORIGIN : "*";
   window.parent.postMessage({ action: "show-livechat-notif" }, target);
@@ -938,18 +1040,14 @@ window.addEventListener("DOMContentLoaded", async () => {
       initChatWithUserData();
     }
   } else {
-    // 3) dibuka langsung (bukan iframe)
     if (!currentActiveId) {
-      await ensureGuestLocalIdentity();  // akan set guest UID / ID lokal
+      await ensureGuestLocalIdentity();
     } else {
-      // sudah ada ID dari email → jangan override dengan guest
       updateUserHeader();
       bindPresenceAndNotif();
       initChatWithUserData();
     }
   }
-
-  // header tetap di-update
   updateUserHeader();
 });
 </script>
