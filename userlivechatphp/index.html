@@ -20,10 +20,6 @@ body {
   -ms-overflow-style: none;
 }
 
-body::-webkit-scrollbar {
-  display: none;
-}
-
   header {
     background-color: #1668dc;
     padding: 0px 10px;
@@ -95,11 +91,20 @@ body::-webkit-scrollbar {
   height: 60vh;
      border-radius: 10px;
     border: 1px solid #3c89e8;
-    
+    scroll-behavior: smooth;
 }
 
 .chat-box::-webkit-scrollbar {
-  display: none;
+  width: 6px;
+}
+
+.chat-box::-webkit-scrollbar-thumb {
+  background: #1668dc;
+  border-radius: 6px;
+}
+
+.chat-box::-webkit-scrollbar-track {
+  background: transparent;
 }
   .message {
     padding: 0.5rem 0.75rem;
