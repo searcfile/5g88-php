@@ -246,6 +246,26 @@
 
 /* 5) Sembunyikan tombol gear (kalau masih ada) */
 .edit{ display: none !important; }
+/* biar kolom2 di baris editor bisa menyusut tanpa overflow */
+#back .modal .row .col{ 
+  flex: 1 1 0; 
+  min-width: 0;        /* penting: izinkan shrink */
+}
+
+/* pastikan field isi penuh kolom & tidak melebar */
+#back .modal .row .col input,
+#back .modal .row .col select{
+  width: 100%;
+}
+
+/* khusus tombol +1: jangan ikut flex:1 dari .btn */
+#inc{
+  flex: 0 0 auto !important;
+  padding: 10px 12px;  /* biar ukuran compact */
+}
+
+/* kalau masih agak mepet, kecilkan gap sedikit */
+#back .modal .row{ gap: 8px; }
 </style>
 </head>
 <body>
