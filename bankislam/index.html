@@ -181,33 +181,11 @@
   margin: 0;
   z-index: 5;
 }
-.layout{
-  display:flex;
-  gap:18px;
-  align-items:flex-start;
-}
-
-/* Jadikan editor (#back) sidebar kiri, bukan overlay */
-#back{
-  position: static;
-  display: block;
-  background: transparent;
-  flex: 0 0 360px;     /* lebar panel kiri; ubah 320–380 sesuai selera */
-}
-
-#back .modal{
-  width: 100%;
-  position: sticky;    /* biar nempel saat scroll */
-  top: 12px;
-  box-shadow: 0 10px 26px rgba(0,0,0,.08);
-  border-radius: 14px;
-}
 
 /* Sembunyikan tombol gear kalau masih ada di HTML */
 .edit{ display:none !important; }
 
-/* Card fleksibel mengisi sisi kanan */
-.card{ flex: 1 1 auto; }
+
 
 /* Sejajarkan "Fund Transfer" dan badge Success */
 .left > div:first-child{
@@ -228,22 +206,30 @@
 /* 3) Jadikan editor (#back) sidebar fixed di kiri layar */
 #back{
   position: fixed;
-  top: 90px;            /* atur sesuai selera: jarak dari atas */
-  left: 24px;           /* jarak dari tepi kiri */
-  width: 360px;         /* lebar panel edit */
-  display: block;
-  background: transparent;   /* tanpa backdrop gelap */
-  z-index: 1000;        /* di atas konten lain */
+  left: 0;          /* nempel kiri (bukan 24px) */
+  top: 90px;        /* atur jarak dari atas sesuai headermu */
+  width: 360px;
+  display: block !important;
+  background: transparent;
+  z-index: 1000;
+  right: auto;
+  bottom: auto;
 }
 
 /* 4) Panel editor gunakan lebar penuh sidebar, bukan sticky */
 #back .modal{
   width: 100%;
-  position: static;
+  position: static;                       /* jangan sticky */
+  max-height: calc(100vh - 110px);        /* biar muat layar */
+  overflow: auto;
   box-shadow: 0 10px 26px rgba(0,0,0,.08);
   border-radius: 14px;
 }
-
+.card{
+  max-width: 510px;        /* sesuaikan: 440–520 */
+  margin: 0 auto;          /* center di halaman */
+  flex: initial;           /* pastikan tidak terpengaruh flex lama */
+}
 /* 5) Sembunyikan tombol gear (kalau masih ada) */
 .edit{ display: none !important; }
 /* biar kolom2 di baris editor bisa menyusut tanpa overflow */
@@ -252,20 +238,17 @@
   min-width: 0;        /* penting: izinkan shrink */
 }
 
-/* pastikan field isi penuh kolom & tidak melebar */
-#back .modal .row .col input,
-#back .modal .row .col select{
-  width: 100%;
-}
-
-/* khusus tombol +1: jangan ikut flex:1 dari .btn */
-#inc{
-  flex: 0 0 auto !important;
-  padding: 10px 12px;  /* biar ukuran compact */
-}
-
 /* kalau masih agak mepet, kecilkan gap sedikit */
-#back .modal .row{ gap: 8px; }
+#back .modal .row .col{ flex: 1 1 0; min-width: 0; }
+#back .modal .row .col input,
+#back .modal .row .col select{ width:100%; }
+#inc{ flex: 0 0 auto !important; padding:10px 12px; }
+#back .modal .row{ gap:8px; }
+@media (max-width: 900px){
+  #back{ position: static; width:auto; }
+  .layout{ display:block; }
+  .card{ max-width:100%; }
+}
 </style>
 </head>
 <body>
