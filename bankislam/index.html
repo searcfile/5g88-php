@@ -3,479 +3,349 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Transaction Summary — Mock (5G88)</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<title>Transaction Summary — Exact Mock</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --page-bg: #fff;
-    --header-pink: #d93a57; /* top bar color */
-    --card-bg: #ffffff;
-    --muted: #8a8a8a;
-    --accent: #d93a57;
-    --success: #3fd4b0;
-    --card-radius: 12px;
-    --outer-radius: 22px;
-    --shadow-lg: 0 20px 40px rgba(19,18,18,0.06);
-    --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    --pink:#d84862;               /* top bar & primary (disetel agar mirip) */
+    --pink-press:#c83853;
+    --ink:#161616;
+    --muted:#8d8d8d;
+    --muted-2:#666;
+    --card:#fff;
+    --success:#32c9a9;
+    --success-bg: rgba(50,201,169,.10);
+    --shadow: 0 14px 32px rgba(0,0,0,.06);
+    --shadow-btn: 0 10px 24px rgba(216,72,98,.18);
+    --border: rgba(0,0,0,.06);
+    --radius-xl: 22px;            /* header outer */
+    --radius-card: 14px;          /* kartu putih */
+    --radius-pill: 999px;
+    --font: "Inter",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
   }
+
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;font-family:var(--font);background:linear-gradient(180deg,#fff 0%, #fbfafb 100%);color:#111}
-  /* container centers */
+  html,body{height:100%;margin:0;background:#fff;font-family:var(--font);color:var(--ink)}
   .page{
-    max-width:920px;
-    margin:26px auto;
-    padding:0 18px 40px;
+    /* contoh gambar lebar ~630px; kita kunci ke 640 agar proporsional */
+    max-width:640px; margin:24px auto 56px; padding:0 18px;
   }
 
-  /* header top rounded pink bar */
-  .topbar{
-    background:var(--header-pink);
-    height:46px;
-    border-radius:var(--outer-radius) var(--outer-radius) 0 0;
-    box-shadow: 0 6px 14px rgba(217,58,87,0.12);
+  /* HEADER PINK ATAS */
+  .topcap{
+    height:54px;
+    background:var(--pink);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    box-shadow: 0 8px 18px rgba(216,72,98,.18);
   }
-  .header-row{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    margin-top:-24px; /* lift card over topbar like screenshot */
+  .hdr{
+    margin-top:-22px;             /* “menggantung” di bawah pink bar */
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 8px;
+  }
+  .hdr .title{
+    font-size:18px; font-weight:700; letter-spacing:.1px;
+  }
+  .hdr .fav{display:flex; gap:10px; align-items:center; font-weight:600; color:#111}
+  .hdr .star{
+    width:24px;height:24px;border-radius:50%;
+    display:grid;place-items:center;font-size:16px;color:#111;
   }
 
-  .title-left{
-    display:flex;
-    gap:12px;
-    align-items:center;
-  }
-  .title-left h1{
-    margin:0;
-    font-size:18px;
-    font-weight:700;
-    color:#111;
-  }
-  .fav{color:#111; font-weight:600; font-size:13px; display:flex; gap:10px; align-items:center}
-  .fav .star{font-size:16px; color:#111}
-
-  /* main card */
+  /* KARTU PUTIH */
   .card{
-    background:var(--card-bg);
-    border-radius:16px;
-    padding:20px 22px;
-    box-shadow: var(--shadow-lg);
-    border:1px solid rgba(0,0,0,0.04);
-    margin-top:10px;
-    position:relative;
+    margin-top:10px; background:var(--card); border-radius:var(--radius-card);
+    padding:18px 20px; box-shadow:var(--shadow); border:1px solid var(--border);
+  }
+  .edit{
+    position:absolute; right:18px; margin-top:-6px;
+    background:transparent; border:0; cursor:pointer; color:#9a9a9a; font-size:18px;
   }
 
-  /* small gear edit button top-right */
-  .edit-btn{
-    position:absolute;
-    right:18px;
-    top:14px;
-    background:transparent;
-    border:0;
-    cursor:pointer;
-    font-size:18px;
-    color:var(--muted);
+  .row-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+  .left{ flex:1; }
+  .type{ font-weight:700; font-size:16px; color:#111; display:inline-block; }
+  .badge{
+    display:inline-flex; align-items:center; gap:6px; margin-left:12px;
+    font-size:12px; font-weight:700; color:var(--success);
+    background:var(--success-bg); border:1px solid rgba(50,201,169,.18);
+    padding:6px 10px; border-radius:var(--radius-pill);
   }
 
-  /* top row inside card */
-  .card-top{
-    display:flex;
-    justify-content:space-between;
-    gap:12px;
-    align-items:flex-start;
+  .amount{ min-width:140px; text-align:right; }
+  .amount .rm{ color:#c13650; font-weight:800; font-size:18px; letter-spacing:.1px; }
+
+  .refwrap{
+    margin-top:10px; display:flex; justify-content:space-between; gap:10px;
   }
-  .left{
-    flex:1;
-  }
-  .tx-type{font-weight:700;font-size:16px;color:#111;display:inline-block}
-  .status-pill{
-    display:inline-block;
-    margin-left:12px;
-    padding:6px 10px;
-    border-radius:999px;
-    font-weight:700;
-    font-size:12px;
-    color:var(--success);
-    background: rgba(63,212,176,0.08);
-    border:1px solid rgba(63,212,176,0.12);
-  }
+  .refleft{ color:var(--muted); font-size:13px; line-height:1.5; }
+  .view{ color:#c13650; font-weight:600; font-size:13px; cursor:pointer; white-space:nowrap; }
 
-  .ref-block{
-    margin-top:12px;
-    display:flex;
-    justify-content:space-between;
-    gap:12px;
-    align-items:flex-start;
-  }
-  .ref-left{color:var(--muted); font-size:13px}
-  .view-receipt{color:var(--accent); font-weight:700; cursor:pointer; font-size:13px}
+  hr{ border:0; border-top:1px solid var(--border); margin:14px 0 12px; }
 
-  .amount{
-    font-weight:800;
-    font-size:18px;
-    text-align:right;
-    min-width:140px;
-    color:#111;
-  }
-  .amount .rm{color:var(--accent); font-weight:800; display:block; font-size:18px}
+  .sect{ font-weight:700; font-size:15px; color:#111; margin-bottom:8px; }
+  .detail{ font-size:14px; color:#333; line-height:1.5; }
+  .detail .sub{ color:var(--muted); font-weight:600; margin-top:6px; }
 
-  hr{border:0;border-top:1px solid rgba(0,0,0,0.04);margin:14px 0}
+  .more{ margin-top:10px; color:#8d8d8d; font-size:13px; cursor:pointer; display:inline-flex; gap:8px; align-items:center; }
 
-  /* details */
-  .section-title{font-weight:700; margin-bottom:8px; font-size:15px; color:#111}
-  .detail-text{font-size:14px; color:#333; line-height:1.6}
-  .detail-muted{color:var(--muted); font-weight:600; margin-top:6px}
-
-  .view-more{margin-top:6px;color:var(--muted);font-size:13px;cursor:pointer}
-
-  /* footer actions */
+  /* FOOTER BUTTONS */
   .actions{
-    margin-top:18px;
-    display:flex;
-    gap:18px;
+    margin-top:18px; display:flex; gap:18px;
   }
   .btn{
-    padding:12px 24px;
-    border-radius:999px;
-    border:1px solid rgba(0,0,0,0.06);
-    background:#fff;
-    font-weight:700;
-    cursor:pointer;
-    font-size:14px;
-    min-width:180px;
-    text-align:center;
+    flex:1; padding:12px 22px; border-radius:var(--radius-pill);
+    border:1px solid var(--border); cursor:pointer; font-weight:700; font-size:14px;
+    background:#fff; color:#1a1a1a;
+    box-shadow: 0 2px 0 rgba(0,0,0,.02), 0 6px 14px rgba(0,0,0,.06) inset;
   }
   .btn.primary{
-    background:linear-gradient(180deg,var(--accent), #c82e4b);
-    color:#fff;
-    box-shadow: 0 10px 24px rgba(216,58,87,0.14);
-    border:1px solid rgba(0,0,0,0.06);
+    flex:1; background:linear-gradient(180deg,var(--pink),var(--pink-press));
+    color:#fff; border:1px solid var(--border); box-shadow:var(--shadow-btn);
   }
 
-  /* modal editor styles */
-  .modal-backdrop{position:fixed;inset:0;background:rgba(9,9,9,0.36);display:none;align-items:center;justify-content:center;z-index:1200}
-  .modal{background:#fff;padding:18px;border-radius:12px;max-width:520px;width:92%;box-shadow:0 16px 40px rgba(12,12,12,0.18);border:1px solid rgba(0,0,0,0.06)}
-  .modal h3{margin:0 0 12px 0}
-  .field{margin-bottom:12px;display:flex;flex-direction:column}
-  .field label{font-weight:700;margin-bottom:6px}
-  .field input, .field select{padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);font-size:14px}
-  .row{display:flex;gap:10px}
-  .row .col{flex:1}
+  /* MODAL EDITOR */
+  .back{ position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; z-index:50; }
+  .modal{ width:min(520px,92vw); background:#fff; border-radius:14px; border:1px solid var(--border);
+          padding:16px 16px 14px; box-shadow:0 18px 40px rgba(0,0,0,.18); }
+  .modal h3{ margin:0 0 12px 0; font-size:16px; }
+  .fld{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+  .row{ display:flex; gap:10px; }
+  .col{ flex:1; }
+  .fld label{ font-weight:600; }
+  .fld input, .fld select{
+    border:1px solid var(--border); border-radius:9px; padding:10px 12px; font-size:14px;
+  }
+  .ctl{ display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
+  .gear{ position:relative; top:-6px; }
 
-  .modal .controls{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
+  /* BLUR MASKING */
+  .blurred{ filter:blur(6px); transition:filter .25s ease; }
+  .initial{ font-weight:800; margin-right:6px; }
 
-  /* blur class for masking sensitive info */
-  .blurred{filter:blur(6px);transition:filter .25s ease}
-  .name-initial{font-weight:800;margin-right:6px}
-
-  /* small responsive */
-  @media (max-width:760px){
-    .amount{min-width:100px;text-align:left}
-    .actions{flex-direction:column;align-items:stretch}
+  @media (max-width:640px){
+    .amount{ text-align:left; min-width:auto; }
+    .actions{ flex-direction:column; }
   }
 </style>
 </head>
 <body>
   <div class="page">
-    <div class="topbar"></div>
+    <div class="topcap"></div>
 
-    <div class="header-row" style="margin-bottom:8px">
-      <div class="title-left">
-        <h1>Transaction Summary</h1>
-      </div>
-      <div class="fav">
-        <div>Save as favourite</div>
-        <div class="star">☆</div>
-      </div>
+    <div class="hdr">
+      <div class="title">Transaction Summary</div>
+      <div class="fav">Save as favourite <span class="star">☆</span></div>
     </div>
 
     <div class="card" id="card">
-      <button class="edit-btn" id="openEditor" title="Edit (manual)">⚙️</button>
+      <button class="edit gear edit" id="open">⚙️</button>
 
-      <div class="card-top">
+      <div class="row-top">
         <div class="left">
-          <div>
-            <span class="tx-type" id="txType">Fund Transfer</span>
-            <span class="status-pill" id="txStatus">Success</span>
-          </div>
+          <div><span class="type">Fund Transfer</span><span class="badge"><span>Success</span></span></div>
 
-          <div class="ref-block">
-            <div class="ref-left">
-              <div style="font-size:13px;color:var(--muted)">Reference Number: <span id="refNumber">251002170720267593224</span></div>
-              <div id="dateText" style="font-size:13px;color:var(--muted);margin-top:6px">02 Oct 2025 05:07:21 PM</div>
+          <div class="refwrap">
+            <div class="refleft">
+              <div>Reference Number: <span id="refNum">251002170720267593224</span></div>
+              <div id="dateText">02 Oct 2025 05:07:21 PM</div>
             </div>
-            <div style="text-align:right">
-              <div class="view-receipt">View Receipt</div>
-            </div>
+            <div class="view">View Receipt</div>
           </div>
-
         </div>
 
-        <div class="amount" aria-hidden="false">
-          <span class="rm" id="amountText">RM 50.00</span>
-        </div>
+        <div class="amount"><span class="rm" id="amt">RM 50.00</span></div>
       </div>
 
       <hr>
 
       <div>
-        <div class="section-title">Recipient Details</div>
-        <div class="detail-text" id="recipientBlock">
-          <div><span class="name-initial" id="nameInitial">B</span><span id="nameRest">AHARUDEEN BIN ABDUL</span></div>
-          <div id="bankName" style="margin-top:6px">Maybank</div>
-          <div id="accountNum" class="detail-muted">164548072822</div>
+        <div class="sect">Recipient Details</div>
+        <div class="detail">
+          <div><span class="initial" id="nmIni">B</span><span id="nmRest">AHARUDEEN BIN ABDUL</span></div>
+          <div id="bankName" style="margin-top:4px">Maybank</div>
+          <div class="sub" id="accNum">164548072822</div>
         </div>
       </div>
 
       <div style="margin-top:12px">
-        <div class="section-title">Transfer Mode</div>
-        <div class="detail-text detail-muted" id="transferMode">DuitNow</div>
+        <div class="sect">Transfer Mode</div>
+        <div class="detail sub">DuitNow</div>
       </div>
 
-      <div class="view-more">View More ▾</div>
+      <div class="more">View More <span>▾</span></div>
 
       <div class="actions">
-        <button class="btn" id="another">Another Transfer</button>
-        <button class="btn primary" id="done">Done</button>
+        <button class="btn">Another Transfer</button>
+        <button class="btn primary">Done</button>
       </div>
     </div>
   </div>
 
-  <!-- Modal editor -->
-  <div class="modal-backdrop" id="backdrop" role="dialog" aria-modal="true">
-    <div class="modal" role="document" aria-label="Editor">
+  <!-- MODAL -->
+  <div class="back" id="back">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Editor">
       <h3>Edit Transaction</h3>
 
-      <div class="field">
+      <div class="fld">
         <label>Amount (RM)</label>
-        <input id="inAmount" type="number" step="0.01" value="50.00" />
+        <input id="inAmount" type="number" step="0.01" value="50.00">
       </div>
 
       <div class="row">
-        <div class="col field">
-          <label>Date & Time</label>
-          <input id="inDatetime" type="datetime-local"/>
+        <div class="col fld">
+          <label>Date &amp; Time</label>
+          <input id="inDate" type="datetime-local">
         </div>
-        <div class="col field">
+        <div class="col fld">
           <label>Reference prefix</label>
-          <input id="inPrefix" type="text" value="2510"/>
+          <div class="row">
+            <input id="inPrefix" type="text" value="2510" class="col">
+            <button class="btn" id="inc" style="padding:10px 12px;min-width:90px">+1</button>
+          </div>
         </div>
       </div>
 
       <div class="row">
-        <div class="col field">
-          <label>Ref total length</label>
-          <select id="inRefLen">
-            <option value="20">20</option>
-            <option value="24" selected>24</option>
-            <option value="28">28</option>
-            <option value="32">32</option>
+        <div class="col fld">
+          <label>Total ref length</label>
+          <select id="inLen">
+            <option>20</option><option selected>24</option><option>28</option><option>32</option>
           </select>
         </div>
-        <div class="col field">
+        <div class="col fld">
           <label>Force Bank (optional)</label>
           <select id="inBank">
             <option value="">Random</option>
-            <option value="Maybank">Maybank (12)</option>
-            <option value="CIMB">CIMB (10)</option>
-            <option value="RHB">RHB (12)</option>
-            <option value="Public">Public Bank (14)</option>
-            <option value="HLB">Hong Leong (12)</option>
+            <option>Maybank</option>
+            <option>CIMB</option>
+            <option>RHB</option>
+            <option>Public</option>
+            <option>HLB</option>
           </select>
         </div>
       </div>
 
-      <div class="field">
+      <div class="fld">
         <label>Recipient Full Name</label>
-        <input id="inName" type="text" value="BAHARUDEEN BIN ABDUL" />
-        <div style="margin-top:6px;font-size:13px;color:var(--muted)">
-          Saat Update, preview akan blur semua sensitive (account, ref, date, amount) kecuali initial nama.
-        </div>
+        <input id="inName" type="text" value="BAHARUDEEN BIN ABDUL">
+        <div style="color:var(--muted);font-size:13px">Saat Update, data sensitif akan otomatis di‑blur; hanya huruf awal nama yang tampak.</div>
       </div>
 
-      <div class="controls">
-        <button class="btn" id="closeModal">Cancel</button>
-        <button class="btn" id="incPrefix">+1 Prefix</button>
-        <button class="btn primary" id="updateBtn">Update & Blur</button>
+      <div class="ctl">
+        <button class="btn" id="close">Cancel</button>
+        <button class="btn primary" id="apply">Update &amp; Blur</button>
       </div>
     </div>
   </div>
 
 <script>
-  // Bank definitions (name + account length)
+  /* ======== DATA BANK (panjang no. akun) ======== */
   const BANKS = [
     {name:'Maybank', len:12},
-    {name:'CIMB', len:10},
-    {name:'RHB', len:12},
-    {name:'Public', len:14},
-    {name:'HLB', len:12}
+    {name:'CIMB',    len:10},
+    {name:'RHB',     len:12},
+    {name:'Public',  len:14},
+    {name:'HLB',     len:12}, // Hong Leong
   ];
 
-  // DOM elements
-  const openEditor = document.getElementById('openEditor');
-  const backdrop = document.getElementById('backdrop');
-  const closeModal = document.getElementById('closeModal');
-  const updateBtn = document.getElementById('updateBtn');
-  const incPrefixBtn = document.getElementById('incPrefix');
+  /* ======== EL ======== */
+  const back = document.getElementById('back');
+  const open = document.getElementById('open');
+  const closeBtn = document.getElementById('close');
+  const apply = document.getElementById('apply');
+  const inc = document.getElementById('inc');
+
+  const refNum = document.getElementById('refNum');
+  const dateText = document.getElementById('dateText');
+  const amt = document.getElementById('amt');
+  const nmIni = document.getElementById('nmIni');
+  const nmRest = document.getElementById('nmRest');
+  const bankName = document.getElementById('bankName');
+  const accNum = document.getElementById('accNum');
 
   const inAmount = document.getElementById('inAmount');
-  const inDatetime = document.getElementById('inDatetime');
+  const inDate = document.getElementById('inDate');
   const inPrefix = document.getElementById('inPrefix');
-  const inRefLen = document.getElementById('inRefLen');
+  const inLen = document.getElementById('inLen');
   const inBank = document.getElementById('inBank');
   const inName = document.getElementById('inName');
 
-  const amountText = document.getElementById('amountText');
-  const dateText = document.getElementById('dateText');
-  const refNumber = document.getElementById('refNumber');
-  const bankName = document.getElementById('bankName');
-  const accountNum = document.getElementById('accountNum');
-  const nameInitial = document.getElementById('nameInitial');
-  const nameRest = document.getElementById('nameRest');
-
-  // helper functions
-  const randInt = (min,max)=> Math.floor(Math.random()*(max-min+1))+min;
-  const randDigits = (n)=> Array.from({length:n},()=>String(randInt(0,9))).join('');
-  function chooseBank(force){
-    if(force){
-      const b = BANKS.find(x=>x.name===force);
-      if(b) return b;
-    }
-    return BANKS[randInt(0,BANKS.length-1)];
+  /* ======== HELPERS ======== */
+  const pad2 = n => String(n).padStart(2,'0');
+  const randi = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+  const digits = n => Array.from({length:n},()=>String(randi(0,9))).join('');
+  const pickBank = forced => forced ? BANKS.find(b=>b.name===forced) : BANKS[randi(0,BANKS.length-1)];
+  const splitName = name => {
+    const s = (name||'').trim().toUpperCase();
+    if(!s) return {i:'—', r:''};
+    return {i:s[0], r:s.slice(1)};
+  };
+  function toCardDate(localVal){
+    if(!localVal) return '02 Oct 2025 05:07:21 PM';
+    let v = localVal;
+    if(v.length===16) v += ':00';
+    const [d,t] = v.split('T');
+    const [Y,M,D] = d.split('-').map(Number);
+    const [h,m,s] = t.split(':').map(Number);
+    const dt = new Date(Y,M-1,D,h||0,m||0,s||0);
+    const mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][dt.getMonth()];
+    let hh = dt.getHours(); const ap = hh>=12?'PM':'AM'; hh = hh%12 || 12;
+    return `${pad2(dt.getDate())} ${mon} ${dt.getFullYear()} ${pad2(hh)}:${pad2(dt.getMinutes())}:${pad2(dt.getSeconds())} ${ap}`;
   }
-  function genRef(prefix, totalLen){
+  function buildRef(prefix,len){
     prefix = String(prefix||'2510');
-    const remain = Math.max(0, totalLen - prefix.length);
-    return prefix + randDigits(remain);
-  }
-  function pad2(n){return String(n).padStart(2,'0');}
-  function formatDateFromLocalInput(val){
-    if(!val) return '02 Oct 2025 05:07:21 PM';
-    // val like 2025-10-02T17:07:21 or without seconds
-    let normalized = val;
-    if(normalized.length === 16) normalized += ':00';
-    const [dPart,tPart] = normalized.split('T');
-    if(!dPart || !tPart) return normalized;
-    const [y,m,d] = dPart.split('-').map(Number);
-    const [hh,mm,ss] = tPart.split(':').map(Number);
-    const dateObj = new Date(y, m-1, d, hh||0, mm||0, ss||0);
-    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const day = pad2(dateObj.getDate());
-    const month = monthNames[dateObj.getMonth()] || 'Oct';
-    const year = dateObj.getFullYear();
-    let hh12 = dateObj.getHours();
-    const ampm = hh12 >= 12 ? 'PM' : 'AM';
-    hh12 = hh12 % 12; hh12 = hh12 ? hh12 : 12;
-    const minute = pad2(dateObj.getMinutes());
-    const second = pad2(dateObj.getSeconds());
-    return `${day} ${month} ${year} ${hh12}:${minute}:${second} ${ampm}`;
+    const remain = Math.max(0, Number(len||24) - prefix.length);
+    return prefix + digits(remain);
   }
 
-  function splitName(full){
-    const s = (full||'').trim();
-    if(!s) return {initial:'—', rest:''};
-    const ini = s.charAt(0).toUpperCase();
-    const rest = s.slice(1).toUpperCase();
-    return {initial:ini, rest:rest};
-  }
+  /* ======== MODAL OPEN/CLOSE ======== */
+  open.addEventListener('click', ()=> back.style.display='flex');
+  closeBtn.addEventListener('click', ()=> back.style.display='none');
+  back.addEventListener('click', e=>{ if(e.target===back) back.style.display='none'; });
 
-  // modal open/close
-  openEditor.addEventListener('click', ()=> {
-    backdrop.style.display = 'flex';
-  });
-  closeModal.addEventListener('click', ()=> {
-    backdrop.style.display = 'none';
-  });
-  backdrop.addEventListener('click', (e)=>{
-    if(e.target === backdrop) backdrop.style.display = 'none';
+  /* ======== PREFIX +1 ======== */
+  inc.addEventListener('click', e=>{
+    e.preventDefault();
+    let cur = parseInt(inPrefix.value||'2510',10);
+    if(Number.isNaN(cur)) cur = 2510;
+    inPrefix.value = String(cur + 1);
   });
 
-  // inc prefix
-  incPrefixBtn.addEventListener('click', ()=>{
-    let cur = parseInt(inPrefix.value || '2510',10);
-    if(isNaN(cur)) cur = 2510;
-    inPrefix.value = String(cur+1);
-  });
-
-  // initial load values (match screenshot)
+  /* ======== INITIAL STATE ======== */
   window.addEventListener('load', ()=>{
-    // set default datetime-local to sample time (2025-10-02T17:07:21 local)
-    inDatetime.value = '2025-10-02T17:07:21';
-    // initial UI already set in HTML; ensure fields reflect that
-    amountText.textContent = inAmount.value ? ('RM ' + parseFloat(inAmount.value).toFixed(2)) : 'RM 0.00';
+    inDate.value = '2025-10-02T17:07:21';
   });
 
-  // update & blur
-  updateBtn.addEventListener('click', (e)=>{
+  /* ======== APPLY & BLUR ======== */
+  apply.addEventListener('click', e=>{
     e.preventDefault();
 
-    // set amount
-    const amt = parseFloat(inAmount.value || 0);
-    amountText.textContent = 'RM ' + amt.toFixed(2);
+    // amount
+    const amount = parseFloat(inAmount.value||0).toFixed(2);
+    amt.textContent = `RM ${amount}`;
 
-    // set date
-    dateText.textContent = formatDateFromLocalInput(inDatetime.value);
+    // datetime
+    dateText.textContent = toCardDate(inDate.value);
 
-    // ref generation
-    const prefix = inPrefix.value || '2510';
-    const totalLen = parseInt(inRefLen.value || 24,10);
-    const newRef = genRef(prefix, totalLen);
-    refNumber.textContent = newRef;
+    // reference
+    refNum.textContent = buildRef(inPrefix.value, inLen.value);
 
-    // bank/account
-    const forced = inBank.value || '';
-    const bank = chooseBank(forced);
+    // bank & account
+    const bank = pickBank(inBank.value || '');
     bankName.textContent = bank.name;
-    accountNum.textContent = randDigits(bank.len);
+    accNum.textContent = digits(bank.len);
 
-    // name initial & rest
-    const nm = inName.value || 'BAHARUDEEN BIN ABDUL';
-    const s = splitName(nm);
-    nameInitial.textContent = s.initial;
-    nameRest.textContent = s.rest || '—';
+    // name
+    const {i,r} = splitName(inName.value || 'BAHARUDEEN BIN ABDUL');
+    nmIni.textContent = i;
+    nmRest.textContent = r;
 
-    // apply blur to sensitive fields: refNumber, dateText, accountNum, amountText, nameRest
-    // keep initial visible
-    refNumber.classList.add('blurred');
-    dateText.classList.add('blurred');
-    accountNum.classList.add('blurred');
-    amountText.classList.add('blurred');
-    nameRest.classList.add('blurred');
+    // BLUR SENSITIF
+    [nmRest, accNum, refNum, dateText, amt].forEach(el=> el.classList.add('blurred'));
 
-    // close modal
-    backdrop.style.display = 'none';
+    back.style.display='none';
   });
-
-  // Another / Done actions (simple behavior)
-  document.getElementById('another').addEventListener('click', ()=>{
-    // clear card preview to allow new
-    // unblur fields and reset some defaults
-    refNumber.classList.remove('blurred');
-    dateText.classList.remove('blurred');
-    accountNum.classList.remove('blurred');
-    amountText.classList.remove('blurred');
-    nameRest.classList.remove('blurred');
-
-    inAmount.value = '';
-    inDatetime.value = '';
-    inPrefix.value = '2510';
-    inRefLen.value = '24';
-    inBank.value = '';
-    inName.value = '';
-    amountText.textContent = 'RM 0.00';
-    dateText.textContent = '—';
-    refNumber.textContent = '—';
-    bankName.textContent = '—';
-    accountNum.textContent = '—';
-    nameInitial.textContent = '—';
-    nameRest.textContent = '—';
-  });
-
-  document.getElementById('done').addEventListener('click', ()=>{
-    alert('Done — simulated (ubah sesuai kebutuhan).');
-  });
-
 </script>
 </body>
 </html>
