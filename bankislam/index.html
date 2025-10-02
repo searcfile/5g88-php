@@ -106,7 +106,7 @@
   }
 
   /* MODAL EDITOR */
-  .back{ position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; z-index:50; }
+
   .modal{ width:min(520px,92vw); background:#fff; border-radius:14px; border:1px solid var(--border);
           padding:16px 16px 14px; box-shadow:0 18px 40px rgba(0,0,0,.18); }
   .modal h3{ margin:0 0 12px 0; font-size:16px; }
@@ -197,38 +197,6 @@
   margin: 24px auto 56px;
 }
 
-/* 2) Jangan pakai layout 2 kolom lagi */
-.layout{
-  display: block;       /* sehingga card tidak terdorong */
-}
-
-/* 3) Jadikan editor (#back) sidebar fixed di kiri layar */
-#back{
-  position: fixed;
-  left: 0;          /* nempel kiri (bukan 24px) */
-  top: 90px;        /* atur jarak dari atas sesuai headermu */
-  width: 360px;
-  display: block !important;
-  background: transparent;
-  z-index: 1000;
-  right: auto;
-  bottom: auto;
-}
-
-/* 4) Panel editor gunakan lebar penuh sidebar, bukan sticky */
-#back .modal{
-  width: 100%;
-  position: static;                       /* jangan sticky */
-  max-height: calc(100vh - 110px);        /* biar muat layar */
-  overflow: auto;
-  box-shadow: 0 10px 26px rgba(0,0,0,.08);
-  border-radius: 14px;
-}
-.card{
-  max-width: 510px;        /* sesuaikan: 440–520 */
-  margin: 0 auto;          /* center di halaman */
-  flex: initial;           /* pastikan tidak terpengaruh flex lama */
-}
 /* 5) Sembunyikan tombol gear (kalau masih ada) */
 .edit{ display: none !important; }
 /* biar kolom2 di baris editor bisa menyusut tanpa overflow */
@@ -247,6 +215,63 @@
   #back{ position: static; width:auto; }
   .layout{ display:block; }
   .card{ max-width:100%; }
+}
+.page{
+  max-width: 980px;            /* boleh 920–1000, sesuaikan layar */
+  margin: 24px auto 56px;
+  padding: 0 18px;
+}
+
+/* Dua kolom yang dicenter */
+.layout{
+  display: grid !important;
+  grid-template-columns: 360px 510px; /* kiri=editor, kanan=resit */
+  gap: 20px;                           /* kecilkan kalau mau lebih “nempel” */
+  justify-content: center;             /* pasangan dicenter */
+  align-items: start;
+}
+
+/* Editor jadi kolom kiri (bukan overlay/fixed) */
+#back{
+  position: static !important;
+  inset: auto !important;              /* netralisir inset:0 lama */
+  display: block !important;
+  background: transparent !important;
+  width: auto !important;
+  z-index: 1;
+}
+
+/* Panel editor isi penuh kolom kiri, boleh sticky di atas */
+#back .modal{
+  width: 100% !important;
+  position: sticky;
+  top: 12px;
+  box-shadow: 0 10px 26px rgba(0,0,0,.08);
+  border-radius: 14px;
+  max-height: none;
+  overflow: visible;
+}
+
+/* Resit di kolom kanan, lebar tetap */
+.card{
+  width: 510px;
+  max-width: 510px;
+  margin: 0 !important;      /* jangan auto-center sendiri; mengikuti grid */
+  flex: initial !important;
+}
+
+/* Pastikan field editor tidak meluber */
+#back .modal .row .col{ flex: 1 1 0; min-width: 0; }
+#back .modal .row .col input,
+#back .modal .row .col select{ width:100%; }
+#inc{ flex: 0 0 auto !important; padding:10px 12px; }
+#back .modal .row{ gap:8px; }
+
+/* Responsif: tumpuk saat layar kecil */
+@media (max-width: 900px){
+  .layout{ grid-template-columns: 1fr; }
+  #back .modal{ position: static; }
+  .card{ width: 100%; max-width: 100%; }
 }
 </style>
 </head>
