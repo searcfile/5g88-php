@@ -173,6 +173,14 @@
 
 /* (opsional pixel-perfect) */
 .badge{ transform: translateY(1px); } 
+.card{ position: relative; overflow: visible; }
+.edit{
+  position: absolute;
+  top: -12px;            /* nilai negatif = keluar ke atas */
+  right: -12px;          /* keluar ke kanan */
+  margin: 0;
+  z-index: 5;
+}
 </style>
 </head>
 <body>
