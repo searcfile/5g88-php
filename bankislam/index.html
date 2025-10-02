@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Transaction Card Editor — 5G88 Style</title>
+<style>
+  :root{
+    --card-bg: #ffffff;
+    --page-bg: #f3f4f6;
+    --muted: #6b6b6b;
+    --accent: #d32f2f; /* red for negative amount */
+    --border: rgba(0,0,0,0.06);
+    --shadow: 0 6px 18px rgba(25,25,25,0.06);
+    --radius: 12px;
+    --font-sans: "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  html,body{
+    height:100%;
+    margin:0;
+    font-family:var(--font-sans);
+    background: linear-gradient(180deg, var(--page-bg), #fff 60%);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    padding:40px;
+    box-sizing:border-box;
+  }
+
+  .wrap{
+    max-width:920px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:1fr 360px;
+    gap:28px;
+    align-items:start;
+  }
+
+  /* Card */
+  .tx-card{
+    background:var(--card-bg);
+    border-radius:var(--radius);
+    border:1px solid var(--border);
+    box-shadow:var(--shadow);
+    padding:20px 22px;
+    position:relative;
+    min-height:96px;
+    display:flex;
+    align-items:flex-start;
+    gap:18px;
+  }
+
+  /* left block text */
+  .tx-left{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+
+  .tx-date{
+    color:var(--muted);
+    font-size:13px;
+    line-height:1;
+    font-weight:600;
+  }
+
+  .tx-time{
+    color:var(--muted);
+    font-size:13px;
+    margin-top:3px;
+    opacity:0.98;
+    letter-spacing:0.2px;
+  }
+
+  .tx-name{
+    margin-top:8px;
+    font-weight:800;
+    font-size:15px;
+    color:#111;
+    letter-spacing:0.2px;
+  }
+
+  .tx-sub{
+    margin-top:3px;
+    color:#444;
+    font-size:13px;
+    font-weight:600;
+  }
+
+  .tx-note{
+    margin-top:2px;
+    color:var(--muted);
+    font-size:12px;
+  }
+
+  /* right block amount */
+  .tx-amount{
+    min-width:180px;
+    text-align:right;
+    align-self:flex-start;
+  }
+  .tx-amount .val{
+    color:var(--accent);
+    font-weight:700;
+    font-size:16px;
+  }
+
+  /* small dashed dash left of amount like image */
+  .tx-amount .dash{
+    display:block;
+    font-weight:700;
+    color:var(--accent);
+    margin-bottom:6px;
+  }
+
+  /* editor panel */
+  .editor{
+    background:#fff;
+    border-radius:12px;
+    padding:18px;
+    border:1px solid var(--border);
+    box-shadow: 0 8px 26px rgba(16,16,16,0.04);
+  }
+  .editor h3{
+    margin:0 0 12px 0;
+    font-size:15px;
+    color:#111;
+  }
+  .field{
+    display:flex;
+    gap:8px;
+    margin-bottom:10px;
+    align-items:center;
+  }
+  .field label{
+    width:110px;
+    font-size:13px;
+    color:#333;
+    font-weight:600;
+  }
+  .field input[type="text"],
+  .field input[type="number"],
+  .field input[type="datetime-local"],
+  .field textarea{
+    flex:1;
+    padding:8px 10px;
+    border-radius:8px;
+    border:1px solid rgba(0,0,0,0.08);
+    font-size:14px;
+    outline:none;
+  }
+  .field textarea{ min-height:60px; resize:vertical; }
+
+  .controls{
+    display:flex;
+    gap:8px;
+    justify-content:flex-end;
+    margin-top:8px;
+  }
+  .btn{
+    border:0;
+    padding:9px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:700;
+    font-size:13px;
+  }
+  .btn.prim{
+    background:linear-gradient(180deg,#111 0,#333 100%);
+    color:#fff;
+    box-shadow: 0 6px 16px rgba(17,17,17,0.16);
+  }
+  .btn.ghost{
+    background:transparent;
+    border:1px solid rgba(0,0,0,0.06);
+    color:#111;
+  }
+
+  .live-toggle{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    margin-bottom:8px;
+    justify-content:space-between;
+  }
+
+  .small{
+    font-size:12px;
+    color:var(--muted);
+  }
+
+  /* responsive */
+  @media (max-width:920px){
+    .wrap{grid-template-columns:1fr; padding:20px; gap:18px;}
+    .tx-amount{min-width:150px}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Card preview -->
+    <div>
+      <div class="tx-card" id="txCard" role="article" aria-label="Transaction card preview">
+        <div class="tx-left">
+          <div>
+            <div class="tx-date" id="displayDate">02 Oct 2025</div>
+            <div class="tx-time" id="displayTime">4:43:39 PM</div>
+          </div>
+
+          <div class="tx-name" id="displayName">MOHD.RADZI BIN MAT L</div>
+
+          <div class="tx-sub" id="displayPayment">payment</div>
+          <div class="tx-note small" id="displayNote">IB DuitNow (ACC NO)</div>
+        </div>
+
+        <div class="tx-amount" aria-hidden="false">
+          <span class="dash" id="displayDash">-</span>
+          <div class="val" id="displayAmount">RM 110.00</div>
+        </div>
+      </div>
+
+      <!-- Optional preview helper: small spacing -->
+      <p style="margin:12px 6px 0 6px; color:var(--muted); font-size:12px;">
+        Preview mirrors the inputs on the right. Amount shows as negative in red like the reference image.
+      </p>
+    </div>
+
+    <!-- Editor -->
+    <aside class="editor" aria-label="Editor panel">
+      <h3>Edit fields (manual)</h3>
+
+      <div class="live-toggle">
+        <div style="display:flex;gap:10px;align-items:center">
+          <input type="checkbox" id="liveUpdate" checked />
+          <label for="liveUpdate" class="small">Live update</label>
+        </div>
+        <div class="small">Card style replicated from image</div>
+      </div>
+
+      <div class="field">
+        <label for="inDatetime">Date & Time</label>
+        <input id="inDatetime" type="datetime-local" />
+      </div>
+
+      <div class="field">
+        <label for="inName">Name</label>
+        <input id="inName" type="text" placeholder="MOHD.RADZI BIN MAT L" />
+      </div>
+
+      <div class="field">
+        <label for="inPayment">Payment</label>
+        <input id="inPayment" type="text" placeholder="payment" />
+      </div>
+
+      <div class="field">
+        <label for="inNote">Account note</label>
+        <input id="inNote" type="text" placeholder="IB DuitNow (ACC NO)" />
+      </div>
+
+      <div class="field">
+        <label for="inAmount">Amount (RM)</label>
+        <input id="inAmount" type="number" step="0.01" min="0" placeholder="110.00" />
+      </div>
+
+      <div class="controls">
+        <button class="btn ghost" id="btnReset">Reset</button>
+        <button class="btn prim" id="btnUpdate">Update</button>
+      </div>
+
+      <hr style="margin:14px 0;border:none;border-top:1px solid rgba(0,0,0,0.04)"/>
+
+      <div style="font-size:13px; color:#444; line-height:1.4">
+        Tips:
+        <ul style="margin:8px 0 0 18px; padding:0;color:var(--muted)">
+          <li>Gunakan <strong>Update</strong> untuk menerapkan saat Live update off.</li>
+          <li>Field <code>Date & Time</code> memakai input browser (<code>datetime-local</code>).</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+<script>
+  // Elements
+  const displayDate = document.getElementById('displayDate');
+  const displayTime = document.getElementById('displayTime');
+  const displayName = document.getElementById('displayName');
+  const displayPayment = document.getElementById('displayPayment');
+  const displayNote = document.getElementById('displayNote');
+  const displayAmount = document.getElementById('displayAmount');
+  const displayDash = document.getElementById('displayDash');
+
+  const inDatetime = document.getElementById('inDatetime');
+  const inName = document.getElementById('inName');
+  const inPayment = document.getElementById('inPayment');
+  const inNote = document.getElementById('inNote');
+  const inAmount = document.getElementById('inAmount');
+  const liveUpdate = document.getElementById('liveUpdate');
+
+  const btnUpdate = document.getElementById('btnUpdate');
+  const btnReset  = document.getElementById('btnReset');
+
+  // default initial state matching the image
+  const initial = {
+    isoDatetime: new Date('2025-10-02T16:43:39').toISOString().slice(0,19),
+    name: 'MOHD.RADZI BIN MAT L',
+    payment: 'payment',
+    note: 'IB DuitNow (ACC NO)',
+    amount: 110.00
+  };
+
+  // helpers: formatting
+  function two(n){ return n.toString().padStart(2,'0'); }
+  function formatDateTimeFromISO(iso){
+    if(!iso) return {date:'--', time:'--'};
+    // iso like '2025-10-02T16:43:39'
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return {date:'--', time:'--'};
+    const day = two(d.getDate());
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const month = monthNames[d.getMonth()];
+    const year = d.getFullYear();
+    // time 12h with seconds and AM/PM
+    let hh = d.getHours();
+    const mm = two(d.getMinutes());
+    const ss = two(d.getSeconds());
+    const ampm = hh >= 12 ? 'PM' : 'AM';
+    hh = hh % 12; hh = hh ? hh : 12;
+    const time = `${hh}:${mm}:${ss} ${ampm}`;
+    const date = `${day} ${month} ${year}`;
+    return {date, time};
+  }
+
+  function formatAmount(num){
+    const n = Number(num) || 0;
+    // ensure 2 decimals
+    return 'RM ' + n.toFixed(2);
+  }
+
+  // initialize inputs & preview
+  function loadInitial(){
+    // datetime-local expects local time without seconds maybe; we'll set full
+    // create local-friendly value for datetime-local (YYYY-MM-DDTHH:MM)
+    const dt = new Date(initial.isoDatetime);
+    // convert ISO to local datetime-local value
+    const local = new Date(initial.isoDatetime);
+    const offset = local.getTimezoneOffset();
+    const localAdjusted = new Date(local.getTime() - offset*60000);
+    const dtLocalStr = localAdjusted.toISOString().slice(0,19); // includes seconds
+    inDatetime.value = dtLocalStr;
+    inName.value = initial.name;
+    inPayment.value = initial.payment;
+    inNote.value = initial.note;
+    inAmount.value = initial.amount.toFixed(2);
+    applyAllFromInputs();
+  }
+
+  function applyAllFromInputs(){
+    // datetime-local returns local time string; convert to Date and format in display
+    const iso = inDatetime.value;
+    // if input has no seconds include :00
+    let normalized = iso;
+    if(iso && iso.length === 16){ normalized = iso + ':00'; } // YYYY-MM-DDTHH:MM
+    // create Date using the local input (no timezone), so add 'Z' offset? easier:
+    // We'll parse as local by replacing 'T' with space
+    let parsed;
+    if(normalized){
+      // Create from parts to avoid timezone shift
+      const [datePart, timePart] = normalized.split('T');
+      if(datePart && timePart){
+        const [y,m,d] = datePart.split('-').map(Number);
+        const [hh,mm,ss] = timePart.split(':').map(Number);
+        parsed = new Date(y, m-1, d, hh||0, mm||0, ss||0);
+      } else {
+        parsed = new Date(normalized);
+      }
+    } else {
+      parsed = new Date();
+    }
+    const {date, time} = formatDateTimeFromISO(parsed.toISOString().slice(0,19));
+    displayDate.textContent = date;
+    displayTime.textContent = time;
+
+    displayName.textContent = inName.value || '—';
+    displayPayment.textContent = inPayment.value || '—';
+    displayNote.textContent = inNote.value || '—';
+
+    // amount
+    const amt = parseFloat(inAmount.value || '0');
+    displayAmount.textContent = formatAmount(amt);
+    // show dash as in image
+    displayDash.textContent = '-';
+  }
+
+  // events
+  [inName,inPayment,inNote,inAmount,inDatetime].forEach(el=>{
+    el.addEventListener('input', ()=>{
+      if(liveUpdate.checked) applyAllFromInputs();
+    });
+  });
+
+  btnUpdate.addEventListener('click', ()=> applyAllFromInputs());
+  btnReset.addEventListener('click', ()=>{
+    inDatetime.value = '';
+    inName.value = '';
+    inPayment.value = '';
+    inNote.value = '';
+    inAmount.value = '';
+    applyAllFromInputs();
+  });
+
+  // on load set defaults
+  loadInitial();
+
+  // accessibility: let user press Enter on amount to update
+  inAmount.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter') applyAllFromInputs();
+  });
+
+</script>
+</body>
+</html>
