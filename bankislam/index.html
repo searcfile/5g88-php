@@ -81,7 +81,7 @@
   .refleft{ color:var(--muted); font-size:13px; line-height:1.5; }
   .view{ color:#c13650; font-weight:600; font-size:13px; cursor:pointer; white-space:nowrap; }
 
-  hr{ border:0; border-top:1px solid var(--border); margin:14px 0 12px; }
+  hr{ border:0;margin:14px 0 12px; }
 
   .sect{ font-weight:700; font-size:15px; color:#111; margin-bottom:8px; }
   .detail{ font-size:14px; color:#333; line-height:1.5; }
@@ -145,6 +145,7 @@
   font-size:13px;
   white-space:nowrap;    /* biar tidak turun baris */
   cursor:pointer;
+  text-decoration: none;
 }
 .ref-date{
   color:#8d8d8d;
@@ -157,6 +158,12 @@
   align-items:flex-end; /* rata kanan */
   gap:6px;              /* jarak antara amount & link */
   min-width:140px;      /* konsisten dengan lebar amount */
+}
+.right-col{ position: relative; }
+.right-col .view-receipt{
+  position: relative;
+  top: 4px;      /* ↓ turun dikit */
+  right: -8px;   /* → geser lebih ke kanan (nilai + untuk makin ke kanan) */
 }
 </style>
 </head>
