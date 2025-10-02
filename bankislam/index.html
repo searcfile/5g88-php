@@ -181,6 +181,39 @@
   margin: 0;
   z-index: 5;
 }
+.layout{
+  display:flex;
+  gap:18px;
+  align-items:flex-start;
+}
+
+/* Jadikan editor (#back) sidebar kiri, bukan overlay */
+#back{
+  position: static;
+  display: block;
+  background: transparent;
+  flex: 0 0 360px;     /* lebar panel kiri; ubah 320–380 sesuai selera */
+}
+
+#back .modal{
+  width: 100%;
+  position: sticky;    /* biar nempel saat scroll */
+  top: 12px;
+  box-shadow: 0 10px 26px rgba(0,0,0,.08);
+  border-radius: 14px;
+}
+
+/* Sembunyikan tombol gear kalau masih ada di HTML */
+.edit{ display:none !important; }
+
+/* Card fleksibel mengisi sisi kanan */
+.card{ flex: 1 1 auto; }
+
+/* Sejajarkan "Fund Transfer" dan badge Success */
+.left > div:first-child{
+  display:flex;
+  align-items:center;
+}
 </style>
 </head>
 <body>
@@ -192,108 +225,113 @@
       <div class="fav">Save as favourite <span class="star">☆</span></div>
     </div>
 
-    <div class="card" id="card">
-      <button class="edit gear edit" id="open">⚙️</button>
+    <!-- ===== NEW: layout 2 kolom ===== -->
+    <div class="layout">
+      <!-- KIRI: Editor selalu tampil -->
+      <div class="back" id="back">
+        <div class="modal" role="document" aria-label="Editor">
+          <h3>Edit Transaction</h3>
 
-<div class="row-top">
-  <div class="left">
-    <div><span class="type">Fund Transfer</span><span class="badge"><span>Success</span></span></div>
+          <div class="fld">
+            <label>Amount (RM)</label>
+            <input id="inAmount" type="number" step="0.01" value="50.00">
+          </div>
 
-    <!-- Kiri: hanya ref & tanggal (tanpa View Receipt) -->
-    <div class="refblock">
-      <div class="ref-left">Reference Number: <span id="refNum">251002170720267593224</span></div>
-      <div class="ref-date" id="dateText">02 Oct 2025 05:07:21 PM</div>
-    </div>
-  </div>
-
-  <!-- Kanan: amount + View Receipt di bawahnya -->
-  <div class="right-col">
-    <div class="amount"><span class="rm" id="amt">RM 50.00</span></div>
-    <a href="#" class="view-receipt">View Receipt</a>
-  </div>
-</div>
-
-      <hr>
-
-      <div>
-        <div class="sect">Recipient Details</div>
-        <div class="detail">
-          <div><span class="initial" id="nmIni">B</span><span id="nmRest">AHARUDEEN BIN ABDUL</span></div>
-          <div id="bankName">Maybank</div>
-          <div class="sub" id="accNum">164548072822</div>
-        </div>
-      </div>
-
-      <div style="margin-top:12px">
-        <div class="sect">Transfer Mode</div>
-        <div class="detail sub">DuitNow</div>
-      </div>
-
-      <div class="more">View More <span>▾</span></div>
-
-      <div class="actions">
-        <button class="btn">Another Transfer</button>
-        <button class="btn primary">Done</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL -->
-  <div class="back" id="back">
-    <div class="modal" role="dialog" aria-modal="true" aria-label="Editor">
-      <h3>Edit Transaction</h3>
-
-      <div class="fld">
-        <label>Amount (RM)</label>
-        <input id="inAmount" type="number" step="0.01" value="50.00">
-      </div>
-
-      <div class="row">
-        <div class="col fld">
-          <label>Date &amp; Time</label>
-          <input id="inDate" type="datetime-local">
-        </div>
-        <div class="col fld">
-          <label>Reference prefix</label>
           <div class="row">
-            <input id="inPrefix" type="text" value="2510" class="col">
-            <button class="btn" id="inc" style="padding:10px 12px;min-width:90px">+1</button>
+            <div class="col fld">
+              <label>Date &amp; Time</label>
+              <input id="inDate" type="datetime-local">
+            </div>
+            <div class="col fld">
+              <label>Reference prefix</label>
+              <div class="row">
+                <input id="inPrefix" type="text" value="2510" class="col">
+                <button class="btn" id="inc" style="padding:10px 12px;min-width:90px">+1</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col fld">
+              <label>Total ref length</label>
+              <select id="inLen">
+                <option>20</option><option selected>24</option><option>28</option><option>32</option>
+              </select>
+            </div>
+            <div class="col fld">
+              <label>Force Bank (optional)</label>
+              <select id="inBank">
+                <option value="">Select Bank</option>
+                <option>Maybank</option>
+                <option>CIMB Bank</option>
+                <option>RHB</option>
+                <option>Public</option>
+                <option>HLB</option>
+                <option>Bank Simpanan Nasional</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="fld">
+            <label>Recipient Full Name</label>
+            <input id="inName" type="text" value="BAHARUDEEN BIN ABDUL">
+            <div style="color:var(--muted);font-size:13px">Saat Update, data sensitif akan otomatis di-blur; hanya huruf awal nama yang tampak.</div>
+          </div>
+
+          <div class="ctl">
+            <button class="btn" id="close">Cancel</button>
+            <button class="btn primary" id="apply">Update &amp; Blur</button>
           </div>
         </div>
       </div>
 
-      <div class="row">
-        <div class="col fld">
-          <label>Total ref length</label>
-          <select id="inLen">
-            <option>20</option><option selected>24</option><option>28</option><option>32</option>
-          </select>
-        </div>
-        <div class="col fld">
-          <label>Force Bank (optional)</label>
-          <select id="inBank">
-            <option value="">Select Bank</option>
-            <option>Maybank</option>
-            <option>CIMB Bank</option>
-            <option>RHB</option>
-            <option>Public</option>
-            <option>HLB</option>
-            <option>Bank Simpanan Nasional</option>
-          </select>
-        </div>
-      </div>
+      <!-- KANAN: Card -->
+      <div class="card" id="card">
+        <!-- HAPUS tombol gear -->
+        <div class="row-top">
+          <div class="left">
+            <div><span class="type">Fund Transfer</span><span class="badge"><span>Success</span></span></div>
 
-      <div class="fld">
-        <label>Recipient Full Name</label>
-        <input id="inName" type="text" value="BAHARUDEEN BIN ABDUL">
-        <div style="color:var(--muted);font-size:13px">Saat Update, data sensitif akan otomatis di‑blur; hanya huruf awal nama yang tampak.</div>
-      </div>
+            <!-- Kiri: ref & tanggal saja -->
+            <div class="refblock">
+              <div class="ref-left">Reference Number: <span id="refNum">251002170720267593224</span></div>
+              <div class="ref-date" id="dateText">02 Oct 2025 05:07:21 PM</div>
+            </div>
+          </div>
 
-      <div class="ctl">
-        <button class="btn" id="close">Cancel</button>
-        <button class="btn primary" id="apply">Update &amp; Blur</button>
+          <!-- Kanan: amount + View Receipt di bawahnya -->
+          <div class="right-col">
+            <div class="amount"><span class="rm" id="amt">RM 50.00</span></div>
+            <a href="#" class="view-receipt">View Receipt</a>
+          </div>
+        </div>
+
+        <hr>
+
+        <div>
+          <div class="sect">Recipient Details</div>
+          <div class="detail">
+            <div><span class="initial" id="nmIni">B</span><span id="nmRest">AHARUDEEN BIN ABDUL</span></div>
+            <div id="bankName">Maybank</div>
+            <div class="sub" id="accNum">164548072822</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <div class="sect">Transfer Mode</div>
+          <div class="detail sub">DuitNow</div>
+        </div>
+
+        <div class="more">View More <span>▾</span></div>
+
+        <div class="actions">
+          <button class="btn">Another Transfer</button>
+          <button class="btn primary">Done</button>
+        </div>
       </div>
     </div>
+    <!-- ===== end layout ===== -->
+
   </div>
 
 <script>
@@ -357,10 +395,7 @@
     return prefix + digits(remain);
   }
 
-  /* ======== MODAL OPEN/CLOSE ======== */
-  open.addEventListener('click', ()=> back.style.display='flex');
-  closeBtn.addEventListener('click', ()=> back.style.display='none');
-  back.addEventListener('click', e=>{ if(e.target===back) back.style.display='none'; });
+
 
   /* ======== PREFIX +1 ======== */
   inc.addEventListener('click', e=>{
@@ -403,7 +438,6 @@
     [nmRest, accNum, refNum].forEach(el=> el.classList.add('blurred'));
     amt.classList.remove('blurred');
     dateText.classList.remove('blurred');
-    back.style.display='none';
   });
 </script>
 </body>
