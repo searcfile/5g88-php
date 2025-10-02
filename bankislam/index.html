@@ -27,7 +27,7 @@
   }
 
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;background:#fff;font-family:var(--font);color:var(--ink)}
+  html,body{height:100%;margin:0;background:#fff;font-family:var(--font);color:white}
   .page{
     /* contoh gambar lebar ~630px; kita kunci ke 640 agar proporsional */
     max-width:510px; margin:24px auto 56px; padding:0 18px;
@@ -96,18 +96,18 @@
   }
   .btn{
     flex:1; padding:12px 22px; border-radius:var(--radius-pill);
-    border:1px solid var(--border); cursor:pointer; font-weight:700; font-size:14px;
-    background:#fff; color:#1a1a1a;
+    border:1px solid #fff; cursor:pointer; font-weight:700; font-size:14px;
+    background:transparent; color:#fff;
     box-shadow: 0 2px 0 rgba(0,0,0,.02), 0 6px 14px rgba(0,0,0,.06) inset;
   }
   .btn.primary{
-    flex:1; background:linear-gradient(180deg,var(--pink),var(--pink-press));
-    color:#fff; border:1px solid var(--border); box-shadow:var(--shadow-btn);
+    flex:1; background:#fff;
+    color:#000; border:1px solid transparent;
   }
 
   /* MODAL EDITOR */
 
-  .modal{ width:min(520px,92vw); background:#fff; border-radius:14px; border:1px solid var(--border);
+  .modal{ width:min(520px,92vw); background:#c83853; border-radius:14px; border:1px solid var(--border);
           padding:16px 16px 14px; box-shadow:0 18px 40px rgba(0,0,0,.18); }
   .modal h3{ margin:0 0 12px 0; font-size:16px; }
   .fld{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
