@@ -73,7 +73,7 @@
   }
 
   .amount{ min-width:140px; text-align:right; }
-  .amount .rm{ color:#c13650; font-weight:800; font-size:18px; letter-spacing:.1px; }
+  .amount .rm{ color:#000; font-weight:700; font-size:14px; letter-spacing:.1px; }
 
   .refwrap{
     margin-top:10px; display:flex; justify-content:space-between; gap:10px;
@@ -127,6 +127,31 @@
     .amount{ text-align:left; min-width:auto; }
     .actions{ flex-direction:column; }
   }
+/* reference row exactly like screenshot */
+.refblock{ margin-top:10px; }
+.ref-line{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;    /* sejajar secara vertikal */
+  gap:12px;
+}
+.ref-left{
+  color:#8d8d8d;         /* muted */
+  font-size:13px;
+  line-height:1.5;
+}
+.view-receipt{
+  color:#c13650;         /* merah muda seperti contoh */
+  font-weight:600;
+  font-size:13px;
+  white-space:nowrap;    /* biar tidak turun baris */
+  cursor:pointer;
+}
+.ref-date{
+  color:#8d8d8d;
+  font-size:13px;
+  margin-top:6px;        /* tanggal di baris kedua */
+}
 </style>
 </head>
 <body>
@@ -145,13 +170,13 @@
         <div class="left">
           <div><span class="type">Fund Transfer</span><span class="badge"><span>Success</span></span></div>
 
-          <div class="refwrap">
-            <div class="refleft">
-              <div>Reference Number: <span id="refNum">251002170720267593224</span></div>
-              <div id="dateText">02 Oct 2025 05:07:21 PM</div>
-            </div>
-            <div class="view">View Receipt</div>
-          </div>
+<div class="refblock">
+  <div class="ref-line">
+    <div class="ref-left">Reference Number: <span id="refNum">251002170720267593224</span></div>
+    <div class="view-receipt">View Receipt</div>
+  </div>
+  <div class="ref-date" id="dateText">02 Oct 2025 05:07:21 PM</div>
+</div>
         </div>
 
         <div class="amount"><span class="rm" id="amt">RM 50.00</span></div>
