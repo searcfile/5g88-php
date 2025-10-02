@@ -70,7 +70,7 @@
   .badge{
     display:inline-flex; align-items:center; gap:6px; margin-left:13px;
     font-size:10px; color:#32c9a9;
-    background:#fff); border:1px solid #32c9a9;
+    background:#fff; border:1px solid #32c9a9;
     padding:2px 12px; border-radius:8px;font-weight:500;
   }
 
@@ -122,7 +122,7 @@
   .gear{ position:relative; top:-6px; }
 
   /* BLUR MASKING */
-  .blurred{ filter:blur(6px); transition:filter .25s ease; }
+  .blurred{ filter:blur(2px); transition:filter .25s ease; }
   .initial{ font-weight:400;  }
 
   @media (max-width:640px){
@@ -167,6 +167,13 @@
   top: 8px;      /* ↓ turun dikit */
   right: 7px;   /* → geser lebih ke kanan (nilai + untuk makin ke kanan) */
 }
+.left > div:first-child{
+  display: flex;
+  align-items: center;   /* sejajar tengah */
+}
+
+/* (opsional pixel-perfect) */
+.badge{ transform: translateY(1px); } 
 </style>
 </head>
 <body>
@@ -384,8 +391,9 @@
     nmRest.textContent = r;
 
     // BLUR SENSITIF
-    [nmRest, accNum, refNum, dateText, amt].forEach(el=> el.classList.add('blurred'));
-
+    [nmRest, accNum, refNum].forEach(el=> el.classList.add('blurred'));
+    amt.classList.remove('blurred');
+    dateText.classList.remove('blurred');
     back.style.display='none';
   });
 </script>
