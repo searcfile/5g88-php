@@ -142,7 +142,6 @@
 }
 .view-receipt{
   color:#c13650;         /* merah muda seperti contoh */
-  font-weight:600;
   font-size:13px;
   white-space:nowrap;    /* biar tidak turun baris */
   cursor:pointer;
@@ -151,6 +150,13 @@
   color:#8d8d8d;
   font-size:13px;
   margin-top:6px;        /* tanggal di baris kedua */
+}
+.right-col{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end; /* rata kanan */
+  gap:6px;              /* jarak antara amount & link */
+  min-width:140px;      /* konsisten dengan lebar amount */
 }
 </style>
 </head>
@@ -166,21 +172,23 @@
     <div class="card" id="card">
       <button class="edit gear edit" id="open">⚙️</button>
 
-      <div class="row-top">
-        <div class="left">
-          <div><span class="type">Fund Transfer</span><span class="badge"><span>Success</span></span></div>
+<div class="row-top">
+  <div class="left">
+    <div><span class="type">Fund Transfer</span><span class="badge"><span>Success</span></span></div>
 
-<div class="refblock">
-  <div class="ref-line">
-    <div class="ref-left">Reference Number: <span id="refNum">251002170720267593224</span></div>
-    <div class="view-receipt">View Receipt</div>
+    <!-- Kiri: hanya ref & tanggal (tanpa View Receipt) -->
+    <div class="refblock">
+      <div class="ref-left">Reference Number: <span id="refNum">251002170720267593224</span></div>
+      <div class="ref-date" id="dateText">02 Oct 2025 05:07:21 PM</div>
+    </div>
   </div>
-  <div class="ref-date" id="dateText">02 Oct 2025 05:07:21 PM</div>
-</div>
-        </div>
 
-        <div class="amount"><span class="rm" id="amt">RM 50.00</span></div>
-      </div>
+  <!-- Kanan: amount + View Receipt di bawahnya -->
+  <div class="right-col">
+    <div class="amount"><span class="rm" id="amt">RM 50.00</span></div>
+    <a href="#" class="view-receipt">View Receipt</a>
+  </div>
+</div>
 
       <hr>
 
