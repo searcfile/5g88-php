@@ -273,6 +273,27 @@
   #back .modal{ position: static; }
   .card{ width: 100%; max-width: 100%; }
 }
+/* === HEADER TIDAK IKUT LEBAR RESIT (break out dari .page) === */
+.topcap,
+.hdr{
+  position: relative;
+  width: 100vw;                 /* penuh lebar viewport */
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;           /* center elemen full-viewport ini */
+  margin-right: -50vw;
+}
+
+/* padding kiri-kanan header supaya rapi & tetap sejajar konten tengah  */
+:root{ --pair-width: 980px; }   /* lebar pasangan edit+resit (ubah sesuai layoutmu) */
+.hdr{
+  padding-left: calc((100vw - var(--pair-width))/2 + 18px);
+  padding-right: calc((100vw - var(--pair-width))/2 + 18px);
+}
+.topcap{
+  /* kalau perlu, sesuaikan tinggi/roundednya */
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
 </style>
 </head>
 <body>
