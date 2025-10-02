@@ -1,420 +1,495 @@
 <!doctype html>
-<html lang="en">
+<html lang="id">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Transaction Card Editor — 5G88 Style</title>
+<title>Transaction Summary — Mock</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --card-bg: #ffffff;
-    --page-bg: #f3f4f6;
-    --muted: #6b6b6b;
-    --accent: #d32f2f; /* red for negative amount */
-    --border: rgba(0,0,0,0.06);
-    --shadow: 0 6px 18px rgba(25,25,25,0.06);
-    --radius: 12px;
-    --font-sans: "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --bg:#f7f6f7;
+    --card:#ffffff;
+    --muted:#6b6b6b;
+    --accent:#d83f57; /* pink/red accent like image */
+    --success:#35caa5;
+    --shadow: 0 14px 30px rgba(15,15,15,0.06);
+    --radius:18px;
+    --radius-card:14px;
+    --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   }
-
-  html,body{
-    height:100%;
-    margin:0;
-    font-family:var(--font-sans);
-    background: linear-gradient(180deg, var(--page-bg), #fff 60%);
-    -webkit-font-smoothing:antialiased;
-    -moz-osx-font-smoothing:grayscale;
-    padding:40px;
-    box-sizing:border-box;
-  }
-
-  .wrap{
-    max-width:920px;
-    margin:0 auto;
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#fff 0%, #f9f7f8 100%);font-family:var(--font);color:#111}
+  .container{
+    max-width:980px;
+    margin:34px auto;
+    padding:26px;
     display:grid;
-    grid-template-columns:1fr 360px;
-    gap:28px;
+    grid-template-columns:1fr 380px;
+    gap:22px;
     align-items:start;
   }
 
-  /* Card */
-  .tx-card{
-    background:var(--card-bg);
-    border-radius:var(--radius);
-    border:1px solid var(--border);
-    box-shadow:var(--shadow);
-    padding:20px 22px;
-    position:relative;
-    min-height:96px;
+  /* Header */
+  .header{
+    grid-column:1 / -1;
     display:flex;
-    align-items:flex-start;
-    gap:18px;
-  }
-
-  /* left block text */
-  .tx-left{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-  }
-
-  .tx-date{
-    color:var(--muted);
-    font-size:13px;
-    line-height:1;
-    font-weight:600;
-  }
-
-  .tx-time{
-    color:var(--muted);
-    font-size:13px;
-    margin-top:3px;
-    opacity:0.98;
-    letter-spacing:0.2px;
-  }
-
-  .tx-name{
-    margin-top:8px;
-    font-weight:800;
-    font-size:15px;
-    color:#111;
-    letter-spacing:0.2px;
-  }
-
-  .tx-sub{
-    margin-top:3px;
-    color:#444;
-    font-size:13px;
-    font-weight:600;
-  }
-
-  .tx-note{
-    margin-top:2px;
-    color:var(--muted);
-    font-size:12px;
-  }
-
-  /* right block amount */
-  .tx-amount{
-    min-width:180px;
-    text-align:right;
-    align-self:flex-start;
-  }
-  .tx-amount .val{
-    color:var(--accent);
-    font-weight:700;
-    font-size:16px;
-  }
-
-  /* small dashed dash left of amount like image */
-  .tx-amount .dash{
-    display:block;
-    font-weight:700;
-    color:var(--accent);
-    margin-bottom:6px;
-  }
-
-  /* editor panel */
-  .editor{
-    background:#fff;
-    border-radius:12px;
-    padding:18px;
-    border:1px solid var(--border);
-    box-shadow: 0 8px 26px rgba(16,16,16,0.04);
-  }
-  .editor h3{
-    margin:0 0 12px 0;
-    font-size:15px;
-    color:#111;
-  }
-  .field{
-    display:flex;
-    gap:8px;
-    margin-bottom:10px;
-    align-items:center;
-  }
-  .field label{
-    width:110px;
-    font-size:13px;
-    color:#333;
-    font-weight:600;
-  }
-  .field input[type="text"],
-  .field input[type="number"],
-  .field input[type="datetime-local"],
-  .field textarea{
-    flex:1;
-    padding:8px 10px;
-    border-radius:8px;
-    border:1px solid rgba(0,0,0,0.08);
-    font-size:14px;
-    outline:none;
-  }
-  .field textarea{ min-height:60px; resize:vertical; }
-
-  .controls{
-    display:flex;
-    gap:8px;
-    justify-content:flex-end;
-    margin-top:8px;
-  }
-  .btn{
-    border:0;
-    padding:9px 12px;
-    border-radius:8px;
-    cursor:pointer;
-    font-weight:700;
-    font-size:13px;
-  }
-  .btn.prim{
-    background:linear-gradient(180deg,#111 0,#333 100%);
-    color:#fff;
-    box-shadow: 0 6px 16px rgba(17,17,17,0.16);
-  }
-  .btn.ghost{
-    background:transparent;
-    border:1px solid rgba(0,0,0,0.06);
-    color:#111;
-  }
-
-  .live-toggle{
-    display:flex;
-    gap:8px;
+    justify-content:space-between;
     align-items:center;
     margin-bottom:8px;
-    justify-content:space-between;
+    padding:0 6px;
+  }
+  .header h2{
+    margin:0;font-weight:700;font-size:18px;color:#111;
+  }
+  .header .fav{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center}
+  .header .fav .star{width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,0.06);display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:var(--muted)}
+
+  /* Card */
+  .card{
+    background:var(--card);
+    border-radius:var(--radius-card);
+    padding:22px;
+    box-shadow:var(--shadow);
+    border:1px solid rgba(0,0,0,0.04);
   }
 
-  .small{
-    font-size:12px;
-    color:var(--muted);
+  .card-top{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    align-items:start;
+    margin-bottom:10px;
   }
+  .left{
+    flex:1;
+  }
+  .type-row{
+    display:flex;align-items:center;gap:12px;
+  }
+  .tx-type{
+    font-weight:700;
+    font-size:16px;
+    color:#111;
+  }
+  .pill{
+    background:rgba(53,202,165,0.12);
+    color:var(--success);
+    padding:6px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+    border:1px solid rgba(53,202,165,0.08);
+  }
+
+  .amount{
+    font-weight:800;
+    font-size:20px;
+    color:#111;
+    text-align:right;
+    min-width:140px;
+  }
+  .amount .rm{color:var(--accent); font-weight:800; display:block; font-size:18px}
+
+  .ref-row{
+    margin-top:10px;
+    color:var(--muted);
+    font-size:13px;
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .ref-left{opacity:0.95}
+  .view-receipt{color:var(--accent); font-weight:600; font-size:13px; cursor:pointer;}
+
+  hr.sep{border:0;border-top:1px solid rgba(0,0,0,0.04);margin:14px 0 12px}
+
+  /* details */
+  .section-title{font-weight:700;margin-bottom:8px;color:#111}
+  .details{
+    font-size:14px;color:#333;line-height:1.6;
+  }
+  .muted{color:var(--muted);font-weight:600}
+
+  .bank-row{margin-top:8px}
+
+  .view-more{margin-top:8px;color:var(--muted);cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px}
+
+  /* bottom buttons */
+  .card-actions{
+    display:flex;gap:20px;margin-top:18px;
+  }
+  .btn{
+    padding:12px 20px;border-radius:999px;border:1px solid rgba(0,0,0,0.06);cursor:pointer;font-weight:700;font-size:14px;background:#fff;
+  }
+  .btn.primary{
+    background:linear-gradient(180deg,var(--accent),#c92f4a);
+    color:#fff;border:1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 8px 22px rgba(216,63,87,0.14);
+  }
+
+  /* Editor panel (right column) */
+  .panel{
+    background:var(--card);
+    border-radius:var(--radius-card);
+    padding:18px;
+    border:1px solid rgba(0,0,0,0.04);
+    box-shadow: 0 10px 26px rgba(18,18,18,0.03);
+  }
+  .panel h3{margin:0 0 12px 0;font-size:16px}
+  .field{display:flex;flex-direction:column;margin-bottom:10px}
+  .field label{font-weight:600;margin-bottom:6px;color:#222}
+  .field input, .field select{
+    padding:10px 12px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);font-size:14px
+  }
+  .small{font-size:13px;color:var(--muted);margin-top:6px}
+
+  /* Blur effect for sensitive fields after update */
+  .blurred{
+    filter: blur(6px);
+    transition:filter .28s ease;
+  }
+  /* keep initial letter visible: we will show separate span not blurred */
+  .name-initial{font-weight:800;margin-right:6px}
 
   /* responsive */
-  @media (max-width:920px){
-    .wrap{grid-template-columns:1fr; padding:20px; gap:18px;}
-    .tx-amount{min-width:150px}
+  @media (max-width:980px){
+    .container{grid-template-columns:1fr; padding:18px}
+    .card-actions{flex-direction:column}
+    .amount{min-width:auto;text-align:left}
   }
+
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <!-- Card preview -->
-    <div>
-      <div class="tx-card" id="txCard" role="article" aria-label="Transaction card preview">
-        <div class="tx-left">
-          <div>
-            <div class="tx-date" id="displayDate">02 Oct 2025</div>
-            <div class="tx-time" id="displayTime">4:43:39 PM</div>
+  <div class="container">
+
+    <div class="header">
+      <h2>Transaction Summary</h2>
+      <div class="fav"><div>Save as favourite</div><div class="star">☆</div></div>
+    </div>
+
+    <!-- LEFT: Card -->
+    <div class="card" id="previewCard" aria-live="polite">
+      <div class="card-top">
+        <div class="left">
+          <div class="type-row">
+            <div class="tx-type" id="txType">Fund Transfer</div>
+            <div class="pill" id="txStatus">Success</div>
           </div>
 
-          <div class="tx-name" id="displayName">MOHD.RADZI BIN MAT L</div>
+          <div class="ref-row">
+            <div class="ref-left">
+              <div id="refNumber" class="muted">Reference Number: <span id="refText">251002170720267593224</span></div>
+              <div id="dtText" class="muted" style="margin-top:6px">02 Oct 2025 05:07:21 PM</div>
+            </div>
+            <div style="text-align:right">
+              <div class="view-receipt" id="viewReceipt">View Receipt</div>
+            </div>
+          </div>
 
-          <div class="tx-sub" id="displayPayment">payment</div>
-          <div class="tx-note small" id="displayNote">IB DuitNow (ACC NO)</div>
         </div>
 
-        <div class="tx-amount" aria-hidden="false">
-          <span class="dash" id="displayDash">-</span>
-          <div class="val" id="displayAmount">RM 110.00</div>
+        <div class="amount" id="amountBlock">
+          <span class="rm" id="amountVal">RM 50.00</span>
         </div>
       </div>
 
-      <!-- Optional preview helper: small spacing -->
-      <p style="margin:12px 6px 0 6px; color:var(--muted); font-size:12px;">
-        Preview mirrors the inputs on the right. Amount shows as negative in red like the reference image.
-      </p>
+      <hr class="sep"/>
+
+      <div>
+        <div class="section-title">Recipient Details</div>
+        <div class="details" id="recipientDetails">
+          <div><span id="recipientName"><span class="name-initial">B</span><span id="recipientRest">AHARUDEEN BIN ABDUL</span></span></div>
+          <div id="bankName" style="margin-top:4px">Maybank</div>
+          <div id="accNumber" class="muted" style="margin-top:6px">164548072822</div>
+        </div>
+      </div>
+
+      <div class="bank-row">
+        <div class="section-title">Transfer Mode</div>
+        <div class="details muted" id="transferMode">DuitNow</div>
+      </div>
+
+      <div class="view-more"><span id="viewMoreText">View More</span> <span style="font-size:13px;color:var(--muted)">▾</span></div>
+
+      <div class="card-actions">
+        <button class="btn" id="anotherBtn">Another Transfer</button>
+        <button class="btn primary" id="doneBtn">Done</button>
+      </div>
     </div>
 
-    <!-- Editor -->
-    <aside class="editor" aria-label="Editor panel">
-      <h3>Edit fields (manual)</h3>
+    <!-- RIGHT: Editor panel -->
+    <aside class="panel">
+      <h3>Editor (manual)</h3>
 
-      <div class="live-toggle">
-        <div style="display:flex;gap:10px;align-items:center">
-          <input type="checkbox" id="liveUpdate" checked />
-          <label for="liveUpdate" class="small">Live update</label>
-        </div>
-        <div class="small">Card style replicated from image</div>
+      <div class="field">
+        <label for="inAmount">Amount (RM)</label>
+        <input id="inAmount" type="number" step="0.01" value="50.00" />
       </div>
 
       <div class="field">
         <label for="inDatetime">Date & Time</label>
         <input id="inDatetime" type="datetime-local" />
+        <div class="small">Gunakan input untuk pilih tanggal & jam.</div>
       </div>
 
       <div class="field">
-        <label for="inName">Name</label>
-        <input id="inName" type="text" placeholder="MOHD.RADZI BIN MAT L" />
+        <label for="inRefPrefix">Reference prefix</label>
+        <div style="display:flex;gap:8px">
+          <input id="inRefPrefix" type="number" value="2510" style="flex:1" />
+          <button id="incPrefix" class="btn" style="padding:8px 10px">+1</button>
+        </div>
+        <div class="small">Prefix (mis. 2510). Tekan +1 untuk naik menjadi 2511.</div>
       </div>
 
       <div class="field">
-        <label for="inPayment">Payment</label>
-        <input id="inPayment" type="text" placeholder="payment" />
+        <label for="inRefLen">Total Ref length</label>
+        <select id="inRefLen">
+          <option value="20">20</option>
+          <option value="24" selected>24</option>
+          <option value="28">28</option>
+          <option value="32">32</option>
+        </select>
+        <div class="small">Panjang total reference (prefix + random digits).</div>
       </div>
 
       <div class="field">
-        <label for="inNote">Account note</label>
-        <input id="inNote" type="text" placeholder="IB DuitNow (ACC NO)" />
+        <label for="inName">Recipient Full Name</label>
+        <input id="inName" type="text" value="BAHARUDEEN BIN ABDUL" />
+        <div class="small">Preview akan menampilkan hanya initial + sisanya di-blur saat Update.</div>
       </div>
 
       <div class="field">
-        <label for="inAmount">Amount (RM)</label>
-        <input id="inAmount" type="number" step="0.01" min="0" placeholder="110.00" />
+        <label for="bankSelect">Force Bank (opsional)</label>
+        <select id="bankSelect">
+          <option value="">-- pilih random saat Update --</option>
+          <option value="Maybank">Maybank (12)</option>
+          <option value="CIMB">CIMB (10)</option>
+          <option value="RHB">RHB (12)</option>
+          <option value="Public">Public Bank (14)</option>
+          <option value="HLB">Hong Leong (12)</option>
+        </select>
+        <div class="small">Jika kosong, Update akan random bank.</div>
       </div>
 
-      <div class="controls">
-        <button class="btn ghost" id="btnReset">Reset</button>
-        <button class="btn prim" id="btnUpdate">Update</button>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button id="btnUpdate" class="btn primary" style="flex:1">Update & Blur</button>
+        <button id="btnPreview" class="btn" style="flex:1">Preview (no blur)</button>
       </div>
 
-      <hr style="margin:14px 0;border:none;border-top:1px solid rgba(0,0,0,0.04)"/>
-
-      <div style="font-size:13px; color:#444; line-height:1.4">
-        Tips:
-        <ul style="margin:8px 0 0 18px; padding:0;color:var(--muted)">
-          <li>Gunakan <strong>Update</strong> untuk menerapkan saat Live update off.</li>
-          <li>Field <code>Date & Time</code> memakai input browser (<code>datetime-local</code>).</li>
-        </ul>
-      </div>
+      <div style="margin-top:10px" class="small">Catatan: Saat Update, account number & ref digenerate sesuai bank. Semua sensitive text di-blur, kecuali initial nama.</div>
     </aside>
+
   </div>
 
 <script>
-  // Elements
-  const displayDate = document.getElementById('displayDate');
-  const displayTime = document.getElementById('displayTime');
-  const displayName = document.getElementById('displayName');
-  const displayPayment = document.getElementById('displayPayment');
-  const displayNote = document.getElementById('displayNote');
-  const displayAmount = document.getElementById('displayAmount');
-  const displayDash = document.getElementById('displayDash');
+  // Banks definition with account length (example)
+  const BANKS = [
+    {name:'Maybank', len:12},
+    {name:'CIMB', len:10},
+    {name:'RHB', len:12},
+    {name:'Public', len:14},
+    {name:'HLB', len:12} // Hong Leong
+  ];
 
-  const inDatetime = document.getElementById('inDatetime');
-  const inName = document.getElementById('inName');
-  const inPayment = document.getElementById('inPayment');
-  const inNote = document.getElementById('inNote');
+  // DOM
+  const refText = document.getElementById('refText');
+  const dtText = document.getElementById('dtText');
+  const amountVal = document.getElementById('amountVal');
+  const recipientNameSpan = document.getElementById('recipientName');
+  const recipientRest = document.getElementById('recipientRest');
+  const nameInitialEl = document.querySelector('.name-initial');
+  const bankNameEl = document.getElementById('bankName');
+  const accNumberEl = document.getElementById('accNumber');
+
   const inAmount = document.getElementById('inAmount');
-  const liveUpdate = document.getElementById('liveUpdate');
+  const inDatetime = document.getElementById('inDatetime');
+  const inRefPrefix = document.getElementById('inRefPrefix');
+  const inRefLen = document.getElementById('inRefLen');
+  const inName = document.getElementById('inName');
+  const bankSelect = document.getElementById('bankSelect');
 
   const btnUpdate = document.getElementById('btnUpdate');
-  const btnReset  = document.getElementById('btnReset');
+  const btnPreview = document.getElementById('btnPreview');
+  const incPrefix = document.getElementById('incPrefix');
 
-  // default initial state matching the image
-  const initial = {
-    isoDatetime: new Date('2025-10-02T16:43:39').toISOString().slice(0,19),
-    name: 'MOHD.RADZI BIN MAT L',
-    payment: 'payment',
-    note: 'IB DuitNow (ACC NO)',
-    amount: 110.00
-  };
-
-  // helpers: formatting
-  function two(n){ return n.toString().padStart(2,'0'); }
-  function formatDateTimeFromISO(iso){
-    if(!iso) return {date:'--', time:'--'};
-    // iso like '2025-10-02T16:43:39'
+  // initial preview defaults (match image)
+  function pad2(n){ return n.toString().padStart(2,'0'); }
+  function niceDateFromISO(iso){
+    if(!iso) return '02 Oct 2025 05:07:21 PM';
     const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return {date:'--', time:'--'};
-    const day = two(d.getDate());
+    const day = pad2(d.getDate());
     const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const month = monthNames[d.getMonth()];
+    const month = monthNames[d.getMonth()] || 'Oct';
     const year = d.getFullYear();
-    // time 12h with seconds and AM/PM
     let hh = d.getHours();
-    const mm = two(d.getMinutes());
-    const ss = two(d.getSeconds());
+    const mm = pad2(d.getMinutes());
+    const ss = pad2(d.getSeconds());
     const ampm = hh >= 12 ? 'PM' : 'AM';
     hh = hh % 12; hh = hh ? hh : 12;
-    const time = `${hh}:${mm}:${ss} ${ampm}`;
-    const date = `${day} ${month} ${year}`;
-    return {date, time};
+    return `${day} ${month} ${year} ${hh}:${mm}:${ss} ${ampm}`;
   }
 
-  function formatAmount(num){
-    const n = Number(num) || 0;
-    // ensure 2 decimals
-    return 'RM ' + n.toFixed(2);
+  // random helpers
+  function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+  function randDigits(n){
+    let s='';
+    for(let i=0;i<n;i++) s += String(randInt(0,9));
+    return s;
   }
 
-  // initialize inputs & preview
-  function loadInitial(){
-    // datetime-local expects local time without seconds maybe; we'll set full
-    // create local-friendly value for datetime-local (YYYY-MM-DDTHH:MM)
-    const dt = new Date(initial.isoDatetime);
-    // convert ISO to local datetime-local value
-    const local = new Date(initial.isoDatetime);
-    const offset = local.getTimezoneOffset();
-    const localAdjusted = new Date(local.getTime() - offset*60000);
-    const dtLocalStr = localAdjusted.toISOString().slice(0,19); // includes seconds
-    inDatetime.value = dtLocalStr;
-    inName.value = initial.name;
-    inPayment.value = initial.payment;
-    inNote.value = initial.note;
-    inAmount.value = initial.amount.toFixed(2);
-    applyAllFromInputs();
+  // generate reference: prefix (string) + random digits to total length
+  function genRef(prefix, totalLen){
+    prefix = String(prefix);
+    const remain = Math.max(0, totalLen - prefix.length);
+    return prefix + randDigits(remain);
   }
 
-  function applyAllFromInputs(){
-    // datetime-local returns local time string; convert to Date and format in display
-    const iso = inDatetime.value;
-    // if input has no seconds include :00
-    let normalized = iso;
-    if(iso && iso.length === 16){ normalized = iso + ':00'; } // YYYY-MM-DDTHH:MM
-    // create Date using the local input (no timezone), so add 'Z' offset? easier:
-    // We'll parse as local by replacing 'T' with space
-    let parsed;
-    if(normalized){
-      // Create from parts to avoid timezone shift
-      const [datePart, timePart] = normalized.split('T');
-      if(datePart && timePart){
-        const [y,m,d] = datePart.split('-').map(Number);
-        const [hh,mm,ss] = timePart.split(':').map(Number);
-        parsed = new Date(y, m-1, d, hh||0, mm||0, ss||0);
-      } else {
-        parsed = new Date(normalized);
-      }
-    } else {
-      parsed = new Date();
+  // choose bank (optionally forced)
+  function chooseBank(forced){
+    if(forced){
+      const b = BANKS.find(x=>x.name===forced);
+      if(b) return b;
     }
-    const {date, time} = formatDateTimeFromISO(parsed.toISOString().slice(0,19));
-    displayDate.textContent = date;
-    displayTime.textContent = time;
-
-    displayName.textContent = inName.value || '—';
-    displayPayment.textContent = inPayment.value || '—';
-    displayNote.textContent = inNote.value || '—';
-
-    // amount
-    const amt = parseFloat(inAmount.value || '0');
-    displayAmount.textContent = formatAmount(amt);
-    // show dash as in image
-    displayDash.textContent = '-';
+    return BANKS[randInt(0,BANKS.length-1)];
   }
 
-  // events
-  [inName,inPayment,inNote,inAmount,inDatetime].forEach(el=>{
-    el.addEventListener('input', ()=>{
-      if(liveUpdate.checked) applyAllFromInputs();
-    });
+  // mask / blur behaviors:
+  // We'll visually show initial letter then span for rest that will receive class "blurred"
+  function splitName(name){
+    name = (name||'').trim();
+    if(!name) return {initial:'—', rest:''};
+    const initial = name.charAt(0).toUpperCase();
+    const rest = name.slice(1).toUpperCase();
+    return {initial, rest};
+  }
+
+  // apply preview values WITHOUT blur (Preview button)
+  function applyPreview(noBlur=true, forcedBank=''){
+    // Amount
+    const amt = parseFloat(inAmount.value || 0);
+    amountVal.textContent = 'RM ' + amt.toFixed(2);
+
+    // Date/time
+    let dtVal = inDatetime.value;
+    if(!dtVal){
+      // leave default shown if empty
+      dtText.textContent = niceDateFromISO();
+    } else {
+      // datetime-local returns local string like "2025-10-02T17:07"
+      // ensure seconds
+      let normalized = dtVal;
+      if(normalized.length === 16) normalized += ':00';
+      // Build date object as local time
+      const [dPart,tPart] = normalized.split('T');
+      if(dPart && tPart){
+        const [y,m,d] = dPart.split('-').map(Number);
+        const [hh,mm,ss] = tPart.split(':').map(Number);
+        const dateObj = new Date(y,m-1,d,hh||0,mm||0,ss||0);
+        dtText.textContent = niceDateFromISO(dateObj.toISOString());
+      } else {
+        dtText.textContent = niceDateFromISO(normalized);
+      }
+    }
+
+    // ref
+    const prefix = String(inRefPrefix.value || '2510');
+    const totalLen = parseInt(inRefLen.value || 24,10);
+    const newRef = genRef(prefix, totalLen);
+    refText.textContent = newRef;
+
+    // bank selection & account
+    const bankObj = chooseBank(bankSelect.value || forcedBank);
+    bankNameEl.textContent = bankObj.name;
+    const accNum = randDigits(bankObj.len);
+    accNumberEl.textContent = accNum;
+
+    // name
+    const nm = inName.value || 'BAHARUDEEN BIN ABDUL';
+    const split = splitName(nm);
+    nameInitialEl.textContent = split.initial;
+    recipientRest.textContent = split.rest || '—';
+
+    // Remove blur classes if noBlur true
+    if(noBlur){
+      // ensure elements are un-blurred
+      recipientRest.classList.remove('blurred');
+      accNumberEl.classList.remove('blurred');
+      refText.classList.remove('blurred');
+      dtText.classList.remove('blurred');
+      amountVal.classList.remove('blurred');
+    }
+  }
+
+  // Update and then blur sensitive fields
+  function doUpdateAndBlur(){
+    applyPreview(true); // update values first (no blur temporarily)
+    // apply blur to fields we consider sensitive
+    recipientRest.classList.add('blurred'); // rest of name blurred (initial stays visible)
+    accNumberEl.classList.add('blurred');
+    refText.classList.add('blurred');
+    dtText.classList.add('blurred');
+    amountVal.classList.add('blurred');
+
+    // also slightly dim & add subtle overlay look by reducing opacity of other text (optional)
+    // (Kept minimal to preserve look)
+  }
+
+  // increment prefix
+  incPrefix.addEventListener('click', ()=>{
+    let cur = parseInt(inRefPrefix.value || '2510',10);
+    cur = isNaN(cur)?2510:cur;
+    inRefPrefix.value = String(cur+1);
   });
 
-  btnUpdate.addEventListener('click', ()=> applyAllFromInputs());
-  btnReset.addEventListener('click', ()=>{
-    inDatetime.value = '';
-    inName.value = '';
-    inPayment.value = '';
-    inNote.value = '';
+  // Buttons
+  btnPreview.addEventListener('click', (e)=>{
+    e.preventDefault();
+    applyPreview(true, '');
+    // Remove blur if previously set
+    recipientRest.classList.remove('blurred');
+    accNumberEl.classList.remove('blurred');
+    refText.classList.remove('blurred');
+    dtText.classList.remove('blurred');
+    amountVal.classList.remove('blurred');
+  });
+
+  btnUpdate.addEventListener('click', (e)=>{
+    e.preventDefault();
+    // Use chosen bank if specified
+    const forced = bankSelect.value || '';
+    // Do preview with specified bank, then apply blur
+    applyPreview(true, forced);
+    // then blur
+    setTimeout(()=> doUpdateAndBlur(), 60);
+  });
+
+  // on load set sensible defaults matching example
+  window.addEventListener('load', ()=>{
+    // set default datetime-local from the example
+    // example: "02 Oct 2025 05:07:21 PM" -> 2025-10-02T17:07:21 (24h)
+    const defaultIsoLocal = '2025-10-02T17:07:21';
+    // datetime-local may not accept seconds depending on browser, set without seconds as fallback
+    const withSeconds = defaultIsoLocal;
+    inDatetime.value = withSeconds.slice(0,19);
+    // initial apply
+    applyPreview(true,'Maybank');
+  });
+
+  // Another / Done buttons simply show alert for demo (you can customize)
+  document.getElementById('anotherBtn').addEventListener('click', ()=> {
+    // reset editor fields for next entry
     inAmount.value = '';
-    applyAllFromInputs();
+    inName.value = '';
+    bankSelect.value = '';
+    inRefPrefix.value = '2510';
+    inRefLen.value = '24';
+    inDatetime.value = '';
+    // clear blur preview
+    btnPreview.click();
   });
-
-  // on load set defaults
-  loadInitial();
-
-  // accessibility: let user press Enter on amount to update
-  inAmount.addEventListener('keydown', (e)=>{
-    if(e.key === 'Enter') applyAllFromInputs();
+  document.getElementById('doneBtn').addEventListener('click', ()=> {
+    alert('Done — simulated (kamu bisa ganti aksi sesuai kebutuhan).');
   });
 
 </script>
