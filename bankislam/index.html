@@ -214,6 +214,38 @@
   display:flex;
   align-items:center;
 }
+/* 1) Halaman tetap sempit & center untuk resit */
+.page{
+  max-width: 510px;     /* biarkan seperti awal */
+  margin: 24px auto 56px;
+}
+
+/* 2) Jangan pakai layout 2 kolom lagi */
+.layout{
+  display: block;       /* sehingga card tidak terdorong */
+}
+
+/* 3) Jadikan editor (#back) sidebar fixed di kiri layar */
+#back{
+  position: fixed;
+  top: 90px;            /* atur sesuai selera: jarak dari atas */
+  left: 24px;           /* jarak dari tepi kiri */
+  width: 360px;         /* lebar panel edit */
+  display: block;
+  background: transparent;   /* tanpa backdrop gelap */
+  z-index: 1000;        /* di atas konten lain */
+}
+
+/* 4) Panel editor gunakan lebar penuh sidebar, bukan sticky */
+#back .modal{
+  width: 100%;
+  position: static;
+  box-shadow: 0 10px 26px rgba(0,0,0,.08);
+  border-radius: 14px;
+}
+
+/* 5) Sembunyikan tombol gear (kalau masih ada) */
+.edit{ display: none !important; }
 </style>
 </head>
 <body>
