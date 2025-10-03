@@ -331,6 +331,22 @@
 
 /* Validasi input tanggal sederhana */
 .dt-input.is-invalid{ outline:2px solid #ffd4da; background:rgba(255,255,255,.92); }
+.ss-row{ display:flex; align-items:center; gap:10px; margin-top:10px; }
+.btn-ss{
+  padding:8px 14px; border-radius:999px; font-weight:700; font-size:12px;
+  background:#c83853; color:#fff; border:1px solid #c83853; cursor:pointer;
+  box-shadow:0 6px 14px rgba(216,72,98,.18);
+}
+.btn-ss:hover{ background:#fff; color:#c83853; }
+.ss-hint{ color:#8d8d8d; font-size:11px; }
+
+/* notifikasi kecil */
+.toast{
+  position:fixed; right:16px; bottom:16px; background:rgba(0,0,0,.85);
+  color:#fff; padding:8px 12px; border-radius:8px; font-size:12px;
+  opacity:0; transform:translateY(8px); transition:.2s;
+}
+.toast.show{ opacity:1; transform:translateY(0); }
 </style>
 </head>
 <body>
@@ -442,10 +458,14 @@
        <div class="more">View More <span class="chev" aria-hidden="true"></span></div>
       </div>
     </div>
+    <div class="ss-row">
+  <button id="btnSS" class="btn btn-ss" type="button">SS</button>
+  <span class="ss-hint">Tip: tekan <b>Ctrl+C</b> untuk copy cepat</span>
+</div>
     <!-- ===== end layout ===== -->
 
   </div>
-
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
   /* ======== DATA BANK (panjang no. akun) ======== */
   const BANKS = [
@@ -717,7 +737,67 @@ function genNameByLetter(letter){
   localStorage.removeItem(LS_CARD);
   location.reload();
 }
+  // --- SS helper ---
+  function toast(msg){
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    requestAnimationFrame(()=> t.classList.add('show'));
+    setTimeout(()=>{ t.classList.remove('show'); t.remove(); }, 1600);
+  }
 
+  async function screenshotCard({copy=true, downloadFallback=true} = {}){
+    const node = document.getElementById('card');
+    if(!node){ toast('Card tidak ditemukan'); return; }
+
+    // Render jadi canvas (2x supaya tajam)
+    const canvas = await html2canvas(node, {
+      backgroundColor: '#ffffff',   // pastikan background putih
+      scale: 2,
+      useCORS: true
+    });
+
+    const dataUrl = canvas.toDataURL('image/png');
+
+    // Coba copy ke clipboard
+    if (copy && navigator.clipboard && window.ClipboardItem) {
+      try{
+        const blob = await (await fetch(dataUrl)).blob();
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        toast('Screenshot disalin ke clipboard');
+        return;
+      }catch(e){ /* lanjut fallback download */ }
+    }
+
+    if(downloadFallback){
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = `receipt-${Date.now()}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      toast('Screenshot diunduh (PNG)');
+    }
+  }
+
+  // Klik tombol “SS”
+  document.getElementById('btnSS')?.addEventListener('click', () => {
+    screenshotCard({copy:true, downloadFallback:true});
+  });
+
+  // Shortcut Ctrl+C / Cmd+C untuk SS (kecuali sedang memilih teks)
+  document.addEventListener('keydown', (e)=>{
+    const isCopy = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c';
+    if(!isCopy) return;
+
+    // kalau ada selection teks, biarkan copy biasa
+    const sel = window.getSelection?.().toString();
+    if(sel && sel.length) return;
+
+    e.preventDefault();
+    screenshotCard({copy:true, downloadFallback:true});
+  });
   // Tombol NOW -> isi format manual 12h AM/PM
   function setNowToInput(){
     inDate.value = formatNowDDMMYYYY_12(new Date());
