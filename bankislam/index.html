@@ -276,13 +276,18 @@
 .dt-wrap{
   display:inline-flex; gap:8px; align-items:center; width:100%;
 }
-.btn-now{
-  font:600 12px/1 system-ui, sans-serif;
-  padding:8px 10px; border-radius:8px; border:0;
-  background:#fff; color:#c83853; box-shadow:var(--shadow-btn);
-  cursor:pointer; white-space:nowrap;
+.btn-now{border-radius: var(--radius-pill);
+    border: 1px solid #fff;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 14px;
+    background: transparent;
+    color: #fff;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, .02), 0 6px 14px rgba(0, 0, 0, .06) inset;padding: 10px 12px;
+    min-width: 30px;
 }
-.btn-now:active{ transform:translateY(1px); }
+
+
 .dt-wrap .dt-input{ flex:1; }  /* biar input melar penuh */
 .dt-wrap{ display:flex; gap:8px; align-items:center; width:100%; }
 .dt-wrap .dt-input{
@@ -290,17 +295,6 @@
   flex:1;              /* isi sisa ruang */
   min-width:0;         /* boleh menyusut */
 }
-.btn-now{
-  font:600 12px/1 system-ui, sans-serif;
-  padding:8px 10px;
-  border:0; border-radius:8px;
-  background:#fff; color:#c83853;
-  box-shadow:var(--shadow-btn);
-  white-space:nowrap;
-  cursor:pointer;
-}
-.btn-now:active{ transform:translateY(1px); }
-
 /* Pastikan kolom editor bisa menyusut */
 #back .modal .row .col{ flex:1 1 0; min-width:0; }
 </style>
