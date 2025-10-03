@@ -260,7 +260,6 @@
 }
 
 /* Pastikan field editor tidak meluber */
-#back .modal .row .col{ flex: 1 1 0; min-width: 0; }
 #back .modal .row .col input,
 #back .modal .row .col select{ width:100%; }
 #inc{ flex: 0 0 auto !important; padding:10px 12px; }
@@ -271,10 +270,6 @@
   .layout{ grid-template-columns: 1fr; }
   #back .modal{ position: static; }
   .card{ width: 100%; max-width: 100%; }
-}
-/* === Date&Time: tombol NOW di kiri input === */
-.dt-wrap{
-  display:inline-flex; gap:8px; align-items:center; width:100%;
 }
 .btn-now{border-radius: var(--radius-pill);
     border: 1px solid #fff;
@@ -317,6 +312,27 @@
 
 /* kalau sebelumnya pakai karakter ▾, sembunyikan */
 .more span:not(.chev){ display:none; }
+/* Ref Number: sisakan 4 digit depan, blur sisanya */
+.ref-keep{ letter-spacing:.2px; }
+.ref-blur{
+  filter: blur(3px);
+  margin-left: 2px;
+  user-select: none;
+}
+.ref-blur::selection{ background: transparent; }
+
+/* Controls Auto Name (opsional) */
+.name-wrap{ display:flex; gap:8px; align-items:center; width:100%; }
+.btn-mini{
+  font:600 12px/1 system-ui,sans-serif;
+  padding:8px 10px; border:0; border-radius:8px;
+  background:#fff; color:#c83853; box-shadow:var(--shadow-btn);
+  cursor:pointer; white-space:nowrap;
+}
+.nm-alpha{ height:36px; border-radius:8px; padding:0 8px; }
+
+/* Validasi input tanggal sederhana */
+.dt-input.is-invalid{ outline:2px solid #ffd4da; background:rgba(255,255,255,.92); }
 </style>
 </head>
 <body>
@@ -380,10 +396,16 @@
           </div>
 
           <div class="fld">
-            <label>Recipient Full Name</label>
-            <input id="inName" type="text" value="BAHARUDEEN BIN ABDUL">
-            <div style="color:rgb(255,255,255,0.65);font-size:13px">Saat Update, data sensitif akan otomatis di-blur; hanya huruf awal nama yang tampak.</div>
-          </div>
+  <label>Recipient Full Name</label>
+  <div class="name-wrap">
+    <button type="button" class="btn-mini" id="btnGenName">Auto</button>
+    <select id="nmAlpha" class="nm-alpha" aria-label="First letter">
+      <option value="">A–Z</option>
+    </select>
+    <input id="inName" type="text" value="BAHARUDEEN BIN ABDUL" class="col">
+  </div>
+  <div style="color:rgb(255,255,255,0.65);font-size:13px">Saat Update, data sensitif akan otomatis di-blur; hanya huruf awal nama yang tampak.</div>
+</div>
 
           <div class="ctl">
             <button class="btn" id="close">Cancel</button>
@@ -528,7 +550,38 @@
     let hh = dt.getHours(); const ap = hh>=12 ? 'PM':'AM'; hh = hh%12 || 12;
     return `${pad2(dt.getDate())} ${MON[dt.getMonth()]} ${dt.getFullYear()} ${pad2(hh)}:${pad2(dt.getMinutes())}:${pad2(dt.getSeconds())} ${ap}`;
   }
+    (function(){
+    const sel=document.getElementById('nmAlpha');
+    if(sel && !sel.dataset.filled){
+      sel.dataset.filled='1';
+      sel.insertAdjacentHTML('beforeend',
+        Array.from({length:26},(_,i)=>`<option>${String.fromCharCode(65+i)}</option>`).join('')
+      );
+    }
+  })();
+  function showRefMasked(fullRef, keep=4){
+  const s = String(fullRef || '');
+  refNum.innerHTML =
+    `<span class="ref-keep">${s.slice(0,keep)}</span><span class="ref-blur">${s.slice(keep)}</span>`;
+}
 
+// Random huruf
+function randLetters(n){
+  const A='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let out=''; for(let i=0;i<n;i++) out += A[Math.floor(Math.random()*26)];
+  return out;
+}
+// Generate nama dengan huruf awal tertentu
+function genNameByLetter(letter){
+  let L = (letter||'').toUpperCase();
+  if(!/^[A-Z]$/.test(L)) L = randLetters(1);
+  const first  = L + randLetters( Math.floor(Math.random()*4)+4 ); // 5–8 huruf total
+  const joiner = [' BIN ',' BINTI ',' '][Math.floor(Math.random()*3)];
+  const second = randLetters( Math.floor(Math.random()*6)+3 );     // 3–8 huruf
+  let full = `${first}${joiner}${second}`;
+  if(Math.random() < 0.35) full += ' ' + randLetters( Math.floor(Math.random()*5)+3 );
+  return full;
+}
   function buildRef(prefix,len){
     prefix = String(prefix||'2510');
     const remain = Math.max(0, Number(len||24) - prefix.length);
@@ -560,9 +613,10 @@
   });
 
   // Initial state: biarkan kosong (lebih jelas user bisa ketik/klik Now)
-  window.addEventListener('load', ()=>{
-    inDate.value = ''; // hapus pengisian ISO sebelumnya
-  });
+window.addEventListener('load', ()=>{
+  inDate.value = ''; // kosong; user bisa klik Now / ketik manual
+  showRefMasked(refNum.textContent, 4); // mask ref awal (4 depan terlihat)
+});
 
   // APPLY & BLUR
   apply.addEventListener('click', e=>{
@@ -573,10 +627,16 @@
     amt.textContent = `RM ${amount}`;
 
     // datetime -> kartu
-    dateText.textContent = toCardDate(inDate.value);
+    if (!parseManualDate(inDate.value)) {
+  inDate.classList.add('is-invalid');
+} else {
+  inDate.classList.remove('is-invalid');
+}
+dateText.textContent = toCardDate(inDate.value);
 
     // reference
-    refNum.textContent = buildRef(inPrefix.value, inLen.value);
+    const newRef = buildRef(inPrefix.value, inLen.value);
+showRefMasked(newRef, 4);
 
     // bank & account
     const bank = pickBank(inBank.value || '');
@@ -589,10 +649,26 @@
     nmRest.textContent = r;
 
     // BLUR SENSITIF
-    [nmRest, accNum, refNum].forEach(el=> el.classList.add('blurred'));
+    [nmRest, accNum].forEach(el=> el.classList.add('blurred'));
     amt.classList.remove('blurred');
     dateText.classList.remove('blurred');
   });
+  const btnGenName = document.getElementById('btnGenName');
+const nmAlphaSel = document.getElementById('nmAlpha');
+
+btnGenName?.addEventListener('click', ()=>{
+  inName.value = genNameByLetter(nmAlphaSel?.value || '');
+  inName.focus();
+});
+
+// Shortcut Alt+R untuk generate nama cepat
+document.addEventListener('keydown', (e)=>{
+  if(e.altKey && e.key.toLowerCase()==='r'){
+    e.preventDefault();
+    inName.value = genNameByLetter(nmAlphaSel?.value || '');
+    inName.focus();
+  }
+});
 </script>
 </body>
 </html>
