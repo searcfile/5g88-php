@@ -358,10 +358,7 @@
 </div>
             <div class="col fld">
               <label>25 = years,10 = month ganti kalau lain</label>
-              <div class="row">
                 <input id="inPrefix" type="text" value="2510" class="col">
-                <button class="btn" id="inc" style="padding:10px 12px;min-width:30px">+1</button>
-              </div>
             </div>
           </div>
 
@@ -464,9 +461,8 @@
 
   /* ======== EL ======== */
   const apply   = document.getElementById('apply');
-  const inc     = document.getElementById('inc');
   const btnNow  = document.getElementById('btnNow');
-
+ 
   const refNum  = document.getElementById('refNum');
   const dateText= document.getElementById('dateText');
   const amt     = document.getElementById('amt');
@@ -492,7 +488,7 @@
     if(!s) return {i:'—', r:''};
     return {i:s[0], r:s.slice(1)};
   };
-
+  const KEEP_VISIBLE = 14;
   // Format NOW ke "DD/MM/YYYY hh:mm:ss AM/PM"
   function formatNowDDMMYYYY_12(d = new Date()){
     let hh = d.getHours();
@@ -532,6 +528,29 @@
     const iso = new Date(s);
     return Number.isNaN(iso.getTime()) ? null : iso;
   }
+  // === Buat prefix dari tanggal (YYMMDDHHMMSS, 24h) ===
+function prefixFromDate(dt){
+  const yy = String(dt.getFullYear()).slice(-2);
+  const MM = pad2(dt.getMonth()+1);
+  const dd = pad2(dt.getDate());
+  const HH = pad2(dt.getHours());
+  const mi = pad2(dt.getMinutes());
+  const ss = pad2(dt.getSeconds());
+  return `${yy}${MM}${dd}${HH}${mi}${ss}`;
+}
+
+// === Sinkronkan input inPrefix dari inDate ===
+function updatePrefixFromDate(){
+  const dt = parseManualDate(inDate.value);
+  if(!dt) return;                          // kalau belum valid, jangan ubah
+  const stamp = prefixFromDate(dt);         // contoh: 251003143417
+  inPrefix.value = stamp;
+
+  // otomatis sesuaikan Total ref length bila kependekan
+  if (+inLen.value < stamp.length) inLen.value = String(stamp.length);
+
+  saveDraft?.();                            // simpan draft kalau ada
+}
   // ======== PERSISTENCE (LocalStorage) ========
 const LS_DRAFT = 'txn_editor_draft_v1';   // nilai form (sementara)
 const LS_CARD  = 'txn_card_snapshot_v1';  // tampilan kartu (sesudah Apply)
@@ -588,7 +607,7 @@ function restoreFromStorage(){
   if (s){
     amt.textContent      = s.amountText;
     dateText.textContent = s.dateText;
-    showRefMasked(s.ref, 4);     // 4 depan terlihat, sisanya blur
+    showRefMasked(s.ref, KEEP_VISIBLE);    // 4 depan terlihat, sisanya blur
     bankName.textContent = s.bank;
     accNum.textContent   = s.acc;
 
@@ -602,7 +621,7 @@ function restoreFromStorage(){
     dateText.classList.remove('blurred');
   }else{
     // belum ada snapshot: minimal mask ref default
-    showRefMasked(refNum.textContent, 4);
+    showRefMasked(refNum.textContent, KEEP_VISIBLE);
   }
 }
 
@@ -611,6 +630,8 @@ function restoreFromStorage(){
   el?.addEventListener('input',  saveDraft);
   el?.addEventListener('change', saveDraft);
 });
+  inDate.addEventListener('input',  updatePrefixFromDate);
+  inDate.addEventListener('change', updatePrefixFromDate);
   // Teks kartu "DD Mon YYYY HH:MM:SS AM/PM"
   function toCardDate(userVal){
     if(!userVal) return '02 Oct 2025 05:07:21 PM';
@@ -629,10 +650,12 @@ function restoreFromStorage(){
       );
     }
   })();
-  function showRefMasked(fullRef, keep=4){
+function showRefMasked(fullRef, keep = KEEP_VISIBLE){
   const s = String(fullRef || '');
+  const head = s.slice(0, keep);   // 14 digit pertama tampil
+  const tail = s.slice(keep);      // sisanya blur
   refNum.innerHTML =
-    `<span class="ref-keep">${s.slice(0,keep)}</span><span class="ref-blur">${s.slice(keep)}</span>`;
+    `<span class="ref-keep">${head}</span><span class="ref-blur">${tail}</span>`;
 }
 // ===== Amount format helpers =====
 const cleanNum   = s => String(s||'').replace(/[^0-9.]/g,''); // buang koma/karakter lain
@@ -679,26 +702,12 @@ function genNameByLetter(letter){
   if(Math.random() < 0.35) full += ' ' + randLetters( Math.floor(Math.random()*5)+3 );
   return full;
 }
-  function buildRef(prefix,len){
-    prefix = String(prefix||'2510');
-    const remain = Math.max(0, Number(len||24) - prefix.length);
-    return prefix + digits(remain);
-  }
 
   function resetLocal(){
   localStorage.removeItem(LS_DRAFT);
   localStorage.removeItem(LS_CARD);
   location.reload();
 }
-
-  // +1 Prefix
-  inc.addEventListener('click', e=>{
-    e.preventDefault();
-    let cur = parseInt(inPrefix.value||'2510',10);
-    if(Number.isNaN(cur)) cur = 2510;
-    inPrefix.value = String(cur + 1);
-    saveDraft();
-  });
 
   // Tombol NOW -> isi format manual 12h AM/PM
   function setNowToInput(){
@@ -707,6 +716,7 @@ function genNameByLetter(letter){
     const len = inDate.value.length;
     inDate.setSelectionRange?.(len, len);
     saveDraft();
+    updatePrefixFromDate();
   }
   if (btnNow) btnNow.addEventListener('click', setNowToInput);
 
@@ -718,6 +728,8 @@ function genNameByLetter(letter){
   // Initial state: biarkan kosong (lebih jelas user bisa ketik/klik Now)
 window.addEventListener('load', ()=>{
   restoreFromStorage();   // pulihkan form & kartu dari localStorage
+  updatePrefixFromDate(); 
+  inLen.closest('.fld')?.style && (inLen.closest('.fld').style.display = 'none');
 });
 
 apply.addEventListener('click', e=>{
@@ -738,9 +750,9 @@ if (!isValid) {
 inDate.classList.remove('is-invalid');
 dateText.textContent = toCardDate(inDate.value);
 
-  // reference (4 depan terlihat, sisanya blur)
-  const newRef = buildRef(inPrefix.value, inLen.value);
-  showRefMasked(newRef, 4);
+const newRef = inPrefix.value; // pakai persis prefix dari tanggal
+showRefMasked(newRef, KEEP_VISIBLE);
+inLen.value = String(newRef.length); // sync panjang (opsional)
 
   // bank & account
   const bank = pickBank(inBank.value || '');
