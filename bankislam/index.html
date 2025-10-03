@@ -40,7 +40,16 @@
     width:24px;height:24px;border-radius:50%;
     display:grid;place-items:center;font-size:16px;color:#111;
   }
+/* Chrome/Edge/Safari: properti zoom ikut mengubah layout */
+.card { zoom: 1.098; }
 
+/* Fallback Firefox: transform (tidak mengubah layout, hanya visual) */
+@supports not (zoom: 1) {
+  .card {
+    transform: scale(1.098);
+    transform-origin: top left;
+  }
+}
   /* KARTU PUTIH */
   .card{
     margin-top:10px !important; background:var(--card);
