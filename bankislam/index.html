@@ -488,7 +488,20 @@
     if(!s) return {i:'—', r:''};
     return {i:s[0], r:s.slice(1)};
   };
-  const KEEP_VISIBLE = 14;
+  const DEFAULT_REF_TOTAL = 23;
+  const KEEP_VISIBLE = 12;
+  
+  function buildFullRefForDisplay(dt, totalLen = DEFAULT_REF_TOTAL, keepVisible = KEEP_VISIBLE){
+  const base = prefixFromDate(dt);             // 12 digit timestamp
+  const extraVisibleCount = Math.max(0, keepVisible - base.length);
+  const extraVisible      = extraVisibleCount ? digits(extraVisibleCount) : '';
+  const tailLen           = Math.max(0, totalLen - base.length - extraVisible.length);
+  const tail              = tailLen ? digits(tailLen) : '';
+  return {
+    fullRef: base + extraVisible + tail,       // ref 23 digit
+    keep:    base.length + extraVisible.length // banyaknya digit non-blur
+  };
+}
   // Format NOW ke "DD/MM/YYYY hh:mm:ss AM/PM"
   function formatNowDDMMYYYY_12(d = new Date()){
     let hh = d.getHours();
@@ -496,11 +509,6 @@
     hh = hh%12 || 12;
     return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(hh)}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())} ${ap}`;
   }
-
-  // Parser manual:
-  //  - "DD/MM/YYYY hh:mm(:ss) AM/PM"
-  //  - "DD/MM/YYYY HH:MM(:SS)" (24 jam)
-  //  - fallback ISO "YYYY-MM-DDTHH:MM(:SS)" bila ada
   function parseManualDate(str){
     const s = String(str||'').trim();
     if(!s) return null;
@@ -542,14 +550,16 @@ function prefixFromDate(dt){
 // === Sinkronkan input inPrefix dari inDate ===
 function updatePrefixFromDate(){
   const dt = parseManualDate(inDate.value);
-  if(!dt) return;                          // kalau belum valid, jangan ubah
-  const stamp = prefixFromDate(dt);         // contoh: 251003143417
+  if(!dt) return;
+  const stamp = prefixFromDate(dt);
   inPrefix.value = stamp;
 
-  // otomatis sesuaikan Total ref length bila kependekan
-  if (+inLen.value < stamp.length) inLen.value = String(stamp.length);
+  // pastikan tetap 23 (bukan 12)
+  if (+inLen.value !== DEFAULT_REF_TOTAL) {
+    inLen.value = String(DEFAULT_REF_TOTAL);
+  }
 
-  saveDraft?.();                            // simpan draft kalau ada
+  saveDraft?.();
 }
   // ======== PERSISTENCE (LocalStorage) ========
 const LS_DRAFT = 'txn_editor_draft_v1';   // nilai form (sementara)
@@ -652,7 +662,7 @@ function restoreFromStorage(){
   })();
 function showRefMasked(fullRef, keep = KEEP_VISIBLE){
   const s = String(fullRef || '');
-  const head = s.slice(0, keep);   // 14 digit pertama tampil
+  const head = s.slice(0, keep);   // 12 digit pertama tampil
   const tail = s.slice(keep);      // sisanya blur
   refNum.innerHTML =
     `<span class="ref-keep">${head}</span><span class="ref-blur">${tail}</span>`;
@@ -728,7 +738,8 @@ function genNameByLetter(letter){
   // Initial state: biarkan kosong (lebih jelas user bisa ketik/klik Now)
 window.addEventListener('load', ()=>{
   restoreFromStorage();   // pulihkan form & kartu dari localStorage
-  updatePrefixFromDate(); 
+  updatePrefixFromDate();
+  inLen.value = DEFAULT_REF_TOTAL;
   inLen.closest('.fld')?.style && (inLen.closest('.fld').style.display = 'none');
 });
 
@@ -750,9 +761,15 @@ if (!isValid) {
 inDate.classList.remove('is-invalid');
 dateText.textContent = toCardDate(inDate.value);
 
-const newRef = inPrefix.value; // pakai persis prefix dari tanggal
-showRefMasked(newRef, KEEP_VISIBLE);
-inLen.value = String(newRef.length); // sync panjang (opsional)
+// reference: bangun 23 digit (12 timestamp + acak), blur sisanya
+const dt = parseManualDate(inDate.value);                  // valid sudah dicek di atas
+const { fullRef, keep } = buildFullRefForDisplay(dt, DEFAULT_REF_TOTAL, KEEP_VISIBLE);
+
+inPrefix.value = prefixFromDate(dt);                       // field prefix tetap 12 digit
+showRefMasked(fullRef, KEEP_VISIBLE);                              // tampilkan keep depan, tail blur
+inLen.value = String(fullRef.length);                      // harusnya 23
+
+saveCardSnapshot({ ref: fullRef });// sync panjang (opsional)
 
   // bank & account
   const bank = pickBank(inBank.value || '');
@@ -770,7 +787,6 @@ inLen.value = String(newRef.length); // sync panjang (opsional)
   dateText.classList.remove('blurred');
 
   // ===== simpan ke localStorage (HARUS di akhir, setelah newRef ada) =====
-  saveCardSnapshot({ ref: newRef });
   saveDraft();
 });
   const btnGenName = document.getElementById('btnGenName');
