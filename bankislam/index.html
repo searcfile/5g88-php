@@ -336,7 +336,7 @@
 
           <div class="fld">
             <label>Amount (RM)</label>
-            <input id="inAmount" type="number" step="0.01" value="50.00">
+            <input id="inAmount" type="text" inputmode="decimal" autocomplete="off" value="1,000.00">
           </div>
 
           <div class="row">
@@ -566,7 +566,7 @@ function restoreFromStorage(){
   // 1) Balikkan draft -> isi form editor
   const d = loadDraft();
   if (d){
-    if (d.amount != null) inAmount.value = d.amount;
+    if (d.amount != null) inAmount.value = formatAmountInput(d.amount);
     if (d.date   != null) inDate.value   = d.date;
     if (d.prefix != null) inPrefix.value = d.prefix;
     if (d.len    != null) inLen.value    = d.len;
@@ -625,7 +625,34 @@ function restoreFromStorage(){
   refNum.innerHTML =
     `<span class="ref-keep">${s.slice(0,keep)}</span><span class="ref-blur">${s.slice(keep)}</span>`;
 }
+// ===== Amount format helpers =====
+const cleanNum   = s => String(s||'').replace(/[^0-9.]/g,''); // buang koma/karakter lain
+const toNumber   = s => Number(cleanNum(s) || 0);
+function formatAmountInput(s){
+  if(!s) return '';
+  let [int, dec] = cleanNum(s).split('.');
+  int = (int||'').replace(/\B(?=(\d{3})+(?!\d))/g, ','); // ribuan
+  if(dec !== undefined) dec = dec.slice(0, 2);           // batasi 2 desimal saat ketik
+  return dec !== undefined ? `${int}.${dec}` : int;
+}
 
+// Format saat halaman dibuka (value awal)
+inAmount.value = formatAmountInput(inAmount.value);
+
+// Format live ketika mengetik
+inAmount.addEventListener('input', () => {
+  const wasEnd = inAmount.selectionStart === inAmount.value.length; // simple caret keep-end
+  inAmount.value = formatAmountInput(inAmount.value);
+  if (wasEnd) inAmount.setSelectionRange(inAmount.value.length, inAmount.value.length);
+  saveDraft();
+});
+
+// Saat blur: pastikan 2 desimal rapih
+inAmount.addEventListener('blur', () => {
+  const n = toNumber(inAmount.value);
+  inAmount.value = n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  saveDraft();
+});
 // Random huruf
 function randLetters(n){
   const A='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -688,8 +715,10 @@ apply.addEventListener('click', e=>{
   e.preventDefault();
 
   // amount
-  const amount = parseFloat(inAmount.value||0).toFixed(2);
-  amt.textContent = `RM ${amount}`;
+  const amountNum = toNumber(inAmount.value);
+amt.textContent = `RM ${amountNum.toLocaleString('en-MY', {
+  minimumFractionDigits: 2, maximumFractionDigits: 2
+})}`;
 
   // datetime -> kartu + validasi ringan
 const isValid = !!parseManualDate(inDate.value);
