@@ -311,6 +311,7 @@
 .ref-blur{
   filter: blur(3px);
   user-select: none;
+  margin-left: -6px;
 }
 .ref-blur::selection{ background: transparent; }
 
@@ -368,12 +369,9 @@
             <div class="col fld">
               <label>Force Bank (optional)</label>
               <select id="inBank">
-                <option value="">Select Bank</option>
+                <option value="">Random Bank</option>
                 <option>Maybank</option>
                 <option>CIMB Bank</option>
-                <option>RHB</option>
-                <option>Public</option>
-                <option>HLB</option>
                 <option>Bank Simpanan Nasional</option>
                 <option>Touch n Go</option>
               </select>
@@ -447,11 +445,8 @@
   const BANKS = [
     {name:'Maybank', len:12},
     {name:'CIMB Bank',len:10},
-    {name:'RHB', len:12},
     {name:'Touch n Go', len:12},
-    {name:'Public', len:14},
     {name:'Bank Simpanan Nasional', len:16},
-    {name:'HLB', len:12}, // Hong Leong
   ];
 
   /* ======== EL ======== */
