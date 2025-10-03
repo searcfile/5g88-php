@@ -297,6 +297,26 @@
 }
 /* Pastikan kolom editor bisa menyusut */
 #back .modal .row .col{ flex:1 1 0; min-width:0; }
+.more .chev{
+  display:inline-block;
+  width:14px;               /* ubah ukuran di sini */
+  height:14px;
+  margin-left:6px;
+  background: currentColor; /* ikut warna teks .more */
+  /* material-like chevron-down */
+  -webkit-mask: url('data:image/svg+xml;utf8,\
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">\
+    <path d="M7.41 8.59 12 13.17l4.59-4.58 1.41 1.41L12 16 6 10l1.41-1.41Z"/>\
+  </svg>') no-repeat center/contain;
+          mask: url('data:image/svg+xml;utf8,\
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">\
+    <path d="M7.41 8.59 12 13.17l4.59-4.58 1.41 1.41L12 16 6 10l1.41-1.41Z"/>\
+  </svg>') no-repeat center/contain;
+  vertical-align: -1px;     /* kecilkan kalau perlu */
+}
+
+/* kalau sebelumnya pakai karakter ▾, sembunyikan */
+.more span:not(.chev){ display:none; }
 </style>
 </head>
 <body>
@@ -409,7 +429,8 @@
           <div class="detail sub">DuitNow</div>
         </div>
 
-        <div class="more">View More <span>▾</span></div>
+       <div class="more">View More <span class="chev" aria-hidden="true"></span></div>
+
 
         <div class="actions">
           <button class="btn">Another Transfer</button>
