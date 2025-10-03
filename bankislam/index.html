@@ -87,9 +87,9 @@
   .btn:hover{background:#fff;color:#c83853;}.btn:active{background:#cccccc;color:#c83853;}
   .btn.primary{
     flex:1; background:#fff;
-    color:#c83853; border:1px solid transparent;transition: all 0.2s;
+    color:#c83853; border:1px solid #c83853;transition: all 0.2s;
   }
- .btn.primary:hover{background:#c83853;color:#fff;border:1px solid white;}.btn.primary:active{background:#c83853;color:#fff;}
+ .btn.primary:hover{background:#c83853;color:#fff;border:1px solid white;}.btn.primary:active{background:#cccccc;color:#c83853;}
   /* MODAL EDITOR */
 
   .modal{ width:min(520px,92vw); background:#c83853; border-radius:14px; border:1px solid var(--border);
@@ -102,7 +102,6 @@
     border:1px solid var(--border); border-radius:9px; padding:10px 12px; font-size:14px;
   }
   .ctl{ display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
-  .gear{ position:relative; top:-6px; }
 
   /* BLUR MASKING */
   .blurred{ filter:blur(2px); transition:filter .25s ease; }
