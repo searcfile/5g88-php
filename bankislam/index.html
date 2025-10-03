@@ -328,25 +328,6 @@
 }
 .btn-mini:hover{background:#fff;color:#c83853;}.btn-mini:active{background:#cccccc;color:#c83853;}
 .nm-alpha{ height:36px; border-radius:8px; padding:0 8px; }
-
-/* Validasi input tanggal sederhana */
-.dt-input.is-invalid{ outline:2px solid #ffd4da; background:rgba(255,255,255,.92); }
-.ss-row{ display:flex; align-items:center; gap:10px; margin-top:10px; }
-.btn-ss{
-  padding:8px 14px; border-radius:999px; font-weight:700; font-size:12px;
-  background:#c83853; color:#fff; border:1px solid #c83853; cursor:pointer;
-  box-shadow:0 6px 14px rgba(216,72,98,.18);
-}
-.btn-ss:hover{ background:#fff; color:#c83853; }
-.ss-hint{ color:#8d8d8d; font-size:11px; }
-
-/* notifikasi kecil */
-.toast{
-  position:fixed; right:16px; bottom:16px; background:rgba(0,0,0,.85);
-  color:#fff; padding:8px 12px; border-radius:8px; font-size:12px;
-  opacity:0; transform:translateY(8px); transition:.2s;
-}
-.toast.show{ opacity:1; transform:translateY(0); }
 </style>
 </head>
 <body>
@@ -456,16 +437,11 @@
         </div>
 
        <div class="more">View More <span class="chev" aria-hidden="true"></span></div>
-      <div class="ss-row">
-        <button id="btnSS" class="btn btn-ss" type="button">SS</button>
-       <span class="ss-hint">Tip: tekan <b>Ctrl+C</b> untuk copy cepat</span>
-      </div>
       </div>
     </div>
     <!-- ===== end layout ===== -->
 
   </div>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
   /* ======== DATA BANK (panjang no. akun) ======== */
   const BANKS = [
@@ -737,94 +713,6 @@ function genNameByLetter(letter){
   localStorage.removeItem(LS_CARD);
   location.reload();
 }
-// ===== DROP-IN REPLACEMENT =====
-async function screenshotCard({
-  nodeId = 'card',
-  copy = true,
-  downloadFallback = true,
-  filename = `receipt-${Date.now()}`,
-  bgColor = '#ffffff',
-  keepShadow = true,
-  scale = Math.min(3, window.devicePixelRatio || 1),
-} = {}) {
-  const node = document.getElementById(nodeId);
-  if (!node) { showToast('Elemen #card tidak ditemukan'); return; }
-
-  // 1) Pastikan font & IMG di dalam #card sudah siap
-  try { await (document.fonts?.ready ?? Promise.resolve()); } catch {}
-  await (async function waitImages(root){
-    const imgs = [...root.querySelectorAll('img')];
-    if (!imgs.length) return;
-    await Promise.all(imgs.map(img => img.complete
-      ? Promise.resolve()
-      : new Promise(res => { img.onload = res; img.onerror = res; })
-    ));
-  })(node);
-
-  // 2) Render dengan html2canvas
-  const canvas = await html2canvas(node, {
-    backgroundColor: bgColor,
-    scale,
-    removeContainer: true,
-    useCORS: true,
-    onclone: (doc) => {
-      const c = doc.getElementById(nodeId);
-      if (!c) return;
-
-      // Sembunyikan semua sibling dari #card hingga ke <body>
-      (function hideSiblings(n){
-        const p = n.parentElement;
-        if (!p) return;
-        [...p.children].forEach(el => { if (el !== n) el.style.display = 'none'; });
-        hideSiblings(p);
-      })(c);
-
-      // Netralisir efek layout/visual yang bikin hasil beda
-      c.style.zoom = '1';
-      c.style.transform = 'none';
-      c.style.filter = 'none';
-      c.style.background = bgColor;
-      c.style.boxShadow = keepShadow ? '0 14px 32px rgba(0,0,0,.06)' : 'none';
-      c.style.zIndex = '2147483647';
-      doc.body.style.background = bgColor;
-    }
-  });
-
-  // 3) Copy ke clipboard (HTTPS / localhost) atau download
-  const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
-  if (!blob) { showToast('Gagal membuat gambar'); return; }
-
-  try {
-    if (copy && navigator.clipboard && window.ClipboardItem) {
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-      showToast('Screenshot disalin ke clipboard');
-      return;
-    }
-  } catch (_) { /* fallback ke download */ }
-
-  if (downloadFallback) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `${filename}.png`;
-    document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
-    showToast('Screenshot diunduh (PNG)');
-  }
-}
-  // Tombol SS
-document.getElementById('btnSS')?.addEventListener('click', () => {
-  screenshotCard().catch(err => { console.error(err); showToast('Gagal ambil screenshot'); });
-});
-
-// Shortcut Ctrl + C (abaikan saat lagi mengetik di input/textarea)
-document.addEventListener('keydown', (e) => {
-  const ae = document.activeElement;
-  const typing = ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable);
-  if (!typing && e.ctrlKey && e.key.toLowerCase() === 'c') {
-    e.preventDefault();
-    screenshotCard().catch(()=>{});
-  }
-});
   function setNowToInput(){
     inDate.value = formatNowDDMMYYYY_12(new Date());
     inDate.focus();
