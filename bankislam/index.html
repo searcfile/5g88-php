@@ -331,7 +331,7 @@
   <label>Date &amp; Time</label>
   <div class="dt-wrap">
     <button type="button" class="btn-now" id="btnNow">Now</button>
-    <input id="inDate" class="dt-input" type="datetime-local" step="1">
+    <input id="inDate" class="dt-input" type="text" placeholder="Date & time">
   </div>
 </div>
             <div class="col fld">
@@ -469,6 +469,59 @@
   const s = pad2(d.getSeconds());
   return `${Y}-${M}-${D}T${h}:${m}:${s}`;
 }
+/* ====== HELPER YANG SUDAH ADA ====== */
+const pad2 = n => String(n).padStart(2,'0');
+
+/* ====== BARU: formatter NOW ke DD/MM/YYYY HH:MM:SS ====== */
+function formatNowDDMMYYYY(d = new Date()){
+  return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+}
+
+/* ====== BARU: parser manual "DD/MM/YYYY HH:MM(:SS)" ====== */
+function parseDDMMYYYY_HHMMSS(str){
+  const m = String(str).trim().match(
+    /^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})(?::(\d{2}))?$/
+  );
+  if(!m) return null;
+  const [_, dd, mm, yyyy, HH, MM, SS] = m;
+  const dt = new Date(+yyyy, +mm-1, +dd, +HH, +MM, +(SS ?? 0));
+  return Number.isNaN(dt.getTime()) ? null : dt;
+}
+
+/* ====== opsional: parser ISO kalau kamu pernah isi "YYYY-MM-DDTHH:MM:SS" ====== */
+function parseISO(str){
+  const d = new Date(str);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/* ====== REPLACE toCardDate: kini terima manual DD/MM/YYYY atau ISO ====== */
+function toCardDate(userVal){
+  if(!userVal) return '02 Oct 2025 05:07:21 PM';
+  let dt = parseDDMMYYYY_HHMMSS(userVal) || parseISO(userVal);
+  if(!dt) dt = new Date(); // fallback kalau format salah
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let hh = dt.getHours(); const ap = hh>=12 ? 'PM' : 'AM'; hh = hh%12 || 12;
+  return `${pad2(dt.getDate())} ${MON[dt.getMonth()]} ${dt.getFullYear()} ${pad2(hh)}:${pad2(dt.getMinutes())}:${pad2(dt.getSeconds())} ${ap}`;
+}
+
+/* ====== REPLACE setNowToInput: isi format manual ====== */
+function setNowToInput(){
+  inDate.value = formatNowDDMMYYYY(new Date()); // "DD/MM/YYYY HH:MM:SS"
+  inDate.focus();
+  const len = inDate.value.length;
+  inDate.setSelectionRange?.(len, len);
+}
+
+/* ====== tombol Now & shortcut ====== */
+document.getElementById('btnNow').addEventListener('click', setNowToInput);
+document.addEventListener('keydown', (e)=>{
+  if(e.altKey && e.key.toLowerCase()==='n'){ e.preventDefault(); setNowToInput(); }
+});
+
+/* ====== INITIAL STATE (REPLACE) ====== */
+window.addEventListener('load', ()=>{
+  inDate.value = formatNowDDMMYYYY(new Date()); // bukan ISO lagi
+});
 
 // Isi field dengan waktu sekarang + fokuskan (editable)
 function setNowToInput(){
