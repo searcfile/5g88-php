@@ -737,68 +737,65 @@ function genNameByLetter(letter){
   localStorage.removeItem(LS_CARD);
   location.reload();
 }
-  // --- SS helper ---
-  function toast(msg){
-    const t = document.createElement('div');
-    t.className = 'toast';
-    t.textContent = msg;
-    document.body.appendChild(t);
-    requestAnimationFrame(()=> t.classList.add('show'));
-    setTimeout(()=>{ t.classList.remove('show'); t.remove(); }, 1600);
-  }
+async function screenshotCard({copy=true, downloadFallback=true} = {}){
+  const node = document.getElementById('card');
+  if (!node) return;
 
-  async function screenshotCard({copy=true, downloadFallback=true} = {}){
-    const node = document.getElementById('card');
-    if(!node){ toast('Card tidak ditemukan'); return; }
+  // Pastikan font (Montserrat) sudah siap
+  try { await document.fonts.ready; } catch {}
 
-    // Render jadi canvas (2x supaya tajam)
-    const canvas = await html2canvas(node, {
-      backgroundColor: '#ffffff',   // pastikan background putih
-      scale: 2,
-      useCORS: true
-    });
+  const canvas = await html2canvas(node, {
+    backgroundColor: '#ffffff',
+    scale: 2,
+    removeContainer: true,
+    useCORS: true,
+    onclone: (doc) => {
+      // 1) Sembunyikan semua selain #card (biar tidak ada overlap dari kolom kiri)
+      [...doc.body.children].forEach(el => {
+        if (el.id !== 'card') el.style.display = 'none';
+      });
 
-    const dataUrl = canvas.toDataURL('image/png');
+      // 2) Bersihkan efek yang bikin hasil beda
+      const c = doc.getElementById('card');
+      c.style.zoom = '1';
+      c.style.transform = 'none';
+      // kalau kamu punya inset shadow/gradient, normalkan:
+      c.style.boxShadow = '0 14px 32px rgba(0,0,0,.06)';  // atau 'none' kalau mau polos
+      c.style.filter = 'none';     // jaga-jaga ada filter global
+      c.style.background = '#ffffff';
+      c.style.zIndex = '999999';
+    }
+  });
 
-    // Coba copy ke clipboard
+  const dataUrl = canvas.toDataURL('image/png');
+
+  // Copy ke clipboard kalau bisa, else download
+  try{
     if (copy && navigator.clipboard && window.ClipboardItem) {
-      try{
-        const blob = await (await fetch(dataUrl)).blob();
-        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-        toast('Screenshot disalin ke clipboard');
-        return;
-      }catch(e){ /* lanjut fallback download */ }
+      const blob = await (await fetch(dataUrl)).blob();
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      showToast('Screenshot disalin ke clipboard');
+      return;
     }
+  }catch(e){ /* fallback download */ }
 
-    if(downloadFallback){
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = `receipt-${Date.now()}.png`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      toast('Screenshot diunduh (PNG)');
-    }
+  if (downloadFallback) {
+    const a = document.createElement('a');
+    a.href = dataUrl; a.download = `receipt-${Date.now()}.png`;
+    document.body.appendChild(a); a.click(); a.remove();
+    showToast('Screenshot diunduh (PNG)');
   }
+}
 
-  // Klik tombol “SS”
-  document.getElementById('btnSS')?.addEventListener('click', () => {
-    screenshotCard({copy:true, downloadFallback:true});
-  });
-
-  // Shortcut Ctrl+C / Cmd+C untuk SS (kecuali sedang memilih teks)
-  document.addEventListener('keydown', (e)=>{
-    const isCopy = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c';
-    if(!isCopy) return;
-
-    // kalau ada selection teks, biarkan copy biasa
-    const sel = window.getSelection?.().toString();
-    if(sel && sel.length) return;
-
-    e.preventDefault();
-    screenshotCard({copy:true, downloadFallback:true});
-  });
-  // Tombol NOW -> isi format manual 12h AM/PM
+// opsional: helper notifikasi kecil
+function showToast(msg){
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(()=>t.classList.add('show'));
+  setTimeout(()=>{ t.classList.remove('show'); t.remove(); }, 1600);
+}
   function setNowToInput(){
     inDate.value = formatNowDDMMYYYY_12(new Date());
     inDate.focus();
