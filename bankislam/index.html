@@ -401,7 +401,7 @@
 </div>
 
           <div class="ctl">
-            <button class="btn" id="close">Cancel</button>
+            <button type="button" class="btn" onclick="resetLocal()">Reset</button>
             <button class="btn primary" id="apply">Update &amp; Blur</button>
           </div>
         </div>
@@ -533,7 +533,85 @@
     const iso = new Date(s);
     return Number.isNaN(iso.getTime()) ? null : iso;
   }
+  // ======== PERSISTENCE (LocalStorage) ========
+const LS_DRAFT = 'txn_editor_draft_v1';   // nilai form (sementara)
+const LS_CARD  = 'txn_card_snapshot_v1';  // tampilan kartu (sesudah Apply)
 
+function saveDraft(){
+  const data = {
+    amount: inAmount.value,
+    date:   inDate.value,
+    prefix: inPrefix.value,
+    len:    inLen.value,
+    bank:   inBank.value,
+    name:   inName.value,
+  };
+  localStorage.setItem(LS_DRAFT, JSON.stringify(data));
+}
+
+function loadDraft(){
+  try { return JSON.parse(localStorage.getItem(LS_DRAFT) || 'null'); }
+  catch { return null; }
+}
+
+function saveCardSnapshot(extra={}){
+  const snap = {
+    // simpan REF full (tanpa mask), kirim via argumen dari Apply
+    ref: extra.ref || (refNum.textContent || '').replace(/\s+/g,''),
+    amountText: amt.textContent,
+    dateText:   dateText.textContent,
+    bank:       bankName.textContent,
+    acc:        accNum.textContent,
+    name:       (inName.value || '').toUpperCase(),
+  };
+  localStorage.setItem(LS_CARD, JSON.stringify(snap));
+}
+
+function loadCardSnapshot(){
+  try { return JSON.parse(localStorage.getItem(LS_CARD) || 'null'); }
+  catch { return null; }
+}
+
+function restoreFromStorage(){
+  // 1) Balikkan draft -> isi form editor
+  const d = loadDraft();
+  if (d){
+    if (d.amount != null) inAmount.value = d.amount;
+    if (d.date   != null) inDate.value   = d.date;
+    if (d.prefix != null) inPrefix.value = d.prefix;
+    if (d.len    != null) inLen.value    = d.len;
+    if (d.bank   != null) inBank.value   = d.bank;
+    if (d.name   != null) inName.value   = d.name;
+  }
+
+  // 2) Balikkan snapshot -> tampilan kartu
+  const s = loadCardSnapshot();
+  if (s){
+    amt.textContent      = s.amountText;
+    dateText.textContent = s.dateText;
+    showRefMasked(s.ref, 4);     // 4 depan terlihat, sisanya blur
+    bankName.textContent = s.bank;
+    accNum.textContent   = s.acc;
+
+    const {i,r} = splitName(s.name || inName.value);
+    nmIni.textContent  = i;
+    nmRest.textContent = r;
+
+    // apply blur seperti setelah Apply
+    [nmRest, accNum].forEach(el => el.classList.add('blurred'));
+    amt.classList.remove('blurred');
+    dateText.classList.remove('blurred');
+  }else{
+    // belum ada snapshot: minimal mask ref default
+    showRefMasked(refNum.textContent, 4);
+  }
+}
+
+// Simpan draft otomatis saat user mengetik/ubah
+[inAmount, inDate, inPrefix, inLen, inBank, inName].forEach(el=>{
+  el?.addEventListener('input',  saveDraft);
+  el?.addEventListener('change', saveDraft);
+});
   // Teks kartu "DD Mon YYYY HH:MM:SS AM/PM"
   function toCardDate(userVal){
     if(!userVal) return '02 Oct 2025 05:07:21 PM';
@@ -581,7 +659,11 @@ function genNameByLetter(letter){
     return prefix + digits(remain);
   }
 
-  /* ======== EVENTS ======== */
+  function resetLocal(){
+  localStorage.removeItem(LS_DRAFT);
+  localStorage.removeItem(LS_CARD);
+  location.reload();
+}
 
   // +1 Prefix
   inc.addEventListener('click', e=>{
@@ -589,6 +671,7 @@ function genNameByLetter(letter){
     let cur = parseInt(inPrefix.value||'2510',10);
     if(Number.isNaN(cur)) cur = 2510;
     inPrefix.value = String(cur + 1);
+    saveDraft();
   });
 
   // Tombol NOW -> isi format manual 12h AM/PM
@@ -597,6 +680,7 @@ function genNameByLetter(letter){
     inDate.focus();
     const len = inDate.value.length;
     inDate.setSelectionRange?.(len, len);
+    saveDraft();
   }
   if (btnNow) btnNow.addEventListener('click', setNowToInput);
 
@@ -607,51 +691,55 @@ function genNameByLetter(letter){
 
   // Initial state: biarkan kosong (lebih jelas user bisa ketik/klik Now)
 window.addEventListener('load', ()=>{
-  inDate.value = ''; // kosong; user bisa klik Now / ketik manual
-  showRefMasked(refNum.textContent, 4); // mask ref awal (4 depan terlihat)
+  restoreFromStorage();   // pulihkan form & kartu dari localStorage
 });
 
-  // APPLY & BLUR
-  apply.addEventListener('click', e=>{
-    e.preventDefault();
+apply.addEventListener('click', e=>{
+  e.preventDefault();
 
-    // amount
-    const amount = parseFloat(inAmount.value||0).toFixed(2);
-    amt.textContent = `RM ${amount}`;
+  // amount
+  const amount = parseFloat(inAmount.value||0).toFixed(2);
+  amt.textContent = `RM ${amount}`;
 
-    // datetime -> kartu
-    if (!parseManualDate(inDate.value)) {
+  // datetime -> kartu + validasi ringan
+const isValid = !!parseManualDate(inDate.value);
+if (!isValid) {
   inDate.classList.add('is-invalid');
-} else {
-  inDate.classList.remove('is-invalid');
+  return; // hentikan Apply di sini
 }
+inDate.classList.remove('is-invalid');
 dateText.textContent = toCardDate(inDate.value);
 
-    // reference
-    const newRef = buildRef(inPrefix.value, inLen.value);
-showRefMasked(newRef, 4);
+  // reference (4 depan terlihat, sisanya blur)
+  const newRef = buildRef(inPrefix.value, inLen.value);
+  showRefMasked(newRef, 4);
 
-    // bank & account
-    const bank = pickBank(inBank.value || '');
-    bankName.textContent = bank.name;
-    accNum.textContent = digits(bank.len);
+  // bank & account
+  const bank = pickBank(inBank.value || '');
+  bankName.textContent = bank.name;
+  accNum.textContent = digits(bank.len);
 
-    // name
-    const {i,r} = splitName(inName.value || 'BAHARUDEEN BIN ABDUL');
-    nmIni.textContent = i;
-    nmRest.textContent = r;
+  // name
+  const {i,r} = splitName(inName.value || 'BAHARUDEEN BIN ABDUL');
+  nmIni.textContent = i;
+  nmRest.textContent = r;
 
-    // BLUR SENSITIF
-    [nmRest, accNum].forEach(el=> el.classList.add('blurred'));
-    amt.classList.remove('blurred');
-    dateText.classList.remove('blurred');
-  });
+  // BLUR SENSITIF
+  [nmRest, accNum].forEach(el=> el.classList.add('blurred'));
+  amt.classList.remove('blurred');
+  dateText.classList.remove('blurred');
+
+  // ===== simpan ke localStorage (HARUS di akhir, setelah newRef ada) =====
+  saveCardSnapshot({ ref: newRef });
+  saveDraft();
+});
   const btnGenName = document.getElementById('btnGenName');
 const nmAlphaSel = document.getElementById('nmAlpha');
 
 btnGenName?.addEventListener('click', ()=>{
   inName.value = genNameByLetter(nmAlphaSel?.value || '');
   inName.focus();
+  saveDraft();
 });
 
 // Shortcut Alt+R untuk generate nama cepat
@@ -660,6 +748,7 @@ document.addEventListener('keydown', (e)=>{
     e.preventDefault();
     inName.value = genNameByLetter(nmAlphaSel?.value || '');
     inName.focus();
+    saveDraft(); 
   }
 });
 </script>
