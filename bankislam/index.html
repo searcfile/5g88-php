@@ -432,143 +432,103 @@
   const BANKS = [
     {name:'Maybank', len:12},
     {name:'CIMB Bank',len:10},
-    {name:'RHB',     len:12},
-    {name:'Touch n Go',     len:12},
-    {name:'Public',  len:14},
-    {name:'Bank Simpanan Nasional',     len:16},
-    {name:'HLB',     len:12}, // Hong Leong
+    {name:'RHB', len:12},
+    {name:'Touch n Go', len:12},
+    {name:'Public', len:14},
+    {name:'Bank Simpanan Nasional', len:16},
+    {name:'HLB', len:12}, // Hong Leong
   ];
 
   /* ======== EL ======== */
-  const back = document.getElementById('back');
-  const open = document.getElementById('open');
-  const closeBtn = document.getElementById('close');
-  const apply = document.getElementById('apply');
-  const inc = document.getElementById('inc');
+  const apply   = document.getElementById('apply');
+  const inc     = document.getElementById('inc');
+  const btnNow  = document.getElementById('btnNow');
 
-  const refNum = document.getElementById('refNum');
-  const dateText = document.getElementById('dateText');
-  const amt = document.getElementById('amt');
-  const nmIni = document.getElementById('nmIni');
-  const nmRest = document.getElementById('nmRest');
-  const bankName = document.getElementById('bankName');
-  const accNum = document.getElementById('accNum');
+  const refNum  = document.getElementById('refNum');
+  const dateText= document.getElementById('dateText');
+  const amt     = document.getElementById('amt');
+  const nmIni   = document.getElementById('nmIni');
+  const nmRest  = document.getElementById('nmRest');
+  const bankName= document.getElementById('bankName');
+  const accNum  = document.getElementById('accNum');
 
-  const inAmount = document.getElementById('inAmount');
-  const inDate = document.getElementById('inDate');
-  const inPrefix = document.getElementById('inPrefix');
-  const inLen = document.getElementById('inLen');
-  const inBank = document.getElementById('inBank');
-  const inName = document.getElementById('inName');
-  function toLocalDatetimeValue(d = new Date()){
-  const Y = d.getFullYear();
-  const M = pad2(d.getMonth()+1);
-  const D = pad2(d.getDate());
-  const h = pad2(d.getHours());
-  const m = pad2(d.getMinutes());
-  const s = pad2(d.getSeconds());
-  return `${Y}-${M}-${D}T${h}:${m}:${s}`;
-}
-/* ====== HELPER YANG SUDAH ADA ====== */
-const pad2 = n => String(n).padStart(2,'0');
+  const inAmount= document.getElementById('inAmount');
+  const inDate  = document.getElementById('inDate');       // <-- type="text"
+  const inPrefix= document.getElementById('inPrefix');
+  const inLen   = document.getElementById('inLen');
+  const inBank  = document.getElementById('inBank');
+  const inName  = document.getElementById('inName');
 
-/* ====== BARU: formatter NOW ke DD/MM/YYYY HH:MM:SS ====== */
-function formatNowDDMMYYYY(d = new Date()){
-  return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
-}
-
-/* ====== BARU: parser manual "DD/MM/YYYY HH:MM(:SS)" ====== */
-function parseDDMMYYYY_HHMMSS(str){
-  const m = String(str).trim().match(
-    /^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})(?::(\d{2}))?$/
-  );
-  if(!m) return null;
-  const [_, dd, mm, yyyy, HH, MM, SS] = m;
-  const dt = new Date(+yyyy, +mm-1, +dd, +HH, +MM, +(SS ?? 0));
-  return Number.isNaN(dt.getTime()) ? null : dt;
-}
-
-/* ====== opsional: parser ISO kalau kamu pernah isi "YYYY-MM-DDTHH:MM:SS" ====== */
-function parseISO(str){
-  const d = new Date(str);
-  return Number.isNaN(d.getTime()) ? null : d;
-}
-
-/* ====== REPLACE toCardDate: kini terima manual DD/MM/YYYY atau ISO ====== */
-function toCardDate(userVal){
-  if(!userVal) return '02 Oct 2025 05:07:21 PM';
-  let dt = parseDDMMYYYY_HHMMSS(userVal) || parseISO(userVal);
-  if(!dt) dt = new Date(); // fallback kalau format salah
-  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  let hh = dt.getHours(); const ap = hh>=12 ? 'PM' : 'AM'; hh = hh%12 || 12;
-  return `${pad2(dt.getDate())} ${MON[dt.getMonth()]} ${dt.getFullYear()} ${pad2(hh)}:${pad2(dt.getMinutes())}:${pad2(dt.getSeconds())} ${ap}`;
-}
-
-/* ====== REPLACE setNowToInput: isi format manual ====== */
-function setNowToInput(){
-  inDate.value = formatNowDDMMYYYY(new Date()); // "DD/MM/YYYY HH:MM:SS"
-  inDate.focus();
-  const len = inDate.value.length;
-  inDate.setSelectionRange?.(len, len);
-}
-
-/* ====== tombol Now & shortcut ====== */
-document.getElementById('btnNow').addEventListener('click', setNowToInput);
-document.addEventListener('keydown', (e)=>{
-  if(e.altKey && e.key.toLowerCase()==='n'){ e.preventDefault(); setNowToInput(); }
-});
-
-/* ====== INITIAL STATE (REPLACE) ====== */
-window.addEventListener('load', ()=>{
-  inDate.value = formatNowDDMMYYYY(new Date()); // bukan ISO lagi
-});
-
-// Isi field dengan waktu sekarang + fokuskan (editable)
-function setNowToInput(){
-  inDate.value = toLocalDatetimeValue(new Date());
-  // opsional: fokus & cursor di akhir
-  inDate.focus();
-}
-
-// tombol Now
-const btnNow = document.getElementById('btnNow');
-btnNow.addEventListener('click', setNowToInput);
-
-// shortcut: Alt+N untuk “Now”
-document.addEventListener('keydown', (e)=>{
-  if(e.altKey && (e.key.toLowerCase()==='n')){ e.preventDefault(); setNowToInput(); }
-});
   /* ======== HELPERS ======== */
-  const pad2 = n => String(n).padStart(2,'0');
-  const randi = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+  const pad2   = n => String(n).padStart(2,'0');
+  const randi  = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
   const digits = n => Array.from({length:n},()=>String(randi(0,9))).join('');
   const pickBank = forced => forced ? BANKS.find(b=>b.name===forced) : BANKS[randi(0,BANKS.length-1)];
   const splitName = name => {
-    const s = (name||'').trim().toUpperCase();
+    const s=(name||'').trim().toUpperCase();
     if(!s) return {i:'—', r:''};
     return {i:s[0], r:s.slice(1)};
   };
-  function toCardDate(localVal){
-    if(!localVal) return '02 Oct 2025 05:07:21 PM';
-    let v = localVal;
-    if(v.length===16) v += ':00';
-    const [d,t] = v.split('T');
-    const [Y,M,D] = d.split('-').map(Number);
-    const [h,m,s] = t.split(':').map(Number);
-    const dt = new Date(Y,M-1,D,h||0,m||0,s||0);
-    const mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][dt.getMonth()];
-    let hh = dt.getHours(); const ap = hh>=12?'PM':'AM'; hh = hh%12 || 12;
-    return `${pad2(dt.getDate())} ${mon} ${dt.getFullYear()} ${pad2(hh)}:${pad2(dt.getMinutes())}:${pad2(dt.getSeconds())} ${ap}`;
+
+  // Format NOW ke "DD/MM/YYYY hh:mm:ss AM/PM"
+  function formatNowDDMMYYYY_12(d = new Date()){
+    let hh = d.getHours();
+    const ap = hh>=12 ? 'PM' : 'AM';
+    hh = hh%12 || 12;
+    return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(hh)}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())} ${ap}`;
   }
+
+  // Parser manual:
+  //  - "DD/MM/YYYY hh:mm(:ss) AM/PM"
+  //  - "DD/MM/YYYY HH:MM(:SS)" (24 jam)
+  //  - fallback ISO "YYYY-MM-DDTHH:MM(:SS)" bila ada
+  function parseManualDate(str){
+    const s = String(str||'').trim();
+    if(!s) return null;
+
+    // 12h + AM/PM
+    let m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AaPp][Mm])$/);
+    if (m){
+      let [, dd, mm, yyyy, hh, mi, ss='0', ap] = m;
+      hh = Number(hh);
+      if (/pm/i.test(ap) && hh !== 12) hh += 12;
+      if (/am/i.test(ap) && hh === 12) hh = 0;
+      const d = new Date(+yyyy, +mm-1, +dd, hh, +mi, +ss);
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+
+    // 24h
+    m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})(?::(\d{2}))?$/);
+    if (m){
+      const [, dd, mm, yyyy, HH, MI, SS='0'] = m;
+      const d = new Date(+yyyy, +mm-1, +dd, +HH, +MI, +SS);
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+
+    // ISO fallback
+    const iso = new Date(s);
+    return Number.isNaN(iso.getTime()) ? null : iso;
+  }
+
+  // Teks kartu "DD Mon YYYY HH:MM:SS AM/PM"
+  function toCardDate(userVal){
+    if(!userVal) return '02 Oct 2025 05:07:21 PM';
+    let dt = parseManualDate(userVal);
+    if(!dt) dt = new Date(); // fallback
+    const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    let hh = dt.getHours(); const ap = hh>=12 ? 'PM':'AM'; hh = hh%12 || 12;
+    return `${pad2(dt.getDate())} ${MON[dt.getMonth()]} ${dt.getFullYear()} ${pad2(hh)}:${pad2(dt.getMinutes())}:${pad2(dt.getSeconds())} ${ap}`;
+  }
+
   function buildRef(prefix,len){
     prefix = String(prefix||'2510');
     const remain = Math.max(0, Number(len||24) - prefix.length);
     return prefix + digits(remain);
   }
 
+  /* ======== EVENTS ======== */
 
-
-  /* ======== PREFIX +1 ======== */
+  // +1 Prefix
   inc.addEventListener('click', e=>{
     e.preventDefault();
     let cur = parseInt(inPrefix.value||'2510',10);
@@ -576,12 +536,26 @@ document.addEventListener('keydown', (e)=>{
     inPrefix.value = String(cur + 1);
   });
 
-  /* ======== INITIAL STATE ======== */
-  window.addEventListener('load', ()=>{
-    inDate.value = '2025-10-02T17:07:21';
+  // Tombol NOW -> isi format manual 12h AM/PM
+  function setNowToInput(){
+    inDate.value = formatNowDDMMYYYY_12(new Date());
+    inDate.focus();
+    const len = inDate.value.length;
+    inDate.setSelectionRange?.(len, len);
+  }
+  if (btnNow) btnNow.addEventListener('click', setNowToInput);
+
+  // Shortcut Alt+N
+  document.addEventListener('keydown', (e)=>{
+    if(e.altKey && e.key.toLowerCase()==='n'){ e.preventDefault(); setNowToInput(); }
   });
 
-  /* ======== APPLY & BLUR ======== */
+  // Initial state: biarkan kosong (lebih jelas user bisa ketik/klik Now)
+  window.addEventListener('load', ()=>{
+    inDate.value = ''; // hapus pengisian ISO sebelumnya
+  });
+
+  // APPLY & BLUR
   apply.addEventListener('click', e=>{
     e.preventDefault();
 
@@ -589,7 +563,7 @@ document.addEventListener('keydown', (e)=>{
     const amount = parseFloat(inAmount.value||0).toFixed(2);
     amt.textContent = `RM ${amount}`;
 
-    // datetime
+    // datetime -> kartu
     dateText.textContent = toCardDate(inDate.value);
 
     // reference
