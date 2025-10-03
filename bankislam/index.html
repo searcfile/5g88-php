@@ -272,6 +272,18 @@
   #back .modal{ position: static; }
   .card{ width: 100%; max-width: 100%; }
 }
+/* === Date&Time: tombol NOW di kiri input === */
+.dt-wrap{
+  display:inline-flex; gap:8px; align-items:center; width:100%;
+}
+.btn-now{
+  font:600 12px/1 system-ui, sans-serif;
+  padding:8px 10px; border-radius:8px; border:0;
+  background:#fff; color:#c83853; box-shadow:var(--shadow-btn);
+  cursor:pointer; white-space:nowrap;
+}
+.btn-now:active{ transform:translateY(1px); }
+.dt-wrap .dt-input{ flex:1; }  /* biar input melar penuh */
 </style>
 </head>
 <body>
@@ -296,10 +308,13 @@
           </div>
 
           <div class="row">
-            <div class="col fld">
-              <label>Date &amp; Time</label>
-              <input id="inDate" type="datetime-local">
-            </div>
+<div class="col fld">
+  <label>Date &amp; Time</label>
+  <div class="dt-wrap">
+    <button type="button" class="btn-now" id="btnNow">Now</button>
+    <input id="inDate" class="dt-input" type="datetime-local" step="1">
+  </div>
+</div>
             <div class="col fld">
               <label>Reference prefix</label>
               <div class="row">
@@ -426,7 +441,31 @@
   const inLen = document.getElementById('inLen');
   const inBank = document.getElementById('inBank');
   const inName = document.getElementById('inName');
+  function toLocalDatetimeValue(d = new Date()){
+  const Y = d.getFullYear();
+  const M = pad2(d.getMonth()+1);
+  const D = pad2(d.getDate());
+  const h = pad2(d.getHours());
+  const m = pad2(d.getMinutes());
+  const s = pad2(d.getSeconds());
+  return `${Y}-${M}-${D}T${h}:${m}:${s}`;
+}
 
+// Isi field dengan waktu sekarang + fokuskan (editable)
+function setNowToInput(){
+  inDate.value = toLocalDatetimeValue(new Date());
+  // opsional: fokus & cursor di akhir
+  inDate.focus();
+}
+
+// tombol Now
+const btnNow = document.getElementById('btnNow');
+btnNow.addEventListener('click', setNowToInput);
+
+// shortcut: Alt+N untuk “Now”
+document.addEventListener('keydown', (e)=>{
+  if(e.altKey && (e.key.toLowerCase()==='n')){ e.preventDefault(); setNowToInput(); }
+});
   /* ======== HELPERS ======== */
   const pad2 = n => String(n).padStart(2,'0');
   const randi = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
