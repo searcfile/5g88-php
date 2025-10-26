@@ -499,6 +499,7 @@ let currentUserEmail = null;
 let currentActiveId  = null;
 let currentIsGuest   = false;
 let presenceBoundFor = null;
+let currentChatRef = null; 
 
 function sanitizeEmail(email) {
   return String(email || '').toLowerCase().replace(/\./g, "_");
@@ -506,6 +507,40 @@ function sanitizeEmail(email) {
 function getChatPath(){ return currentActiveId ? 'chats/' + currentActiveId : null; }
 function getUserPath(){ return currentActiveId ? 'users/' + currentActiveId : null; }
 function getNotifPath(){ return currentActiveId ? 'notifications/' + currentActiveId : null; }
+
+function clearChatUI(){
+  try {
+    const chatBox = document.getElementById('chatBox');
+    if (chatBox) {
+      chatBox.querySelectorAll(".message, .date-label").forEach(el => el.remove());
+      const startMsg = document.getElementById("startMessage");
+      if (startMsg) startMsg.style.display = "block";
+    }
+  } catch(_) {}
+}
+
+function resetIdentity({keepStorage = false} = {}){
+  try { currentChatRef && currentChatRef.off(); } catch(_) {}
+  currentChatRef = null;
+
+  chatInitialized = false;
+  presenceBoundFor = null;
+
+  currentIsGuest   = false;
+  currentUserEmail = null;
+  currentActiveId  = null;
+
+  if (!keepStorage) {
+    try {
+      localStorage.removeItem("username");
+      localStorage.removeItem("userphoto");
+      localStorage.removeItem("useremail");
+      // kalau ada key lain, hapus di sini juga
+    } catch(_) {}
+  }
+  clearChatUI();
+  updateUserHeader();
+}
   
 const firebaseConfig = {
   apiKey: "AIzaSyCKmrlS4qrZCrMNRIfIRCWCbNgZT1uQ3ZI",
@@ -631,39 +666,46 @@ function getParentOrigin(){
 }
 const PARENT_ORIGIN = getParentOrigin();
 
-// PATCH START: postMessage handler
 window.addEventListener("message", (e) => {
   if (!ALLOWED_PARENTS.includes(e.origin)) return;
-
   const data = e.data || {};
-  if (data.type === "user-login" && data.user){
-    const { name, email, photo, uid, isGuest } = data.user;
 
+  // 0) Parent minta reset penuh
+  if (data.type === "reset-chat") {
+    resetIdentity();  // full reset
+    return;
+  }
+
+  // 1) Parent kirim identitas baru
+  if (data.type === "user-login" && data.user){
+    resetIdentity({ keepStorage: true });  // matikan listener lama & bersihkan UI
+
+    const { name, email, photo, uid, isGuest } = data.user;
     localStorage.setItem("username", name || (isGuest ? "Guest" : "User"));
     localStorage.setItem("userphoto", photo || "");
 
     if (isGuest && uid) {
       currentIsGuest   = true;
-      currentActiveId  = String(uid);          // gunakan UID guest
+      currentActiveId  = String(uid);
       currentUserEmail = null;
       localStorage.removeItem("useremail");
     } else if (email) {
       currentIsGuest   = false;
       currentUserEmail = email;
-      currentActiveId  = sanitizeEmail(email); // email_sanitized
+      currentActiveId  = sanitizeEmail(email);
       localStorage.setItem("useremail", email);
     } else {
-      return; // identitas tak valid
+      return; // identitas invalid
     }
 
     updateUserHeader();
-    writeUserProfile(); 
+    writeUserProfile();
     bindPresenceAndNotif();
     initChatWithUserData();
     notifyRead();
+    return;
   }
 
-  // opsional status dari parent
   if (data.action === "panel-open")  notifyRead();
   if (data.action === "panel-close") {/* no-op */}
 });
@@ -805,9 +847,12 @@ function listenToChat() {
   const chatBox = document.getElementById('chatBox');
   const chatPath = getChatPath();
   if (!chatBox || !chatPath) return;
-
+  try { currentChatRef && currentChatRef.off(); } catch(_) {}
+  
   const chatRef = db.ref(chatPath);
+  currentChatRef = chatRef;
   chatRef.off();
+  
   const lastSeenKey = `lastSeenByUser_${currentActiveId}`;
   const startMsg = document.getElementById("startMessage");
 
@@ -1124,6 +1169,19 @@ if (window.ResizeObserver && sendBoxEl) {
   }
   updateUserHeader();
 });
+  
+(function resetFromQuery(){
+  try {
+    const qs = new URLSearchParams(location.search);
+    if (qs.get('reset') === '1') {
+      localStorage.removeItem("username");
+      localStorage.removeItem("userphoto");
+      localStorage.removeItem("useremail");
+      localStorage.removeItem("guest.uid");
+      resetIdentity({ keepStorage: true }); // state internal di-reset; storage sudah dibersihkan
+    }
+  } catch(_) {}
+})();
 </script>
 </body>
 </html>
