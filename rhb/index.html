@@ -120,14 +120,7 @@
           <option>Touch N Go Digital</option>
           <option>Maybank</option>
           <option>CIMB</option>
-          <option>RHB Bank</option>
-          <option>Public Bank</option>
-          <option>Hong Leong Bank</option>
-          <option>Bank Islam</option>
           <option>Bank Simpanan Nasional</option>
-          <option>AmBank</option>
-          <option>OCBC Bank</option>
-          <option>UOB Bank</option>
         </select>
       </div>
     </div>
@@ -202,7 +195,7 @@
     for (const ch of raw){
       if (/\d/.test(ch)){
         seen++;
-        const isLastTwo = seen > (digits.length - 2);
+        const isLastTwo = seen > (digits.length - 1);
         out += isLastTwo ? ch : `<span class="blur">${ch}</span>`;
       } else out += ch;
     }
@@ -212,9 +205,9 @@
   function maskNameFirst2(name){
     if (!name) return '';
     const s = String(name).trim().toUpperCase();
-    let shown = s.slice(0,2);
+    let shown = s.slice(0,1);
     let masked = '';
-    for (const ch of s.slice(2)){
+    for (const ch of s.slice(1)){
       masked += (ch===' ')? ' ' : `<span class="blur">${ch}</span>`;
     }
     return shown + masked;
