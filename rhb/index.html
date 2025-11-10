@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Payment Preview • Blur Mask</title>
+<style>
+  :root{
+    --bg:#f3f6fb;          /* latar mirip screenshot */
+    --card:#ffffff;
+    --line:#e8edf4;        /* garis pemisah halus */
+    --label:#8a93a3;       /* teks label abu-abu */
+    --text:#253041;        /* teks utama */
+    --muted:#647189;       /* teks sekunder */
+    --accent:#3a7bd5;      /* tidak terlalu dipakai, cadangan */
+    --radius:10px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    padding:24px;
+  }
+
+  /* ---------- Form ---------- */
+  .wrap{max-width:920px;margin:0 auto;display:grid;gap:18px}
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:0 1px 1px rgba(0,0,0,.02);
+  }
+  .form{
+    padding:16px;
+    display:grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap:12px 14px;
+  }
+  .form h2{
+    grid-column:1 / -1;
+    font-size:16px;
+    font-weight:700;
+    color:var(--muted);
+    letter-spacing:.02em;
+    margin:2px 0 6px;
+    text-transform:uppercase;
+  }
+  .fld{grid-column: span 4; min-width:0}
+  .fld.w6{grid-column: span 6}
+  .fld.w8{grid-column: span 8}
+  .fld.w12{grid-column: 1 / -1}
+  .lbl{
+    display:block;
+    font-size:12px;
+    color:var(--label);
+    margin:2px 0 6px;
+  }
+  .inp, .sel, .btn{
+    width:100%; height:40px;
+    border:1px solid var(--line);
+    background:#f9fbff;
+    color:var(--text);
+    border-radius:8px;
+    padding:0 12px;
+    font-size:14px;
+    outline:none;
+  }
+  .inp:focus, .sel:focus{
+    border-color:#d7deea;
+    box-shadow: 0 0 0 3px rgba(58,123,213,.08);
+    background:#fff;
+  }
+  .btn{
+    background:#eef3fb;
+    border-color:#dfe6f2;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .btn:hover{filter:brightness(0.98)}
+  .btn:active{transform:translateY(1px)}
+
+  /* ---------- Preview (meniru gambar) ---------- */
+  .preview{
+    padding:0;
+    overflow:hidden;
+  }
+  .row{
+    display:flex;
+    align-items:center;
+    padding:18px 18px;
+    gap:10px;
+    border-bottom:1px solid var(--line);
+  }
+  .row:last-child{border-bottom:none}
+  .to-label{
+    font-size:12px;
+    color:var(--label);
+    margin-bottom:2px;
+  }
+  .to-line{
+    font-size:15px;
+    color:var(--text);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .dot{padding:0 8px; color:#9aa6bd}
+  .cols{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:28px;
+    width:100%;
+  }
+  .kv .k{
+    font-size:12px; color:var(--label); margin-bottom:6px;
+  }
+  .kv .v{
+    font-size:15px; color:var(--text);
+  }
+
+  /* Blur style agar mirip “disensor” */
+  .blur{
+    filter: blur(5px);
+    opacity:.85;
+    border-radius:6px;
+    padding:0 .15em;
+    display:inline-block;
+  }
+
+  /* kecilkan pada layar sempit */
+  @media (max-width:640px){
+    .fld{grid-column: span 12}
+    .cols{grid-template-columns: 1fr}
+    .row{padding:16px 14px}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Form -->
+    <div class="card form" id="form">
+      <h2>Input</h2>
+
+      <div class="fld w6">
+        <label class="lbl">To (Recipient Name)</label>
+        <input class="inp" id="toName" placeholder="CHAN YUE YENG" value="CHAN YUE YENG">
+      </div>
+
+      <div class="fld w6">
+        <label class="lbl">Recipient Account / ID</label>
+        <input class="inp" id="toId" placeholder="1-7157-134469-8" value="1-7157-134469-8">
+      </div>
+
+      <div class="fld w6">
+        <label class="lbl">Bank</label>
+        <select class="sel" id="bankSel">
+          <option>Touch N Go Digital</option>
+          <option>Maybank</option>
+          <option>CIMB Bank</option>
+          <option>RHB Bank</option>
+          <option>Public Bank</option>
+          <option>Hong Leong Bank</option>
+          <option>Bank Islam</option>
+          <option>Bank Simpanan Nasional</option>
+          <option>AmBank</option>
+          <option>OCBC Bank</option>
+          <option>UOB Bank</option>
+        </select>
+      </div>
+
+      <div class="fld w6">
+        <label class="lbl">Payment Type</label>
+        <input class="inp" id="payType" value="Fund Transfer">
+      </div>
+
+      <div class="fld w6">
+        <label class="lbl">Amount (MYR)</label>
+        <input class="inp" id="amount" inputmode="decimal" placeholder="2550" value="2550">
+      </div>
+
+      <div class="fld w6">
+        <label class="lbl">Recipient Reference</label>
+        <input class="inp" id="reference" value="Payment" placeholder="Payment">
+      </div>
+
+      <div class="fld w12">
+        <button class="btn" id="createBtn">Create</button>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div class="card preview" id="preview">
+      <!-- Row: To -->
+      <div class="row">
+        <div>
+          <div class="to-label">To</div>
+          <div class="to-line" id="toLine">
+            <!-- Filled by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Row: 2 columns like screenshot -->
+      <div class="row">
+        <div class="cols" style="margin-top:2px">
+          <div class="kv">
+            <div class="k">Bank</div>
+            <div class="v" id="vBank">Touch N Go Digital</div>
+          </div>
+          <div class="kv">
+            <div class="k">Payment Type</div>
+            <div class="v" id="vType">Fund Transfer</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="cols">
+          <div class="kv">
+            <div class="k">Amount</div>
+            <div class="v" id="vAmount">MYR 0.00</div>
+          </div>
+          <div class="kv">
+            <div class="k">Recipient Reference</div>
+            <div class="v" id="vRef">Payment</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const $ = sel => document.querySelector(sel);
+
+  const el = {
+    toName:    $('#toName'),
+    toId:      $('#toId'),
+    bankSel:   $('#bankSel'),
+    payType:   $('#payType'),
+    amount:    $('#amount'),
+    ref:       $('#reference'),
+    toLine:    $('#toLine'),
+    vBank:     $('#vBank'),
+    vType:     $('#vType'),
+    vAmount:   $('#vAmount'),
+    vRef:      $('#vRef'),
+    createBtn: $('#createBtn')
+  };
+
+  // Format number to MYR X,XXX.XX
+  function fmtMYR(val){
+    let num = Number(String(val).replace(/[^\d.]/g,''));
+    if (!isFinite(num)) num = 0;
+    return 'MYR ' + num.toLocaleString('en-MY', {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+
+  // Keep hyphens visible but blur other digits except last 2
+  function maskAccountKeepDashes(str){
+    if (!str) return '';
+    const raw = String(str);
+    // ambil hanya digit untuk hitung terakhir 2
+    const digits = raw.replace(/\D/g,'');
+    const last2 = digits.slice(-2);
+    let seenDigits = 0;
+    // Bangun kembali: digit pertama sampai total-2 diblur, hyphen tetap normal,
+    // dua digit terakhir tampil normal.
+    let out = '';
+    for (const ch of raw){
+      if (/\d/.test(ch)){
+        seenDigits++;
+        const isLastTwo = seenDigits > (digits.length - 2);
+        if (isLastTwo){
+          out += ch; // tampil
+        }else{
+          out += `<span class="blur">${ch}</span>`;
+        }
+      } else {
+        // karakter non-digit (mis. '-')
+        out += ch;
+      }
+    }
+    return out;
+  }
+
+  // Blur semua huruf setelah 2 huruf pertama (biarkan spasi tetap normal)
+  function maskNameFirst2(name){
+    if (!name) return '';
+    const s = String(name).trim();
+    let shown = s.slice(0,2).toUpperCase();
+    let rest = s.slice(2);
+    // karakter selain spasi diblur, spasi dibiarkan agar bentuk nama masih mirip
+    let masked = '';
+    for (const ch of rest){
+      if (ch === ' '){
+        masked += ch;
+      }else{
+        masked += `<span class="blur">${ch}</span>`;
+      }
+    }
+    return shown + masked;
+  }
+
+  function render(){
+    // To line: NAME • ACCOUNT(ID)
+    const nameFrag = maskNameFirst2(el.toName.value);
+    const idFrag   = maskAccountKeepDashes(el.toId.value);
+    el.toLine.innerHTML = `${nameFrag}<span class="dot">•</span>${idFrag}`;
+
+    el.vBank.textContent = el.bankSel.value || '';
+    el.vType.textContent = el.payType.value || '';
+    el.vAmount.textContent = fmtMYR(el.amount.value);
+    el.vRef.textContent = el.ref.value || '';
+  }
+
+  // Format amount on blur
+  el.amount.addEventListener('blur', e=>{
+    e.target.value = String(Number(String(e.target.value).replace(/[^\d.]/g,''))||0);
+  });
+
+  el.createBtn.addEventListener('click', render);
+
+  // Render awal sesuai nilai default
+  render();
+</script>
+</body>
+</html>
