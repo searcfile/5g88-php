@@ -254,7 +254,7 @@ function maskAccountKeepDashes(str){
     'Public Bank':    [4,4,4],     // 12
     'Hong Leong Bank':[4,5,3],     // 12
     'Bank Islam':     [4,4,4],
-    'Bank Simpanan Nasional':[4,4,4],
+    'Bank Simpanan Nasional':[1,5,7,3],
     'AmBank':         [4,4,4],
     'OCBC Bank':      [4,4,4],
     'UOB Bank':       [4,4,4]
@@ -301,10 +301,10 @@ function maskAccountKeepDashes(str){
   [el.autoName, el.autoBank, el.autoAcct].forEach(btn=>{
     btn.addEventListener('click',()=>btn.classList.toggle('on'));
   });
- el.bankSel.addEventListener('change', ()=>{
-  if (el.autoAcct.classList.contains('on')){
-    el.toId.value = makeAccountFor(el.bankSel.value);
-  }
+el.bankSel.addEventListener('change', ()=>{
+  // setiap tukar bank, terus buat akaun ikut pola bank
+  el.toId.value = makeAccountFor(el.bankSel.value);
+  render(); // refresh preview
 });
   el.createBtn.addEventListener('click', render);
   render(); // initial
