@@ -3,8 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Payment Preview • Blur Mask</title>
-
+<title>RHB BANK</title>
 <!-- Google Font: Lato -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,7 +38,7 @@
   .lbl{display:block;font-size:14px;color:#fff;margin:2px 0 6px}
 
   .input-row{display:flex;gap:8px;align-items:center}
-  .inp,.sel,.btn{height:40px;border:1px solid var(--line);background:#f9fbff;color:#0050a1;border-radius:8px;padding:0 12px;font-size:14px;outline:none}
+  .inp,.sel,.btn,.btn-rest{height:40px;border:1px solid var(--line);background:#f9fbff;color:#0050a1;border-radius:8px;padding:0 12px;font-size:14px;outline:none}
   .inp{width:100%}
   .mini{height:40px;border-radius:10px;border:1px solid #fff;background:#fff;min-width:54px;padding:0 8px}
   .chip{
@@ -50,6 +49,8 @@
   .btn{background:#eef3fb;border-color:#dfe6f2;font-weight:600;cursor:pointer}
   .btn:hover{filter:brightness(.98)}
   .btn:active{transform:translateY(1px)}
+  .btn-reset{background:#eef3fb;border-color:red;font-weight:600;cursor:pointer}
+  .btn-reset:hover{filter:brightness(.98)}.btn-reset:active{transform:translateY(1px)}
 
   /* ----------- PREVIEW ----------- */
   .preview{padding:0;overflow:hidden}
@@ -135,7 +136,7 @@
 
     <div class="fld">
       <label class="lbl">Amount (MYR)</label>
-      <input class="inp" id="amount" inputmode="decimal" placeholder="2550" value="2550">
+      <input class="inp" id="amount" inputmode="decimal" placeholder="Amount" value="0">
     </div>
 
     <div class="fld">
@@ -144,7 +145,7 @@
     </div>
 
 <div class="fld w12" style="display:flex; gap:8px">
-  <button class="btn" id="resetBtn">Reset</button>
+  <button class="btn-reset" id="resetBtn">Reset</button>
   <button class="btn" id="createBtn">Create</button>
 </div>
   </div>
