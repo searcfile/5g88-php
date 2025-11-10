@@ -73,10 +73,16 @@
     .row{padding:16px 14px}
     .mini{min-width:48px}
   }
+  .zoom-wrap{
+  transform: scale(1.20);        /* 120% */
+  transform-origin: top center;  /* supaya membesar ke tengah, bukan ke bawah */
+  margin-top: 20px;              /* beri ruang sedikit */
+}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="zoom-wrap">
+  <div class="wrap">
   <!-- Form -->
   <div class="card form" id="form">
     <h2>RHB BANK</h2>
@@ -174,6 +180,7 @@
       </div>
     </div>
   </div>
+</div>
 </div>
 
 <script>
