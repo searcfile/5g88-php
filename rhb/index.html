@@ -188,19 +188,24 @@
     return 'MYR ' + num.toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
   }
 
-  function maskAccountKeepDashes(str){
-    if (!str) return '';
-    const raw = String(str), digits = raw.replace(/\D/g,'');
-    let seen = 0, out = '';
-    for (const ch of raw){
-      if (/\d/.test(ch)){
-        seen++;
-        const isLastTwo = seen > (digits.length - 1);
-        out += isLastTwo ? ch : `<span class="blur">${ch}</span>`;
-      } else out += ch;
+function maskAccountKeepDashes(str){
+  if (!str) return '';
+  const raw = String(str), digits = raw.replace(/\D/g,'');
+  let seen = 0, out = '';
+  for (const ch of raw){
+    if (/\d/.test(ch)){
+      seen++;
+      const isLastTwo = seen > (digits.length - 1);  // (sama seperti punyamu)
+      out += isLastTwo ? ch : `<span class="blur">${ch}</span>`;
+    } else if (ch === '-') {
+      // blur juga tanda minus
+      out += `<span class="blur">-</span>`;
+    } else {
+      out += ch; // spasi atau karakter lain biarkan seperti biasa
     }
-    return out;
   }
+  return out;
+}
 
   function maskNameFirst2(name){
     if (!name) return '';
