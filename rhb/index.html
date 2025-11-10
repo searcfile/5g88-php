@@ -93,6 +93,11 @@
             );
           </script>
         </select>
+        <select class="mini" id="binSel" title="BIN / BINTI">
+          <option value="">-</option>
+          <option value="BIN">BIN</option>
+          <option value="BINTI">BINTI</option>
+        </select>
         <input class="inp" id="toName" placeholder="CHAN YUE YENG" value="CHAN YUE YENG">
       </div>
     </div>
@@ -243,7 +248,7 @@ function maskAccountKeepDashes(str){
   // Pola akaun per bank
   const BANK_PATTERNS = {
     'Maybank':        [1,4,6,1],   // total 12 digit -> 1-xxxx-xxxxxx-x
-    'CIMB':           [4,4,2],     // total 10 digit -> xxxx-xxxx-xx
+    'CIMB':           [10],     // total 10 digit -> xxxx-xxxx-xx
     'Touch N Go Digital': [4,5,3], // 12 digit (contoh)
     'RHB Bank':       [3,6,3],     // 12 digit
     'Public Bank':    [4,4,4],     // 12
