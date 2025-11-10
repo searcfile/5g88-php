@@ -195,30 +195,37 @@
     return 'MYR ' + num.toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
   }
 
-  function maskAccountKeepDashes(str){
-    if (!str) return '';
-    const raw = String(str), digits = raw.replace(/\D/g,'');
-    let seen = 0, out = '';
-    for (const ch of raw){
-      if (/\d/.test(ch)){
-        seen++;
-        const isLastTwo = seen > (digits.length - 2);
-        out += isLastTwo ? ch : `<span class="blur">${ch}</span>`;
-      } else out += ch;
-    }
-    return out;
-  }
+function maskAccountKeepDashes(str){
+  if (!str) return '';
+  const raw    = String(str);
+  const digits = raw.replace(/\D/g,'');       // semua angka saja
+  const last1IndexFromEnd = 1;                // cuma 1 di ujung
+  let seenDigits = 0;
+  let out = '';
 
-  function maskNameFirst2(name){
-    if (!name) return '';
-    const s = String(name).trim().toUpperCase();
-    let shown = s.slice(0,2);
-    let masked = '';
-    for (const ch of s.slice(2)){
-      masked += (ch===' ')? ' ' : `<span class="blur">${ch}</span>`;
+  for (const ch of raw){
+    if (/\d/.test(ch)){                       // kalau angka
+      seenDigits++;
+      const isLastOne = seenDigits > (digits.length - last1IndexFromEnd);
+      out += isLastOne ? ch : `<span class="blur">${ch}</span>`;
+    } else {
+      // biarkan karakter non-digit (mis. '-',' ')
+      out += ch;
     }
-    return shown + masked;
   }
+  return out;
+}
+
+function maskNameFirst1(name){
+  if (!name) return '';
+  const s = String(name).trim().toUpperCase();
+  const first = s.slice(0,1);                 // 1 huruf pertama
+  let masked = '';
+  for (const ch of s.slice(1)){               // sisanya di-blur
+    masked += (ch === ' ') ? ' ' : `<span class="blur">${ch}</span>`;
+  }
+  return first + masked;
+}
 
   function randomInt(min,max){return Math.floor(Math.random()*(max-min+1))+min}
   function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
@@ -303,6 +310,11 @@
   [el.autoName, el.autoBank, el.autoAcct].forEach(btn=>{
     btn.addEventListener('click',()=>btn.classList.toggle('on'));
   });
+  el.bankSel.addEventListener('change', ()=>{
+  if (el.autoAcct.classList.contains('on')){
+    el.toId.value = makeAccountFor(el.bankSel.value);
+  }
+});
 
   el.createBtn.addEventListener('click', render);
   render(); // initial
