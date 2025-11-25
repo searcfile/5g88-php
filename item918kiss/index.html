@@ -222,14 +222,15 @@
       box-shadow:0 0 18px rgba(250,204,21,0.45);
     }
 
-    .image-wrap{
-      border-radius:10px;
-      overflow:hidden;
-      position:relative;
-      background:#020617;
-      border:1px solid rgba(148,163,184,0.4);
-      min-height:160px; /* 🔥 gambar lebih tinggi */
-    }
+ .image-wrap{
+  width:100%;
+  height:150px;          /* Tambah tinggi */
+  border-radius:12px;
+  overflow:hidden;
+  background:#020617;
+  border:1px solid rgba(148,163,184,0.4);
+  position:relative;
+}
 
     .image-wrap::after{
       content:"";
@@ -239,14 +240,14 @@
       opacity:0.25;
     }
 
-    .image-wrap img{
-      width:100%;
-      display:block;
-      height:160px;   /* 🔥 gambar lebih tinggi */
-      object-fit:cover;
-      transform:scale(1.02);
-      transition:transform 0.25s ease;
-    }
+.image-wrap img{
+  width:100%;
+  height:100%;
+  object-fit:cover;       /* INI PENTING */
+  object-position:center; /* Biar center */
+  display:block;
+  transition:transform 0.25s ease;
+}
 
     .item-card:hover .image-wrap img{
       transform:scale(1.06);
