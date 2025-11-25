@@ -59,7 +59,7 @@
     /* GRID 6 per baris jika cukup lebar */
     .card-grid{
       display:grid;
-      grid-template-columns: repeat(6, minmax(0, 1fr));
+      grid-template-columns: repeat(6, minmax(160px, 1fr));
       gap:16px;
     }
 
@@ -89,18 +89,19 @@
       background: radial-gradient(circle at top left,#111827,#020617 55%);
       border-radius:14px;
       border:1px solid rgba(148,163,184,0.32);
-      padding:10px 10px 12px;
+      padding:12px 12px 14px;
       display:flex;
       flex-direction:column;
-      gap:8px;
+      gap:10px;
       position:relative;
       overflow:hidden;
-      cursor:pointer;
+      cursor:default; /* tidak klik card untuk copy */
       transition:
         transform 0.16s ease,
         box-shadow 0.16s ease,
         border-color 0.16s ease,
         background 0.16s ease;
+      min-height:220px;
     }
 
     .item-card::before{
@@ -146,6 +147,7 @@
       position:relative;
       background:#020617;
       border:1px solid rgba(148,163,184,0.4);
+      min-height:130px;
     }
 
     .image-wrap::after{
@@ -159,7 +161,7 @@
     .image-wrap img{
       width:100%;
       display:block;
-      height:90px;
+      height:130px;
       object-fit:cover;
       transform:scale(1.02);
       transition:transform 0.25s ease;
@@ -174,10 +176,11 @@
       flex-direction:column;
       gap:4px;
       margin-top:4px;
+      flex-grow:1;
     }
 
     .item-title{
-      font-size:0.9rem;
+      font-size:1rem;
       font-weight:600;
       white-space:nowrap;
       overflow:hidden;
@@ -186,7 +189,7 @@
 
     .item-code{
       font-family:"JetBrains Mono","SF Mono",Consolas,monospace;
-      font-size:0.78rem;
+      font-size:0.8rem;
       color:var(--accent-soft);
       background:rgba(15,23,42,0.9);
       border-radius:999px;
@@ -196,12 +199,12 @@
     }
 
     .copy-btn{
-      margin-top:6px;
+      margin-top:8px;
       border:none;
       outline:none;
-      padding:6px 8px;
+      padding:7px 10px;
       border-radius:999px;
-      font-size:0.78rem;
+      font-size:0.8rem;
       font-weight:600;
       letter-spacing:0.06em;
       text-transform:uppercase;
@@ -276,7 +279,7 @@
 <div class="wrapper">
   <div class="title">Item Collection</div>
   <div class="subtitle">
-    Klik tombol <b>Copy Item</b> untuk salin code ke clipboard.  
+    Klik tombol <b>Copy Image</b> untuk salin gambar ke clipboard.  
     Card otomatis turun ke baris berikutnya jika sudah penuh.
   </div>
 
@@ -291,8 +294,8 @@
         <div class="item-code">FLAME_SWORD_001</div>
       </div>
       <button class="copy-btn">
-        <span class="icon">📋</span>
-        <span>Copy Item</span>
+        <span class="icon">🖼️</span>
+        <span>Copy Image</span>
       </button>
     </div>
 
@@ -306,8 +309,8 @@
         <div class="item-code">ICE_SHIELD_777</div>
       </div>
       <button class="copy-btn">
-        <span class="icon">📋</span>
-        <span>Copy Item</span>
+        <span class="icon">🖼️</span>
+        <span>Copy Image</span>
       </button>
     </div>
 
@@ -321,8 +324,8 @@
         <div class="item-code">DRAGON_ORB_X9</div>
       </div>
       <button class="copy-btn">
-        <span class="icon">📋</span>
-        <span>Copy Item</span>
+        <span class="icon">🖼️</span>
+        <span>Copy Image</span>
       </button>
     </div>
 
@@ -336,8 +339,8 @@
         <div class="item-code">LUCKY_TICKET_88</div>
       </div>
       <button class="copy-btn">
-        <span class="icon">📋</span>
-        <span>Copy Item</span>
+        <span class="icon">🖼️</span>
+        <span>Copy Image</span>
       </button>
     </div>
 
@@ -351,8 +354,8 @@
         <div class="item-code">VIP_PASS_BLACK</div>
       </div>
       <button class="copy-btn">
-        <span class="icon">📋</span>
-        <span>Copy Item</span>
+        <span class="icon">🖼️</span>
+        <span>Copy Image</span>
       </button>
     </div>
 
@@ -366,8 +369,8 @@
         <div class="item-code">CRYSTAL_KEY_005</div>
       </div>
       <button class="copy-btn">
-        <span class="icon">📋</span>
-        <span>Copy Item</span>
+        <span class="icon">🖼️</span>
+        <span>Copy Image</span>
       </button>
     </div>
 
@@ -381,8 +384,8 @@
         <div class="item-code">BONUS_BOX_999</div>
       </div>
       <button class="copy-btn">
-        <span class="icon">📋</span>
-        <span>Copy Item</span>
+        <span class="icon">🖼️</span>
+        <span>Copy Image</span>
       </button>
     </div>
 
@@ -390,7 +393,7 @@
 </div>
 
 <div class="copy-toast" id="copyToast">
-  <span>✅ Copied to clipboard</span>
+  <span>✅ Image copied to clipboard</span>
 </div>
 
 <script>
@@ -406,25 +409,26 @@
 
     cards.forEach(card => {
       const btn = card.querySelector('.copy-btn');
-      const codeEl = card.querySelector('.item-code');
-
-      const textToCopy = card.dataset.item || (codeEl ? codeEl.textContent.trim() : '');
 
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
 
+        const img = card.querySelector('img');
+        if (!img) return;
+
+        // Cek support clipboard image
+        if (!(navigator.clipboard && navigator.clipboard.write && window.ClipboardItem)) {
+          alert('Browser tidak support copy image ke clipboard. Coba Chrome / Edge terbaru ya bro.');
+          return;
+        }
+
         try{
-          if (navigator.clipboard && navigator.clipboard.writeText){
-            await navigator.clipboard.writeText(textToCopy);
-          } else {
-            // fallback lama
-            const tmp = document.createElement('textarea');
-            tmp.value = textToCopy;
-            document.body.appendChild(tmp);
-            tmp.select();
-            document.execCommand('copy');
-            document.body.removeChild(tmp);
-          }
+          const res = await fetch(img.src);
+          const blob = await res.blob();
+
+          await navigator.clipboard.write([
+            new ClipboardItem({ [blob.type]: blob })
+          ]);
 
           // efek active di card
           card.classList.add('copied');
@@ -439,15 +443,12 @@
           }, 1200);
 
         }catch(err){
-          console.error('Gagal copy', err);
-          alert('Gagal copy: ' + textToCopy);
+          console.error('Gagal copy image', err);
+          alert('Gagal copy image. Mungkin karena permission / CORS.');
         }
       });
 
-      // optional: klik seluruh card juga copy
-      card.addEventListener('click', () => {
-        btn.click();
-      });
+      // ⚠️ TIDAK ADA event klik di card -> hanya tombol saja yang copy
     });
   });
 </script>
