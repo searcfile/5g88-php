@@ -34,7 +34,7 @@
 
     .wrapper{
       width:100%;
-      max-width:1200px;
+      max-width:1400px; /* 🔥 diperbesar supaya card lebih lebar */
     }
 
     .title{
@@ -151,15 +151,16 @@
       transform:translateY(-50%) scale(0.96);
       background:rgba(15,23,42,1);
     }
+
     /* GRID pakai flex supaya selalu center */
-.card-grid{
-  display:flex;
-  flex-wrap:wrap;
-  gap:16px;
-  justify-content:center;   /* semua card di tengah */
-  align-items:flex-start;
-  width:100%;
-}
+    .card-grid{
+      display:flex;
+      flex-wrap:wrap;
+      gap:16px;
+      justify-content:center;   /* semua card di tengah */
+      align-items:flex-start;
+      width:100%;
+    }
 
     .item-card{
       background: radial-gradient(circle at top left,#111827,#020617 55%);
@@ -177,7 +178,9 @@
         box-shadow 0.16s ease,
         border-color 0.16s ease,
         background 0.16s ease;
-      min-height:220px;
+      min-height:260px; /* 🔥 card lebih tinggi */
+
+      /* 6 card per baris dengan gap 16px (5 gap = 80) */
       flex: 0 0 calc((100% - 80px) / 6);
       max-width: calc((100% - 80px) / 6);
     }
@@ -225,7 +228,7 @@
       position:relative;
       background:#020617;
       border:1px solid rgba(148,163,184,0.4);
-      min-height:130px;
+      min-height:160px; /* 🔥 gambar lebih tinggi */
     }
 
     .image-wrap::after{
@@ -239,7 +242,7 @@
     .image-wrap img{
       width:100%;
       display:block;
-      height:130px;
+      height:160px;   /* 🔥 gambar lebih tinggi */
       object-fit:cover;
       transform:scale(1.02);
       transition:transform 0.25s ease;
@@ -350,37 +353,38 @@
       opacity:1;
       transform:translateX(-50%) translateY(0);
     }
-  /* 4 card per baris kalau layar lebih kecil */
-@media (max-width: 1024px){
-  .item-card{
-    flex: 0 0 calc((100% - 48px) / 4);   /* 4 card, 3 gap => 3*16 = 48 */
-    max-width: calc((100% - 48px) / 4);
-  }
-}
 
-/* 3 card per baris */
-@media (max-width: 800px){
-  .item-card{
-    flex: 0 0 calc((100% - 32px) / 3);   /* 3 card, 2 gap => 32 */
-    max-width: calc((100% - 32px) / 3);
-  }
-}
+    /* 4 card per baris kalau layar lebih kecil */
+    @media (max-width: 1024px){
+      .item-card{
+        flex: 0 0 calc((100% - 48px) / 4);   /* 4 card, 3 gap */
+        max-width: calc((100% - 48px) / 4);
+      }
+    }
 
-/* 2 card per baris */
-@media (max-width: 600px){
-  .item-card{
-    flex: 0 0 calc((100% - 16px) / 2);   /* 2 card, 1 gap => 16 */
-    max-width: calc((100% - 16px) / 2);
-  }
-}
+    /* 3 card per baris */
+    @media (max-width: 800px){
+      .item-card{
+        flex: 0 0 calc((100% - 32px) / 3);   /* 3 card, 2 gap */
+        max-width: calc((100% - 32px) / 3);
+      }
+    }
 
-/* 1 card full di HP kecil */
-@media (max-width: 400px){
-  .item-card{
-    flex: 0 0 100%;
-    max-width:100%;
-  }
-}
+    /* 2 card per baris */
+    @media (max-width: 600px){
+      .item-card{
+        flex: 0 0 calc((100% - 16px) / 2);   /* 2 card, 1 gap */
+        max-width: calc((100% - 16px) / 2);
+      }
+    }
+
+    /* 1 card full di HP kecil */
+    @media (max-width: 400px){
+      .item-card{
+        flex: 0 0 100%;
+        max-width:100%;
+      }
+    }
   </style>
 </head>
 <body>
