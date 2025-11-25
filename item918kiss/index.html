@@ -229,7 +229,13 @@
   background:#020617;
   border:1px solid rgba(148,163,184,0.4);
   min-height:160px;
+
+  /* 🔥 center gambar */
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
+
 
     .image-wrap::after{
       content:"";
@@ -239,14 +245,13 @@
       opacity:0.25;
     }
 
-/* 🔥 UPGRADE DI SINI */
+/* 🔥 Gambar muat tanpa crop & center perfect */
 .image-wrap img{
   width:100%;
   height:100%;
   display:block;
-  object-fit:contain;      /* dulu cover */
-  object-position:center;  /* center logo */
-  /* transform:scale(1.02);  <-- buang supaya tak zoom */
+  object-fit:contain;
+  object-position:center;
   transition:transform 0.25s ease;
 }
     .item-card:hover .image-wrap img{
