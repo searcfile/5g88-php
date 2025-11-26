@@ -387,6 +387,30 @@
       opacity:1;
       transform:translateX(-50%) translateY(0);
     }
+    .search-icon{
+  position:absolute;
+  left:12px;
+  top:50%;
+  transform:translateY(-50%);
+  opacity:0.8;
+  pointer-events:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* SVG ikut warna text input */
+.search-svg{
+  width:16px;
+  height:16px;
+  fill:var(--muted);  /* warna default */
+  transition:fill 0.15s ease;
+}
+
+/* ketika input focus → warna ikut accent */
+.search-input:focus ~ .search-icon .search-svg{
+  fill:var(--accent-soft);
+}
 
     /* 4 card per baris kalau layar lebih kecil */
     @media (max-width: 1024px){
@@ -432,7 +456,11 @@
   <!-- SEARCH BAR -->
   <div class="search-wrapper">
     <div class="search-box" id="searchBox">
-      <span class="search-icon">🔍</span>
+     <span class="search-icon">
+  <svg viewBox="0 0 24 24" class="search-svg">
+    <path d="M21.172 24l-7.387-7.387c-1.388.874-3.024 1.387-4.785 1.387-4.971 0-9-4.029-9-9s4.029-9 9-9 9 4.029 9 9c0 1.761-.514 3.398-1.387 4.785l7.387 7.387-2.828 2.828zm-12.172-8c3.859 0 7-3.14 7-7s-3.141-7-7-7-7 3.14-7 7 3.141 7 7 7z"/>
+  </svg>
+</span>
       <input
         type="text"
         id="searchInput"
