@@ -333,6 +333,33 @@
       box-shadow:0 2px 6px rgba(15,23,42,0.8);
       background:linear-gradient(135deg,#020617,#020617);
     }
+    .copy-btn span.icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  translate:0 0;
+  transition:translate 0.16s ease;
+}
+
+/* ukuran & warna SVG */
+.copy-btn .copy-icon-svg{
+  width:16px;
+  height:16px;
+  fill:#38bdf8;                 /* biru cantik */
+  transition:fill 0.16s ease,
+             transform 0.16s ease;
+}
+
+/* efek hover */
+.copy-btn:hover .copy-icon-svg{
+  fill:#0ea5e9;                 /* biru lebih terang saat hover */
+  transform:translateX(2px);    /* gerak sedikit ke kanan */
+}
+
+/* optional: saat tombol "copied" (kalau class .copied dipakai di card) */
+.item-card.copied .copy-icon-svg{
+  fill:#022c22;                 /* misal gelap sedikit bila copied */
+}
 
     .copy-toast{
       position:fixed;
@@ -427,10 +454,14 @@
         <div class="item-title">918kiss Original</div>
         <div class="item-code">5G88_Site</div>
       </div>
-      <button class="copy-btn">
-        <span class="icon">🖼️</span>
-        <span>Copy Image</span>
-      </button>
+<button class="copy-btn">
+  <span class="icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" class="copy-icon-svg">
+      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
+    </svg>
+  </span>
+  <span>Copy Image</span>
+</button>
     </div>
 
     <!-- CARD 2 -->
@@ -442,10 +473,14 @@
         <div class="item-title">Crystal Ice Shield</div>
         <div class="item-code">5G88_Site</div>
       </div>
-      <button class="copy-btn">
-        <span class="icon">🖼️</span>
-        <span>Copy Image</span>
-      </button>
+<button class="copy-btn">
+  <span class="icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" class="copy-icon-svg">
+      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
+    </svg>
+  </span>
+  <span>Copy Image</span>
+</button>
     </div>
 
     <!-- CARD 3 -->
@@ -457,10 +492,14 @@
         <div class="item-title">Golden Dragon Orb</div>
         <div class="item-code">5G88_Site</div>
       </div>
-      <button class="copy-btn">
-        <span class="icon">🖼️</span>
-        <span>Copy Image</span>
-      </button>
+<button class="copy-btn">
+  <span class="icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" class="copy-icon-svg">
+      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
+    </svg>
+  </span>
+  <span>Copy Image</span>
+</button>
     </div>
 
     <!-- CARD 4 -->
@@ -472,10 +511,14 @@
         <div class="item-title">Hong Leong Bank</div>
         <div class="item-code">5G88_Site</div>
       </div>
-      <button class="copy-btn">
-        <span class="icon">🖼️</span>
-        <span>Copy Image</span>
-      </button>
+<button class="copy-btn">
+  <span class="icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" class="copy-icon-svg">
+      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
+    </svg>
+  </span>
+  <span>Copy Image</span>
+</button>
     </div>
 
     <!-- CARD 5 -->
@@ -487,10 +530,14 @@
         <div class="item-title">AmBank</div>
         <div class="item-code">5G88_Site</div>
       </div>
-      <button class="copy-btn">
-        <span class="icon">🖼️</span>
-        <span>Copy Image</span>
-      </button>
+<button class="copy-btn">
+  <span class="icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" class="copy-icon-svg">
+      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
+    </svg>
+  </span>
+  <span>Copy Image</span>
+</button>
     </div>
 
     <!-- CARD 6 -->
@@ -502,10 +549,14 @@
         <div class="item-title">GXBank</div>
         <div class="item-code">5G88_Site</div>
       </div>
-      <button class="copy-btn">
-        <span class="icon">🖼️</span>
-        <span>Copy Image</span>
-      </button>
+<button class="copy-btn">
+  <span class="icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" class="copy-icon-svg">
+      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
+    </svg>
+  </span>
+  <span>Copy Image</span>
+</button>
     </div>
 
     <!-- Tambah lagi card di bawah ini, otomatis turun ke baris baru -->
@@ -517,10 +568,14 @@
         <div class="item-title">TNG-Ewallet</div>
         <div class="item-code">5G88_Site</div>
       </div>
-      <button class="copy-btn">
-        <span class="icon">🖼️</span>
-        <span>Copy Image</span>
-      </button>
+<button class="copy-btn">
+  <span class="icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" class="copy-icon-svg">
+      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
+    </svg>
+  </span>
+  <span>Copy Image</span>
+</button>
     </div>
 
   </div>
