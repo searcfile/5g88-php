@@ -19,16 +19,16 @@
 
     *{ box-sizing:border-box; margin:0; padding:0; }
 
-body{
-  min-height:100vh;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: radial-gradient(circle at top, #1f2937 0, transparent 55%), radial-gradient(circle at bottom, #020617 0, #000 65%) !important;
-  color:var(--text);
-  display:flex;
-  justify-content:center;
-  align-items:flex-start;
-  padding:30px 16px;
-}
+    body{
+      min-height:100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1f2937 0, transparent 55%), radial-gradient(circle at bottom, #020617 0, #000 65%) !important;
+      color:var(--text);
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+      padding:30px 16px;
+    }
 
     .wrapper{
       width:100%;
@@ -104,6 +104,20 @@ body{
       font-size:0.9rem;
       opacity:0.8;
       pointer-events:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .search-svg{
+      width:16px;
+      height:16px;
+      fill:var(--muted);
+      transition:fill 0.15s ease;
+    }
+
+    .search-input:focus ~ .search-icon .search-svg{
+      fill:var(--accent-soft);
     }
 
     .clear-btn{
@@ -154,7 +168,7 @@ body{
       display:flex;
       flex-wrap:wrap;
       gap:16px;
-      justify-content:center;   /* semua card di tengah */
+      justify-content:center;
       align-items:flex-start;
       width:100%;
     }
@@ -175,7 +189,7 @@ body{
         box-shadow 0.16s ease,
         border-color 0.16s ease,
         background 0.16s ease;
-      min-height:260px; /* 🔥 card lebih tinggi */
+      min-height:260px;
 
       /* 6 card per baris dengan gap 16px (5 gap = 80) */
       flex: 0 0 calc((100% - 80px) / 6);
@@ -219,21 +233,18 @@ body{
       box-shadow:0 0 18px rgba(250,204,21,0.45);
     }
 
-.image-wrap{
-  border-radius:10px;
-  overflow:hidden;
-  position:relative;
-  background:#020617;
-  border:1px solid rgba(148,163,184,0.4);
-
-  /* 🔥 FIX HEIGHT supaya semua gambar sama besar */
-  height:180px;
-  width:100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
+    .image-wrap{
+      border-radius:10px;
+      overflow:hidden;
+      position:relative;
+      background:#020617;
+      border:1px solid rgba(148,163,184,0.4);
+      height:180px;
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
 
     .image-wrap::after{
       content:"";
@@ -243,15 +254,15 @@ body{
       opacity:0.25;
     }
 
-/* 🔥 Gambar muat tanpa crop & center perfect */
-.image-wrap img{
-  width:100%;
-  height:100%;
-  display:block;
-  object-fit:contain;
-  object-position:center;
-  transition:transform 0.25s ease;
-}
+    .image-wrap img{
+      width:100%;
+      height:100%;
+      display:block;
+      object-fit:contain;
+      object-position:center;
+      transition:transform 0.25s ease;
+    }
+
     .item-card:hover .image-wrap img{
       transform:scale(1.06);
     }
@@ -310,13 +321,28 @@ body{
     }
 
     .copy-btn span.icon{
-      font-size:0.9rem;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
       translate:0 0;
       transition:translate 0.16s ease;
     }
 
-    .item-card:hover .copy-btn span.icon{
-      translate:2px 0;
+    .copy-btn .copy-icon-svg{
+      width:16px;
+      height:16px;
+      fill:#38bdf8;
+      transition:fill 0.16s ease,
+              transform 0.16s ease;
+    }
+
+    .copy-btn:hover .copy-icon-svg{
+      fill:#0ea5e9;
+      transform:translateX(2px);
+    }
+
+    .item-card.copied .copy-icon-svg{
+      fill:#022c22;
     }
 
     .copy-btn:hover{
@@ -330,33 +356,6 @@ body{
       box-shadow:0 2px 6px rgba(15,23,42,0.8);
       background:linear-gradient(135deg,#020617,#020617);
     }
-    .copy-btn span.icon{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  translate:0 0;
-  transition:translate 0.16s ease;
-}
-
-/* ukuran & warna SVG */
-.copy-btn .copy-icon-svg{
-  width:16px;
-  height:16px;
-  fill:#38bdf8;                 /* biru cantik */
-  transition:fill 0.16s ease,
-             transform 0.16s ease;
-}
-
-/* efek hover */
-.copy-btn:hover .copy-icon-svg{
-  fill:#0ea5e9;                 /* biru lebih terang saat hover */
-  transform:translateX(2px);    /* gerak sedikit ke kanan */
-}
-
-/* optional: saat tombol "copied" (kalau class .copied dipakai di card) */
-.item-card.copied .copy-icon-svg{
-  fill:#022c22;                 /* misal gelap sedikit bila copied */
-}
 
     .copy-toast{
       position:fixed;
@@ -384,35 +383,11 @@ body{
       opacity:1;
       transform:translateX(-50%) translateY(0);
     }
-    .search-icon{
-  position:absolute;
-  left:12px;
-  top:50%;
-  transform:translateY(-50%);
-  opacity:0.8;
-  pointer-events:none;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-/* SVG ikut warna text input */
-.search-svg{
-  width:16px;
-  height:16px;
-  fill:var(--muted);  /* warna default */
-  transition:fill 0.15s ease;
-}
-
-/* ketika input focus → warna ikut accent */
-.search-input:focus ~ .search-icon .search-svg{
-  fill:var(--accent-soft);
-}
 
     /* 4 card per baris kalau layar lebih kecil */
     @media (max-width: 1024px){
       .item-card{
-        flex: 0 0 calc((100% - 48px) / 4);   /* 4 card, 3 gap */
+        flex: 0 0 calc((100% - 48px) / 4);
         max-width: calc((100% - 48px) / 4);
       }
     }
@@ -420,7 +395,7 @@ body{
     /* 3 card per baris */
     @media (max-width: 800px){
       .item-card{
-        flex: 0 0 calc((100% - 32px) / 3);   /* 3 card, 2 gap */
+        flex: 0 0 calc((100% - 32px) / 3);
         max-width: calc((100% - 32px) / 3);
       }
     }
@@ -428,7 +403,7 @@ body{
     /* 2 card per baris */
     @media (max-width: 600px){
       .item-card{
-        flex: 0 0 calc((100% - 16px) / 2);   /* 2 card, 1 gap */
+        flex: 0 0 calc((100% - 16px) / 2);
         max-width: calc((100% - 16px) / 2);
       }
     }
@@ -453,11 +428,11 @@ body{
   <!-- SEARCH BAR -->
   <div class="search-wrapper">
     <div class="search-box" id="searchBox">
-     <span class="search-icon">
-  <svg viewBox="0 0 24 24" class="search-svg">
-    <path d="M21.172 24l-7.387-7.387c-1.388.874-3.024 1.387-4.785 1.387-4.971 0-9-4.029-9-9s4.029-9 9-9 9 4.029 9 9c0 1.761-.514 3.398-1.387 4.785l7.387 7.387-2.828 2.828zm-12.172-8c3.859 0 7-3.14 7-7s-3.141-7-7-7-7 3.14-7 7 3.141 7 7 7z"/>
-  </svg>
-</span>
+      <span class="search-icon">
+        <svg viewBox="0 0 24 24" class="search-svg">
+          <path d="M21.172 24l-7.387-7.387c-1.388.874-3.024 1.387-4.785 1.387-4.971 0-9-4.029-9-9s4.029-9 9-9 9 4.029 9 9c0 1.761-.514 3.398-1.387 4.785l7.387 7.387-2.828 2.828zm-12.172-8c3.859 0 7-3.14 7-7s-3.141-7-7-7-7 3.14-7 7 3.141 7 7 7z"/>
+        </svg>
+      </span>
       <input
         type="text"
         id="searchInput"
@@ -469,368 +444,8 @@ body{
     </div>
   </div>
 
-  <div class="card-grid">
-    <!-- CARD 1 -->
-    <div class="item-card" data-item="Allience Bank">
-      <div class="image-wrap">
-        <img src="https://i.imgur.com/nh2B37Z.png" alt="Item 1" loading="lazy">
-      </div>
-      <div class="item-info">
-        <div class="item-title">Allience Bank</div>
-        <div class="item-code">5G88_Site</div>
-      </div>
-<button class="copy-btn">
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" class="copy-icon-svg">
-      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
-    </svg>
-  </span>
-  <span>Copy Image</span>
-</button>
-    </div>
-
-                          <!-- CARD 1 -->
-    <div class="item-card" data-item="Bank Telco">
-      <div class="image-wrap">
-        <img src="https://i.imgur.com/XHr1Vgr.png" alt="Item 1">
-      </div>
-      <div class="item-info">
-        <div class="item-title">Bank Telco</div>
-        <div class="item-code">5G88_Site</div>
-      </div>
-<button class="copy-btn">
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" class="copy-icon-svg">
-      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
-    </svg>
-  </span>
-  <span>Copy Image</span>
-</button>
-    </div>
-                      <!-- CARD 1 -->
-    <div class="item-card" data-item="Bank RHB">
-      <div class="image-wrap">
-        <img src="https://i.imgur.com/JQN3UYB.png" alt="Item 1">
-      </div>
-      <div class="item-info">
-        <div class="item-title">Bank RHB</div>
-        <div class="item-code">5G88_Site</div>
-      </div>
-<button class="copy-btn">
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" class="copy-icon-svg">
-      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
-    </svg>
-  </span>
-  <span>Copy Image</span>
-</button>
-    </div>
-
-                  <!-- CARD 1 -->
-    <div class="item-card" data-item="Bank Islam">
-      <div class="image-wrap">
-        <img src="https://i.imgur.com/Q8Rw0LH.png" alt="Item 1">
-      </div>
-      <div class="item-info">
-        <div class="item-title">Bank Islam</div>
-        <div class="item-code">5G88_Site</div>
-      </div>
-<button class="copy-btn">
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" class="copy-icon-svg">
-      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
-    </svg>
-  </span>
-  <span>Copy Image</span>
-</button>
-    </div>
-                <!-- CARD 1 -->
-    <div class="item-card" data-item="Duitnow Bank">
-      <div class="image-wrap">
-        <img src="https://i.imgur.com/p4wVhHV.png" alt="Item 1">
-      </div>
-      <div class="item-info">
-        <div class="item-title">Duitnow Bank</div>
-        <div class="item-code">5G88_Site</div>
-      </div>
-<button class="copy-btn">
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" class="copy-icon-svg">
-      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
-    </svg>
-  </span>
-  <span>Copy Image</span>
-</button>
-    </div>
-
-            <!-- CARD 1 -->
-    <div class="item-card" data-item="UOB Bank">
-      <div class="image-wrap">
-        <img src="https://i.imgur.com/i9dDsWW.png" alt="Item 1">
-      </div>
-      <div class="item-info">
-        <div class="item-title">UOB Bank</div>
-        <div class="item-code">5G88_Site</div>
-      </div>
-<button class="copy-btn">
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" class="copy-icon-svg">
-      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
-    </svg>
-  </span>
-  <span>Copy Image</span>
-</button>
-    </div>
-
-        <!-- CARD 1 -->
-    <div class="item-card" data-item="HSBC Bank">
-      <div class="image-wrap">
-        <img src="https://i.imgur.com/i82YkHm.png" alt="Item 1">
-      </div>
-      <div class="item-info">
-        <div class="item-title">HSBC Bank</div>
-        <div class="item-code">5G88_Site</div>
-      </div>
-<button class="copy-btn">
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" class="copy-icon-svg">
-      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
-    </svg>
-  </span>
-  <span>Copy Image</span>
-</button>
-    </div>
-
-    <!-- CARD 2 -->
-    <div class="item-card" data-item="Agro Bank">
-      <div class="image-wrap">
-        <img src="https://i.imgur.com/V1JyFtI.png" alt="Item 2">
-      </div>
-      <div class="item-info">
-        <div class="item-title">Agro Bank</div>
-        <div class="item-code">5G88_Site</div>
-      </div>
-<button class="copy-btn">
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" class="copy-icon-svg">
-      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
-    </svg>
-  </span>
-  <span>Copy Image</span>
-</button>
-    </div>
-
-    <!-- CARD 3 -->
-    <div class="item-card" data-item="Maybank">
-      <div class="image-wrap">
-        <img src="https://i.imgur.com/Ki1pk1j.png" alt="Item 3">
-      </div>
-      <div class="item-info">
-        <div class="item-title">Maybank</div>
-        <div class="item-code">5G88_Site</div>
-      </div>
-<button class="copy-btn">
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" class="copy-icon-svg">
-      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
-    </svg>
-  </span>
-  <span>Copy Image</span>
-</button>
-    </div>
-
-    <!-- CARD 4 -->
-    <div class="item-card" data-item="Hong Leong Bank">
-      <div class="image-wrap">
-        <img src="https://i.imgur.com/P19A5Jp.png" alt="Item 4">
-      </div>
-      <div class="item-info">
-        <div class="item-title">Hong Leong Bank</div>
-        <div class="item-code">5G88_Site</div>
-      </div>
-<button class="copy-btn">
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" class="copy-icon-svg">
-      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
-    </svg>
-  </span>
-  <span>Copy Image</span>
-</button>
-    </div>
-
-    <!-- CARD 5 -->
-    <div class="item-card" data-item="AmBank">
-      <div class="image-wrap">
-        <img src="https://i.imgur.com/VRSwGfj.png" alt="Item 5">
-      </div>
-      <div class="item-info">
-        <div class="item-title">AmBank</div>
-        <div class="item-code">5G88_Site</div>
-      </div>
-<button class="copy-btn">
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" class="copy-icon-svg">
-      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
-    </svg>
-  </span>
-  <span>Copy Image</span>
-</button>
-    </div>
-
-    <!-- CARD 6 -->
-    <div class="item-card" data-item="GXBank">
-      <div class="image-wrap">
-        <img src="https://i.imgur.com/BOhOQLV.png" alt="Item 6">
-      </div>
-      <div class="item-info">
-        <div class="item-title">GXBank</div>
-        <div class="item-code">5G88_Site</div>
-      </div>
-<button class="copy-btn">
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" class="copy-icon-svg">
-      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
-    </svg>
-  </span>
-  <span>Copy Image</span>
-</button>
-    </div>
-
-    <!-- Tambah lagi card di bawah ini, otomatis turun ke baris baru -->
-    <div class="item-card" data-item="TNG">
-      <div class="image-wrap">
-        <img src="https://i.imgur.com/FQHeQLJ.png" alt="Item 7">
-      </div>
-      <div class="item-info">
-        <div class="item-title">TNG-Ewallet</div>
-        <div class="item-code">5G88_Site</div>
-      </div>
-<button class="copy-btn">
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" class="copy-icon-svg">
-      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
-    </svg>
-  </span>
-  <span>Copy Image</span>
-</button>
-    </div>
-
-       <!-- Tambah lagi card di bawah ini, otomatis turun ke baris baru -->
-    <div class="item-card" data-item="Cimb Bank">
-      <div class="image-wrap">
-        <img src="https://i.imgur.com/dJflRmT.png" alt="Item 7">
-      </div>
-      <div class="item-info">
-        <div class="item-title">Cimb Bank</div>
-        <div class="item-code">5G88_Site</div>
-      </div>
-<button class="copy-btn">
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" class="copy-icon-svg">
-      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
-    </svg>
-  </span>
-  <span>Copy Image</span>
-</button>
-    </div>
-
-           <!-- Tambah lagi card di bawah ini, otomatis turun ke baris baru -->
-    <div class="item-card" data-item="Affin Bank">
-      <div class="image-wrap">
-        <img src="https://i.imgur.com/rg3009J.png" alt="Item 7">
-      </div>
-      <div class="item-info">
-        <div class="item-title">Affin Bank</div>
-        <div class="item-code">5G88_Site</div>
-      </div>
-<button class="copy-btn">
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" class="copy-icon-svg">
-      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
-    </svg>
-  </span>
-  <span>Copy Image</span>
-</button>
-    </div>
-
-               <!-- Tambah lagi card di bawah ini, otomatis turun ke baris baru -->
-    <div class="item-card" data-item="Bank Rakyat">
-      <div class="image-wrap">
-        <img src="https://i.imgur.com/aQiEYk3.png" alt="Item 7">
-      </div>
-      <div class="item-info">
-        <div class="item-title">Bank Rakyat</div>
-        <div class="item-code">5G88_Site</div>
-      </div>
-<button class="copy-btn">
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" class="copy-icon-svg">
-      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
-    </svg>
-  </span>
-  <span>Copy Image</span>
-</button>
-    </div>
-
-               <!-- Tambah lagi card di bawah ini, otomatis turun ke baris baru -->
-    <div class="item-card" data-item="Bank Muamalat">
-      <div class="image-wrap">
-        <img src="https://i.imgur.com/5cMKvGF.png" alt="Item 7">
-      </div>
-      <div class="item-info">
-        <div class="item-title">Bank Muamalat</div>
-        <div class="item-code">5G88_Site</div>
-      </div>
-<button class="copy-btn">
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" class="copy-icon-svg">
-      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
-    </svg>
-  </span>
-  <span>Copy Image</span>
-</button>
-    </div>
-
-                 <!-- Tambah lagi card di bawah ini, otomatis turun ke baris baru -->
-    <div class="item-card" data-item="Bank BSN">
-      <div class="image-wrap">
-        <img src="https://i.imgur.com/n7SJnQs.png" alt="Item 7">
-      </div>
-      <div class="item-info">
-        <div class="item-title">Bank Simpanan Nasional</div>
-        <div class="item-code">5G88_Site</div>
-      </div>
-<button class="copy-btn">
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" class="copy-icon-svg">
-      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
-    </svg>
-  </span>
-  <span>Copy Image</span>
-</button>
-    </div>
-
-                 <!-- Tambah lagi card di bawah ini, otomatis turun ke baris baru -->
-    <div class="item-card" data-item="Public Bank">
-      <div class="image-wrap">
-        <img src="https://i.imgur.com/SMxOfMd.png" alt="Item 7">
-      </div>
-      <div class="item-info">
-        <div class="item-title">Public Bank</div>
-        <div class="item-code">5G88_Site</div>
-      </div>
-<button class="copy-btn">
-  <span class="icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" class="copy-icon-svg">
-      <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
-    </svg>
-  </span>
-  <span>Copy Image</span>
-</button>
-    </div>
-
-    
-  </div>
+  <!-- 🔥 SEKARANG GRID KOSONG, CARD DI-GENERATE DARI JS -->
+  <div class="card-grid" id="cardGrid"></div>
 </div>
 
 <div class="copy-toast" id="copyToast">
@@ -846,6 +461,63 @@ body{
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+
+    // 🔥 DATA ITEM DI SINI — kalau mau tambah, tinggal tambah objek baru
+    const ITEMS = [
+      { title: "Allience Bank",     code: "5G88_Site", img: "https://i.imgur.com/nh2B37Z.png",   tag:"Alliance Bank" },
+      { title: "Bank Telco",        code: "5G88_Site", img: "https://i.imgur.com/XHr1Vgr.png",   tag:"Bank Telco" },
+      { title: "Bank RHB",          code: "5G88_Site", img: "https://i.imgur.com/JQN3UYB.png",   tag:"RHB" },
+      { title: "Bank Islam",        code: "5G88_Site", img: "https://i.imgur.com/Q8Rw0LH.png",   tag:"Bank Islam" },
+      { title: "Duitnow Bank",      code: "5G88_Site", img: "https://i.imgur.com/p4wVhHV.png",   tag:"Duitnow" },
+      { title: "UOB Bank",          code: "5G88_Site", img: "https://i.imgur.com/i9dDsWW.png",   tag:"UOB" },
+      { title: "HSBC Bank",         code: "5G88_Site", img: "https://i.imgur.com/i82YkHm.png",   tag:"HSBC" },
+      { title: "Agro Bank",         code: "5G88_Site", img: "https://i.imgur.com/V1JyFtI.png",   tag:"Agro" },
+      { title: "Maybank",           code: "5G88_Site", img: "https://i.imgur.com/Ki1pk1j.png",   tag:"Maybank" },
+      { title: "Hong Leong Bank",   code: "5G88_Site", img: "https://i.imgur.com/P19A5Jp.png",   tag:"Hong Leong" },
+      { title: "AmBank",            code: "5G88_Site", img: "https://i.imgur.com/VRSwGfj.png",   tag:"AmBank" },
+      { title: "GXBank",            code: "5G88_Site", img: "https://i.imgur.com/BOhOQLV.png",   tag:"GXBank" },
+      { title: "TNG-Ewallet",       code: "5G88_Site", img: "https://i.imgur.com/FQHeQLJ.png",   tag:"TNG" },
+      { title: "Cimb Bank",         code: "5G88_Site", img: "https://i.imgur.com/dJflRmT.png",   tag:"CIMB" },
+      { title: "Affin Bank",        code: "5G88_Site", img: "https://i.imgur.com/rg3009J.png",   tag:"Affin" },
+      { title: "Bank Rakyat",       code: "5G88_Site", img: "https://i.imgur.com/aQiEYk3.png",   tag:"Bank Rakyat" },
+      { title: "Bank Muamalat",     code: "5G88_Site", img: "https://i.imgur.com/5cMKvGF.png",   tag:"Muamalat" },
+      { title: "Bank Simpanan Nasional", code: "5G88_Site", img: "https://i.imgur.com/n7SJnQs.png", tag:"BSN" },
+      { title: "Public Bank",       code: "5G88_Site", img: "https://i.imgur.com/SMxOfMd.png",   tag:"Public Bank" }
+
+      // contoh tambah baru:
+      // { title: "OCBC Bank", code: "5G88_Site", img: "https://link_gambar_di_sini.png", tag:"OCBC" },
+    ];
+
+    const grid = document.getElementById('cardGrid');
+
+    // ⚙️ GENERATE CARD DARI ARRAY
+    ITEMS.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'item-card';
+      card.dataset.item = item.tag || item.title;
+
+      card.innerHTML = `
+        <div class="image-wrap">
+          <img src="${item.img}" alt="${item.title}" loading="lazy">
+        </div>
+        <div class="item-info">
+          <div class="item-title">${item.title}</div>
+          <div class="item-code">${item.code}</div>
+        </div>
+        <button class="copy-btn">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="copy-icon-svg">
+              <path d="m22 7c0-.478-.379-1-1-1h-14c-.62 0-1 .519-1 1v14c0 .621.52 1 1 1h14c.478 0 1-.379 1-1zm-14.5.5h13v13h-13zm-5.5 7.5v2c0 .621.52 1 1 1h2v-1.5h-1.5v-1.5zm13.369-5s-2.136.002-4.616.003c-.414 0-.75.336-.75.75-.001 2.479-.003 4.612-.003 4.612 0 .41.335.745.75.745.414 0 .75-.334.75-.745v-2.804l4.439 4.439c.293.293.768.293 1.061 0s.293-.768 0-1.061l-4.439-4.439h2.808c.409 0 .741-.336.741-.75s-.333-.75-.741-.75zm-11.869.637v3.363h-1.5v-3.363zm0-4.637v3.637h-1.5v-3.637zm11.5-4v1.5h1.5v1.5h1.5v-2c0-.478-.379-1-1-1zm-10 0h-2c-.62 0-1 .519-1 1v2h1.5v-1.5h1.5zm4.5 1.5h-3.5v-1.5h3.5zm4.5 0h-3.5v-1.5h3.5z"/>
+            </svg>
+          </span>
+          <span>Copy Image</span>
+        </button>
+      `;
+
+      grid.appendChild(card);
+    });
+
+    // setelah card dibuat, baru ambil semua .item-card
     const cards = document.querySelectorAll('.item-card');
 
     // --- COPY IMAGE BUTTON ---
@@ -858,7 +530,6 @@ body{
         const img = card.querySelector('img');
         if (!img) return;
 
-        // Cek support clipboard image
         if (!(navigator.clipboard && navigator.clipboard.write && window.ClipboardItem)) {
           alert('Browser tidak support copy image ke clipboard. Coba Chrome / Edge terbaru ya bro.');
           return;
@@ -906,7 +577,8 @@ body{
       cards.forEach(card => {
         const titleEl = card.querySelector('.item-title');
         const titleText = (titleEl?.textContent || '').toLowerCase();
-        const match = term === '' || titleText.includes(term);
+        const dataItem = (card.dataset.item || '').toLowerCase();
+        const match = term === '' || titleText.includes(term) || dataItem.includes(term);
         card.style.display = match ? '' : 'none';
       });
     }
