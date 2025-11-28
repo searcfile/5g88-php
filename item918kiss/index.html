@@ -22,7 +22,9 @@
     body{
       min-height:100vh;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top, #1f2937 0, transparent 55%), radial-gradient(circle at bottom, #020617 0, #000 65%) !important;
+      background:
+        radial-gradient(circle at top, #1f2937 0, transparent 55%),
+        radial-gradient(circle at bottom, #020617 0, #000 65%) !important;
       color:var(--text);
       display:flex;
       justify-content:center;
@@ -32,7 +34,7 @@
 
     .wrapper{
       width:100%;
-      max-width:1400px; /* 🔥 diperbesar supaya card lebih lebar */
+      max-width:1400px;
     }
 
     .title{
@@ -76,7 +78,7 @@
       color:var(--text);
       font-size:0.9rem;
       outline:none;
-      box-shadow:0 8px 22px rgba(15,23,42,0.95);
+      box-shadow:0 6px 18px rgba(15,23,42,0.9); /* sedikit diringankan */
       transition:
         border-color 0.15s ease,
         box-shadow 0.15s ease,
@@ -92,7 +94,7 @@
       border-color:var(--accent-soft);
       box-shadow:
         0 0 0 1px rgba(250,204,21,0.7),
-        0 10px 26px rgba(15,23,42,0.98);
+        0 8px 20px rgba(15,23,42,0.95);
       background:radial-gradient(circle at top,#020617,#020617 75%);
     }
 
@@ -163,7 +165,7 @@
       background:rgba(15,23,42,1);
     }
 
-    /* GRID pakai flex supaya selalu center */
+    /* GRID */
     .card-grid{
       display:flex;
       flex-wrap:wrap;
@@ -174,7 +176,7 @@
     }
 
     .item-card{
-      background: radial-gradient(circle at top left,#111827,#020617 55%);
+      background: linear-gradient(145deg,#111827,#020617); /* simpler, lebih ringan */
       border-radius:14px;
       border:1px solid rgba(148,163,184,0.32);
       padding:12px 12px 14px;
@@ -187,32 +189,32 @@
       transition:
         transform 0.16s ease,
         box-shadow 0.16s ease,
-        border-color 0.16s ease,
-        background 0.16s ease;
+        border-color 0.16s ease;
       min-height:260px;
 
       /* 6 card per baris dengan gap 16px (5 gap = 80) */
       flex: 0 0 calc((100% - 80px) / 6);
       max-width: calc((100% - 80px) / 6);
+
+      /* bantu GPU */
+      will-change: transform;
     }
 
+    /* matikan glow radial berat, biar render lebih ringan */
     .item-card::before{
       content:"";
       position:absolute;
-      inset:-40%;
-      background:
-        radial-gradient(circle at 0 0, rgba(250,204,21,0.18), transparent 55%),
-        radial-gradient(circle at 100% 100%, rgba(56,189,248,0.15), transparent 60%);
+      inset:0;
       opacity:0;
-      transition:opacity 0.2s ease;
       pointer-events:none;
+      /* kalau mau glow tipis boleh pakai warna lembut, sekarang dimatikan */
+      background:none;
+      transition:opacity 0.2s ease;
     }
 
     .item-card:hover{
-      transform:translateY(-3px) scale(1.01);
-      box-shadow:
-        0 16px 40px rgba(15,23,42,0.8),
-        0 0 0 1px rgba(148,163,184,0.35);
+      transform:translateY(-2px); /* sedikit saja */
+      box-shadow:0 10px 24px rgba(15,23,42,0.85);
       border-color:rgba(250,204,21,0.55);
     }
 
@@ -224,13 +226,13 @@
       border-color:var(--accent);
       box-shadow:
         0 0 0 1px rgba(250,204,21,0.9),
-        0 0 18px rgba(250,204,21,0.65);
+        0 0 18px rgba(250,204,21,0.5);
     }
 
     .item-card.copied .copy-btn{
       background:linear-gradient(120deg,var(--accent),var(--accent-2));
       color:#020617;
-      box-shadow:0 0 18px rgba(250,204,21,0.45);
+      box-shadow:0 0 14px rgba(250,204,21,0.4);
     }
 
     .image-wrap{
@@ -250,8 +252,8 @@
       content:"";
       position:absolute;
       inset:0;
-      background:linear-gradient(to top, rgba(15,23,42,0.7), transparent 40%);
-      opacity:0.25;
+      background:linear-gradient(to top, rgba(15,23,42,0.55), transparent 40%);
+      opacity:0.2;
     }
 
     .image-wrap img{
@@ -261,10 +263,11 @@
       object-fit:contain;
       object-position:center;
       transition:transform 0.25s ease;
+      will-change: transform;
     }
 
     .item-card:hover .image-wrap img{
-      transform:scale(1.06);
+      transform:scale(1.04);
     }
 
     .item-info{
@@ -312,7 +315,7 @@
       background:linear-gradient(135deg,#0f172a,#020617);
       color:var(--text);
       border:1px solid rgba(148,163,184,0.6);
-      box-shadow:0 4px 10px rgba(15,23,42,0.9);
+      box-shadow:0 3px 8px rgba(15,23,42,0.85); /* diringankan */
       transition:
         background 0.16s ease,
         transform 0.08s ease,
@@ -348,7 +351,7 @@
     .copy-btn:hover{
       background:linear-gradient(135deg,#1e293b,#020617);
       border-color:var(--accent-soft);
-      box-shadow:0 6px 15px rgba(15,23,42,0.95);
+      box-shadow:0 5px 12px rgba(15,23,42,0.9);
     }
 
     .copy-btn:active{
@@ -384,7 +387,7 @@
       transform:translateX(-50%) translateY(0);
     }
 
-    /* 4 card per baris kalau layar lebih kecil */
+    /* 4 card per baris */
     @media (max-width: 1024px){
       .item-card{
         flex: 0 0 calc((100% - 48px) / 4);
@@ -444,7 +447,7 @@
     </div>
   </div>
 
-  <!-- 🔥 SEKARANG GRID KOSONG, CARD DI-GENERATE DARI JS -->
+  <!-- GRID -->
   <div class="card-grid" id="cardGrid"></div>
 </div>
 
@@ -461,8 +464,6 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-
-    // 🔥 DATA ITEM DI SINI — kalau mau tambah, tinggal tambah objek baru
     const ITEMS = [
       { title: "Allience Bank",     code: "5G88_Site", img: "https://i.imgur.com/nh2B37Z.png",   tag:"Alliance Bank" },
       { title: "Bank Telco",        code: "5G88_Site", img: "https://i.imgur.com/XHr1Vgr.png",   tag:"Bank Telco" },
@@ -483,14 +484,11 @@
       { title: "Bank Muamalat",     code: "5G88_Site", img: "https://i.imgur.com/5cMKvGF.png",   tag:"Muamalat" },
       { title: "Bank Simpanan Nasional", code: "5G88_Site", img: "https://i.imgur.com/n7SJnQs.png", tag:"BSN" },
       { title: "Public Bank",       code: "5G88_Site", img: "https://i.imgur.com/SMxOfMd.png",   tag:"Public Bank" }
-
-      // contoh tambah baru:
-      // { title: "OCBC Bank", code: "5G88_Site", img: "https://link_gambar_di_sini.png", tag:"OCBC" },
     ];
 
     const grid = document.getElementById('cardGrid');
 
-    // ⚙️ GENERATE CARD DARI ARRAY
+    // generate card
     ITEMS.forEach(item => {
       const card = document.createElement('div');
       card.className = 'item-card';
@@ -517,10 +515,9 @@
       grid.appendChild(card);
     });
 
-    // setelah card dibuat, baru ambil semua .item-card
     const cards = document.querySelectorAll('.item-card');
 
-    // --- COPY IMAGE BUTTON ---
+    // COPY IMAGE
     cards.forEach(card => {
       const btn = card.querySelector('.copy-btn');
 
@@ -561,7 +558,7 @@
       });
     });
 
-    // --- SEARCH FEATURE ---
+    // SEARCH
     const searchInput = document.getElementById('searchInput');
     const clearBtn = document.getElementById('clearSearch');
     const searchBox = document.getElementById('searchBox');
@@ -575,9 +572,9 @@
       }
 
       cards.forEach(card => {
-        const titleEl = card.querySelector('.item-title');
+        const titleEl  = card.querySelector('.item-title');
         const titleText = (titleEl?.textContent || '').toLowerCase();
-        const dataItem = (card.dataset.item || '').toLowerCase();
+        const dataItem  = (card.dataset.item || '').toLowerCase();
         const match = term === '' || titleText.includes(term) || dataItem.includes(term);
         card.style.display = match ? '' : 'none';
       });
