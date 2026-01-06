@@ -1052,15 +1052,16 @@ function attachLiveHandlers(){
 }
 
     // Boot
-    initBanks();
-    let state = loadState();
-    bankSelect.value = state.bank; // ✅ sync awal untuk custom label/menu
-    // Ensure accounts for saved bank
-    state = ensureAccountsForBank(state, state.bank);
+initBanks();
+let state = loadState();
 
-    // If user already created before refresh, keep mask
-    state = render(state);
-    attachLiveHandlers();
+// ✅ penting: set value & trigger change supaya custom dropdown label/menu ikut state
+bankSelect.value = state.bank;
+bankSelect.dispatchEvent(new Event("change", { bubbles:true }));
+
+state = ensureAccountsForBank(state, state.bank);
+state = render(state);
+attachLiveHandlers();
   </script>
 </body>
 </html>
