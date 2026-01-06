@@ -631,10 +631,10 @@ const BANK_CONFIG = {
     const completedTextEl = document.getElementById("completedText");
 
     // Helpers
-    function rm(n){
-      const v = Number(n || 0);
-      return "RM " + v.toFixed(2);
-    }
+function rm(n){
+  const v = Number(n || 0);
+  return "RM " + format2(v); // ✅ akan jadi 1,000.00
+}
     function formatMoneyInput(raw){
   raw = String(raw || "").replace(/,/g, "").trim();
   if(raw === "") return "";
