@@ -547,15 +547,13 @@ function genAccountsForBank(bank, count = 10){
         .replaceAll('"',"&quot;")
         .replaceAll("'","&#039;");
     }
-    function maskAccount1Digit(acc){
+function maskAccount2Digit(acc){
   const s = String(acc || "").trim();
-  if(!s) return "";
-  const first = s[0];
-  const rest  = s.slice(1);
-  return {
-    first,
-    rest
-  };
+  if(!s) return { first:"", rest:"" };
+
+  const first2 = s.slice(0, 2);  // nampak 2 digit
+  const rest   = s.slice(2);     // baki blur
+  return { first: first2, rest };
 }
 
 function setAccountMasked(isMasked, acc){
@@ -563,7 +561,7 @@ function setAccountMasked(isMasked, acc){
     accountNumber.textContent = acc;
     return;
   }
-  const m = maskAccount1Digit(acc);
+  const m = maskAccount2Digit(acc);
   accountNumber.innerHTML =
     `<span class="maskWrap">
       <span class="maskFirst mono">${escapeHtml(m.first)}</span>
