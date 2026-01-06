@@ -533,14 +533,15 @@ input[type="number"]{
             <div class="l">Recipient's bank</div>
             <div class="v strong" id="bankValue">CIMB BANK BERHAD</div>
           </div>
-          <div class="r">
-            <div class="l">Transaction Type</div>
-            <div class="v">Funds Transfer</div>
-          </div>
-          <div class="r">
-            <div class="l">Transfer Mode</div>
-            <div class="v">DuitNow Transfer</div>
-          </div>
+<div class="r" id="rowTxnType">
+  <div class="l">Transaction Type</div>
+  <div class="v">Funds Transfer</div>
+</div>
+
+<div class="r" id="rowTransferMode">
+  <div class="l">Transfer Mode</div>
+  <div class="v">DuitNow Transfer</div>
+</div>
           <div class="r">
             <div class="l">Effective date</div>
             <div class="v" id="dateValue">Today 06 Jan 2026</div>
@@ -610,6 +611,8 @@ const BANK_CONFIG = {
     };
 
     // Elements
+    const rowTxnType = document.getElementById("rowTxnType");
+    const rowTransferMode = document.getElementById("rowTransferMode");
     const bankSelect   = document.getElementById("bankSelect");
     const dateInput    = document.getElementById("dateInput");
     const refPrefix    = document.getElementById("refPrefix");
@@ -863,6 +866,11 @@ function ensureAccountsForBank(state, bank){
 
       refValue.textContent = state.referenceId10;
       completedTextEl.textContent = `Completed on ${state.completedText || ""}`;
+      const isMaybank = state.bank === "MAYBANK";
+
+      // hide untuk Maybank sahaja
+      if (rowTxnType) rowTxnType.style.display = isMaybank ? "none" : "";
+      if (rowTransferMode) rowTransferMode.style.display = isMaybank ? "none" : "";
 
       // account number (from bank)
       state = ensureAccountsForBank(state, state.bank);
