@@ -304,6 +304,77 @@
   color:#9b9b9b;
   text-align:right;
 }
+    /* hide native select */
+.nativeSelectHidden{
+  position:absolute !important;
+  left:-9999px !important;
+  width:1px !important;
+  height:1px !important;
+  overflow:hidden !important;
+}
+
+/* custom dropdown */
+.cselect{ position:relative; }
+
+.cselect-btn{
+  width:100%;
+  height:40px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  padding:0 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  cursor:pointer;
+  font-size:14px;
+}
+
+.cselect-caret{ color:#6b7280; }
+
+.cselect-menu{
+  position:absolute;
+  top:calc(100% + 8px);
+  left:0;
+  right:0;
+  background:#111;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;
+  box-shadow:0 18px 40px rgba(0,0,0,.25);
+  padding:6px;
+  display:none;
+  z-index:9999;
+  max-height:260px;
+  overflow:auto;
+}
+.cselect.open .cselect-menu{ display:block; }
+
+.cselect-item{
+  padding:10px 10px;
+  border-radius:10px;
+  color:#fff;
+  cursor:pointer;
+  user-select:none;
+  font-size:14px;
+}
+.cselect-item:hover{
+  background: rgba(245,166,35,.22);
+}
+.cselect-item.active{
+  background: rgba(245,166,35,.38);
+  outline: 1px solid rgba(245,166,35,.55);
+}
+
+/* remove number input arrows (spinner) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button{
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"]{
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
   </style>
 </head>
 
@@ -316,10 +387,22 @@
         <span class="mono" style="font-size:12px;color:#6b7280;">localStorage ✅</span>
       </div>
       <div class="pb">
-        <div class="field">
-          <label>Recipient’s bank</label>
-          <select id="bankSelect"></select>
-        </div>
+<div class="field">
+  <label>Recipient’s bank</label>
+
+  <!-- hidden select untuk simpan value + guna event change yg kau sudah ada -->
+  <select id="bankSelect" class="nativeSelectHidden" aria-hidden="true" tabindex="-1"></select>
+
+  <!-- custom dropdown -->
+  <div class="cselect" id="bankCSelect">
+    <button type="button" class="cselect-btn" id="bankCBtn" aria-haspopup="listbox" aria-expanded="false">
+      <span id="bankCLabel">Select bank</span>
+      <span class="cselect-caret">▾</span>
+    </button>
+    <div class="cselect-menu" id="bankCMenu" role="listbox"></div>
+  </div>
+</div>
+        
         <div class="field">
   <label>Holder name</label>
 
@@ -512,6 +595,7 @@ const BANK_CONFIG = {
       bank: "CIMB BANK BERHAD",
       effectiveDate: "Today 06 Jan 2026",
       amount: 100.00,
+      amountText: "100.00",
       refPrefix4: "8292",
       referenceId10: "8292256805",
       holderName: "CHRISTINA SHANDIE ANAK WILLIAM",
@@ -731,7 +815,7 @@ function ensureAccountsForBank(state, bank){
       bankSelect.value = state.bank;
       dateInput.value  = state.effectiveDate;
       refPrefix.value  = state.refPrefix4;
-      amountInput.value= Number(state.amount || 0).toFixed(2);
+      amountInput.value = (state.amountText != null ? state.amountText : String(Number(state.amount || 0).toFixed(2)));
       completedInput.value = state.completedText || "";
       
       holderInput.value = state.holderName || "";
@@ -763,9 +847,60 @@ function ensureAccountsForBank(state, bank){
 
 function initBanks(){
   const banks = Object.keys(BANK_CONFIG);
+
+  // hidden select options
   bankSelect.innerHTML = banks
     .map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`)
     .join("");
+
+  // custom UI elements
+  const wrapEl  = document.getElementById("bankCSelect");
+  const btnEl   = document.getElementById("bankCBtn");
+  const labelEl = document.getElementById("bankCLabel");
+  const menuEl  = document.getElementById("bankCMenu");
+
+  function renderMenu(active){
+    menuEl.innerHTML = "";
+    banks.forEach(b => {
+      const item = document.createElement("div");
+      item.className = "cselect-item" + (b === active ? " active" : "");
+      item.textContent = b;
+      item.addEventListener("click", () => {
+        bankSelect.value = b;
+        bankSelect.dispatchEvent(new Event("change", { bubbles:true }));
+        closeMenu();
+      });
+      menuEl.appendChild(item);
+    });
+  }
+
+  function openMenu(){
+    wrapEl.classList.add("open");
+    btnEl.setAttribute("aria-expanded","true");
+  }
+  function closeMenu(){
+    wrapEl.classList.remove("open");
+    btnEl.setAttribute("aria-expanded","false");
+  }
+
+  btnEl.addEventListener("click", (e) => {
+    e.preventDefault();
+    wrapEl.classList.contains("open") ? closeMenu() : openMenu();
+  });
+
+  document.addEventListener("click", (e) => {
+    if(!wrapEl.contains(e.target)) closeMenu();
+  });
+
+  // sync label bila select berubah (render() akan set bankSelect.value)
+  bankSelect.addEventListener("change", () => {
+    labelEl.textContent = bankSelect.value || banks[0] || "Select bank";
+    renderMenu(bankSelect.value);
+  });
+
+  // init label/menu
+  labelEl.textContent = bankSelect.value || banks[0] || "Select bank";
+  renderMenu(bankSelect.value || banks[0] || "");
 }
 
     // Live update amount/date/bank (but "mask name" only after Create)
@@ -788,11 +923,32 @@ function initBanks(){
         state = render(state);
       });
 
-      amountInput.addEventListener("input", () => {
-        const v = Number(amountInput.value);
-        state.amount = isNaN(v) ? 0 : Math.max(0, v);
-        state = render(state);
-      });
+amountInput.addEventListener("input", () => {
+  // simpan apa user taip (boleh kosong)
+  state.amountText = amountInput.value;
+
+  // parse untuk paparan RM (kalau kosong, jangan paksa balik)
+  const raw = (amountInput.value || "").replace(/,/g, "").trim();
+  const v = raw === "" ? NaN : Number(raw);
+
+  state.amount = isNaN(v) ? 0 : Math.max(0, v);
+
+  // update paparan RM sahaja (tanpa render full)
+  topAmount.textContent = rm(state.amount);
+  bottomAmount.textContent = rm(state.amount);
+
+  saveState(state);
+});
+      amountInput.addEventListener("blur", () => {
+  const raw = (amountInput.value || "").replace(/,/g, "").trim();
+  const v = raw === "" ? 0 : Number(raw);
+
+  state.amount = isNaN(v) ? 0 : Math.max(0, v);
+  state.amountText = state.amount.toFixed(2);
+
+  state = render(state); // sekarang ok sebab user dah selesai menaip
+});
+
      holderInput.addEventListener("input", () => {
   state.holderName = holderInput.value;
   // update receipt name live (kalau belum created, ia display plain)
@@ -837,6 +993,11 @@ if (list.length) {
 if(state.autoName){
   state.holderName = randomHolderName();
 }
+        // sync amount before create (in case user belum blur)
+const raw = (state.amountText || "").replace(/,/g, "").trim();
+const v = raw === "" ? 0 : Number(raw);
+state.amount = isNaN(v) ? 0 : Math.max(0, v);
+state.amountText = state.amount.toFixed(2);
         state.completedText = formatCompletedNow();
         state.created = true;
         state = render(state);
@@ -854,7 +1015,7 @@ if(state.autoName){
     // Boot
     initBanks();
     let state = loadState();
-
+    bankSelect.value = state.bank; // ✅ sync awal untuk custom label/menu
     // Ensure accounts for saved bank
     state = ensureAccountsForBank(state, state.bank);
 
