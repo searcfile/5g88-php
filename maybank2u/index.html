@@ -553,25 +553,27 @@ function genAccountsForBank(bank, count = 10){
         .replaceAll('"',"&quot;")
         .replaceAll("'","&#039;");
     }
-function maskAccount2Digit(acc){
+function maskAccountFront2Back1(acc){
   const s = String(acc || "").trim();
-  if(!s) return { first:"", rest:"" };
+  if(!s) return { head:"", mid:"", tail:"" };
 
-  const first2 = s.slice(0, 2);  // nampak 2 digit
-  const rest   = s.slice(2);     // baki blur
-  return { first: first2, rest };
+  const head = s.slice(0, 2);      // 2 digit depan
+  const tail = s.slice(-1);        // 1 digit belakang
+  const mid  = s.slice(2, -1);     // yang tengah blur
+  return { head, mid, tail };
 }
-
 function setAccountMasked(isMasked, acc){
   if(!isMasked){
     accountNumber.textContent = acc;
     return;
   }
-  const m = maskAccount2Digit(acc);
+
+  const m = maskAccountFront2Back1(acc);
   accountNumber.innerHTML =
     `<span class="maskWrap">
-      <span class="maskFirst mono">${escapeHtml(m.first)}</span>
-      <span class="maskBlur mono">${escapeHtml(m.rest)}</span>
+      <span class="maskFirst mono">${escapeHtml(m.head)}</span>
+      <span class="maskBlur mono">${escapeHtml(m.mid)}</span>
+      <span class="maskFirst mono">${escapeHtml(m.tail)}</span>
     </span>`;
 }
 function ensureAccountsForBank(state, bank){
