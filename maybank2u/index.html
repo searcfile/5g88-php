@@ -293,6 +293,20 @@
   font-weight:700;
   cursor:pointer;
 }
+  .completedBar{
+  background:#e6e6e6;
+  border-top:1px solid var(--line);
+  padding: 10px 16px;
+  display:grid;
+  grid-template-columns: 1fr auto;
+  align-items:center;
+}
+
+.completedText{
+  font-size:13px;
+  color:#6b7280;
+  text-align:right;
+}
   </style>
 </head>
 
@@ -329,6 +343,16 @@
     <input id="dateInput" type="text" placeholder="Today 06 Jan 2026" />
     <button type="button" class="dateBtn" id="nowBtn">Now</button>
   </div>
+</div>
+      <div class="field">
+  <label>Completed date & time (text)</label>
+
+  <div class="dateRow">
+    <input id="completedInput" type="text" placeholder="Tuesday 06 January 2026 at 16:16:36" />
+    <button type="button" class="dateBtn" id="completedNowBtn">Now</button>
+  </div>
+
+  <div class="hint">Akan muncul di bawah sebagai: Completed on [text]</div>
 </div>
 
         <div class="row2">
@@ -461,6 +485,12 @@
           <div class="totalLabel">Total Amount</div>
           <div class="totalVal" id="bottomAmount">RM 100.00</div>
         </div>
+        <div class="completedBar">
+  <div></div>
+  <div class="completedText" id="completedText">
+    Completed on Tuesday 06 January 2026 at 16:16:36
+  </div>
+</div>
       </div>
     </div>
   </div>
@@ -491,6 +521,7 @@ const BANK_CONFIG = {
       referenceId10: "8292256805",
       holderName: "CHRISTINA SHANDIE ANAK WILLIAM",
       autoName: false,
+      completedText: "Tuesday 06 January 2026 at 16:16:36",
       created: false,
       // store generated accounts per bank
       accountsByBank: {
@@ -517,6 +548,8 @@ const BANK_CONFIG = {
     const bottomAmount = document.getElementById("bottomAmount");
     const holderInput = document.getElementById("holderInput");
     const autoNameBtn = document.getElementById("autoNameBtn");
+    const completedInput = document.getElementById("completedInput");
+    const completedTextEl = document.getElementById("completedText");
 
     // Helpers
     function rm(n){
@@ -527,6 +560,22 @@ const BANK_CONFIG = {
   const d = new Date();
   const m = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   return `Today ${String(d.getDate()).padStart(2,"0")} ${m[d.getMonth()]} ${d.getFullYear()}`;
+}
+    function formatCompletedNow(){
+  const d = new Date();
+  const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+  const dayName = days[d.getDay()];
+  const dd = String(d.getDate()).padStart(2,"0");
+  const monthName = months[d.getMonth()];
+  const yyyy = d.getFullYear();
+
+  const hh = String(d.getHours()).padStart(2,"0");
+  const mm = String(d.getMinutes()).padStart(2,"0");
+  const ss = String(d.getSeconds()).padStart(2,"0");
+
+  return `${dayName} ${dd} ${monthName} ${yyyy} at ${hh}:${mm}:${ss}`;
 }
     function onlyDigits(str){ return String(str || "").replace(/\D/g, ""); }
 
@@ -688,6 +737,7 @@ function ensureAccountsForBank(state, bank){
       dateInput.value  = state.effectiveDate;
       refPrefix.value  = state.refPrefix4;
       amountInput.value= Number(state.amount || 0).toFixed(2);
+      completedInput.value = state.completedText || "";
       
       holderInput.value = state.holderName || "";
       autoNameBtn.classList.toggle("on", !!state.autoName);
@@ -702,6 +752,7 @@ function ensureAccountsForBank(state, bank){
       bottomAmount.textContent = rm(state.amount);
 
       refValue.textContent = state.referenceId10;
+      completedTextEl.textContent = `Completed on ${state.completedText || ""}`;
 
       // account number (from bank)
       state = ensureAccountsForBank(state, state.bank);
@@ -761,6 +812,15 @@ function initBanks(){
   state.effectiveDate = formatToday();
   state = render(state);
 });
+      completedInput.addEventListener("input", () => {
+  state.completedText = completedInput.value.trim() || DEFAULT_STATE.completedText;
+  state = render(state);
+});
+
+document.getElementById("completedNowBtn").addEventListener("click", () => {
+  state.completedText = formatCompletedNow();
+  state = render(state);
+});
       refPrefix.addEventListener("input", () => {
         // keep only digits max 4
         const d = onlyDigits(refPrefix.value).slice(0,4);
@@ -784,6 +844,7 @@ if (list.length) {
 if(state.autoName){
   state.holderName = randomHolderName();
 }
+        state.completedText = formatCompletedNow();
         state.created = true;
         state = render(state);
       });
