@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Transfer Receipt Builder</title>
+  <title>Maybank2u Transfer</title>
   <style>
     :root{
       --green:#3b9b73;          /* dekat macam screenshot */
@@ -1044,8 +1044,7 @@ function attachLiveHandlers(){
     amountInput.value = state.amountText;
 
     // completed now every create
-    state.completedText = formatCompletedNow();
-    completedInput.value = state.completedText;
+    state.completedText = completedInput.value.trim() || state.completedText;
 
     state.created = true;
     state = render(state);
