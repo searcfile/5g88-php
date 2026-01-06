@@ -338,19 +338,17 @@
 
 <div class="field">
   <label>Effective date (text)</label>
-
   <div class="dateRow">
     <input id="dateInput" type="text" placeholder="Today 06 Jan 2026" />
-    <button type="button" class="dateBtn" id="nowBtn">Now</button>
   </div>
 </div>
       <div class="field">
   <label>Completed date & time (text)</label>
 
-  <div class="dateRow">
-    <input id="completedInput" type="text" placeholder="Tuesday 06 January 2026 at 16:16:36" />
-    <button type="button" class="dateBtn" id="completedNowBtn">Now</button>
-  </div>
+<div class="dateRow">
+  <input id="completedInput" type="text" placeholder="Tuesday 06 January 2026 at 16:16:36" />
+  <button type="button" class="dateBtn" id="nowBtn">Now</button>
+</div>
 
   <div class="hint">Akan muncul di bawah sebagai: Completed on [text]</div>
 </div>
@@ -808,19 +806,17 @@ function initBanks(){
   state.autoName = !state.autoName;
   state = render(state);
 });
-      document.getElementById("nowBtn").addEventListener("click", () => {
-  state.effectiveDate = formatToday();
-  state = render(state);
-});
+
       completedInput.addEventListener("input", () => {
   state.completedText = completedInput.value.trim() || DEFAULT_STATE.completedText;
   state = render(state);
 });
-
-document.getElementById("completedNowBtn").addEventListener("click", () => {
+document.getElementById("nowBtn").addEventListener("click", () => {
+  state.effectiveDate = formatToday();
   state.completedText = formatCompletedNow();
   state = render(state);
 });
+
       refPrefix.addEventListener("input", () => {
         // keep only digits max 4
         const d = onlyDigits(refPrefix.value).slice(0,4);
