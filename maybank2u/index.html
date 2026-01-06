@@ -423,7 +423,18 @@
       "OCBC BANK",
       "UOB BANK"
     ];
-
+    const ACCOUNT_LENGTH_BY_BANK = {
+  "CIMB BANK BERHAD": 10,
+  "MAYBANK": 12,
+  "PUBLIC BANK": 10,
+  "RHB BANK": 10,
+  "HONG LEONG BANK": 10,
+  "AMBANK": 10,
+  "BANK ISLAM": 10,
+  "HSBC BANK": 12,
+  "OCBC BANK": 12,
+  "UOB BANK": 12
+};
     const DEFAULT_STATE = {
       bank: "CIMB BANK BERHAD",
       effectiveDate: "Today 06 Jan 2026",
@@ -474,18 +485,22 @@
       const p = onlyDigits(prefix4).slice(0,4).padEnd(4, "0");
       return p + randomDigits(6);
     }
+function getAccountLen(bank){
+  return ACCOUNT_LENGTH_BY_BANK[bank] || 10; // default 10
+}
 
-    function makeAccount10(){
-      // 10 digits, first digit not 0 to look more "real"
-      const first = String(Math.floor(Math.random()*9)+1);
-      return first + randomDigits(9);
-    }
+function makeAccountDigits(len){
+  // first digit not 0
+  const first = String(Math.floor(Math.random() * 9) + 1);
+  return first + randomDigits(Math.max(0, len - 1));
+}
 
-    function gen10Accounts(){
-      const set = new Set();
-      while(set.size < 10) set.add(makeAccount10());
-      return Array.from(set);
-    }
+function genAccountsForBank(bank, count = 10){
+  const len = getAccountLen(bank);
+  const set = new Set();
+  while(set.size < count) set.add(makeAccountDigits(len));
+  return Array.from(set);
+}
 
     function saveState(s){
       localStorage.setItem(LS_KEY, JSON.stringify(s));
@@ -557,18 +572,26 @@ function setAccountMasked(isMasked, acc){
       <span class="maskBlur mono">${escapeHtml(m.rest)}</span>
     </span>`;
 }
-    function ensureAccountsForBank(state, bank){
-      state.accountsByBank ||= {};
-      state.selectedAccountByBank ||= {};
+function ensureAccountsForBank(state, bank){
+  state.accountsByBank ||= {};
+  state.selectedAccountByBank ||= {};
 
-      if(!state.accountsByBank[bank] || state.accountsByBank[bank].length !== 10){
-        state.accountsByBank[bank] = gen10Accounts();
-      }
-      if(!state.selectedAccountByBank[bank]){
-        state.selectedAccountByBank[bank] = state.accountsByBank[bank][0];
-      }
-      return state;
-    }
+  const expectedLen = getAccountLen(bank);
+  const list = state.accountsByBank[bank] || [];
+
+  // regen jika: tak cukup 10 acc, atau ada acc length tak sama
+  const badLen = list.some(a => String(a).length !== expectedLen);
+
+  if(list.length !== 10 || badLen){
+    state.accountsByBank[bank] = genAccountsForBank(bank, 10);
+  }
+
+  if(!state.selectedAccountByBank[bank]){
+    state.selectedAccountByBank[bank] = state.accountsByBank[bank][0];
+  }
+
+  return state;
+}
 
     function render(state){
       // Inputs
