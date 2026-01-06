@@ -474,18 +474,24 @@ const BANK_CONFIG = {
       return p + randomDigits(6);
     }
 function getBankCfg(bank){
-  return BANK_CONFIG[bank] || { len: 10, start: null };
+  return BANK_CONFIG[bank] || { len: 10, prefix: "" };
 }
 
 function makeAccountDigits(bank){
   const cfg = getBankCfg(bank);
   const len = cfg.len || 10;
 
-  // digit pertama ikut cfg.start, kalau tak ada start → random 1-9
-  const first = cfg.start ? String(cfg.start)[0] : String(Math.floor(Math.random() * 9) + 1);
+  // ✅ prefix boleh 1-4 digit (atau lebih), akan kekal di depan
+  let prefix = (cfg.prefix ?? cfg.start ?? "").toString().replace(/\D/g, "");
+  if(prefix.length === 0){
+    prefix = String(Math.floor(Math.random() * 9) + 1); // fallback 1-9
+  }
 
-  // baki digit
-  return first + randomDigits(Math.max(0, len - 1));
+  // kalau prefix lebih panjang dari len, potong
+  if(prefix.length > len) prefix = prefix.slice(0, len);
+
+  const remaining = Math.max(0, len - prefix.length);
+  return prefix + randomDigits(remaining);
 }
 
 function genAccountsForBank(bank, count = 10){
