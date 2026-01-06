@@ -640,7 +640,8 @@ function initBanks(){
         // regenerate 10 accounts ONLY when bank changed (if not exist)
         state = ensureAccountsForBank(state, state.bank);
         // pick first by default
-        state.selectedAccountByBank[state.bank] = state.accountsByBank[state.bank][0];
+        const list = state.accountsByBank[state.bank] || [];
+        state.selectedAccountByBank[state.bank] = list[Math.floor(Math.random() * list.length)] || "";
 
         state.created = false; // optional: switching bank = back to uncreated view
         state = render(state);
@@ -673,10 +674,10 @@ function initBanks(){
         state = ensureAccountsForBank(state, state.bank);
 
         // If bank is CIMB: auto show 1 of 10 (random choose), but keep the 10 list
-        if(state.bank === "CIMB BANK BERHAD"){
-          const list = state.accountsByBank[state.bank];
-          state.selectedAccountByBank[state.bank] = list[Math.floor(Math.random() * list.length)];
-        }
+const list = state.accountsByBank[state.bank] || [];
+if (list.length) {
+  state.selectedAccountByBank[state.bank] = list[Math.floor(Math.random() * list.length)];
+}
 
         state.created = true;
         state = render(state);
