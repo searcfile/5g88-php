@@ -635,6 +635,37 @@ const BANK_CONFIG = {
       const v = Number(n || 0);
       return "RM " + v.toFixed(2);
     }
+    function formatMoneyInput(raw){
+  raw = String(raw || "").replace(/,/g, "").trim();
+  if(raw === "") return "";
+
+  // keep digits + one dot
+  raw = raw.replace(/[^\d.]/g, "");
+  const parts = raw.split(".");
+  const intPart = parts[0] || "0";
+  const decPart = (parts[1] || "").slice(0, 2);
+
+  const intFormatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+  // kalau user sedang taip decimal
+  if(parts.length > 1) return intFormatted + "." + decPart;
+
+  return intFormatted;
+}
+
+function normalizeMoney(raw){
+  const s = String(raw || "").replace(/,/g, "").trim();
+  const v = Number(s);
+  return isNaN(v) ? 0 : v;
+}
+
+function format2(v){
+  return Number(v || 0).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
    function formatToday(){
   const d = new Date();
   const m = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -815,7 +846,7 @@ function ensureAccountsForBank(state, bank){
       bankSelect.value = state.bank;
       dateInput.value  = state.effectiveDate;
       refPrefix.value  = state.refPrefix4;
-      amountInput.value = (state.amountText != null ? state.amountText : String(Number(state.amount || 0).toFixed(2)));
+      amountInput.value = (state.amountText != null ? state.amountText : format2(state.amount));
       completedInput.value = state.completedText || "";
       
       holderInput.value = state.holderName || "";
@@ -903,114 +934,122 @@ function initBanks(){
   renderMenu(bankSelect.value || banks[0] || "");
 }
 
-    // Live update amount/date/bank (but "mask name" only after Create)
-    function attachLiveHandlers(){
-      bankSelect.addEventListener("change", () => {
-        state.bank = bankSelect.value;
+// Live update amount/date/bank (but "mask name" only after Create)
+function attachLiveHandlers(){
 
-        // regenerate 10 accounts ONLY when bank changed (if not exist)
-        state = ensureAccountsForBank(state, state.bank);
-        // pick first by default
-        const list = state.accountsByBank[state.bank] || [];
-        state.selectedAccountByBank[state.bank] = list[Math.floor(Math.random() * list.length)] || "";
+  bankSelect.addEventListener("change", () => {
+    state.bank = bankSelect.value;
 
-        state.created = false; // optional: switching bank = back to uncreated view
-        state = render(state);
-      });
+    // regenerate accounts when bank changed
+    state = ensureAccountsForBank(state, state.bank);
 
-      dateInput.addEventListener("input", () => {
-        state.effectiveDate = dateInput.value.trim() || DEFAULT_STATE.effectiveDate;
-        state = render(state);
-      });
+    // pick random 1
+    const list = state.accountsByBank[state.bank] || [];
+    state.selectedAccountByBank[state.bank] = list[Math.floor(Math.random() * list.length)] || "";
 
-amountInput.addEventListener("input", () => {
-  // simpan apa user taip (boleh kosong)
-  state.amountText = amountInput.value;
+    state.created = false; // switch bank -> uncreated view
+    state = render(state);
+  });
 
-  // parse untuk paparan RM (kalau kosong, jangan paksa balik)
-  const raw = (amountInput.value || "").replace(/,/g, "").trim();
-  const v = raw === "" ? NaN : Number(raw);
+  dateInput.addEventListener("input", () => {
+    state.effectiveDate = dateInput.value.trim() || DEFAULT_STATE.effectiveDate;
+    state = render(state);
+  });
 
-  state.amount = isNaN(v) ? 0 : Math.max(0, v);
+  // ✅ Amount: auto comma on typing, keep editable
+  amountInput.addEventListener("input", () => {
+    const formatted = formatMoneyInput(amountInput.value);
+    amountInput.value = formatted;
 
-  // update paparan RM sahaja (tanpa render full)
-  topAmount.textContent = rm(state.amount);
-  bottomAmount.textContent = rm(state.amount);
+    state.amountText = formatted;
+    state.amount = Math.max(0, normalizeMoney(formatted));
 
-  saveState(state);
-});
-      amountInput.addEventListener("blur", () => {
-  const raw = (amountInput.value || "").replace(/,/g, "").trim();
-  const v = raw === "" ? 0 : Number(raw);
+    // update receipt amounts without full render
+    topAmount.textContent = rm(state.amount);
+    bottomAmount.textContent = rm(state.amount);
 
-  state.amount = isNaN(v) ? 0 : Math.max(0, v);
-  state.amountText = state.amount.toFixed(2);
+    saveState(state);
+  });
 
-  state = render(state); // sekarang ok sebab user dah selesai menaip
-});
+  // ✅ Amount: on blur, force 2 decimals + comma
+  amountInput.addEventListener("blur", () => {
+    state.amount = Math.max(0, normalizeMoney(amountInput.value));
+    state.amountText = format2(state.amount);
+    amountInput.value = state.amountText;
 
-     holderInput.addEventListener("input", () => {
-  state.holderName = holderInput.value;
-  // update receipt name live (kalau belum created, ia display plain)
-  state = render(state);
-});
-    
-      autoNameBtn.addEventListener("click", () => {
-  state.autoName = !state.autoName;
-  state = render(state);
-});
+    topAmount.textContent = rm(state.amount);
+    bottomAmount.textContent = rm(state.amount);
 
-      completedInput.addEventListener("input", () => {
-  state.completedText = completedInput.value.trim() || DEFAULT_STATE.completedText;
-  state = render(state);
-});
-document.getElementById("nowBtn").addEventListener("click", () => {
-  state.effectiveDate = formatToday();
-  state.completedText = formatCompletedNow();
-  state = render(state);
-});
+    saveState(state);
+  });
 
-      refPrefix.addEventListener("input", () => {
-        // keep only digits max 4
-        const d = onlyDigits(refPrefix.value).slice(0,4);
-        refPrefix.value = d;
-        state.refPrefix4 = d || DEFAULT_STATE.refPrefix4;
-        // don’t change referenceId until Create (to match your request)
-        saveState(state);
-      });
+  holderInput.addEventListener("input", () => {
+    state.holderName = holderInput.value;
+    state = render(state);
+  });
 
-      createBtn.addEventListener("click", () => {
-        // Build referenceId10
-        state.referenceId10 = makeReferenceId(state.refPrefix4);
-        // Ensure accounts exist
-        state = ensureAccountsForBank(state, state.bank);
+  autoNameBtn.addEventListener("click", () => {
+    state.autoName = !state.autoName;
+    state = render(state);
+  });
 
-        // If bank is CIMB: auto show 1 of 10 (random choose), but keep the 10 list
-const list = state.accountsByBank[state.bank] || [];
-if (list.length) {
-  state.selectedAccountByBank[state.bank] = list[Math.floor(Math.random() * list.length)];
-}
-if(state.autoName){
-  state.holderName = randomHolderName();
-}
-        // sync amount before create (in case user belum blur)
-const raw = (state.amountText || "").replace(/,/g, "").trim();
-const v = raw === "" ? 0 : Number(raw);
-state.amount = isNaN(v) ? 0 : Math.max(0, v);
-state.amountText = state.amount.toFixed(2);
-        state.completedText = formatCompletedNow();
-        state.created = true;
-        state = render(state);
-      });
+  completedInput.addEventListener("input", () => {
+    state.completedText = completedInput.value.trim() || DEFAULT_STATE.completedText;
+    state = render(state);
+  });
 
-      resetBtn.addEventListener("click", () => {
-        localStorage.removeItem(LS_KEY);
-        state = structuredClone(DEFAULT_STATE);
-        // ensure default CIMB accounts
-        state = ensureAccountsForBank(state, state.bank);
-        state = render(state);
-      });
+  document.getElementById("nowBtn").addEventListener("click", () => {
+    state.effectiveDate = formatToday();
+    state.completedText = formatCompletedNow();
+    state = render(state);
+  });
+
+  refPrefix.addEventListener("input", () => {
+    const d = onlyDigits(refPrefix.value).slice(0,4);
+    refPrefix.value = d;
+    state.refPrefix4 = d || DEFAULT_STATE.refPrefix4;
+    saveState(state);
+  });
+
+  createBtn.addEventListener("click", () => {
+    // Build referenceId10
+    state.referenceId10 = makeReferenceId(state.refPrefix4);
+
+    // Ensure accounts exist
+    state = ensureAccountsForBank(state, state.bank);
+
+    // pick random account
+    const list = state.accountsByBank[state.bank] || [];
+    if(list.length){
+      state.selectedAccountByBank[state.bank] = list[Math.floor(Math.random() * list.length)];
     }
+
+    // auto name (if ON)
+    if(state.autoName){
+      state.holderName = randomHolderName();
+      holderInput.value = state.holderName;
+    }
+
+    // ✅ sync + force format amount on create
+    state.amount = Math.max(0, normalizeMoney(amountInput.value));
+    state.amountText = format2(state.amount);
+    amountInput.value = state.amountText;
+
+    // completed now every create
+    state.completedText = formatCompletedNow();
+    completedInput.value = state.completedText;
+
+    state.created = true;
+    state = render(state);
+  });
+
+  resetBtn.addEventListener("click", () => {
+    localStorage.removeItem(LS_KEY);
+    state = structuredClone(DEFAULT_STATE);
+    state = ensureAccountsForBank(state, state.bank);
+    state = render(state);
+  });
+}
 
     // Boot
     initBanks();
