@@ -410,17 +410,18 @@
     //  FULL RECEIPT BUILDER v1
     // ============================
     const LS_KEY = "receipt.builder.v1";
-    const ACCOUNT_LENGTH_BY_BANK = {
-  "CIMB BANK BERHAD": 10,
-  "MAYBANK": 12,
-  "PUBLIC BANK": 10,
-  "RHB BANK": 10,
-  "HONG LEONG BANK": 10,
-  "AMBANK": 10,
-  "BANK ISLAM": 10,
-  "HSBC BANK": 12,
-  "OCBC BANK": 12,
-  "UOB BANK": 12
+const BANK_CONFIG = {
+  "CIMB BANK BERHAD": { len: 10, start: "7" },
+  "MAYBANK":         { len: 12, start: "1" },
+  "PUBLIC BANK":     { len: 10, start: "6" },
+  "RHB BANK":        { len: 10, start: "2" },
+  "HONG LEONG BANK": { len: 10, start: "3" },
+  "AMBANK":          { len: 10, start: "5" },
+  "BANK ISLAM":      { len: 10, start: "4" },
+  "HSBC BANK":       { len: 12, start: "1" },
+  "OCBC BANK":       { len: 12, start: "1" },
+  "UOB BANK":        { len: 12, start: "1" }
+  // Tambah bank baru kat sini sahaja
 };
     const DEFAULT_STATE = {
       bank: "CIMB BANK BERHAD",
@@ -472,20 +473,30 @@
       const p = onlyDigits(prefix4).slice(0,4).padEnd(4, "0");
       return p + randomDigits(6);
     }
-function getAccountLen(bank){
-  return ACCOUNT_LENGTH_BY_BANK[bank] || 10; // default 10
+function getBankCfg(bank){
+  return BANK_CONFIG[bank] || { len: 10, start: null };
 }
 
-function makeAccountDigits(len){
-  // first digit not 0
-  const first = String(Math.floor(Math.random() * 9) + 1);
+function makeAccountDigits(bank){
+  const cfg = getBankCfg(bank);
+  const len = cfg.len || 10;
+
+  // digit pertama ikut cfg.start, kalau tak ada start → random 1-9
+  const first = cfg.start ? String(cfg.start)[0] : String(Math.floor(Math.random() * 9) + 1);
+
+  // baki digit
   return first + randomDigits(Math.max(0, len - 1));
 }
 
 function genAccountsForBank(bank, count = 10){
-  const len = getAccountLen(bank);
+  const cfg = getBankCfg(bank);
+  const expectedLen = cfg.len || 10;
+
   const set = new Set();
-  while(set.size < count) set.add(makeAccountDigits(len));
+  while(set.size < count){
+    const acc = makeAccountDigits(bank);
+    if(String(acc).length === expectedLen) set.add(acc);
+  }
   return Array.from(set);
 }
 
@@ -563,10 +574,10 @@ function ensureAccountsForBank(state, bank){
   state.accountsByBank ||= {};
   state.selectedAccountByBank ||= {};
 
-  const expectedLen = getAccountLen(bank);
-  const list = state.accountsByBank[bank] || [];
+  const cfg = getBankCfg(bank);
+  const expectedLen = cfg.len || 10;
 
-  // regen jika: tak cukup 10 acc, atau ada acc length tak sama
+  const list = state.accountsByBank[bank] || [];
   const badLen = list.some(a => String(a).length !== expectedLen);
 
   if(list.length !== 10 || badLen){
@@ -609,7 +620,7 @@ function ensureAccountsForBank(state, bank){
     }
 
 function initBanks(){
-  const banks = Object.keys(ACCOUNT_LENGTH_BY_BANK);
+  const banks = Object.keys(BANK_CONFIG);
   bankSelect.innerHTML = banks
     .map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`)
     .join("");
