@@ -410,19 +410,6 @@
     //  FULL RECEIPT BUILDER v1
     // ============================
     const LS_KEY = "receipt.builder.v1";
-
-    const BANKS = [
-      "CIMB BANK BERHAD",
-      "MAYBANK",
-      "PUBLIC BANK",
-      "RHB BANK",
-      "HONG LEONG BANK",
-      "AMBANK",
-      "BANK ISLAM",
-      "HSBC BANK",
-      "OCBC BANK",
-      "UOB BANK"
-    ];
     const ACCOUNT_LENGTH_BY_BANK = {
   "CIMB BANK BERHAD": 10,
   "MAYBANK": 12,
@@ -621,10 +608,12 @@ function ensureAccountsForBank(state, bank){
       return state;
     }
 
-    // Init dropdown
-    function initBanks(){
-      bankSelect.innerHTML = BANKS.map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join("");
-    }
+function initBanks(){
+  const banks = Object.keys(ACCOUNT_LENGTH_BY_BANK);
+  bankSelect.innerHTML = banks
+    .map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`)
+    .join("");
+}
 
     // Live update amount/date/bank (but "mask name" only after Create)
     function attachLiveHandlers(){
