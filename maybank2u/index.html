@@ -534,7 +534,29 @@
         .replaceAll('"',"&quot;")
         .replaceAll("'","&#039;");
     }
+    function maskAccount1Digit(acc){
+  const s = String(acc || "").trim();
+  if(!s) return "";
+  const first = s[0];
+  const rest  = s.slice(1);
+  return {
+    first,
+    rest
+  };
+}
 
+function setAccountMasked(isMasked, acc){
+  if(!isMasked){
+    accountNumber.textContent = acc;
+    return;
+  }
+  const m = maskAccount1Digit(acc);
+  accountNumber.innerHTML =
+    `<span class="maskWrap">
+      <span class="maskFirst mono">${escapeHtml(m.first)}</span>
+      <span class="maskBlur mono">${escapeHtml(m.rest)}</span>
+    </span>`;
+}
     function ensureAccountsForBank(state, bank){
       state.accountsByBank ||= {};
       state.selectedAccountByBank ||= {};
@@ -566,7 +588,8 @@
 
       // account number (from bank)
       state = ensureAccountsForBank(state, state.bank);
-      accountNumber.textContent = state.selectedAccountByBank[state.bank];
+      const acc = state.selectedAccountByBank[state.bank];
+      setAccountMasked(!!state.created, acc);
 
       // holder name mask only after Create
       setHolderMasked(!!state.created, state.holderName);
