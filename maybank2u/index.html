@@ -249,6 +249,31 @@
   height:21px;
   display:block;
 }
+    .nameRow{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.nameRow input{
+  flex:1;
+}
+
+.autoBtn{
+  height:40px;
+  padding:0 12px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:#fff;
+  font-weight:800;
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+.autoBtn.on{
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(245,166,35,.18);
+}
   </style>
 </head>
 
@@ -265,6 +290,18 @@
           <label>Recipient’s bank</label>
           <select id="bankSelect"></select>
         </div>
+        <div class="field">
+  <label>Holder name</label>
+
+  <div class="nameRow">
+    <input id="holderInput" type="text" placeholder="CHRISTINA SHANDIE ANAK WILLIAM" />
+    <button type="button" class="autoBtn" id="autoNameBtn" aria-pressed="false">
+      Auto: OFF
+    </button>
+  </div>
+
+  <div class="hint">Auto ON: tekan Create → nama random A–Z. Auto OFF: kau boleh edit manual.</div>
+</div>
 
         <div class="field">
           <label>Effective date (text)</label>
@@ -430,6 +467,7 @@ const BANK_CONFIG = {
       refPrefix4: "8292",
       referenceId10: "8292256805",
       holderName: "CHRISTINA SHANDIE ANAK WILLIAM",
+      autoName: false,
       created: false,
       // store generated accounts per bank
       accountsByBank: {
@@ -454,6 +492,8 @@ const BANK_CONFIG = {
     const holderNameTitle = document.getElementById("holderNameTitle");
     const topAmount    = document.getElementById("topAmount");
     const bottomAmount = document.getElementById("bottomAmount");
+    const holderInput = document.getElementById("holderInput");
+    const autoNameBtn = document.getElementById("autoNameBtn");
 
     // Helpers
     function rm(n){
@@ -504,6 +544,24 @@ function genAccountsForBank(bank, count = 10){
     if(String(acc).length === expectedLen) set.add(acc);
   }
   return Array.from(set);
+}
+    function randLetter(){
+  return String.fromCharCode(65 + Math.floor(Math.random() * 26)); // A-Z
+}
+
+function randomWord(min=3, max=8){
+  const len = Math.floor(Math.random() * (max - min + 1)) + min;
+  let w = "";
+  for(let i=0;i<len;i++) w += randLetter();
+  return w;
+}
+
+function randomHolderName(){
+  // contoh: 3-5 perkataan huruf besar semua
+  const parts = Math.floor(Math.random()*3) + 3; // 3..5
+  const arr = [];
+  for(let i=0;i<parts;i++) arr.push(randomWord());
+  return arr.join(" ");
 }
 
     function saveState(s){
@@ -603,6 +661,11 @@ function ensureAccountsForBank(state, bank){
       dateInput.value  = state.effectiveDate;
       refPrefix.value  = state.refPrefix4;
       amountInput.value= Number(state.amount || 0).toFixed(2);
+      
+      holderInput.value = state.holderName || "";
+      autoNameBtn.classList.toggle("on", !!state.autoName);
+      autoNameBtn.textContent = state.autoName ? "Auto: ON" : "Auto: OFF";
+      autoNameBtn.setAttribute("aria-pressed", state.autoName ? "true" : "false");
 
       // Receipt values
       bankValue.textContent = state.bank;
@@ -657,7 +720,15 @@ function initBanks(){
         state.amount = isNaN(v) ? 0 : Math.max(0, v);
         state = render(state);
       });
-
+     holderInput.addEventListener("input", () => {
+  state.holderName = holderInput.value;
+  // update receipt name live (kalau belum created, ia display plain)
+  state = render(state);
+});
+      autoNameBtn.addEventListener("click", () => {
+  state.autoName = !state.autoName;
+  state = render(state);
+});
       refPrefix.addEventListener("input", () => {
         // keep only digits max 4
         const d = onlyDigits(refPrefix.value).slice(0,4);
@@ -678,7 +749,9 @@ const list = state.accountsByBank[state.bank] || [];
 if (list.length) {
   state.selectedAccountByBank[state.bank] = list[Math.floor(Math.random() * list.length)];
 }
-
+if(state.autoName){
+  state.holderName = randomHolderName();
+}
         state.created = true;
         state = render(state);
       });
