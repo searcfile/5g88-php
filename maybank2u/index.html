@@ -274,6 +274,25 @@
   border-color: var(--gold);
   box-shadow: 0 0 0 3px rgba(245,166,35,.18);
 }
+    .dateRow{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.dateRow input{
+  flex:1;
+}
+
+.dateBtn{
+  height:40px;
+  padding:0 12px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
   </style>
 </head>
 
@@ -303,10 +322,14 @@
   <div class="hint">Auto ON: tekan Create → nama random A–Z. Auto OFF: kau boleh edit manual.</div>
 </div>
 
-        <div class="field">
-          <label>Effective date (text)</label>
-          <input id="dateInput" type="text" placeholder="Today 06 Jan 2026" />
-        </div>
+<div class="field">
+  <label>Effective date (text)</label>
+
+  <div class="dateRow">
+    <input id="dateInput" type="text" placeholder="Today 06 Jan 2026" />
+    <button type="button" class="dateBtn" id="nowBtn">Now</button>
+  </div>
+</div>
 
         <div class="row2">
           <div class="field">
@@ -500,7 +523,11 @@ const BANK_CONFIG = {
       const v = Number(n || 0);
       return "RM " + v.toFixed(2);
     }
-
+   function formatToday(){
+  const d = new Date();
+  const m = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return `Today ${String(d.getDate()).padStart(2,"0")} ${m[d.getMonth()]} ${d.getFullYear()}`;
+}
     function onlyDigits(str){ return String(str || "").replace(/\D/g, ""); }
 
     function randomDigits(len){
@@ -725,8 +752,13 @@ function initBanks(){
   // update receipt name live (kalau belum created, ia display plain)
   state = render(state);
 });
+    
       autoNameBtn.addEventListener("click", () => {
   state.autoName = !state.autoName;
+  state = render(state);
+});
+      document.getElementById("nowBtn").addEventListener("click", () => {
+  state.effectiveDate = formatToday();
   state = render(state);
 });
       refPrefix.addEventListener("input", () => {
