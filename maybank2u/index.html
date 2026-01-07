@@ -270,8 +270,9 @@
 }
 
 .autoBtn.on{
-  border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(245,166,35,.18);
+  border-color: #389a6e;
+  background:#389a6e;
+  color:#fff;
 }
     .dateRow{
   display:flex;
@@ -861,7 +862,7 @@ function ensureAccountsForBank(state, bank){
 
       refValue.textContent = state.referenceId10;
       completedTextEl.textContent = `Completed on ${state.completedText || ""}`;
-      const isMaybank = state.bank === "MAYBANK";
+      const isMaybank = state.bank === "Maybank / Maybank Islamic";
 
       // hide untuk Maybank sahaja
       if (rowTxnType) rowTxnType.style.display = isMaybank ? "none" : "";
