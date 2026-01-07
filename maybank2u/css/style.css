@@ -226,7 +226,7 @@
       grid-template-columns: 1fr auto;
       align-items:center;
       font-size:14px;
-      border-top: 6px solid #efefef;
+      border-top: 6px solid #e7e7e7;
     }
     .footer .totalLabel{ color:#171717; }
     .footer .totalVal{ font-weight:400; color:#da4747; }
