@@ -624,17 +624,16 @@ input[type="number"]{
     // ============================
     const LS_KEY = "receipt.builder.v1";
 const BANK_CONFIG = {
-  "CIMB BANK BERHAD": { len: 10, prefix: "76" },
-  "Maybank / Maybank Islamic":         { len: 12, prefix: "1" },
-  "PUBLIC BANK":     { len: 10, prefix: "6" },
-  "RHB BANK":        { len: 10, start: "2" },
-  "HONG LEONG BANK": { len: 10, start: "3" },
-  "AMBANK":          { len: 10, start: "5" },
-  "BANK ISLAM":      { len: 10, start: "4" },
-  "HSBC BANK":       { len: 12, start: "1" },
-  "OCBC BANK":       { len: 12, start: "1" },
-  "UOB BANK":        { len: 12, start: "1" }
-  // Tambah bank baru kat sini sahaja
+  "CIMB BANK BERHAD": { len: 10, prefix: "7" },
+  "Maybank / Maybank Islamic":{ len: 12, prefix: "1" },
+  "TOUCH N GO eWALLET":{ len: 12, prefix: "1" },
+  "HONG LEONG BANK": { len: 11, prefix: "1" },
+  "AmBANK BERHAD": { len: 13, prefix: "88" },
+  "BANK SIMPANAN NASIONAL BERHAD": { len: 16, start: "0" },
+  "RHB BANK":{ len: 14, prefix: "16" },
+  "PUBLIC BANK":{ len: 10, start: "6" },
+  "Merchantrade":{ len: 12, start: "5" },
+  "BANK ISLAM MALAYSIA":{ len: 14, start: "1" },
 };
     const DEFAULT_STATE = {
       bank: "CIMB BANK BERHAD",
