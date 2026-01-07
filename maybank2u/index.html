@@ -393,6 +393,35 @@ input[type="number"]{
   -moz-appearance: textfield;
   appearance: textfield;
 }
+    /* Chrome / Edge / Brave */
+.cselect-menu::-webkit-scrollbar{
+  width: 10px;
+}
+
+.cselect-menu::-webkit-scrollbar-track{
+  background: #0b0b0b;
+  border-radius: 12px;
+}
+
+.cselect-menu::-webkit-scrollbar-thumb{
+  background: linear-gradient(180deg, #ffd86a, #ffb300);
+  border-radius: 12px;
+  border: 2px solid #0b0b0b;   /* bagi nampak macam inset */
+}
+
+.cselect-menu::-webkit-scrollbar-thumb:hover{
+  background: linear-gradient(180deg, #ffeaa0, #ffcc33);
+}
+
+.cselect-menu::-webkit-scrollbar-thumb:active{
+  background: linear-gradient(180deg, #ffb300, #d89b00);
+}
+
+/* Firefox */
+.cselect-menu{
+  scrollbar-width: thin;
+  scrollbar-color: #ffb300 #0b0b0b;
+}
   </style>
 </head>
 
