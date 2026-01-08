@@ -296,6 +296,64 @@
   display: flex;
   flex-direction: column;
 }
+    .bank-select{ position: relative; width:100%; }
+
+.bank-btn{
+  width:100%;
+  height:42px;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  background:#fff;
+  color:#111;
+  font-size:14px;
+  font-weight:700;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 12px;
+  cursor:pointer;
+}
+
+.bank-btn:focus{
+  outline: 2px solid rgba(236,29,35,.25);
+  border-color:#ec1d23;
+}
+
+.bank-caret{ opacity:.7; }
+
+.bank-menu{
+  position:absolute;
+  top: calc(42px + 8px);
+  left:0;
+  width:100%;
+  background:#0b0f18;              /* ✅ tukar warna dropdown sini */
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;
+  box-shadow:0 18px 40px rgba(0,0,0,.45);
+  overflow:hidden;
+  display:none;
+  z-index:999;
+}
+
+.bank-menu.open{ display:block; }
+
+.bank-item{
+  padding:10px 12px;
+  color:#e5e7eb;
+  font-size:13px;
+  cursor:pointer;
+  user-select:none;
+}
+
+.bank-item:hover{
+  background:#ec1d23;             /* ✅ tukar hover warna sini */
+  color:#fff;
+}
+
+.bank-item.active{
+  background: rgba(236,29,35,.22);
+  color:#fff;
+}
   </style>
 </head>
 <body>
@@ -305,6 +363,19 @@
     <aside class="builder-panel">
       <div class="top-inputs">
         <div class="builder-row">
+          <!-- ===== Custom Bank Dropdown ===== -->
+<div class="builder-field">
+  <label>Bank</label>
+
+  <div class="bank-select" id="bankSelect">
+    <button type="button" class="bank-btn" id="bankBtn" aria-expanded="false">
+      <span id="bankBtnText">CIMB BANK BERHAD</span>
+      <span class="bank-caret">▾</span>
+    </button>
+
+    <div class="bank-menu" id="bankMenu" role="listbox" aria-hidden="true"></div>
+  </div>
+</div>
 <div class="builder-field">
   <label>Date & Time</label>
 
@@ -352,13 +423,13 @@
           <div class="left">
             <div class="value">To</div>
             <div class="label">Account Number</div>
-            <div class="value">7002795979</div>
+            <div class="value" id="account-number">7002795979</div>
 
             <div class="label">Account Name</div>
             <div class="value">SA PASSBOOK</div>
 
             <div class="label">Recipient Name</div>
-            <div class="value">PAPA MINTA SAYANG</div>
+            <div class="value" id="recipient-name">PAPA MINTA SAYANG</div>
           </div>
 
           <div class="right" style="text-align: right;">
@@ -384,6 +455,107 @@
 
 <script>
 console.log("Page Editor\nVersion Date: 01/04/2025\nCreate by   : M'cng\nPowered by  : 5G88\nOPERATOR\n(01/04/2025)\n• System 'Updated' ");
+const BANK_CONFIG = {
+  "CIMB BANK BERHAD": { len: 10, prefix: "7" },
+  "Maybank / Maybank Islamic": { len: 12, prefix: "1" },
+  "TOUCH N GO eWALLET": { len: 12, prefix: "1" },
+  "HONG LEONG BANK": { len: 11, prefix: "1" },
+  "AmBANK BERHAD": { len: 13, prefix: "88" },
+  "BANK SIMPANAN NASIONAL BERHAD": { len: 16, start: "0" },
+  "RHB BANK": { len: 14, prefix: "16" },
+  "PUBLIC BANK": { len: 10, start: "6" },
+  "Merchantrade": { len: 12, start: "5" },
+  "BANK ISLAM MALAYSIA": { len: 14, start: "1" }
+};
+
+let selectedBank = "CIMB BANK BERHAD";
+
+// ===== helpers =====
+function randDigits(n){
+  let s = "";
+  for(let i=0;i<n;i++) s += Math.floor(Math.random()*10);
+  return s;
+}
+
+function buildAccountNumber(bankName){
+  const cfg = BANK_CONFIG[bankName];
+  if(!cfg) return "7002795979";
+
+  const head = (cfg.prefix ?? cfg.start ?? "");
+  const need = Math.max(0, (cfg.len || 10) - head.length);
+  return head + randDigits(need);
+}
+
+// blur: 2 depan + 1 belakang
+function maskAccount(acc){
+  const s = String(acc || "");
+  if (s.length <= 3) return s;
+  const first2 = s.slice(0,2);
+  const last1  = s.slice(-1);
+  return first2 + "*".repeat(s.length - 3) + last1;
+}
+
+// blur name: 2 huruf depan sahaja
+function maskName(name){
+  const s = String(name || "").trim();
+  if (s.length <= 2) return s;
+  return s.slice(0,2) + "*".repeat(s.length - 2);
+}
+// ===== init custom dropdown =====
+const bankSelectEl = document.getElementById("bankSelect");
+const bankBtn      = document.getElementById("bankBtn");
+const bankBtnText  = document.getElementById("bankBtnText");
+const bankMenu     = document.getElementById("bankMenu");
+
+// isi menu
+function renderBankMenu(){
+  bankMenu.innerHTML = "";
+  Object.keys(BANK_CONFIG).forEach(name => {
+    const div = document.createElement("div");
+    div.className = "bank-item" + (name === selectedBank ? " active" : "");
+    div.textContent = name;
+    div.addEventListener("click", () => selectBank(name));
+    bankMenu.appendChild(div);
+  });
+}
+
+function openBankMenu(){
+  bankMenu.classList.add("open");
+  bankBtn.setAttribute("aria-expanded","true");
+  bankMenu.setAttribute("aria-hidden","false");
+}
+
+function closeBankMenu(){
+  bankMenu.classList.remove("open");
+  bankBtn.setAttribute("aria-expanded","false");
+  bankMenu.setAttribute("aria-hidden","true");
+}
+
+function toggleBankMenu(){
+  bankMenu.classList.contains("open") ? closeBankMenu() : openBankMenu();
+}
+
+function selectBank(name){
+  selectedBank = name;
+  bankBtnText.textContent = name;
+  closeBankMenu();
+  renderBankMenu();
+
+  // ✅ auto ganti account number ikut bank bila pilih
+  const newAcc = buildAccountNumber(name);
+  const accEl = document.getElementById("account-number");
+  if (accEl) accEl.textContent = newAcc;
+
+  // optional: simpan pilihan bank
+  localStorage.setItem("selectedBank", name);
+}
+
+// events
+bankBtn.addEventListener("click", toggleBankMenu);
+document.addEventListener("click", (e) => {
+  if (!bankSelectEl.contains(e.target)) closeBankMenu();
+});
+  
 function randomDigits(len) {
   let s = "";
   for (let i = 0; i < len; i++) s += Math.floor(Math.random() * 10);
@@ -458,6 +630,15 @@ if (!live) {
     ref: ref9,
     ref4
   };
+    // ✅ blur account + recipient bila Create
+  const accEl = document.getElementById("account-number");
+  const recEl = document.getElementById("recipient-name");
+
+  if (accEl) accEl.textContent = maskAccount(accEl.textContent);
+  if (recEl) recEl.textContent = maskName(recEl.textContent);
+
+  // ✅ simpan juga bank supaya reload kekal
+  displayData.bank = selectedBank;
 
   localStorage.setItem("displayData", JSON.stringify(displayData));
 }
