@@ -563,8 +563,9 @@ function selectBank(name){
   const inRec = document.getElementById("input-recipient");
   lastRealName = (inRec?.value || "").trim() || "PA";
 
-  showAccountFull(lastRealAcc);
-  showRecipientFull(lastRealName);
+  // ✅ pilih bank: tunjuk full dulu
+  setAccountPreviewMode("full", lastRealAcc);
+  setNamePreviewMode("full", lastRealName);
 
   localStorage.setItem("selectedBank", name);
 }
@@ -601,6 +602,36 @@ function applyNameBlur(name){
 
   f.textContent = s.slice(0,2);
   m.textContent = s.slice(2);
+}
+function setAccountPreviewMode(mode, acc){
+  const wrap = document.getElementById("account-number");
+  if (!wrap) return;
+
+  if (mode === "full") {
+    wrap.innerHTML = String(acc || "");
+    return;
+  }
+
+  wrap.innerHTML =
+    `<span class="keep" id="acc-first"></span>` +
+    `<span class="blur" id="acc-mid"></span>` +
+    `<span class="keep" id="acc-last"></span>`;
+  applyAccountBlur(acc);
+}
+
+function setNamePreviewMode(mode, name){
+  const wrap = document.getElementById("recipient-name");
+  if (!wrap) return;
+
+  if (mode === "full") {
+    wrap.innerHTML = String(name || "");
+    return;
+  }
+
+  wrap.innerHTML =
+    `<span class="keep" id="name-first"></span>` +
+    `<span class="blur" id="name-mid"></span>`;
+  applyNameBlur(name);
 }
 function showAccountFull(acc){
   const el = document.getElementById("account-number");
@@ -731,50 +762,39 @@ function updateDisplay(live = false) {
     if (refEl) refEl.textContent = ref9;
 
     // --- ACCOUNT: fresh random ikut bank ---
-lastRealAcc = buildAccountNumber(selectedBank);
+    lastRealAcc = buildAccountNumber(selectedBank);
 
-const inRec = document.getElementById("input-recipient");
-lastRealName = (inRec?.value || "").trim();
+    const inRec = document.getElementById("input-recipient");
+    lastRealName = (inRec?.value || "").trim();
 
-if (autoNameOn) {
-  lastRealName = randomAZName();
-  if (inRec) inRec.value = lastRealName;
-}
-if (!lastRealName) lastRealName = "PA";
-localStorage.setItem("lastRecipientName", realName);
-// ✅ tukar HTML jadi span blur dulu, baru apply
-const accWrap = document.getElementById("account-number");
-if (accWrap){
-  accWrap.innerHTML =
-    `<span class="keep" id="acc-first"></span>` +
-    `<span class="blur" id="acc-mid"></span>` +
-    `<span class="keep" id="acc-last"></span>`;
-  applyAccountBlur(lastRealAcc);
-}
+    if (autoNameOn) {
+      lastRealName = randomAZName();
+      if (inRec) inRec.value = lastRealName;
+    }
+    if (!lastRealName) lastRealName = "PA";
 
-const nameWrap = document.getElementById("recipient-name");
-if (nameWrap){
-  nameWrap.innerHTML =
-    `<span class="keep" id="name-first"></span>` +
-    `<span class="blur" id="name-mid"></span>`;
-  applyNameBlur(lastRealName);
-}
+    // ✅ save supaya refresh tak berubah
+    localStorage.setItem("lastRecipientName", lastRealName);
+
+    // ✅ Create: baru blur
+    setAccountPreviewMode("blur", lastRealAcc);
+    setNamePreviewMode("blur", lastRealName);
+
     // ✅ simpan untuk reload
- const displayData = {
-  date,
-  amount: amountFixed,
-  mainAmount: main,
-  sen,
-  ref: ref9,
-  ref4,
-  bank: selectedBank,
-  realAcc: lastRealAcc,
-  realName: lastRealName
-};
-
+    const displayData = {
+      date,
+      amount: amountFixed,
+      mainAmount: main,
+      sen,
+      ref: ref9,
+      ref4,
+      bank: selectedBank,
+      realAcc: lastRealAcc,
+      realName: lastRealName
+    };
     localStorage.setItem("displayData", JSON.stringify(displayData));
   }
-}
+
 
 
 // ===== EVENTS =====
@@ -829,34 +849,43 @@ if (dateInput) {
 
 
 // ===== LOAD FROM STORAGE =====
+// ===== LOAD FROM STORAGE =====
 window.addEventListener("DOMContentLoaded", () => {
   // ✅ render dropdown list bank dulu
   const savedBank = localStorage.getItem("selectedBank");
   if (savedBank && BANK_CONFIG[savedBank]) selectedBank = savedBank;
-  if (typeof bankBtnText !== "undefined" && bankBtnText) bankBtnText.textContent = selectedBank;
+
+  if (typeof bankBtnText !== "undefined" && bankBtnText) {
+    bankBtnText.textContent = selectedBank;
+  }
   if (typeof renderBankMenu === "function") renderBankMenu();
 
-  // load receipt data
-  const stored = localStorage.getItem("displayData");
-if (!stored) {
-  // ✅ set blur account ikut bank (tanpa rosakkan span)
-  const acc = buildAccountNumber(selectedBank);
-  applyAccountBlur(acc);
-
-  // ✅ set auto name ikut saved setting
+  // ✅ restore auto name ON/OFF + value (kekal selepas refresh)
   const savedAuto = localStorage.getItem("autoNameOn");
   autoNameOn = savedAuto !== "0";
   setAutoName(autoNameOn);
 
-  // ✅ set blur preview recipient ikut input sekarang
+  // ✅ ambil lastRecipientName supaya refresh tak berubah
   const inRec = document.getElementById("input-recipient");
-  const nameNow = (inRec?.value || "PA").trim();
-  applyNameBlur(nameNow);
+  const savedName = localStorage.getItem("lastRecipientName");
+  if (inRec && savedName && savedName.trim()) {
+    inRec.value = savedName;
+  }
 
-  return;
-}
+  // ====== kalau belum pernah Create ======
+  const stored = localStorage.getItem("displayData");
+  if (!stored) {
+    // ✅ pilih bank -> tunjuk FULL (tak blur)
+    lastRealAcc = buildAccountNumber(selectedBank);
+    lastRealName = (inRec?.value || "").trim() || "PA";
 
+    setAccountPreviewMode("full", lastRealAcc);
+    setNamePreviewMode("full", lastRealName);
 
+    return;
+  }
+
+  // ====== kalau dah pernah Create (ada displayData) ======
   const data = JSON.parse(stored);
 
   // restore inputs
@@ -868,7 +897,7 @@ if (!stored) {
   if (inAmt)  inAmt.value  = formatNumberWithCommas(data.amount || "");
   if (inRef4) inRef4.value = (data.ref4 || "").toString();
 
-  // restore preview
+  // restore preview text
   const td = document.getElementById("transfer-date");
   if (td && data.date) td.textContent = data.date;
 
@@ -881,62 +910,34 @@ if (!stored) {
   const refEl = document.getElementById("ref-number");
   if (refEl && data.ref) refEl.textContent = data.ref;
 
-  // restore bank selection (kalau ada)
+  // restore bank selection
   if (data.bank && BANK_CONFIG[data.bank]) {
     selectedBank = data.bank;
     localStorage.setItem("selectedBank", selectedBank);
-    if (typeof bankBtnText !== "undefined" && bankBtnText) bankBtnText.textContent = selectedBank;
+
+    if (typeof bankBtnText !== "undefined" && bankBtnText) {
+      bankBtnText.textContent = selectedBank;
+    }
     if (typeof renderBankMenu === "function") renderBankMenu();
   }
-const savedAuto = localStorage.getItem("autoNameOn");
-autoNameOn = savedAuto !== "0"; // default ON
-setAutoName(autoNameOn);
-  // restore masked acc/name (guna saved real, then mask balik)
-  const accEl = document.getElementById("account-number");
-  const recEl = document.getElementById("recipient-name");
 
-const stored2 = localStorage.getItem("displayData");
-if (stored2) {
-  const data2 = JSON.parse(stored2);
-
-  if (data2.realAcc) {
-    const accWrap = document.getElementById("account-number");
-    if (accWrap){
-      accWrap.innerHTML =
-        `<span class="keep" id="acc-first"></span>` +
-        `<span class="blur" id="acc-mid"></span>` +
-        `<span class="keep" id="acc-last"></span>`;
-      applyAccountBlur(data2.realAcc);
-    }
+  // ✅ restore acc/name dalam mode BLUR (sebab dah Create)
+  if (data.realAcc) {
+    lastRealAcc = data.realAcc;
+    setAccountPreviewMode("blur", lastRealAcc);
+  } else {
+    lastRealAcc = buildAccountNumber(selectedBank);
+    setAccountPreviewMode("blur", lastRealAcc);
   }
 
-  if (data2.realName) {
-    const nameWrap = document.getElementById("recipient-name");
-    if (nameWrap){
-      nameWrap.innerHTML =
-        `<span class="keep" id="name-first"></span>` +
-        `<span class="blur" id="name-mid"></span>`;
-      applyNameBlur(data2.realName);
-    }
+  if (data.realName) {
+    lastRealName = data.realName;
+    setNamePreviewMode("blur", lastRealName);
+  } else {
+    lastRealName = (inRec?.value || "").trim() || "PA";
+    setNamePreviewMode("blur", lastRealName);
   }
-}
-// ✅ tukar preview kepada BLUR mode masa Create
-const accWrap = document.getElementById("account-number");
-if (accWrap){
-  accWrap.innerHTML =
-    `<span class="keep" id="acc-first"></span>` +
-    `<span class="blur" id="acc-mid"></span>` +
-    `<span class="keep" id="acc-last"></span>`;
-}
-
-const nameWrap = document.getElementById("recipient-name");
-if (nameWrap){
-  nameWrap.innerHTML =
-    `<span class="keep" id="name-first"></span>` +
-    `<span class="blur" id="name-mid"></span>`;
-}
 });
-
 // ===== RESET =====
 function resetDisplay() {
   localStorage.removeItem("displayData");
