@@ -357,6 +357,15 @@
     #account-number, #recipient-name{
   letter-spacing: 0.5px;
 }
+    .blur{
+  display: inline-block;
+  filter: blur(5px);
+  opacity: .9;
+}
+
+.keep{
+  display: inline-block;
+}
   </style>
 </head>
 <body>
@@ -426,13 +435,17 @@
           <div class="left">
             <div class="value">To</div>
             <div class="label">Account Number</div>
-            <div class="value" id="account-number">7002795979</div>
+            <div class="value" id="account-number">
+  <span class="keep" id="acc-first">70</span><span class="blur" id="acc-mid">0279597</span><span class="keep" id="acc-last">9</span>
+</div>
 
             <div class="label">Account Name</div>
             <div class="value">SA PASSBOOK</div>
 
             <div class="label">Recipient Name</div>
-            <div class="value" id="recipient-name">PAPA MINTA SAYANG</div>
+            <div class="value" id="recipient-name">
+  <span class="keep" id="name-first">PA</span><span class="blur" id="name-mid">PA MINTA SAYANG</span>
+</div>
           </div>
 
           <div class="right" style="text-align: right;">
@@ -489,11 +502,6 @@ function buildAccountNumber(bankName){
   return head + randDigits(need);
 }
 
-function maskName(name){
-  const s = String(name || "").trim();
-  if (s.length <= 2) return s;
-  return s.slice(0,2) + "•".repeat(s.length - 2);
-}
 // ===== init custom dropdown =====
 const bankSelectEl = document.getElementById("bankSelect");
 const bankBtn      = document.getElementById("bankBtn");
@@ -548,11 +556,30 @@ bankBtn.addEventListener("click", toggleBankMenu);
 document.addEventListener("click", (e) => {
   if (!bankSelectEl.contains(e.target)) closeBankMenu();
 });
-  
+
 function randomDigits(len) {
   let s = "";
   for (let i = 0; i < len; i++) s += Math.floor(Math.random() * 10);
   return s;
+}
+function applyAccountBlur(acc){
+  const s = String(acc || "").replace(/\s+/g,"");
+  const first = s.slice(0,2);
+  const last  = s.slice(-1);
+  const mid   = s.slice(2,-1);
+
+  document.getElementById("acc-first").textContent = first || "";
+  document.getElementById("acc-mid").textContent   = mid   || "";
+  document.getElementById("acc-last").textContent  = last  || "";
+}
+
+function applyNameBlur(name){
+  const s = String(name || "").trim();
+  const first = s.slice(0,2);
+  const mid   = s.slice(2);
+
+  document.getElementById("name-first").textContent = first || "";
+  document.getElementById("name-mid").textContent   = mid   || "";
 }
 // ===== FORMAT DATE TIME =====
 function getFormattedDateTime() {
@@ -580,11 +607,6 @@ function formatNumberWithCommas(numStr) {
   const [whole, decimal] = cleaned.split(".");
   const formattedWhole = (parseInt(whole || "0", 10)).toLocaleString("en-MY");
   return formattedWhole + (decimal !== undefined ? "." + decimal : "");
-}
-function maskAccount(acc){
-  const s = String(acc || "").replace(/\s+/g, "");
-  if (s.length <= 3) return s;
-  return s.slice(0,2) + "•".repeat(s.length - 3) + s.slice(-1);
 }
 // ===== CORE: UPDATE RECEIPT (LIVE or SAVE) =====
 function updateDisplay(live = false) {
@@ -753,17 +775,17 @@ window.addEventListener("DOMContentLoaded", () => {
   const accEl = document.getElementById("account-number");
   const recEl = document.getElementById("recipient-name");
 
-  if (accEl) {
-    const realAcc = data.realAcc || buildAccountNumber(selectedBank);
-    accEl.dataset.real = realAcc;
-    accEl.textContent = maskAccount(realAcc);
-  }
+if (accEl) {
+  const realAcc = buildAccountNumber(selectedBank);
+  accEl.dataset.real = realAcc;
+  applyAccountBlur(realAcc);
+}
 
-  if (recEl) {
-    const realName = data.realName || "PAPA MINTA SAYANG";
-    recEl.dataset.real = realName;
-    recEl.textContent = maskName(realName);
-  }
+if (recEl) {
+  const newRealName = randomRecipient(); // atau guna nama asal kalau tak nak random
+  recEl.dataset.real = newRealName;
+  applyNameBlur(newRealName);
+}
 });
 
 // ===== RESET =====
