@@ -140,20 +140,9 @@
      border-top: 1px solid #ccc;
     }
     .top-inputs {
-     width: 100%;
-     justify-content: flex-end;
-     gap: 8px;
-     flex-wrap: wrap;
-     font-size: 10px;
-    display: block;
+     width: 100%;;
     }
 
-    .input-label {
-     font-size: 15px;
-     color: #ec1d23;
-     margin-top: 4px;
-     text-align: center;
-    }
     #transfer-date, #ref-number {
      font-family: Open Sans;
      font-size: 14px;
@@ -165,25 +154,23 @@
      caret-color: #ec1d23;
      border-color: #ec1d23;
     }
-    .btn-update, btn-date {
-     width:100%;
-     height: 42px;
-     padding: 0 14px;
-     font-size: 13px;
-     border: 1px solid #e5e7eb;
-     border-radius: 10px;
-     background-color: #fff;
-     color: #ffffff;
-     cursor: pointer;
-     transition: all 0.2s;
-     font-weight: 700;
-     
-    }
-    .btn-update, btn-date:hover {
-     animation: rotate360 0.6s linear;
-     background-color: #ec1d23;
-     color: #fff;
-    }
+.btn-update{
+  width:100%;
+  height: 42px;
+  padding: 0 14px;
+  font-size: 13px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background-color: #ec1d23;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 700;
+}
+
+.btn-update:hover{
+  filter: brightness(.95);
+}
     @media (max-width: 600px) {
     .left, .right {
     width: 100%;
@@ -258,7 +245,41 @@
   gap: 10px;
   width: 100%;
 }
+.builder-field label{
+  font-size: 13px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 6px;
+  display: block;
+}
 
+.input-row{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.input-row input{
+  flex: 1;
+  height: 42px;          /* sama macam button */
+}
+
+.btn-now{
+  flex: 0 0 90px;        /* lebar Now */
+  height: 42px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #ec1d23;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.btn-now:hover{
+  filter: brightness(.95);
+}
     *, *::before, *::after { box-sizing: border-box; }
   </style>
 </head>
@@ -269,12 +290,14 @@
     <aside class="builder-panel">
       <div class="top-inputs">
         <div class="builder-row">
-          <button class="btn-update" id="btn-date">Now</button>
+<div class="builder-field">
+  <label>Date & Time</label>
 
-          <div class="builder-field">
-            <label>Date & Time</label>
-            <input type="text" id="input-date" placeholder="Date & Time" />
-          </div>
+  <div class="input-row">
+    <input type="text" id="input-date" placeholder="Date & Time" />
+    <button class="btn-now" id="btn-date" type="button">Now</button>
+  </div>
+</div>
 
           <div class="builder-field">
             <label>Amount (RM)</label>
