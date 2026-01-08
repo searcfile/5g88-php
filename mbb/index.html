@@ -166,15 +166,16 @@
      border-color: #ec1d23;
     }
     .btn-update, btn-date {
-     padding: 4px 8px;
+     height: 42px;
+     padding: 0 14px;
      font-size: 13px;
-     border: 2px solid #ec1d23;
-     border-radius: 4px;
+     border: 1px solid #e5e7eb;
+     border-radius: 10px;
      background-color: #fff;
-     color: #ec1d23;
+     color: #ffffff;
      cursor: pointer;
-     transition: transform 0.6s ease, background-color 0.3s, color 0.3s;
-     transform-origin: center;
+     transition: all 0.2s;
+     font-weight: 700;
     }
     .btn-update, btn-date:hover {
      animation: rotate360 0.6s linear;
@@ -290,8 +291,8 @@
           </div>
 
           <div class="builder-field">
+            <label>Amount (RM)</label>
             <input type="text" id="input-amount" placeholder="Fill Amount" />
-            <div class="input-label">Amount</div>
           </div>
 <div class="btn-row">
   <button class="btn-update" onclick="resetDisplay()">Reset</button>
