@@ -489,19 +489,10 @@ function buildAccountNumber(bankName){
   return head + randDigits(need);
 }
 
-// blur: 2 depan + 1 belakang
 function maskName(name){
   const s = String(name || "").trim();
   if (s.length <= 2) return s;
-
   return s.slice(0,2) + "•".repeat(s.length - 2);
-}
-
-// blur name: 2 huruf depan sahaja
-function maskName(name){
-  const s = String(name || "").trim();
-  if (s.length <= 2) return s;
-  return s.slice(0,2) + "*".repeat(s.length - 2);
 }
 // ===== init custom dropdown =====
 const bankSelectEl = document.getElementById("bankSelect");
@@ -590,7 +581,11 @@ function formatNumberWithCommas(numStr) {
   const formattedWhole = (parseInt(whole || "0", 10)).toLocaleString("en-MY");
   return formattedWhole + (decimal !== undefined ? "." + decimal : "");
 }
-
+function maskAccount(acc){
+  const s = String(acc || "").replace(/\s+/g, "");
+  if (s.length <= 3) return s;
+  return s.slice(0,2) + "•".repeat(s.length - 3) + s.slice(-1);
+}
 // ===== CORE: UPDATE RECEIPT (LIVE or SAVE) =====
 function updateDisplay(live = false) {
   const dateEl = document.getElementById("input-date");
@@ -609,95 +604,166 @@ function updateDisplay(live = false) {
   const main = (parseInt(wholePart || "0", 10)).toLocaleString("en-MY");
   const sen  = senPart || "00";
 
-  // update preview
-  if (date) document.getElementById("transfer-date").textContent = date;
-  document.getElementById("main-amount").textContent = main + ".";
-  document.querySelector(".sen").textContent = sen;
+  // update preview (live)
+  if (date) {
+    const td = document.getElementById("transfer-date");
+    if (td) td.textContent = date;
+  }
+  const mainEl = document.getElementById("main-amount");
+  if (mainEl) mainEl.textContent = main + ".";
+  const senEl = document.querySelector(".sen");
+  if (senEl) senEl.textContent = sen;
 
   // SAVE hanya bila tekan Create (live=false)
-if (!live) {
-  const refInput = document.getElementById("input-ref4");
-  let ref4 = (refInput?.value || "").replace(/\D/g, "").slice(0, 4);
-  ref4 = ref4.padStart(4, "0");
+  if (!live) {
+    const refInput = document.getElementById("input-ref4");
+    let ref4 = (refInput?.value || "").replace(/\D/g, "").slice(0, 4);
+    ref4 = ref4.padStart(4, "0");
 
-  const ref9 = ref4 + randomDigits(5); // jadi 9 digit total
+    const ref9 = ref4 + randomDigits(5); // jadi 9 digit total
+    const refEl = document.getElementById("ref-number");
+    if (refEl) refEl.textContent = ref9;
 
-  document.getElementById("ref-number").textContent = ref9;
+    // ✅ setiap kali Create: generate fresh REAL data dulu
+    const accEl = document.getElementById("account-number");
+    const recEl = document.getElementById("recipient-name");
 
-  const displayData = {
-    date,
-    amount: amountFixed,
-    mainAmount: main,
-    sen,
-    ref: ref9,
-    ref4
-  };
-    // ✅ blur account + recipient bila Create
-  const accEl = document.getElementById("account-number");
-  const recEl = document.getElementById("recipient-name");
+    if (accEl) {
+      const realAcc = buildAccountNumber(selectedBank); // random ikut bank
+      accEl.dataset.real = realAcc;
+      accEl.textContent = maskAccount(realAcc);         // blur/dot
+    }
 
-  if (accEl) accEl.textContent = maskAccount(accEl.textContent);
-  if (recEl) recEl.textContent = maskName(recEl.textContent);
+    if (recEl) {
+      const newRealName = randomRecipient();            // random nama
+      recEl.dataset.real = newRealName;
+      recEl.textContent = maskName(newRealName);        // blur/dot
+    }
 
-  // ✅ simpan juga bank supaya reload kekal
-  displayData.bank = selectedBank;
+    // simpan semua data
+    const displayData = {
+      date,
+      amount: amountFixed,
+      mainAmount: main,
+      sen,
+      ref: ref9,
+      ref4,
+      bank: selectedBank,
+      realAcc: accEl?.dataset.real || "",
+      realName: recEl?.dataset.real || ""
+    };
 
-  localStorage.setItem("displayData", JSON.stringify(displayData));
+    localStorage.setItem("displayData", JSON.stringify(displayData));
+  }
 }
-}
+
 
 // ===== EVENTS =====
-document.getElementById("btn-date").addEventListener("click", () => {
-  const now = getFormattedDateTime();
-  document.getElementById("input-date").value = now;
-  updateDisplay(true); // ✅ live update resit
-});
 
-document.getElementById("input-amount").addEventListener("input", function () {
-  document.getElementById("input-ref4").addEventListener("input", function () {
-  this.value = this.value.replace(/\D/g, "").slice(0, 4);
-});
-  const rawValue = this.value.replace(/,/g, "");
-  if (!isNaN(rawValue) && rawValue !== "") {
-    this.value = formatNumberWithCommas(rawValue);
-  }
-  updateDisplay(true); // ✅ live update resit
-});
+// Now button -> set date + live update
+const btnDate = document.getElementById("btn-date");
+if (btnDate) {
+  btnDate.addEventListener("click", () => {
+    const now = getFormattedDateTime();
+    const inputDate = document.getElementById("input-date");
+    if (inputDate) inputDate.value = now;
+    updateDisplay(true);
+  });
+}
 
-// optional: kalau kau edit date manual pun live
-document.getElementById("input-date").addEventListener("input", () => {
-  updateDisplay(true);
-});
+// ✅ Ref 4 digit listener (LETak SEKALI SAHAJA, bukan dalam amount)
+const ref4El = document.getElementById("input-ref4");
+if (ref4El) {
+  ref4El.addEventListener("input", function () {
+    this.value = this.value.replace(/\D/g, "").slice(0, 4);
+  });
+}
+
+// Amount live format + live update
+const amtInput = document.getElementById("input-amount");
+if (amtInput) {
+  amtInput.addEventListener("input", function () {
+    const rawValue = this.value.replace(/,/g, "");
+    if (!isNaN(rawValue) && rawValue !== "") {
+      this.value = formatNumberWithCommas(rawValue);
+    }
+    updateDisplay(true);
+  });
+}
+
+// Date manual edit -> live update
+const dateInput = document.getElementById("input-date");
+if (dateInput) {
+  dateInput.addEventListener("input", () => updateDisplay(true));
+}
+
 
 // ===== LOAD FROM STORAGE =====
 window.addEventListener("DOMContentLoaded", () => {
+  // ✅ render dropdown list bank dulu
+  const savedBank = localStorage.getItem("selectedBank");
+  if (savedBank && BANK_CONFIG[savedBank]) selectedBank = savedBank;
+  if (typeof bankBtnText !== "undefined" && bankBtnText) bankBtnText.textContent = selectedBank;
+  if (typeof renderBankMenu === "function") renderBankMenu();
+
+  // load receipt data
   const stored = localStorage.getItem("displayData");
-  if (!stored) return;
+  if (!stored) {
+    // kalau belum ada, set account ikut bank sekali
+    const accEl = document.getElementById("account-number");
+    if (accEl && accEl.textContent.trim() === "7002795979") {
+      accEl.textContent = buildAccountNumber(selectedBank);
+    }
+    return;
+  }
 
   const data = JSON.parse(stored);
 
-  document.getElementById("input-date").value = data.date || "";
-  document.getElementById("input-amount").value = formatNumberWithCommas(data.amount || "");
+  // restore inputs
+  const inDate = document.getElementById("input-date");
+  const inAmt  = document.getElementById("input-amount");
+  const inRef4 = document.getElementById("input-ref4");
 
-  if (data.date) document.getElementById("transfer-date").textContent = data.date;
-  if (data.mainAmount) document.getElementById("main-amount").textContent = data.mainAmount + ".";
-  if (data.sen) document.querySelector(".sen").textContent = data.sen;
+  if (inDate) inDate.value = data.date || "";
+  if (inAmt)  inAmt.value  = formatNumberWithCommas(data.amount || "");
+  if (inRef4) inRef4.value = (data.ref4 || "").toString();
 
-  if (data.ref) document.getElementById("ref-number").textContent = data.ref;
-  if (data.ref4) {
-  document.getElementById("input-ref4").value = data.ref4;
-}
-const savedBank = localStorage.getItem("selectedBank");
-if (savedBank && BANK_CONFIG[savedBank]) selectedBank = savedBank;
+  // restore preview
+  const td = document.getElementById("transfer-date");
+  if (td && data.date) td.textContent = data.date;
 
-bankBtnText.textContent = selectedBank;
-renderBankMenu();
+  const mainEl = document.getElementById("main-amount");
+  if (mainEl && data.mainAmount) mainEl.textContent = data.mainAmount + ".";
 
-// set account ikut bank masa load (kalau belum ada)
-const accEl = document.getElementById("account-number");
-if (accEl && accEl.textContent.trim() === "7002795979") {
-  accEl.textContent = buildAccountNumber(selectedBank);
-}
+  const senEl = document.querySelector(".sen");
+  if (senEl && data.sen) senEl.textContent = data.sen;
+
+  const refEl = document.getElementById("ref-number");
+  if (refEl && data.ref) refEl.textContent = data.ref;
+
+  // restore bank selection (kalau ada)
+  if (data.bank && BANK_CONFIG[data.bank]) {
+    selectedBank = data.bank;
+    localStorage.setItem("selectedBank", selectedBank);
+    if (typeof bankBtnText !== "undefined" && bankBtnText) bankBtnText.textContent = selectedBank;
+    if (typeof renderBankMenu === "function") renderBankMenu();
+  }
+
+  // restore masked acc/name (guna saved real, then mask balik)
+  const accEl = document.getElementById("account-number");
+  const recEl = document.getElementById("recipient-name");
+
+  if (accEl) {
+    const realAcc = data.realAcc || buildAccountNumber(selectedBank);
+    accEl.dataset.real = realAcc;
+    accEl.textContent = maskAccount(realAcc);
+  }
+
+  if (recEl) {
+    const realName = data.realName || "PAPA MINTA SAYANG";
+    recEl.dataset.real = realName;
+    recEl.textContent = maskName(realName);
+  }
 });
 
 // ===== RESET =====
