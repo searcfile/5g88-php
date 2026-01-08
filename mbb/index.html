@@ -140,11 +140,12 @@
      border-top: 1px solid #ccc;
     }
     .top-inputs {
-     max-width: 700px;
+     width: 100%;
      justify-content: flex-end;
      gap: 8px;
      flex-wrap: wrap;
      font-size: 10px;
+    display: block;
     }
 
     .input-label {
@@ -271,6 +272,7 @@
   width: 100%;
   height: 34px; /* ikut height button kau */
 }
+    *, *::before, *::after { box-sizing: border-box; }
   </style>
 </head>
 <body>
@@ -283,8 +285,8 @@
           <button class="btn-update" id="btn-date">Now</button>
 
           <div class="builder-field">
+            <label>Date & Time</label>
             <input type="text" id="input-date" placeholder="Date & Time" />
-            <div class="input-label">Date & Time</div>
           </div>
 
           <div class="builder-field">
