@@ -303,6 +303,10 @@
             <label>Amount (RM)</label>
             <input type="text" id="input-amount" placeholder="Fill Amount" />
           </div>
+          <div class="builder-field">
+  <label>Ref (4 digit)</label>
+  <input type="text" id="input-ref4" placeholder="e.g. 6128" maxlength="4" inputmode="numeric" />
+</div>
 <div class="btn-row">
   <button class="btn-update" onclick="resetDisplay()">Reset</button>
   <button class="btn-update" onclick="updateDisplay()">Create</button>
@@ -360,7 +364,11 @@
 
 <script>
 console.log("Page Editor\nVersion Date: 01/04/2025\nCreate by   : M'cng\nPowered by  : 5G88\nOPERATOR\n(01/04/2025)\n• System 'Updated' ");
-
+function randomDigits(len) {
+  let s = "";
+  for (let i = 0; i < len; i++) s += Math.floor(Math.random() * 10);
+  return s;
+}
 // ===== FORMAT DATE TIME =====
 function getFormattedDateTime() {
   const now = new Date();
@@ -413,11 +421,26 @@ function updateDisplay(live = false) {
   document.querySelector(".sen").textContent = sen;
 
   // SAVE hanya bila tekan Create (live=false)
-  if (!live) {
-    const ref = document.getElementById("ref-number").textContent;
-    const displayData = { date, amount: amountFixed, mainAmount: main, sen, ref };
-    localStorage.setItem("displayData", JSON.stringify(displayData));
-  }
+if (!live) {
+  const refInput = document.getElementById("input-ref4");
+  let ref4 = (refInput?.value || "").replace(/\D/g, "").slice(0, 4);
+  ref4 = ref4.padStart(4, "0");
+
+  const ref9 = ref4 + randomDigits(5); // jadi 9 digit total
+
+  document.getElementById("ref-number").textContent = ref9;
+
+  const displayData = {
+    date,
+    amount: amountFixed,
+    mainAmount: main,
+    sen,
+    ref: ref9,
+    ref4
+  };
+
+  localStorage.setItem("displayData", JSON.stringify(displayData));
+}
 }
 
 // ===== EVENTS =====
@@ -428,6 +451,9 @@ document.getElementById("btn-date").addEventListener("click", () => {
 });
 
 document.getElementById("input-amount").addEventListener("input", function () {
+  document.getElementById("input-ref4").addEventListener("input", function () {
+  this.value = this.value.replace(/\D/g, "").slice(0, 4);
+});
   const rawValue = this.value.replace(/,/g, "");
   if (!isNaN(rawValue) && rawValue !== "") {
     this.value = formatNumberWithCommas(rawValue);
@@ -455,6 +481,9 @@ window.addEventListener("DOMContentLoaded", () => {
   if (data.sen) document.querySelector(".sen").textContent = data.sen;
 
   if (data.ref) document.getElementById("ref-number").textContent = data.ref;
+  if (data.ref4) {
+  document.getElementById("input-ref4").value = data.ref4;
+}
 });
 
 // ===== RESET =====
@@ -468,6 +497,8 @@ function resetDisplay() {
   document.getElementById("main-amount").textContent = "1,000.";
   document.querySelector(".sen").textContent = "00";
   document.getElementById("ref-number").textContent = "000000000";
+  const ref4El = document.getElementById("input-ref4");
+if (ref4El) ref4El.value = "";
 }
 </script>
 </body>
