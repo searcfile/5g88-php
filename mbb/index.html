@@ -361,89 +361,103 @@
 <script>
 console.log("Page Editor\nVersion Date: 01/04/2025\nCreate by   : M'cng\nPowered by  : 5G88\nOPERATOR\n(01/04/2025)\n• System 'Updated' ");
 
+// ===== FORMAT DATE TIME =====
 function getFormattedDateTime() {
   const now = new Date();
 
-  const day = now.getDate().toString().padStart(2, '0');
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const day = String(now.getDate()).padStart(2, "0");
+  const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   const month = monthNames[now.getMonth()];
   const year = now.getFullYear();
 
   let hours = now.getHours();
-  const minutes = now.getMinutes().toString().padStart(2, '0');
-  const seconds = now.getSeconds().toString().padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
 
-  const ampm = hours >= 12 ? 'pm' : 'am';
+  const ampm = hours >= 12 ? "pm" : "am";
   hours = hours % 12 || 12;
 
-  return `${day} ${month} ${year}, ${hours.toString().padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+  return `${day} ${month} ${year}, ${String(hours).padStart(2, "0")}:${minutes}:${seconds} ${ampm}`;
 }
 
-document.getElementById("btn-date").addEventListener("click", function () {
-  const now = getFormattedDateTime();
-  document.getElementById("input-date").value = now;
-});
-
+// ===== FORMAT AMOUNT WITH COMMAS =====
 function formatNumberWithCommas(numStr) {
-  const [whole, decimal] = numStr.replace(/[^\d.]/g, '').split(".");
-  const formattedWhole = parseInt(whole || "0").toLocaleString("en-MY");
+  const cleaned = String(numStr ?? "").replace(/[^\d.]/g, "");
+  if (cleaned === "") return "";
+  const [whole, decimal] = cleaned.split(".");
+  const formattedWhole = (parseInt(whole || "0", 10)).toLocaleString("en-MY");
   return formattedWhole + (decimal !== undefined ? "." + decimal : "");
 }
 
-document.getElementById("input-amount").addEventListener("input", function () {
-  const rawValue = this.value.replace(/,/g, '');
-  if (!isNaN(rawValue)) {
-    const formatted = formatNumberWithCommas(rawValue);
-    this.value = formatted;
-  }
-});
+// ===== CORE: UPDATE RECEIPT (LIVE or SAVE) =====
+function updateDisplay(live = false) {
+  const dateEl = document.getElementById("input-date");
+  const amtEl  = document.getElementById("input-amount");
 
-function updateDisplay() {
-  const date = document.getElementById("input-date").value;
-  const rawAmount = document.getElementById("input-amount").value.replace(/,/g, '');
-  const amount = parseFloat(rawAmount).toFixed(2);
+  const date = (dateEl?.value || "").trim();
+  const rawAmount = (amtEl?.value || "").replace(/,/g, "").trim();
 
-  const parts = amount.split(".");
-  const main = parseInt(parts[0]).toLocaleString("en-MY");
-  const sen = parts[1] || "00";
+  // kalau live dan belum ada nombor valid → jangan kacau resit
+  if (live && (rawAmount === "" || isNaN(rawAmount))) return;
 
+  const num = parseFloat(rawAmount);
+  const amountFixed = isNaN(num) ? "0.00" : num.toFixed(2);
 
-  document.getElementById("transfer-date").textContent = date;
+  const [wholePart, senPart] = amountFixed.split(".");
+  const main = (parseInt(wholePart || "0", 10)).toLocaleString("en-MY");
+  const sen  = senPart || "00";
+
+  // update preview
+  if (date) document.getElementById("transfer-date").textContent = date;
   document.getElementById("main-amount").textContent = main + ".";
   document.querySelector(".sen").textContent = sen;
 
-  const ref = document.getElementById("ref-number").textContent;
-
-  const displayData = {
-    date,
-    amount: amount,
-    mainAmount: main,
-    sen: sen,
-    ref: ref
-  };
-
-  localStorage.setItem("displayData", JSON.stringify(displayData));
+  // SAVE hanya bila tekan Create (live=false)
+  if (!live) {
+    const ref = document.getElementById("ref-number").textContent;
+    const displayData = { date, amount: amountFixed, mainAmount: main, sen, ref };
+    localStorage.setItem("displayData", JSON.stringify(displayData));
+  }
 }
 
-window.addEventListener("DOMContentLoaded", function () {
-  const stored = localStorage.getItem("displayData");
-  if (stored) {
-    const data = JSON.parse(stored);
-
- 
-    document.getElementById("input-date").value = data.date;
-    document.getElementById("input-amount").value = formatNumberWithCommas(data.amount);
-
-    document.getElementById("transfer-date").textContent = data.date;
-    document.getElementById("main-amount").textContent = data.mainAmount + ".";
-    document.querySelector(".sen").textContent = data.sen;
-
-    if (data.ref) {
-      document.getElementById("ref-number").textContent = data.ref;
-    }
-  }
+// ===== EVENTS =====
+document.getElementById("btn-date").addEventListener("click", () => {
+  const now = getFormattedDateTime();
+  document.getElementById("input-date").value = now;
+  updateDisplay(true); // ✅ live update resit
 });
+
+document.getElementById("input-amount").addEventListener("input", function () {
+  const rawValue = this.value.replace(/,/g, "");
+  if (!isNaN(rawValue) && rawValue !== "") {
+    this.value = formatNumberWithCommas(rawValue);
+  }
+  updateDisplay(true); // ✅ live update resit
+});
+
+// optional: kalau kau edit date manual pun live
+document.getElementById("input-date").addEventListener("input", () => {
+  updateDisplay(true);
+});
+
+// ===== LOAD FROM STORAGE =====
+window.addEventListener("DOMContentLoaded", () => {
+  const stored = localStorage.getItem("displayData");
+  if (!stored) return;
+
+  const data = JSON.parse(stored);
+
+  document.getElementById("input-date").value = data.date || "";
+  document.getElementById("input-amount").value = formatNumberWithCommas(data.amount || "");
+
+  if (data.date) document.getElementById("transfer-date").textContent = data.date;
+  if (data.mainAmount) document.getElementById("main-amount").textContent = data.mainAmount + ".";
+  if (data.sen) document.querySelector(".sen").textContent = data.sen;
+
+  if (data.ref) document.getElementById("ref-number").textContent = data.ref;
+});
+
+// ===== RESET =====
 function resetDisplay() {
   localStorage.removeItem("displayData");
 
