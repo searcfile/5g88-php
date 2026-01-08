@@ -685,6 +685,17 @@ window.addEventListener("DOMContentLoaded", () => {
   if (data.ref4) {
   document.getElementById("input-ref4").value = data.ref4;
 }
+const savedBank = localStorage.getItem("selectedBank");
+if (savedBank && BANK_CONFIG[savedBank]) selectedBank = savedBank;
+
+bankBtnText.textContent = selectedBank;
+renderBankMenu();
+
+// set account ikut bank masa load (kalau belum ada)
+const accEl = document.getElementById("account-number");
+if (accEl && accEl.textContent.trim() === "7002795979") {
+  accEl.textContent = buildAccountNumber(selectedBank);
+}
 });
 
 // ===== RESET =====
