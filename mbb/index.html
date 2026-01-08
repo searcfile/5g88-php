@@ -260,63 +260,148 @@
   background-color: white;
   color: black;
 }
+  /* ===== NEW LAYOUT: builder kiri, preview kanan ===== */
+.app-layout{
+  width: min(1200px, 96vw);
+  margin: 20px auto;
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+/* panel kiri */
+.builder-panel{
+  width: 360px;
+  flex: 0 0 360px;
+  position: sticky;
+  top: 16px;
+}
+
+/* panel kanan */
+.preview-panel{
+  flex: 1;
+  min-width: 0;
+}
+
+/* override top-inputs supaya ikut panel kiri (bukan center 700px) */
+.top-inputs{
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+
+/* susun input dalam panel kiri */
+.builder-row{
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.builder-field input{
+  width: 100%;
+}
+
+/* butang full width macam panel builder */
+.builder-row .btn-update{
+  height: 34px;
+  width: 100%;
+}
+
+/* preview jangan auto-center 700px, bagi responsive */
+.container{
+  max-width: none;
+  width: 100%;
+  margin: 0;
+}
+
+/* mobile: jadi atas-bawah */
+@media (max-width: 900px){
+  .app-layout{
+    flex-direction: column;
+  }
+  .builder-panel{
+    width: 100%;
+    flex: 0 0 auto;
+    position: relative;
+    top: auto;
+  }
+}
   </style>
 </head>
 <body>
-  <div class="top-inputs">
-    <div style="display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap;">
-  <button class="btn-update" onclick="resetDisplay()">Reset</button>
-  <button class="btn-update" id="btn-date">Now</button>
-  <div style="display: flex; flex-direction: column;">
-    <input type="text" id="input-date" placeholder="Date & Time" />
-    <div class="input-label">Date & Time</div>
-  </div>
-  <div style="display: flex; flex-direction: column;">
-    <input type="text" id="input-amount" placeholder="Fill Amount" />
-    <div class="input-label">Amount</div>
-  </div>
-  <button class="btn-update" onclick="updateDisplay()">Create</button>
-</div>
-  </div>
+  <div class="app-layout">
 
-  <div class="container">
-    <div class="header">DuitNow / Transfer Money Acknowledgement</div>
+    <!-- ✅ PANEL KIRI: input + buttons -->
+    <aside class="builder-panel">
+      <div class="top-inputs">
+        <div class="builder-row">
+          <button class="btn-update" onclick="resetDisplay()">Reset</button>
+          <button class="btn-update" id="btn-date">Now</button>
 
-    <div class="status-bar">
-      <div class="left" style="display: flex; align-items: center;">
-        <div class="check-icon">✔</div>
-        <span><strong class="success-text">Successful</strong> Ref <span id="ref-number">000000000</span></span>
-      </div>
-      <div id="transfer-date">01 May 2025, 00:00:00 am</div>
-    </div>
+          <div class="builder-field">
+            <input type="text" id="input-date" placeholder="Date & Time" />
+            <div class="input-label">Date & Time</div>
+          </div>
 
-    <div class="details">
-      <div class="left">
-        <div class="value">To</div>
-        <div class="label">Account Number</div>
-        <div class="value">7002795979</div>
+          <div class="builder-field">
+            <input type="text" id="input-amount" placeholder="Fill Amount" />
+            <div class="input-label">Amount</div>
+          </div>
 
-        <div class="label">Account Name</div>
-        <div class="value">SA PASSBOOK</div>
-
-        <div class="label">Recipient Name</div>
-        <div class="value">PAPA MINTA SAYANG</div>
-      </div>
-      <div class="right" style="text-align: right;">
-        <div class="label amount-label">Amount</div>
-        <div class="amount">
-          <span class="currency">MYR</span>
-          <span id="main-amount">1,000.</span><span class="sen">00</span>
-        </div>
-        <div class="charges">
-          Bank charges 
-          <span class="currency">MYR</span>
-          <span class="charge-amount">0.</span><span class="charge-sen">00</span>
+          <button class="btn-update" onclick="updateDisplay()">Create</button>
         </div>
       </div>
-    </div>
+    </aside>
 
-    <div class="footer">More transfer details →</div>
+    <!-- ✅ PANEL KANAN: receipt preview -->
+    <main class="preview-panel">
+      <div class="container">
+        <div class="header">DuitNow / Transfer Money Acknowledgement</div>
+
+        <div class="status-bar">
+          <div class="left" style="display: flex; align-items: center;">
+            <div class="check-icon">✔</div>
+            <span><strong class="success-text">Successful</strong> Ref <span id="ref-number">000000000</span></span>
+          </div>
+          <div id="transfer-date">01 May 2025, 00:00:00 am</div>
+        </div>
+
+        <div class="details">
+          <div class="left">
+            <div class="value">To</div>
+            <div class="label">Account Number</div>
+            <div class="value">7002795979</div>
+
+            <div class="label">Account Name</div>
+            <div class="value">SA PASSBOOK</div>
+
+            <div class="label">Recipient Name</div>
+            <div class="value">PAPA MINTA SAYANG</div>
+          </div>
+
+          <div class="right" style="text-align: right;">
+            <div class="label amount-label">Amount</div>
+            <div class="amount">
+              <span class="currency">MYR</span>
+              <span id="main-amount">1,000.</span><span class="sen">00</span>
+            </div>
+            <div class="charges">
+              Bank charges
+              <span class="currency">MYR</span>
+              <span class="charge-amount">0.</span><span class="charge-sen">00</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">More transfer details →</div>
+      </div>
+    </main>
+
   </div>
 
 
