@@ -425,7 +425,7 @@
 </div>
 <div class="btn-row">
   <button class="btn-update" onclick="resetDisplay()">Reset</button>
-  <button class="btn-update" onclick="updateDisplay()">Create</button>
+  <button class="btn-update" id="btn-create" type="button">Create</button>
 </div>
         </div>
       </div>
@@ -864,6 +864,13 @@ function resetDisplay() {
   document.getElementById("ref-number").textContent = "000000000";
   const ref4El = document.getElementById("input-ref4");
 if (ref4El) ref4El.value = "";
+}
+// ===== CREATE BUTTON HANDLER (WAJIB DI BAWAH SEKALI) =====
+const btnCreate = document.getElementById("btn-create");
+if (btnCreate) {
+  btnCreate.addEventListener("click", () => {
+    updateDisplay(false);   // ⬅️ trigger SAVE mode
+  });
 }
 </script>
 </body>
