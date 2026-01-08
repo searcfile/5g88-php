@@ -557,12 +557,10 @@ function selectBank(name){
   closeBankMenu();
   renderBankMenu();
 
-  // ✅ auto ganti account number ikut bank bila pilih
+  // ✅ generate account ikut bank & update blur spans
   const newAcc = buildAccountNumber(name);
-  const accEl = document.getElementById("account-number");
-  if (accEl) accEl.textContent = newAcc;
+  applyAccountBlur(newAcc);
 
-  // optional: simpan pilihan bank
   localStorage.setItem("selectedBank", name);
 }
 
@@ -579,22 +577,26 @@ function randomDigits(len) {
 }
 function applyAccountBlur(acc){
   const s = String(acc || "").replace(/\s+/g,"");
-  const first = s.slice(0,2);
-  const last  = s.slice(-1);
-  const mid   = s.slice(2,-1);
 
-  document.getElementById("acc-first").textContent = first || "";
-  document.getElementById("acc-mid").textContent   = mid   || "";
-  document.getElementById("acc-last").textContent  = last  || "";
+  const f = document.getElementById("acc-first");
+  const m = document.getElementById("acc-mid");
+  const l = document.getElementById("acc-last");
+  if (!f || !m || !l) return; // ✅ elak crash kalau span hilang
+
+  f.textContent = s.slice(0,2);
+  m.textContent = s.slice(2,-1);
+  l.textContent = s.slice(-1);
 }
 
 function applyNameBlur(name){
   const s = String(name || "").trim();
-  const first = s.slice(0,2);
-  const mid   = s.slice(2);
 
-  document.getElementById("name-first").textContent = first || "";
-  document.getElementById("name-mid").textContent   = mid   || "";
+  const f = document.getElementById("name-first");
+  const m = document.getElementById("name-mid");
+  if (!f || !m) return; // ✅ elak crash
+
+  f.textContent = s.slice(0,2);
+  m.textContent = s.slice(2);
 }
 // ===== FORMAT DATE TIME =====
 function getFormattedDateTime() {
@@ -795,14 +797,24 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // load receipt data
   const stored = localStorage.getItem("displayData");
-  if (!stored) {
-    // kalau belum ada, set account ikut bank sekali
-    const accEl = document.getElementById("account-number");
-    if (accEl && accEl.textContent.trim() === "7002795979") {
-      accEl.textContent = buildAccountNumber(selectedBank);
-    }
-    return;
-  }
+if (!stored) {
+  // ✅ set blur account ikut bank (tanpa rosakkan span)
+  const acc = buildAccountNumber(selectedBank);
+  applyAccountBlur(acc);
+
+  // ✅ set auto name ikut saved setting
+  const savedAuto = localStorage.getItem("autoNameOn");
+  autoNameOn = savedAuto !== "0";
+  setAutoName(autoNameOn);
+
+  // ✅ set blur preview recipient ikut input sekarang
+  const inRec = document.getElementById("input-recipient");
+  const nameNow = (inRec?.value || "PA").trim();
+  applyNameBlur(nameNow);
+
+  return;
+}
+
 
   const data = JSON.parse(stored);
 
