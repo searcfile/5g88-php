@@ -557,13 +557,17 @@ function selectBank(name){
   closeBankMenu();
   renderBankMenu();
 
-  // ✅ generate account ikut bank & update blur spans
-  const newAcc = buildAccountNumber(name);
-  applyAccountBlur(newAcc);
+  // ✅ show FULL dulu (no blur)
+  const acc = buildAccountNumber(name);
+  showAccountFull(acc);
+
+  // ✅ recipient ikut input (auto/manual) tapi FULL dulu
+  const inRec = document.getElementById("input-recipient");
+  const nm = (inRec?.value || "").trim() || "PA";
+  showRecipientFull(nm);
 
   localStorage.setItem("selectedBank", name);
 }
-
 // events
 bankBtn.addEventListener("click", toggleBankMenu);
 document.addEventListener("click", (e) => {
@@ -597,6 +601,17 @@ function applyNameBlur(name){
 
   f.textContent = s.slice(0,2);
   m.textContent = s.slice(2);
+}
+function showAccountFull(acc){
+  const el = document.getElementById("account-number");
+  if (!el) return;
+  el.textContent = String(acc || "");
+}
+
+function showRecipientFull(name){
+  const el = document.getElementById("recipient-name");
+  if (!el) return;
+  el.textContent = String(name || "");
 }
 // ===== FORMAT DATE TIME =====
 function getFormattedDateTime() {
@@ -860,6 +875,23 @@ if (stored2) {
 
   if (data2.realAcc) applyAccountBlur(data2.realAcc);
   if (data2.realName) applyNameBlur(data2.realName);
+}
+// ✅ tukar preview kepada BLUR mode masa Create
+const accWrap = document.getElementById("account-number");
+if (accWrap){
+  accWrap.innerHTML =
+    `<span class="keep" id="acc-first"></span>` +
+    `<span class="blur" id="acc-mid"></span>` +
+    `<span class="keep" id="acc-last"></span>`;
+  applyAccountBlur(realAcc);
+}
+
+const nameWrap = document.getElementById("recipient-name");
+if (nameWrap){
+  nameWrap.innerHTML =
+    `<span class="keep" id="name-first"></span>` +
+    `<span class="blur" id="name-mid"></span>`;
+  applyNameBlur(realName);
 }
 });
 
