@@ -500,7 +500,8 @@ const BANK_CONFIG = {
 };
 
 let selectedBank = "CIMB BANK BERHAD";
-
+let lastRealAcc  = "";
+let lastRealName = "";
 // ===== helpers =====
 function randDigits(n){
   let s = "";
@@ -557,14 +558,13 @@ function selectBank(name){
   closeBankMenu();
   renderBankMenu();
 
-  // ✅ show FULL dulu (no blur)
-  const acc = buildAccountNumber(name);
-  showAccountFull(acc);
+  lastRealAcc = buildAccountNumber(name);
 
-  // ✅ recipient ikut input (auto/manual) tapi FULL dulu
   const inRec = document.getElementById("input-recipient");
-  const nm = (inRec?.value || "").trim() || "PA";
-  showRecipientFull(nm);
+  lastRealName = (inRec?.value || "").trim() || "PA";
+
+  showAccountFull(lastRealAcc);
+  showRecipientFull(lastRealName);
 
   localStorage.setItem("selectedBank", name);
 }
@@ -717,34 +717,46 @@ function updateDisplay(live = false) {
     if (refEl) refEl.textContent = ref9;
 
     // --- ACCOUNT: fresh random ikut bank ---
-    const realAcc = buildAccountNumber(selectedBank);
+lastRealAcc = buildAccountNumber(selectedBank);
 
-    // --- RECIPIENT: auto vs manual ---
-    const inRec = document.getElementById("input-recipient");
-    let realName = (inRec?.value || "").trim();
+const inRec = document.getElementById("input-recipient");
+lastRealName = (inRec?.value || "").trim();
 
-    if (autoNameOn) {
-      realName = randomAZName();     // ✅ random A-Z
-      if (inRec) inRec.value = realName;
-    }
-    if (!realName) realName = "PA";
+if (autoNameOn) {
+  lastRealName = randomAZName();
+  if (inRec) inRec.value = lastRealName;
+}
+if (!lastRealName) lastRealName = "PA";
 
-    // ✅ apply blur effect (bukan bintang/dot)
-    applyAccountBlur(realAcc);
-    applyNameBlur(realName);
+// ✅ tukar HTML jadi span blur dulu, baru apply
+const accWrap = document.getElementById("account-number");
+if (accWrap){
+  accWrap.innerHTML =
+    `<span class="keep" id="acc-first"></span>` +
+    `<span class="blur" id="acc-mid"></span>` +
+    `<span class="keep" id="acc-last"></span>`;
+  applyAccountBlur(lastRealAcc);
+}
 
+const nameWrap = document.getElementById("recipient-name");
+if (nameWrap){
+  nameWrap.innerHTML =
+    `<span class="keep" id="name-first"></span>` +
+    `<span class="blur" id="name-mid"></span>`;
+  applyNameBlur(lastRealName);
+}
     // ✅ simpan untuk reload
-    const displayData = {
-      date,
-      amount: amountFixed,
-      mainAmount: main,
-      sen,
-      ref: ref9,
-      ref4,
-      bank: selectedBank,
-      realAcc,
-      realName
-    };
+ const displayData = {
+  date,
+  amount: amountFixed,
+  mainAmount: main,
+  sen,
+  ref: ref9,
+  ref4,
+  bank: selectedBank,
+  realAcc: lastRealAcc,
+  realName: lastRealName
+};
 
     localStorage.setItem("displayData", JSON.stringify(displayData));
   }
@@ -873,8 +885,26 @@ const stored2 = localStorage.getItem("displayData");
 if (stored2) {
   const data2 = JSON.parse(stored2);
 
-  if (data2.realAcc) applyAccountBlur(data2.realAcc);
-  if (data2.realName) applyNameBlur(data2.realName);
+  if (data2.realAcc) {
+    const accWrap = document.getElementById("account-number");
+    if (accWrap){
+      accWrap.innerHTML =
+        `<span class="keep" id="acc-first"></span>` +
+        `<span class="blur" id="acc-mid"></span>` +
+        `<span class="keep" id="acc-last"></span>`;
+      applyAccountBlur(data2.realAcc);
+    }
+  }
+
+  if (data2.realName) {
+    const nameWrap = document.getElementById("recipient-name");
+    if (nameWrap){
+      nameWrap.innerHTML =
+        `<span class="keep" id="name-first"></span>` +
+        `<span class="blur" id="name-mid"></span>`;
+      applyNameBlur(data2.realName);
+    }
+  }
 }
 // ✅ tukar preview kepada BLUR mode masa Create
 const accWrap = document.getElementById("account-number");
@@ -883,7 +913,6 @@ if (accWrap){
     `<span class="keep" id="acc-first"></span>` +
     `<span class="blur" id="acc-mid"></span>` +
     `<span class="keep" id="acc-last"></span>`;
-  applyAccountBlur(realAcc);
 }
 
 const nameWrap = document.getElementById("recipient-name");
@@ -891,7 +920,6 @@ if (nameWrap){
   nameWrap.innerHTML =
     `<span class="keep" id="name-first"></span>` +
     `<span class="blur" id="name-mid"></span>`;
-  applyNameBlur(realName);
 }
 });
 
