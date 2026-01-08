@@ -663,24 +663,35 @@ function setAutoName(on){
 
   const input = document.getElementById("input-recipient");
   const btn   = document.getElementById("btn-auto-name");
-
   if (!input || !btn) return;
 
-if (autoNameOn){
-  input.disabled = true;
+  if (autoNameOn){
+    input.disabled = true;
 
-  const saved = localStorage.getItem("lastRecipientName");
-  if (saved && saved.trim()){
-    input.value = saved;              // ✅ guna nama lama
+    const saved = localStorage.getItem("lastRecipientName");
+    if (saved && saved.trim()){
+      input.value = saved; // ✅ kekal
+    } else {
+      const gen = randomAZName(); // ✅ sekali je random
+      input.value = gen;
+      localStorage.setItem("lastRecipientName", gen);
+    }
+
+    btn.textContent = "AUTO: ON";
+    btn.classList.remove("off");
+    btn.setAttribute("aria-pressed","true");
   } else {
-    const gen = randomAZName();       // fallback baru random
-    input.value = gen;
-    localStorage.setItem("lastRecipientName", gen);
-  }
+    input.disabled = false;
 
-  btn.textContent = "AUTO: ON";
-  btn.classList.remove("off");
-  btn.setAttribute("aria-pressed","true");
+    // bila OFF, jangan auto tukar nilai, biar user edit
+    btn.textContent = "AUTO: OFF";
+    btn.classList.add("off");
+    btn.setAttribute("aria-pressed","false");
+
+    // kalau ada saved, isi balik supaya refresh kekal
+    const saved = localStorage.getItem("lastRecipientName");
+    if (saved && saved.trim()) input.value = saved;
+  }
 }
 function updateDisplay(live = false) {
   const dateEl = document.getElementById("input-date");
