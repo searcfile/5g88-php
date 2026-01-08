@@ -281,17 +281,6 @@
   filter: brightness(.95);
 }
     *, *::before, *::after { box-sizing: border-box; }
-    .builder-row-2{
-  display: flex;
-  gap: 10px;
-  width: 100%;
-}
-
-.builder-row-2 .builder-field{
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
   </style>
 </head>
 <body>
@@ -301,16 +290,22 @@
     <aside class="builder-panel">
       <div class="top-inputs">
         <div class="builder-row">
-<div class="builder-row-2">
-  <div class="builder-field">
-    <label>Ref (4 digit)</label>
-    <input type="text" id="input-ref4" placeholder="e.g. 6128" maxlength="4" inputmode="numeric" />
-  </div>
+<div class="builder-field">
+  <label>Date & Time</label>
 
-  <div class="builder-field">
-    <label>Amount (RM)</label>
-    <input type="text" id="input-amount" placeholder="Fill Amount" />
+  <div class="input-row">
+    <input type="text" id="input-date" placeholder="Date & Time" />
+    <button class="btn-now" id="btn-date" type="button">Now</button>
   </div>
+</div>
+
+          <div class="builder-field">
+            <label>Amount (RM)</label>
+            <input type="text" id="input-amount" placeholder="Fill Amount" />
+          </div>
+          <div class="builder-field">
+  <label>Ref (4 digit)</label>
+  <input type="text" id="input-ref4" placeholder="e.g. 6128" maxlength="4" inputmode="numeric" />
 </div>
 <div class="btn-row">
   <button class="btn-update" onclick="resetDisplay()">Reset</button>
