@@ -366,6 +366,12 @@
 .keep{
   display: inline-block;
 }
+    .btn-now.off{
+  background:#111;
+  border-color:#111;
+  color:#fff;
+  opacity:.9;
+}
   </style>
 </head>
 <body>
@@ -388,6 +394,15 @@
     <div class="bank-menu" id="bankMenu" role="listbox" aria-hidden="true"></div>
   </div>
 </div>
+<div class="builder-field">
+  <label>Recipient Name</label>
+
+  <div class="input-row">
+    <input type="text" id="input-recipient" placeholder="e.g. PAPA MINTA SAYANG" />
+    <button class="btn-now" id="btn-auto-name" type="button" aria-pressed="true">AUTO: ON</button>
+  </div>
+</div>
+          
 <div class="builder-field">
   <label>Date & Time</label>
 
@@ -608,7 +623,45 @@ function formatNumberWithCommas(numStr) {
   const formattedWhole = (parseInt(whole || "0", 10)).toLocaleString("en-MY");
   return formattedWhole + (decimal !== undefined ? "." + decimal : "");
 }
-// ===== CORE: UPDATE RECEIPT (LIVE or SAVE) =====
+let autoNameOn = true;
+function randLetter(){
+  return String.fromCharCode(65 + Math.floor(Math.random()*26)); // A-Z
+}
+
+// contoh: "AB RQZKLM" style, boleh ubah panjang ikut suka
+function randomAZName(){
+  const part1Len = 2 + Math.floor(Math.random()*3);   // 2-4
+  const part2Len = 4 + Math.floor(Math.random()*6);   // 4-9
+
+  let p1="", p2="";
+  for(let i=0;i<part1Len;i++) p1 += randLetter();
+  for(let i=0;i<part2Len;i++) p2 += randLetter();
+
+  return `${p1} ${p2}`;
+}
+
+function setAutoName(on){
+  autoNameOn = !!on;
+  localStorage.setItem("autoNameOn", autoNameOn ? "1" : "0");
+
+  const input = document.getElementById("input-recipient");
+  const btn   = document.getElementById("btn-auto-name");
+
+  if (!input || !btn) return;
+
+  if (autoNameOn){
+    input.disabled = true;
+    input.value = randomAZName();
+    btn.textContent = "AUTO: ON";
+    btn.classList.remove("off");
+    btn.setAttribute("aria-pressed","true");
+  } else {
+    input.disabled = false;
+    btn.textContent = "AUTO: OFF";
+    btn.classList.add("off");
+    btn.setAttribute("aria-pressed","false");
+  }
+}
 function updateDisplay(live = false) {
   const dateEl = document.getElementById("input-date");
   const amtEl  = document.getElementById("input-amount");
@@ -616,7 +669,6 @@ function updateDisplay(live = false) {
   const date = (dateEl?.value || "").trim();
   const rawAmount = (amtEl?.value || "").replace(/,/g, "").trim();
 
-  // kalau live dan belum ada nombor valid → jangan kacau resit
   if (live && (rawAmount === "" || isNaN(rawAmount))) return;
 
   const num = parseFloat(rawAmount);
@@ -626,7 +678,7 @@ function updateDisplay(live = false) {
   const main = (parseInt(wholePart || "0", 10)).toLocaleString("en-MY");
   const sen  = senPart || "00";
 
-  // update preview (live)
+  // ✅ live update amount/date
   if (date) {
     const td = document.getElementById("transfer-date");
     if (td) td.textContent = date;
@@ -636,33 +688,35 @@ function updateDisplay(live = false) {
   const senEl = document.querySelector(".sen");
   if (senEl) senEl.textContent = sen;
 
-  // SAVE hanya bila tekan Create (live=false)
+  // ✅ ONLY when Create
   if (!live) {
+    // --- REF 9 digit ---
     const refInput = document.getElementById("input-ref4");
     let ref4 = (refInput?.value || "").replace(/\D/g, "").slice(0, 4);
     ref4 = ref4.padStart(4, "0");
 
-    const ref9 = ref4 + randomDigits(5); // jadi 9 digit total
+    const ref9 = ref4 + randomDigits(5);
     const refEl = document.getElementById("ref-number");
     if (refEl) refEl.textContent = ref9;
 
-    // ✅ setiap kali Create: generate fresh REAL data dulu
-    const accEl = document.getElementById("account-number");
-    const recEl = document.getElementById("recipient-name");
+    // --- ACCOUNT: fresh random ikut bank ---
+    const realAcc = buildAccountNumber(selectedBank);
 
-    if (accEl) {
-      const realAcc = buildAccountNumber(selectedBank); // random ikut bank
-      accEl.dataset.real = realAcc;
-      accEl.textContent = maskAccount(realAcc);         // blur/dot
+    // --- RECIPIENT: auto vs manual ---
+    const inRec = document.getElementById("input-recipient");
+    let realName = (inRec?.value || "").trim();
+
+    if (autoNameOn) {
+      realName = randomAZName();     // ✅ random A-Z
+      if (inRec) inRec.value = realName;
     }
+    if (!realName) realName = "PA";
 
-    if (recEl) {
-      const newRealName = randomRecipient();            // random nama
-      recEl.dataset.real = newRealName;
-      recEl.textContent = maskName(newRealName);        // blur/dot
-    }
+    // ✅ apply blur effect (bukan bintang/dot)
+    applyAccountBlur(realAcc);
+    applyNameBlur(realName);
 
-    // simpan semua data
+    // ✅ simpan untuk reload
     const displayData = {
       date,
       amount: amountFixed,
@@ -671,8 +725,8 @@ function updateDisplay(live = false) {
       ref: ref9,
       ref4,
       bank: selectedBank,
-      realAcc: accEl?.dataset.real || "",
-      realName: recEl?.dataset.real || ""
+      realAcc,
+      realName
     };
 
     localStorage.setItem("displayData", JSON.stringify(displayData));
@@ -681,7 +735,18 @@ function updateDisplay(live = false) {
 
 
 // ===== EVENTS =====
+// Toggle AUTO name
+document.getElementById("btn-auto-name")?.addEventListener("click", () => {
+  setAutoName(!autoNameOn);
+});
 
+// Kalau manual edit recipient, boleh live update blur preview (optional)
+document.getElementById("input-recipient")?.addEventListener("input", () => {
+  if (!autoNameOn) {
+    // preview kanan boleh tukar terus (blur boleh tunggu Create pun ok)
+    // applyNameBlur(document.getElementById("input-recipient").value);
+  }
+});
 // Now button -> set date + live update
 const btnDate = document.getElementById("btn-date");
 if (btnDate) {
@@ -770,21 +835,19 @@ window.addEventListener("DOMContentLoaded", () => {
     if (typeof bankBtnText !== "undefined" && bankBtnText) bankBtnText.textContent = selectedBank;
     if (typeof renderBankMenu === "function") renderBankMenu();
   }
-
+const savedAuto = localStorage.getItem("autoNameOn");
+autoNameOn = savedAuto !== "0"; // default ON
+setAutoName(autoNameOn);
   // restore masked acc/name (guna saved real, then mask balik)
   const accEl = document.getElementById("account-number");
   const recEl = document.getElementById("recipient-name");
 
-if (accEl) {
-  const realAcc = buildAccountNumber(selectedBank);
-  accEl.dataset.real = realAcc;
-  applyAccountBlur(realAcc);
-}
+const stored2 = localStorage.getItem("displayData");
+if (stored2) {
+  const data2 = JSON.parse(stored2);
 
-if (recEl) {
-  const newRealName = randomRecipient(); // atau guna nama asal kalau tak nak random
-  recEl.dataset.real = newRealName;
-  applyNameBlur(newRealName);
+  if (data2.realAcc) applyAccountBlur(data2.realAcc);
+  if (data2.realName) applyNameBlur(data2.realName);
 }
 });
 
