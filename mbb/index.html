@@ -489,8 +489,10 @@
   <span class="keep" id="acc-first">70</span><span class="blur" id="acc-mid">0279597</span><span class="keep" id="acc-last">9</span>
 </div>
 
-            <div class="label">Account Name</div>
-            <div class="value">SA PASSBOOK</div>
+<div id="accountNameRow">
+  <div class="label">Account Name</div>
+  <div class="value" id="accountNameValue">SA PASSBOOK</div>
+</div>
 
             <div class="label">Recipient Name</div>
             <div class="value" id="recipient-name">
@@ -589,6 +591,7 @@ function toggleBankMenu(){
 
 function selectBank(name){
   selectedBank = name;
+  toggleAccountNameByBank(selectedBank);
   bankBtnText.textContent = name;
   closeBankMenu();
   renderBankMenu();
@@ -609,7 +612,25 @@ bankBtn.addEventListener("click", toggleBankMenu);
 document.addEventListener("click", (e) => {
   if (!bankSelectEl.contains(e.target)) closeBankMenu();
 });
+// ✅ Bank yang ada Account Name (dan teksnya)
+const BANK_ACCOUNT_NAME_TEXT = {
+  "CIMB BANK BERHAD": "SA PASSBOOK"
+};
 
+function toggleAccountNameByBank(bankName){
+  const row = document.getElementById("accountNameRow");
+  const val = document.getElementById("accountNameValue");
+  if (!row || !val) return;
+
+  const key = String(bankName || "").trim().toUpperCase();
+
+  if (BANK_ACCOUNT_NAME_TEXT[key]) {
+    row.style.display = "";
+    val.textContent = BANK_ACCOUNT_NAME_TEXT[key]; // ✅ set text
+  } else {
+    row.style.display = "none";
+  }
+}
 function randomDigits(len) {
   let s = "";
   for (let i = 0; i < len; i++) s += Math.floor(Math.random() * 10);
@@ -894,7 +915,7 @@ window.addEventListener("DOMContentLoaded", () => {
     bankBtnText.textContent = selectedBank;
   }
   if (typeof renderBankMenu === "function") renderBankMenu();
-
+  toggleAccountNameByBank(selectedBank);
   // ✅ restore auto name ON/OFF + value (kekal selepas refresh)
   const savedAuto = localStorage.getItem("autoNameOn");
   autoNameOn = savedAuto !== "0";
