@@ -409,9 +409,15 @@
   color:#fff;
   opacity:.9;
 }
+    .zoom-wrap{
+  transform: scale(1.25);        /* 120% */
+  transform-origin: top center;  /* supaya membesar ke tengah, bukan ke bawah */
+  margin-top: 20px;              /* beri ruang sedikit */
+}
   </style>
 </head>
 <body>
+  <div class="zoom-wrap">
   <div class="app-layout">
 
     <!-- ✅ PANEL KIRI: input + buttons -->
@@ -520,7 +526,7 @@
       </div>
 
     </main>
-
+ </div>
   </div>
 
 
