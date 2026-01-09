@@ -344,6 +344,8 @@
   overflow:hidden;
   display:none;
   z-index: 99999; 
+  max-height: 280px;
+  overflow-y: auto;
 }
 
 .bank-menu.open{ display:block; }
@@ -354,6 +356,7 @@
   font-size:13px;
   cursor:pointer;
   user-select:none;
+  line-height: 20px;
 }
 
 .bank-item:hover{
@@ -364,6 +367,27 @@
 .bank-item.active{
   background: rgba(236,29,35,.22);
   color:#fff;
+}
+/* ===== Scrollbar merah (Chrome/Edge/Safari) ===== */
+.bank-menu::-webkit-scrollbar{
+  width: 8px;
+}
+.bank-menu::-webkit-scrollbar-track{
+  background: rgba(255,255,255,0.08);
+  border-radius: 10px;
+}
+.bank-menu::-webkit-scrollbar-thumb{
+  background: #ec1d23;
+  border-radius: 10px;
+}
+.bank-menu::-webkit-scrollbar-thumb:hover{
+  background: #ff3b3f;
+}
+
+/* ===== Scrollbar merah (Firefox) ===== */
+.bank-menu{
+  scrollbar-width: thin;
+  scrollbar-color: #ec1d23 rgba(255,255,255,0.08);
 }
     #account-number, #recipient-name{
   letter-spacing: 0.5px;
