@@ -728,8 +728,11 @@ function formatNumberWithCommas(numStr) {
   return formattedWhole + (decimal !== undefined ? "." + decimal : "");
 }
 let autoNameOn = true;
+const ALLOWED_LETTERS = "ABCDEFGHIJKLMNOPRSTUVWYZ"; 
 function randLetter(){
-  return String.fromCharCode(65 + Math.floor(Math.random()*26)); // A-Z
+  return ALLOWED_LETTERS.charAt(
+    Math.floor(Math.random() * ALLOWED_LETTERS.length)
+  );
 }
 
 // contoh: "AB RQZKLM" style, boleh ubah panjang ikut suka
