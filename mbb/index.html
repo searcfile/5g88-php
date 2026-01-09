@@ -554,7 +554,11 @@ function buildAccountNumber(bankName){
   const need = Math.max(0, (cfg.len || 10) - head.length);
   return head + randDigits(need);
 }
-
+function buildZeroAccount(bankName){
+  const cfg = BANK_CONFIG[bankName];
+  const len = cfg?.len || 10;
+  return "0".repeat(len);
+}
 // ===== init custom dropdown =====
 const bankSelectEl = document.getElementById("bankSelect");
 const bankBtn      = document.getElementById("bankBtn");
@@ -1006,12 +1010,20 @@ function resetDisplay() {
   document.getElementById("input-date").value = "";
   document.getElementById("input-amount").value = "";
 
+  const ref4El = document.getElementById("input-ref4");
+  if (ref4El) ref4El.value = "";
+
   document.getElementById("transfer-date").textContent = "01 May 2025, 00:00:00 am";
   document.getElementById("main-amount").textContent = "1,000.";
   document.querySelector(".sen").textContent = "00";
   document.getElementById("ref-number").textContent = "000000000";
-  const ref4El = document.getElementById("input-ref4");
-if (ref4El) ref4El.value = "";
+
+  // ✅ reset ke 00000 / 0000
+  lastRealAcc  = buildZeroAccount(selectedBank); // contoh 0000000000
+  lastRealName = "0000";
+
+  setAccountPreviewMode("blur", lastRealAcc);
+  setNamePreviewMode("blur", lastRealName);
 }
 // ===== CREATE BUTTON HANDLER (WAJIB DI BAWAH SEKALI) =====
 const btnCreate = document.getElementById("btn-create");
