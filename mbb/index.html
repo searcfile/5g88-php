@@ -986,44 +986,68 @@ window.addEventListener("DOMContentLoaded", () => {
     if (typeof renderBankMenu === "function") renderBankMenu();
   }
 
-  // ✅ restore acc/name dalam mode BLUR (sebab dah Create)
-  if (data.realAcc) {
-    lastRealAcc = data.realAcc;
-    setAccountPreviewMode("blur", lastRealAcc);
-  } else {
-    lastRealAcc = buildAccountNumber(selectedBank);
-    setAccountPreviewMode("blur", lastRealAcc);
-  }
+const mode = data.mode || "created";
 
-  if (data.realName) {
-    lastRealName = data.realName;
-    setNamePreviewMode("blur", lastRealName);
-  } else {
-    lastRealName = (inRec?.value || "").trim() || "PA";
-    setNamePreviewMode("blur", lastRealName);
-  }
+lastRealAcc  = data.realAcc || buildAccountNumber(selectedBank);
+lastRealName = data.realName || ((inRec?.value || "").trim() || "PA");
+
+if (mode === "reset") {
+  // ✅ reset: FULL tanpa blur
+  setAccountPreviewMode("full", lastRealAcc);
+  setNamePreviewMode("full", lastRealName);
+} else {
+  // ✅ create: BLUR
+  setAccountPreviewMode("blur", lastRealAcc);
+  setNamePreviewMode("blur", lastRealName);
+}
 });
 // ===== RESET =====
 function resetDisplay() {
-  localStorage.removeItem("displayData");
+  // ❌ JANGAN remove displayData (kalau remove, refresh akan random balik)
+  // localStorage.removeItem("displayData");
 
-  document.getElementById("input-date").value = "";
-  document.getElementById("input-amount").value = "";
+  // reset input
+  const inDate = document.getElementById("input-date");
+  const inAmt  = document.getElementById("input-amount");
+  const inRef4 = document.getElementById("input-ref4");
+  const inRec  = document.getElementById("input-recipient");
 
-  const ref4El = document.getElementById("input-ref4");
-  if (ref4El) ref4El.value = "";
+  if (inDate) inDate.value = "";
+  if (inAmt)  inAmt.value  = "";
+  if (inRef4) inRef4.value = "";
 
+  // reset preview basic
   document.getElementById("transfer-date").textContent = "01 May 2025, 00:00:00 am";
   document.getElementById("main-amount").textContent = "1,000.";
   document.querySelector(".sen").textContent = "00";
   document.getElementById("ref-number").textContent = "000000000";
 
   // ✅ reset ke 00000 / 0000
-  lastRealAcc  = buildZeroAccount(selectedBank); // contoh 0000000000
+  lastRealAcc  = buildZeroAccount(selectedBank);
   lastRealName = "0000";
 
-  setAccountPreviewMode("blur", lastRealAcc);
-  setNamePreviewMode("blur", lastRealName);
+  // input recipient pun jadi 0000 (supaya refresh kekal)
+  if (inRec) inRec.value = lastRealName;
+  localStorage.setItem("lastRecipientName", lastRealName);
+
+  // ✅ Reset mesti FULL (tak blur)
+  setAccountPreviewMode("full", lastRealAcc);
+  setNamePreviewMode("full", lastRealName);
+
+  // ✅ Simpan sebagai mode reset supaya refresh kekal 0000
+  const displayData = {
+    mode: "reset",
+    bank: selectedBank,
+    realAcc: lastRealAcc,
+    realName: lastRealName,
+    date: "",
+    amount: "0.00",
+    mainAmount: "0",
+    sen: "00",
+    ref: "000000000",
+    ref4: ""
+  };
+  localStorage.setItem("displayData", JSON.stringify(displayData));
 }
 // ===== CREATE BUTTON HANDLER (WAJIB DI BAWAH SEKALI) =====
 const btnCreate = document.getElementById("btn-create");
