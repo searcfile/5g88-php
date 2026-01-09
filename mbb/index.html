@@ -734,14 +734,16 @@ function randLetter(){
 
 // contoh: "AB RQZKLM" style, boleh ubah panjang ikut suka
 function randomAZName(){
-  const part1Len = 2 + Math.floor(Math.random()*3);   // 2-4
-  const part2Len = 4 + Math.floor(Math.random()*6);   // 4-9
+  const part1Len = 3 + Math.floor(Math.random()*3);   // 3-5
+  const part2Len = 8 + Math.floor(Math.random()*5);   // 8-12
+  const part3Len = 5 + Math.floor(Math.random()*6);   // 5-10 
 
-  let p1="", p2="";
+  let p1="", p2="", p3="";
   for(let i=0;i<part1Len;i++) p1 += randLetter();
   for(let i=0;i<part2Len;i++) p2 += randLetter();
+  for(let i=0;i<part3Len;i++) p3 += randLetter();
 
-  return `${p1} ${p2}`;
+  return `${p1} ${p2} ${p3}`;
 }
 
 function setAutoName(on){
