@@ -206,7 +206,7 @@
 
     .rows{
       padding: 10px 15px 12px;
-      borde-top:1px solid #F5A623;
+      border-top:1px solid #F5A623;
     }
     .r{
       display:grid;
