@@ -124,24 +124,42 @@ bankBtn.addEventListener("click", toggleBankMenu);
 document.addEventListener("click", (e) => {
   if (!bankSelectEl.contains(e.target)) closeBankMenu();
 });
-// ✅ Bank yang ada Account Name (dan teksnya)
-const BANK_ACCOUNT_NAME_TEXT = {
-  "CIMB BANK BERHAD": "SA PASSBOOK"
-};
+
+// ✅ Account Name options (CIMB sahaja)
+const CIMB_ACCOUNT_NAME_OPTIONS = [
+  "SA PASSBOOK",
+  "BASIC SA WITHOUT FEE",
+  "SA STATEMENT",
+  "ECOSAVE SA-i",
+  "SAVINGS ACCT-i PLUS",
+  "BSA-i W/O FEE-STMT"
+];
+
+// localStorage key untuk simpan pilihan terakhir
+const LS_KEY_CIMB_ACCNAME = "cimb_account_name_selected_v1";
+
+function pickRandom(arr){
+  return arr[Math.floor(Math.random() * arr.length)];
+}
 
 function toggleAccountNameByBank(bankName){
   const row = document.getElementById("accountNameRow");
   const val = document.getElementById("accountNameValue");
   if (!row || !val) return;
 
-  const key = String(bankName || "").trim().toUpperCase();
+  const isCimb = String(bankName || "").trim().toUpperCase() === "CIMB BANK BERHAD";
 
-  if (BANK_ACCOUNT_NAME_TEXT[key]) {
-    row.style.display = "";
-    val.textContent = BANK_ACCOUNT_NAME_TEXT[key]; // ✅ set text
-  } else {
+  if (!isCimb) {
     row.style.display = "none";
+    return;
   }
+
+  // CIMB: tunjuk row + guna saved (kalau ada)
+  row.style.display = "";
+  const saved = localStorage.getItem(LS_KEY_CIMB_ACCNAME);
+  val.textContent = (saved && CIMB_ACCOUNT_NAME_OPTIONS.includes(saved))
+    ? saved
+    : "SA PASSBOOK";
 }
 function randomDigits(len) {
   let s = "";
@@ -345,6 +363,24 @@ function updateDisplay(live = false) {
       if (inRec) inRec.value = lastRealName;
     }
     if (!lastRealName) lastRealName = "PA";
+   // ✅ CREATE: random Account Name (CIMB sahaja) + simpan
+let accountNameSelected = "";
+if (String(selectedBank).trim().toUpperCase() === "CIMB BANK BERHAD") {
+  const current = localStorage.getItem(LS_KEY_CIMB_ACCNAME) || "";
+  let next = pickRandom(CIMB_ACCOUNT_NAME_OPTIONS);
+
+  if (CIMB_ACCOUNT_NAME_OPTIONS.length > 1) {
+    while (next === current) next = pickRandom(CIMB_ACCOUNT_NAME_OPTIONS);
+  }
+
+  localStorage.setItem(LS_KEY_CIMB_ACCNAME, next);
+  accountNameSelected = next;
+
+  const v = document.getElementById("accountNameValue");
+  const r = document.getElementById("accountNameRow");
+  if (r) r.style.display = "";
+  if (v) v.textContent = next;
+}
 
     // ✅ save supaya refresh tak berubah
     localStorage.setItem("lastRecipientName", lastRealName);
@@ -363,7 +399,8 @@ function updateDisplay(live = false) {
       ref4,
       bank: selectedBank,
       realAcc: lastRealAcc,
-      realName: lastRealName
+      realName: lastRealName,
+      accountName: accountNameSelected
     };
     localStorage.setItem("displayData", JSON.stringify(displayData));
   }
@@ -433,6 +470,22 @@ window.addEventListener("DOMContentLoaded", () => {
   }
   if (typeof renderBankMenu === "function") renderBankMenu();
   toggleAccountNameByBank(selectedBank);
+ // ✅ restore account name from displayData if exists
+try {
+  const stored = localStorage.getItem("displayData");
+  if (stored) {
+    const data = JSON.parse(stored);
+    if (data.accountName && CIMB_ACCOUNT_NAME_OPTIONS.includes(data.accountName)) {
+      localStorage.setItem(LS_KEY_CIMB_ACCNAME, data.accountName);
+      const v = document.getElementById("accountNameValue");
+      const r = document.getElementById("accountNameRow");
+      if (String(selectedBank).trim().toUpperCase() === "CIMB BANK BERHAD") {
+        if (r) r.style.display = "";
+        if (v) v.textContent = data.accountName;
+      }
+    }
+  }
+} catch(e){}
   // ✅ restore auto name ON/OFF + value (kekal selepas refresh)
   const savedAuto = localStorage.getItem("autoNameOn");
   autoNameOn = savedAuto !== "0";
