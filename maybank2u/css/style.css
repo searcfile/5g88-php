@@ -1,11 +1,11 @@
     :root{
-      --green:#3b9b73;          /* dekat macam screenshot */
+      --green:#3b9b73;
       --bg:#e7e7e7;
       --card:#fff;
       --text:#111827;
       --muted:#6b7280;
       --line:#e5e7eb;
-      --danger:#e11d48;         /* amount merah */
+      --danger:#e11d48;
       --shadow:0 10px 30px rgba(0,0,0,.10);
       --radius:10px;
     }
