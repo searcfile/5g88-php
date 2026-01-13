@@ -46,6 +46,7 @@ const BANK_CONFIG = {
   "PUBLIC BANK":{ len: 10, start: "6" },
   "Merchantrade":{ len: 12, start: "5" },
   "BANK ISLAM MALAYSIA":{ len: 14, start: "1" },
+  "GXBANK": { len: 13, prefix: "88" }
 };
     const DEFAULT_STATE = {
       bank: "Please Select",
