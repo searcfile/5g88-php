@@ -41,7 +41,8 @@ const BANK_CONFIG = {
   "RHB BANK": { len: 14, prefix: "16" },
   "PUBLIC BANK": { len: 10, start: "6" },
   "Merchantrade": { len: 12, prefix: "50" },
-  "BANK ISLAM MALAYSIA": { len: 14, start: "1" }
+  "BANK ISLAM MALAYSIA": { len: 14, start: "1" },
+  "GXBank": { len: 13, prefix: "88" }
 };
 
 let selectedBank = "CIMB BANK BERHAD";
