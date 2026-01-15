@@ -566,13 +566,14 @@ async function copyReceiptImage() {
     showToast?.("Clipboard blocked. PNG downloaded ✅", "info");
   }
 }
-document.addEventListener("keydown", function(e) {
+
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("copyReceiptBtn");
+  if (btn) btn.addEventListener("click", copyReceiptImage);
+
+ document.addEventListener("keydown", function(e) {
   if (e.ctrlKey && e.key.toLowerCase() === "c") {
     e.preventDefault();
     copyGameLogImage();
   }
-});
-document.addEventListener("DOMContentLoaded", () => {
-  const btn = document.getElementById("copyReceiptBtn");
-  if (btn) btn.addEventListener("click", copyReceiptImage);
 });
