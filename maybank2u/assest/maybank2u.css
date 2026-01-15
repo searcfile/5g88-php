@@ -281,7 +281,7 @@
     }
 /* Bila screenshot-mode aktif (html2canvas capture) */
 .screenshot-mode .maskBlur{
-  filter: none !important;
+  filter: blur(4px);
   color: transparent !important;
   text-shadow:
     0 0 6px rgba(0,0,0,.45),
