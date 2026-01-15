@@ -515,28 +515,69 @@ function showToast(msg, type = "info"){
 async function copyReceiptImage() {
   const receiptEl = document.getElementById("receiptCard");
   if (!receiptEl) {
-    showToast?.("Resit #receiptCard tidak ditemui", "error");
+    showToast("Resit #receiptCard tidak ditemui", "error");
     return;
   }
 
-  // ✅ 1) tunggu font siap (penting untuk elak text lari)
+  // ✅ tunggu font siap (elak text lari)
   try { await document.fonts.ready; } catch(_) {}
 
-  // ✅ 2) enable screenshot mode + disable zoom sementara
+  // ✅ helper: paksa blur wujud masa screenshot (buat span .maskBlur)
+  function forceMaskForShot(){
+    const prevHolder = holderNameTitle?.innerHTML || "";
+    const prevAcc    = accountNumber?.innerHTML || "";
+
+    const fullName = (state?.holderName || holderInput?.value || "").trim();
+    const bank = state?.bank || bankSelect?.value || "";
+
+    try { state = ensureAccountsForBank(state, bank); } catch(_) {}
+
+    // ambil account sebenar dari state / DOM
+    const acc =
+      (state?.selectedAccountByBank && state.selectedAccountByBank[bank]) ||
+      (accountNumber?.textContent || "").trim();
+
+    // ✅ paksa masked => wujudkan .maskBlur (html2canvas boleh capture)
+    try { setHolderMasked(true, fullName || "CH"); } catch(_) {}
+    try { setAccountMasked(true, acc || "0000000000"); } catch(_) {}
+
+    return function restore(){
+      if (holderNameTitle) holderNameTitle.innerHTML = prevHolder;
+      if (accountNumber)   accountNumber.innerHTML   = prevAcc;
+    };
+  }
+
+  // ✅ ON screenshot mode (untuk CSS yang kau buat)
   document.body.classList.add("bodyShot");
   document.body.classList.add("screenshot-mode");
+
+  // ✅ paksa blur wujud
+  const restoreMask = forceMaskForShot();
 
   // tunggu 2 frame supaya style sempat apply
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
   let canvas;
   try {
+    // ✅ kalau ZOOM_FACTOR tak ada, fallback 1
+    const z = (typeof ZOOM_FACTOR === "number" && ZOOM_FACTOR > 0) ? ZOOM_FACTOR : 1;
+
     canvas = await html2canvas(receiptEl, {
-      scale: 2 * ZOOM_FACTOR,   // ✅ compensate zoom, PNG tetap besar & sharp
+      scale: 2 * z,                 // sharp
       useCORS: true,
-      backgroundColor: null
+      backgroundColor: null,
+      logging: false,
+      removeContainer: true
     });
+
+  } catch (err) {
+    showToast("Gagal capture screenshot", "error");
+    console.error(err);
+    return;
+
   } finally {
+    // ✅ restore balik UI asal
+    try { restoreMask?.(); } catch(_) {}
     document.body.classList.remove("screenshot-mode");
     document.body.classList.remove("bodyShot");
   }
@@ -552,18 +593,17 @@ async function copyReceiptImage() {
     });
 
     await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-    showToast?.("Receipt image copied ✅", "success");
-    return;
+    showToast("Receipt image copied ✅", "success");
 
   } catch (err) {
-    // fallback download
+    // ✅ fallback download
     const a = document.createElement("a");
     a.href = canvas.toDataURL("image/png");
     a.download = `receipt_${Date.now()}.png`;
     document.body.appendChild(a);
     a.click();
     a.remove();
-    showToast?.("Clipboard blocked. PNG downloaded ✅", "info");
+    showToast("Clipboard blocked. PNG downloaded ✅", "info");
   }
 }
 
@@ -571,3 +611,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("copyReceiptBtn");
   if (btn) btn.addEventListener("click", copyReceiptImage);
 });
+function forceMaskForShot(){
+  // simpan asal (untuk restore)
+  const prevHolder = holderNameTitle.innerHTML;
+  const prevAcc    = accountNumber.innerHTML;
+
+  // ambil text penuh sebenar (kalau state belum created)
+  const fullName = (state?.holderName || holderInput?.value || "").trim();
+  const bank = state?.bank || bankSelect?.value || "";
+  state = ensureAccountsForBank(state, bank);
+  const acc = state?.selectedAccountByBank?.[bank] || accountNumber.textContent.trim();
+
+  // paksa mask (buat span .maskBlur)
+  setHolderMasked(true, fullName || "CH");
+  setAccountMasked(true, acc || "0000000000");
+
+  return function restore(){
+    holderNameTitle.innerHTML = prevHolder;
+    accountNumber.innerHTML   = prevAcc;
+  };
+}
