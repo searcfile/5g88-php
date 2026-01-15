@@ -17,7 +17,7 @@
       background: radial-gradient(circle at top, #1f2937 0, transparent 55%), radial-gradient(circle at bottom, #020617 0, #000 65%) !important;
       color:var(--text);
     }
-
+   
     .wrap{
       max-width: 1070px;
       margin: 18px auto;
@@ -418,3 +418,29 @@ input[type="number"]{
   transform-origin: top center;  /* supaya membesar ke tengah, bukan ke bawah */
   margin-top: 20px;              /* beri ruang sedikit */
 }
+/* ✅ COPY BUTTON bawah resit */
+.copyBar{
+  background: transparent;
+  padding: 10px 15px 16px;
+  display:flex;
+  justify-content:flex-start; /* kiri */
+}
+
+.copyReceiptBtn{
+  border:0;
+  height:40px;
+  padding:0 14px;
+  border-radius:10px;
+  font-weight:800;
+  cursor:pointer;
+  background:#ffffff;
+  color:#111;
+  box-shadow: 0 10px 24px rgba(0,0,0,.35);
+  transition: all .2s;
+}
+
+.copyReceiptBtn:hover{ transform: translateY(-1px); }
+.copyReceiptBtn:active{ transform: translateY(1px); }
+
+/* ✅ bila screenshot: elak button ikut masuk gambar */
+.screenshot-mode .copyBar{ display:none !important; }
