@@ -9,7 +9,10 @@
       --shadow:0 10px 30px rgba(0,0,0,.10);
       --radius:10px;
     }
-
+    /* ✅ bila screenshot, matikan zoom-wrap supaya text tak pecah */
+.bodyShot .zoom-wrap{
+  transform: none !important;
+}
     *{box-sizing:border-box}
     body{
       font-family: "Lato", Calibri, Helvetica, Arial, sans-serif;
