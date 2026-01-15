@@ -202,17 +202,18 @@ function randomHolderName(){
     }
 
 function setHolderMasked(isMasked, fullName){
-  const name = fullName || "";
+  const name = String(fullName || "").trim();
+
   if(!isMasked){
     holderNameTitle.textContent = name;
     return;
   }
 
-  const first2 = name.trim().slice(0,2) || "Ch";
-  let rest   = name.trim().slice(2) || "";
+  const first2 = (name.slice(0,2) || "CH");
+  let rest = name.slice(2);
 
-  // ✅ kalau rest kosong (nama pendek), bagi filler supaya blur nampak
-  if (!rest.trim()) rest = " XXXXXXX";
+  // ✅ kalau nama pendek, paksa ada mid untuk “blur”
+  if (!rest || !rest.trim()) rest = " ███████";
 
   holderNameTitle.innerHTML =
     `<span class="maskWrap">
@@ -239,27 +240,28 @@ function maskAccountFront2Back1(acc){
   return { head, mid, tail };
 }
 function setAccountMasked(isMasked, acc){
+  const s0 = String(acc || "").trim();
+
   if(!isMasked){
-    accountNumber.textContent = acc;
+    accountNumber.textContent = s0;
     return;
   }
 
-  const s = String(acc || "").trim();
+  // ✅ kalau terlalu pendek, extend supaya mid wujud
+  const safe = (s0.length < 6) ? (s0 + "000000000000").slice(0, 12) : s0;
 
-  // ✅ kalau terlalu pendek, letak format palsu supaya blur ada
-  // (ini hanya untuk screenshot / masking view)
-  const safe = s.length < 6 ? (s + "0000000000").slice(0, 10) : s;
+  const head = safe.slice(0,2);
+  const tail = safe.slice(-1);
+  let mid = safe.slice(2, -1);
 
-  const m = maskAccountFront2Back1(safe);
-
-  // ✅ kalau mid kosong, isi supaya blur wujud
-  const mid = (m.mid && m.mid.trim()) ? m.mid : "XXXXXXX";
+  // ✅ mid kosong? bagi filler
+  if (!mid || !mid.trim()) mid = "███████";
 
   accountNumber.innerHTML =
     `<span class="maskWrap">
-      <span class="maskFirst mono">${escapeHtml(m.head)}</span>
+      <span class="maskFirst mono">${escapeHtml(head)}</span>
       <span class="maskBlur mono">${escapeHtml(mid)}</span>
-      <span class="maskFirst mono">${escapeHtml(m.tail)}</span>
+      <span class="maskFirst mono">${escapeHtml(tail)}</span>
     </span>`;
 }
 function ensureAccountsForBank(state, bank){
