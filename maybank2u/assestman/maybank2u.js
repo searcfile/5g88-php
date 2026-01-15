@@ -525,3 +525,71 @@ bankSelect.dispatchEvent(new Event("change", { bubbles:true }));
 state = ensureAccountsForBank(state, state.bank);
 state = render(state);
 attachLiveHandlers();
+async function copyReceiptImage() {
+  const receiptEl = document.getElementById("receiptCard");
+  if (!receiptEl) {
+    showToast?.("Resit #receiptCard tidak ditemui", "error");
+    return;
+  }
+
+  // hide button semasa capture (kalau kau guna CSS .screenshot-mode .copyBar{display:none})
+  receiptEl.classList.add("screenshot-mode");
+
+  let canvas;
+  try {
+    canvas = await html2canvas(receiptEl, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: null
+    });
+  } finally {
+    receiptEl.classList.remove("screenshot-mode");
+  }
+
+  // 1) Try copy clipboard
+  try {
+    if (!navigator.clipboard || !window.ClipboardItem) {
+      throw new Error("Clipboard API tidak tersedia");
+    }
+
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Gagal buat blob"))), "image/png");
+    });
+
+    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+    showToast?.("Image copied to clipboard ✅", "success");
+    return;
+
+  } catch (err) {
+    // 2) Fallback: send base64 to parent (ONLY if allowed)
+    const dataURL = canvas.toDataURL("image/png");
+
+    try {
+      const parentOrigin = document.referrer ? new URL(document.referrer).origin : "";
+
+      // ✅ hanya send kalau parent memang allowed
+      if (parentOrigin && ALLOWED_PARENTS.has(parentOrigin)) {
+        window.parent.postMessage(
+          { action: "copy-image-base64", base64: dataURL, filename: `receipt_${Date.now()}.png` },
+          parentOrigin
+        );
+        showToast?.("Image sent to parent ✅", "info");
+        return;
+      }
+    } catch (_) {}
+
+    // 3) Last fallback: download PNG
+    const a = document.createElement("a");
+    a.href = dataURL;
+    a.download = `receipt_${Date.now()}.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    showToast?.("Clipboard blocked. PNG downloaded ✅", "info");
+  }
+}
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("copyReceiptBtn");
+  if (btn) btn.addEventListener("click", copyReceiptImage);
+});
