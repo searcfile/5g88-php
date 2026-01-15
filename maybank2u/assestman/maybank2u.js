@@ -524,7 +524,7 @@ async function copyReceiptImage() {
 
   // ✅ 2) enable screenshot mode + disable zoom sementara
   document.body.classList.add("bodyShot");
-  receiptEl.classList.add("screenshot-mode");
+  document.body.classList.add("screenshot-mode");
 
   // tunggu 2 frame supaya style sempat apply
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
@@ -537,7 +537,7 @@ async function copyReceiptImage() {
       backgroundColor: null
     });
   } finally {
-    receiptEl.classList.remove("screenshot-mode");
+    document.body.classList.remove("screenshot-mode");
     document.body.classList.remove("bodyShot");
   }
 
