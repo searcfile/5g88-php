@@ -9,44 +9,7 @@
       --shadow:0 10px 30px rgba(0,0,0,.10);
       --radius:10px;
     }
-    /* ✅ bila screenshot, matikan zoom-wrap supaya text tak pecah */
-.bodyShot .zoom-wrap{
-  transform: none !important;
-}
-#toastWrap{
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 99999;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
 
-.toast{
-  min-width: 220px;
-  max-width: 300px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  box-shadow: 0 10px 30px rgba(0,0,0,.4);
-  animation: toastIn .25s ease, toastOut .25s ease 2.6s forwards;
-}
-
-.toast.success{ background: #22c55e; }
-.toast.error{ background: #ef4444; }
-.toast.info{ background: #3b82f6; }
-
-@keyframes toastIn{
-  from{ opacity:0; transform: translateY(12px); }
-  to{ opacity:1; transform: translateY(0); }
-}
-
-@keyframes toastOut{
-  to{ opacity:0; transform: translateY(12px); }
-}
     *{box-sizing:border-box}
     body{
       font-family: "Lato", Calibri, Helvetica, Arial, sans-serif;
@@ -54,7 +17,7 @@
       background: radial-gradient(circle at top, #1f2937 0, transparent 55%), radial-gradient(circle at bottom, #020617 0, #000 65%) !important;
       color:var(--text);
     }
-   
+
     .wrap{
       max-width: 1070px;
       margin: 18px auto;
@@ -279,15 +242,6 @@
       opacity:.9;
       transform: translateZ(0);
     }
-/* Bila screenshot-mode aktif (html2canvas capture) */
-/* ✅ screenshot-mode: jangan guna filter blur (html2canvas selalu fail)
-   tukar jadi “mask block” yang nampak macam blur */
-.screenshot-mode .maskBlur{
-  filter: none !important;
-  opacity: .55 !important;
-  color: #ffffff00 !important;   /* transparent text */
-  text-shadow: 0 0 7px rgba(255,255,255,.95) !important;
-}
     .fav-star{
   width:22px;
   height:21px;
@@ -464,29 +418,3 @@ input[type="number"]{
   transform-origin: top center;  /* supaya membesar ke tengah, bukan ke bawah */
   margin-top: 20px;              /* beri ruang sedikit */
 }
-/* ✅ COPY BUTTON bawah resit */
-.copyBar{
-  background: transparent;
-  padding: 10px 15px 16px;
-  display:flex;
-  justify-content:flex-start; /* kiri */
-}
-
-.copyReceiptBtn{
-  border:0;
-  height:40px;
-  padding:0 14px;
-  border-radius:10px;
-  font-weight:800;
-  cursor:pointer;
-  background:#ffffff;
-  color:#111;
-  box-shadow: 0 10px 24px rgba(0,0,0,.35);
-  transition: all .2s;
-}
-
-.copyReceiptBtn:hover{ transform: translateY(-1px); }
-.copyReceiptBtn:active{ transform: translateY(1px); }
-
-/* ✅ bila screenshot: elak button ikut masuk gambar */
-.screenshot-mode .copyBar{ display:none !important; }
