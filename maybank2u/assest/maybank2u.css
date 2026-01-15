@@ -279,6 +279,23 @@
       opacity:.9;
       transform: translateZ(0);
     }
+/* ✅ masa screenshot, jangan guna filter blur (html2canvas kadang bocor) */
+.screenshot-mode .maskBlur{
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+/* ✅ ini yang akan muncul masa screenshot (mask) */
+.screenshot-mode .maskBlur::before{
+  content: attr(data-mask);
+  letter-spacing: 1px;
+}
+
+/* ✅ sembunyikan text asal blur masa screenshot */
+.screenshot-mode .maskBlur{
+  color: transparent !important;
+  text-shadow: none !important;
+}
     .fav-star{
   width:22px;
   height:21px;
