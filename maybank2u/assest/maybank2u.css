@@ -280,14 +280,13 @@
       transform: translateZ(0);
     }
 /* Bila screenshot-mode aktif (html2canvas capture) */
+/* ✅ screenshot-mode: jangan guna filter blur (html2canvas selalu fail)
+   tukar jadi “mask block” yang nampak macam blur */
 .screenshot-mode .maskBlur{
   filter: none !important;
-  color: transparent !important;
-  text-shadow:
-    0 0 2px rgba(255,255,255,1),
-    0 0 6px rgba(255,255,255,.95),
-    0 0 12px rgba(255,255,255,.85),
-    0 0 18px rgba(255,255,255,.70);
+  opacity: .55 !important;
+  color: #ffffff00 !important;   /* transparent text */
+  text-shadow: 0 0 7px rgba(255,255,255,.95) !important;
 }
     .fav-star{
   width:22px;
