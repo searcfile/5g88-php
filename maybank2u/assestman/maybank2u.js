@@ -201,22 +201,25 @@ function randomHolderName(){
       }
     }
 
-    function setHolderMasked(isMasked, fullName){
-      const name = fullName || "";
-      if(!isMasked){
-        holderNameTitle.textContent = name;
-        return;
-      }
-      // show first 2 letters, rest blur
-      const first2 = name.trim().slice(0,2) || "Ch";
-      const rest   = name.trim().slice(2) || "";
+function setHolderMasked(isMasked, fullName){
+  const name = fullName || "";
+  if(!isMasked){
+    holderNameTitle.textContent = name;
+    return;
+  }
 
-      holderNameTitle.innerHTML =
-        `<span class="maskWrap">
-          <span class="maskFirst">${escapeHtml(first2)}</span>
-          <span class="maskBlur">${escapeHtml(rest)}</span>
-        </span>`;
-    }
+  const first2 = name.trim().slice(0,2) || "Ch";
+  let rest   = name.trim().slice(2) || "";
+
+  // ✅ kalau rest kosong (nama pendek), bagi filler supaya blur nampak
+  if (!rest.trim()) rest = " XXXXXXX";
+
+  holderNameTitle.innerHTML =
+    `<span class="maskWrap">
+      <span class="maskFirst">${escapeHtml(first2)}</span>
+      <span class="maskBlur">${escapeHtml(rest)}</span>
+    </span>`;
+}
 
     function escapeHtml(s){
       return String(s)
@@ -241,11 +244,21 @@ function setAccountMasked(isMasked, acc){
     return;
   }
 
-  const m = maskAccountFront2Back1(acc);
+  const s = String(acc || "").trim();
+
+  // ✅ kalau terlalu pendek, letak format palsu supaya blur ada
+  // (ini hanya untuk screenshot / masking view)
+  const safe = s.length < 6 ? (s + "0000000000").slice(0, 10) : s;
+
+  const m = maskAccountFront2Back1(safe);
+
+  // ✅ kalau mid kosong, isi supaya blur wujud
+  const mid = (m.mid && m.mid.trim()) ? m.mid : "XXXXXXX";
+
   accountNumber.innerHTML =
     `<span class="maskWrap">
       <span class="maskFirst mono">${escapeHtml(m.head)}</span>
-      <span class="maskBlur mono">${escapeHtml(m.mid)}</span>
+      <span class="maskBlur mono">${escapeHtml(mid)}</span>
       <span class="maskFirst mono">${escapeHtml(m.tail)}</span>
     </span>`;
 }
