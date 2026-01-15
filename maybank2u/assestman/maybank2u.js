@@ -1,5 +1,35 @@
  
-
+  (function(){
+  const LOGIN_URL = "https://5g88-login.vercel.app/";
+  const ALLOWED_PARENTS = new Set([
+  "https://searcfile.github.io","https://5g88-main.vercel.app",]);
+  const TIMEOUT_MS = 3500;
+  function goLogin(){const rt = encodeURIComponent(location.href);
+  location.replace(`${LOGIN_URL}?redirect=${rt}`);}
+  if (window.top === window.self) { goLogin(); return; }
+  let authed = false;
+  let timeoutId = null;
+  function requestLoginFromParent(){
+    try {
+      window.parent.postMessage({ type: "request-login" }, "*");
+      window.parent.postMessage({ type: "child-ready" }, "*");
+    } catch(_) {}
+  }
+  function onMsg(ev){
+    if (!ALLOWED_PARENTS.has(ev.origin)) return;
+    const d = ev.data || {};
+    if (d.type === "user-login" && d.user && typeof d.user.email === "string") {
+      authed = true;
+      try { sessionStorage.setItem("child_login_user", d.user.email.toLowerCase()); } catch(_){}
+      document.documentElement.style.visibility = "visible";
+      window.removeEventListener("message", onMsg);
+      if (timeoutId) clearTimeout(timeoutId);
+    }
+  }
+  window.addEventListener("message", onMsg, false);
+  requestLoginFromParent();
+  timeoutId = setTimeout(() => {
+  if (!authed) { window.removeEventListener("message", onMsg);goLogin();}}, TIMEOUT_MS);})();
 
 // ============================
     //  FULL RECEIPT BUILDER v1
@@ -201,26 +231,22 @@ function randomHolderName(){
       }
     }
 
-function setHolderMasked(isMasked, fullName){
-  const name = String(fullName || "").trim();
+    function setHolderMasked(isMasked, fullName){
+      const name = fullName || "";
+      if(!isMasked){
+        holderNameTitle.textContent = name;
+        return;
+      }
+      // show first 2 letters, rest blur
+      const first2 = name.trim().slice(0,2) || "Ch";
+      const rest   = name.trim().slice(2) || "";
 
-  if(!isMasked){
-    holderNameTitle.textContent = name;
-    return;
-  }
-
-  const first2 = (name.slice(0,2) || "CH");
-  let rest = name.slice(2);
-
-  // ✅ kalau nama pendek, paksa ada mid untuk “blur”
-  if (!rest || !rest.trim()) rest = " ███████";
-
-  holderNameTitle.innerHTML =
-    `<span class="maskWrap">
-      <span class="maskFirst">${escapeHtml(first2)}</span>
-      <span class="maskBlur">${escapeHtml(rest)}</span>
-    </span>`;
-}
+      holderNameTitle.innerHTML =
+        `<span class="maskWrap">
+          <span class="maskFirst">${escapeHtml(first2)}</span>
+          <span class="maskBlur">${escapeHtml(rest)}</span>
+        </span>`;
+    }
 
     function escapeHtml(s){
       return String(s)
@@ -240,28 +266,17 @@ function maskAccountFront2Back1(acc){
   return { head, mid, tail };
 }
 function setAccountMasked(isMasked, acc){
-  const s0 = String(acc || "").trim();
-
   if(!isMasked){
-    accountNumber.textContent = s0;
+    accountNumber.textContent = acc;
     return;
   }
 
-  // ✅ kalau terlalu pendek, extend supaya mid wujud
-  const safe = (s0.length < 6) ? (s0 + "000000000000").slice(0, 12) : s0;
-
-  const head = safe.slice(0,2);
-  const tail = safe.slice(-1);
-  let mid = safe.slice(2, -1);
-
-  // ✅ mid kosong? bagi filler
-  if (!mid || !mid.trim()) mid = "███████";
-
+  const m = maskAccountFront2Back1(acc);
   accountNumber.innerHTML =
     `<span class="maskWrap">
-      <span class="maskFirst mono">${escapeHtml(head)}</span>
-      <span class="maskBlur mono">${escapeHtml(mid)}</span>
-      <span class="maskFirst mono">${escapeHtml(tail)}</span>
+      <span class="maskFirst mono">${escapeHtml(m.head)}</span>
+      <span class="maskBlur mono">${escapeHtml(m.mid)}</span>
+      <span class="maskFirst mono">${escapeHtml(m.tail)}</span>
     </span>`;
 }
 function ensureAccountsForBank(state, bank){
@@ -510,99 +525,3 @@ bankSelect.dispatchEvent(new Event("change", { bubbles:true }));
 state = ensureAccountsForBank(state, state.bank);
 state = render(state);
 attachLiveHandlers();
-const ZOOM_FACTOR = 1.25; // sama macam .zoom-wrap transform scale(1.25)
-
-function showToast(msg, type = "info"){
-  const wrap = document.getElementById("toastWrap");
-  if (!wrap) return;
-
-  const t = document.createElement("div");
-  t.className = `toast ${type}`;
-  t.textContent = msg;
-
-  wrap.appendChild(t);
-
-  setTimeout(() => {
-    t.remove();
-  }, 3000);
-}
-
-async function copyReceiptImage() {
-  const receiptEl = document.getElementById("receiptCard");
-  if (!receiptEl) return showToast("Resit #receiptCard tidak ditemui", "error");
-
-  try { await document.fonts.ready; } catch(_) {}
-
-  // ✅ paksa mask wujud masa shot
-  const restoreMask = forceMaskForShot();
-
-  // ✅ ON mode (hide button + zoom off)
-  receiptEl.classList.add("screenshot-mode");
-  document.body.classList.add("bodyShot");
-
-  // tunggu style apply
-  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-
-  let canvas;
-  try {
-    const z = (typeof ZOOM_FACTOR === "number" && ZOOM_FACTOR > 0) ? ZOOM_FACTOR : 1;
-    canvas = await html2canvas(receiptEl, {
-      scale: 2 * z,
-      useCORS: true,
-      backgroundColor: null,
-      logging: false,
-      removeContainer: true
-    });
-  } catch (err) {
-    console.error(err);
-    showToast("Gagal capture screenshot", "error");
-    return;
-  } finally {
-    // restore UI
-    try { restoreMask?.(); } catch(_) {}
-    receiptEl.classList.remove("screenshot-mode");
-    document.body.classList.remove("bodyShot");
-  }
-
-  // ✅ copy / fallback
-  try {
-    if (!navigator.clipboard || !window.ClipboardItem) throw new Error("Clipboard API tak support");
-    const blob = await new Promise((resolve, reject) => {
-      canvas.toBlob(b => b ? resolve(b) : reject(new Error("Gagal buat blob")), "image/png");
-    });
-    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-    showToast("Receipt image copied ✅", "success");
-  } catch (err) {
-    const a = document.createElement("a");
-    a.href = canvas.toDataURL("image/png");
-    a.download = `receipt_${Date.now()}.png`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    showToast("Clipboard blocked. PNG downloaded ✅", "info");
-  }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const btn = document.getElementById("copyReceiptBtn");
-  if (btn) btn.addEventListener("click", copyReceiptImage);
-});
-function forceMaskForShot(){
-  const prevHolder = holderNameTitle.innerHTML;
-  const prevAcc    = accountNumber.innerHTML;
-
-  const fullName = (state?.holderName || holderInput?.value || "").trim();
-  const bank = state?.bank || bankSelect?.value || "";
-
-  try { state = ensureAccountsForBank(state, bank); } catch(_) {}
-
-  const acc = state?.selectedAccountByBank?.[bank] || accountNumber.textContent.trim();
-
-  setHolderMasked(true, fullName || "CH");
-  setAccountMasked(true, acc || "0000000000");
-
-  return function restore(){
-    holderNameTitle.innerHTML = prevHolder;
-    accountNumber.innerHTML   = prevAcc;
-  };
-}
