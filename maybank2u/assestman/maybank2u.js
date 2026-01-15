@@ -525,6 +525,8 @@ bankSelect.dispatchEvent(new Event("change", { bubbles:true }));
 state = ensureAccountsForBank(state, state.bank);
 state = render(state);
 attachLiveHandlers();
+const ZOOM_FACTOR = 1.25; // sama macam .zoom-wrap transform scale(1.25)
+
 async function copyReceiptImage() {
   const receiptEl = document.getElementById("receiptCard");
   if (!receiptEl) {
@@ -532,21 +534,29 @@ async function copyReceiptImage() {
     return;
   }
 
-  // hide button semasa capture (kalau kau guna CSS .screenshot-mode .copyBar{display:none})
+  // ✅ 1) tunggu font siap (penting untuk elak text lari)
+  try { await document.fonts.ready; } catch(_) {}
+
+  // ✅ 2) enable screenshot mode + disable zoom sementara
+  document.body.classList.add("bodyShot");
   receiptEl.classList.add("screenshot-mode");
+
+  // tunggu 2 frame supaya style sempat apply
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
   let canvas;
   try {
     canvas = await html2canvas(receiptEl, {
-      scale: 2,
+      scale: 2 * ZOOM_FACTOR,   // ✅ compensate zoom, PNG tetap besar & sharp
       useCORS: true,
       backgroundColor: null
     });
   } finally {
     receiptEl.classList.remove("screenshot-mode");
+    document.body.classList.remove("bodyShot");
   }
 
-  // 1) Try copy clipboard
+  // ✅ Try copy clipboard
   try {
     if (!navigator.clipboard || !window.ClipboardItem) {
       throw new Error("Clipboard API tidak tersedia");
@@ -557,35 +567,17 @@ async function copyReceiptImage() {
     });
 
     await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-    showToast?.("Image copied to clipboard ✅", "success");
+    showToast?.("Receipt image copied ✅", "success");
     return;
 
   } catch (err) {
-    // 2) Fallback: send base64 to parent (ONLY if allowed)
-    const dataURL = canvas.toDataURL("image/png");
-
-    try {
-      const parentOrigin = document.referrer ? new URL(document.referrer).origin : "";
-
-      // ✅ hanya send kalau parent memang allowed
-      if (parentOrigin && ALLOWED_PARENTS.has(parentOrigin)) {
-        window.parent.postMessage(
-          { action: "copy-image-base64", base64: dataURL, filename: `receipt_${Date.now()}.png` },
-          parentOrigin
-        );
-        showToast?.("Image sent to parent ✅", "info");
-        return;
-      }
-    } catch (_) {}
-
-    // 3) Last fallback: download PNG
+    // fallback download
     const a = document.createElement("a");
-    a.href = dataURL;
+    a.href = canvas.toDataURL("image/png");
     a.download = `receipt_${Date.now()}.png`;
     document.body.appendChild(a);
     a.click();
     a.remove();
-
     showToast?.("Clipboard blocked. PNG downloaded ✅", "info");
   }
 }
