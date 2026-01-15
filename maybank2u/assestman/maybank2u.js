@@ -570,10 +570,4 @@ async function copyReceiptImage() {
 document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("copyReceiptBtn");
   if (btn) btn.addEventListener("click", copyReceiptImage);
-
- document.addEventListener("keydown", function(e) {
-  if (e.ctrlKey && e.key.toLowerCase() === "c") {
-    e.preventDefault();
-    copyGameLogImage();
-  }
 });
