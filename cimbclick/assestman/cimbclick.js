@@ -48,6 +48,20 @@ const BANK_CONFIG = {
 let selectedBank = "CIMB BANK BERHAD";
 let lastRealAcc  = "";
 let lastRealName = "";
+// ✅ Show / Hide "MYR" text in Bank Charges
+function updateBankChargeCurrencyVisibility(bankName) {
+  const currencyEl = document.querySelector(".charges .currency");
+  if (!currencyEl) return;
+
+  const b = String(bankName || "").trim().toUpperCase();
+
+  // Jika CIMB → sembunyikan MYR sahaja
+  if (b === "CIMB BANK BERHAD") {
+    currencyEl.style.display = "none";
+  } else {
+    currencyEl.style.display = "";
+  }
+}
 // ===== helpers =====
 function randDigits(n){
   let s = "";
@@ -108,7 +122,7 @@ function selectBank(name){
   bankBtnText.textContent = name;
   closeBankMenu();
   renderBankMenu();
-
+  updateBankChargeCurrencyVisibility(selectedBank);
   lastRealAcc = buildAccountNumber(name);
 
   const inRec = document.getElementById("input-recipient");
@@ -471,6 +485,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
   if (typeof renderBankMenu === "function") renderBankMenu();
   toggleAccountNameByBank(selectedBank);
+  updateBankChargeCurrencyVisibility(selectedBank);
  // ✅ restore account name from displayData if exists
 try {
   const stored = localStorage.getItem("displayData");
@@ -595,6 +610,7 @@ function resetDisplay() {
   // ✅ Reset mesti FULL (tak blur)
   setAccountPreviewMode("full", lastRealAcc);
   setNamePreviewMode("full", lastRealName);
+  updateBankChargeCurrencyVisibility(selectedBank);
 
   // ✅ Simpan sebagai mode reset supaya refresh kekal 0000
   const displayData = {
