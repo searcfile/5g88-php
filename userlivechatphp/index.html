@@ -533,7 +533,31 @@ function getOrCreateLocalGuestId(){
   }
   return id;
 }
+function markAdminSeenInDB(){
+  if (!currentActiveId) return;
 
+  const chatPath = getChatPath();
+  if (!chatPath) return;
+
+  const chatRef = db.ref(chatPath);
+
+  chatRef.once("value", (snap) => {
+    if (!snap.exists()) return;
+
+    const updates = {};
+    snap.forEach(child => {
+      const m = child.val();
+      if (m?.from === "admin" && m?.seenByUser !== true) {
+        updates[child.key + "/seenByUser"] = true;
+        updates[child.key + "/readAt"] = Date.now();   // optional
+      }
+    });
+
+    if (Object.keys(updates).length) {
+      chatRef.update(updates).catch(err => console.warn("markAdminSeenInDB fail:", err?.message || err));
+    }
+  });
+}
 async function ensureGuestLocalIdentity(){
   try{
     await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
@@ -856,6 +880,7 @@ function listenToChat() {
 
     renderChats(pastChats, today);
     renderChats(todayChats, today);
+    markAdminSeenInDB();
     const lastMsg = (Array.isArray(chatArray) && chatArray[chatArray.length - 1]) || {};
     const mustForce = wasAtBottom || lastMsg.from === 'user';
     onNewMessageRendered({ forceToBottom: mustForce });
