@@ -662,7 +662,15 @@ function listenToChat(){
       });
       if (messagesToMarkRead.length > 0) updateUserListFlags();
     }
-
+    // ✅ kalau admin sedang view chat ini, pastikan semua msg user jadi read
+if (!justOpenedChat && selectedUserId === activeUserIdSanitized && messagesToMarkRead.length){
+  const updates = {};
+  messagesToMarkRead.forEach(key=>{
+    updates[`${key}/readByAdmin`] = true;
+  });
+  db.ref(`chats/${activeUserIdSanitized}`).update(updates).catch(()=>{});
+  updateUserListFlags();
+}
     // jika ada pesan user baru, naikkan posisinya
     if (shouldUpdatePosition){
       const userIndex = allUsersData.findIndex(([id])=> id === activeUserIdSanitized);
@@ -894,15 +902,18 @@ function sendMessage(){
   if (!selectedUserId || !msg) return alert("Pilih user dan tulis pesan dulu!");
 
   const now = Date.now();
-  const newMsg = {
-    from: 'admin',
-    name: 'Admin',
-    email: 'admin@domain.com',
-    photoURL: 'https://i.imgur.com/qiZFOs9.png',
-    text: msg,
-    time: now,
-    readByAdmin: true
-  };
+const newMsg = {
+  from: 'admin',
+  name: 'Admin',
+  email: 'admin@domain.com',
+  photoURL: 'https://i.imgur.com/qiZFOs9.png',
+  text: msg,
+  time: now,
+  readByAdmin: true,
+  seenByUser: false,
+  deliveredAt: now,
+  readAt: null
+};
 
   db.ref(`chats/${selectedUserId}`).push(newMsg, err=>{
     if (!err){
