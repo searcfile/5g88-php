@@ -15,7 +15,6 @@
   ]);
   const TIMEOUT_MS = 3500; // lebih longgar
 
-  // redirect helper (samakan param dengan parent: ?redirect=)
   function goLogin(){
     const rt = encodeURIComponent(location.href);
     location.replace(`${LOGIN_URL}?redirect=${rt}`);
