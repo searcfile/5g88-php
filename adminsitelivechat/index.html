@@ -650,7 +650,6 @@ function renderChatMessages(messages){
 // ✅ berapa banyak message terakhir untuk kira unread (besar = lebih tepat, kecil = lebih ringan)
 const META_WINDOW = 120;
 
-/* ======================= CHAT META LISTENER (PER USER) ======================= */
 function ensureChatMetaListener(sanitized){
   if (chatMeta[sanitized]?.listening) return;
 
@@ -658,55 +657,105 @@ function ensureChatMetaListener(sanitized){
   chatMeta[sanitized].listening = true;
   chatMeta[sanitized].hasUnread = !!chatMeta[sanitized].hasUnread;
 
-  // ✅ dengar "value" untuk last N messages → realtime confirm (no need refresh)
+  // =========================================================
+  // ✅ FAST REALTIME (NO REFRESH)
+  // tangkap msg baru masuk terus, tak tunggu time stable
+  // =========================================================
+  const lastRef = db.ref(`chats/${sanitized}`).limitToLast(1);
+
+  lastRef.on("child_added", snap=>{
+    const m = snap.val() || {};
+    const t = Number(m.time) || Date.now(); // ✅ fallback kalau time belum stable
+
+    chatMeta[sanitized].lastChatTime = t;
+
+    // hanya user msg buat unread
+    if (m.from === "user"){
+      // identity (untuk label)
+      chatMeta[sanitized].identity = {
+        name: m.name,
+        email: m.email,
+        photoURL: m.photoURL
+      };
+
+      const prevUnread = !!chatMeta[sanitized].hasUnread;
+      const unreadNow  = (m.readByAdmin !== true);
+
+      chatMeta[sanitized].hasUnread = unreadNow;
+
+      // bunyi bila benar-benar ada unread baru & admin tak buka chat tu
+      if (initialUserListLoaded && !prevUnread && unreadNow && sanitized !== activeUserIdSanitized){
+        playNotificationSound();
+      }
+    }
+
+    // bump activity + sort list
+    const idx = allUsersData.findIndex(([id])=> id === sanitized);
+    if (idx !== -1){
+      const userData = allUsersData[idx][1] || {};
+      allUsersData[idx][2] = makeActivityTime(t, userData);
+      allUsersData.sort((a,b)=> (b[2]||0)-(a[2]||0));
+    }
+
+    scheduleRender();
+  });
+
+  lastRef.on("child_changed", snap=>{
+    const m = snap.val() || {};
+    const t = Number(m.time) || chatMeta[sanitized].lastChatTime || Date.now();
+
+    chatMeta[sanitized].lastChatTime = t;
+
+    if (m.from === "user"){
+      chatMeta[sanitized].hasUnread = (m.readByAdmin !== true);
+
+      if (m.name || m.email || m.photoURL){
+        chatMeta[sanitized].identity = {
+          name: m.name,
+          email: m.email,
+          photoURL: m.photoURL
+        };
+      }
+    }
+
+    const idx = allUsersData.findIndex(([id])=> id === sanitized);
+    if (idx !== -1){
+      const userData = allUsersData[idx][1] || {};
+      allUsersData[idx][2] = makeActivityTime(t, userData);
+      allUsersData.sort((a,b)=> (b[2]||0)-(a[2]||0));
+    }
+
+    scheduleRender();
+  });
+
+  // =========================================================
+  // ✅ BACKUP CONFIRM (WINDOW)
+  // untuk kes unread lama / data lama
+  // =========================================================
   const qref = db.ref(`chats/${sanitized}`).orderByChild("time").limitToLast(META_WINDOW);
 
   qref.on("value", snap=>{
     const chats = snap.val();
-    if (!chats) return;
+    if (!chats){
+      chatMeta[sanitized].hasUnread = false;
+      scheduleRender();
+      return;
+    }
 
-    const entries = Object.values(chats);
+    const entries = Object.values(chats).filter(Boolean);
     if (!entries.length) return;
 
-    // last message (ikut time)
-    const lastMsg = entries.reduce((a,b)=> (Number(a.time||0) > Number(b.time||0) ? a : b));
-    const lastTime = Number(lastMsg.time || 0);
-
-    // kira unread: mana-mana message dari user yang readByAdmin !== true
     const hasUnreadNow = entries.some(m => m && m.from === "user" && m.readByAdmin !== true);
-
-    // simpan meta
-    const prevUnread = !!chatMeta[sanitized].hasUnread;
-    chatMeta[sanitized].lastChatTime = lastTime;
     chatMeta[sanitized].hasUnread = hasUnreadNow;
 
-    // identity (ambil dari message user paling latest yang ada identity)
-    const lastUserMsg = entries
-      .slice()
-      .reverse()
-      .find(m => m && m.from === "user" && (m.name || m.email || m.photoURL));
-
+    // identity dari last user msg
+    const lastUserMsg = entries.slice().reverse().find(m => m && m.from === "user" && (m.name || m.email || m.photoURL));
     if (lastUserMsg){
       chatMeta[sanitized].identity = {
         name: lastUserMsg.name,
         email: lastUserMsg.email,
         photoURL: lastUserMsg.photoURL
       };
-    }
-
-    if (
-      initialUserListLoaded &&
-      !prevUnread &&
-      hasUnreadNow &&
-      sanitized !== activeUserIdSanitized
-    ){
-      playNotificationSound();
-    }
-    const idx = allUsersData.findIndex(([id])=> id === sanitized);
-    if (idx !== -1){
-      const userData = allUsersData[idx][1] || {};
-      allUsersData[idx][2] = makeActivityTime(lastTime, userData);
-      allUsersData.sort((a,b)=> (b[2]||0)-(a[2]||0));
     }
 
     scheduleRender();
