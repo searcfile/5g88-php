@@ -478,7 +478,7 @@ mark.__hit{ background:#ffe58a; padding:0 2px; border-radius:3px; }
         Upload Image
         <input type="file" id="fileInput" accept="image/*">
       </label>
-      <button type="button" disabled>Send</button>
+      <button type="button" id="sendBtn" disabled>Send</button>
     </div>
   </div>
 </main>
@@ -735,8 +735,8 @@ function initChatWithUserData() {
   if (!currentActiveId) return;
 
   const msgInput    = document.getElementById('msg');
-  const sendBtn     = document.querySelector('.send-box button');
-  const fileInput   = document.getElementById('fileInput');
+  const sendBtn   = document.getElementById('sendBtn');
+  const fileInput = document.getElementById('fileInput');
   const searchInput = document.getElementById('searchChat');
   const chatBox     = document.getElementById('chatBox');
   const typingEl    = document.getElementById('typingStatus');
@@ -749,30 +749,37 @@ function initChatWithUserData() {
 
   let typingTimer;
   const typingDelay = 2000;
+  
+// ✅ letak refreshSend DI SINI
+function refreshSend(){
+  sendBtn.disabled = !msgInput.value.trim() && !fileInput.files.length;
+}
+refreshSend();
 
-  msgInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
-      e.preventDefault();
-      sendMessage(); // tanpa arg
+msgInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+msgInput.addEventListener("input", () => {
+  refreshSend();
+  if (typingEl) {
+    typingEl.textContent = msgInput.value.trim() ? 'Typing...' : 'Online';
+    clearTimeout(typingTimer);
+    if (msgInput.value.trim()) {
+      typingTimer = setTimeout(() => { if (typingEl) typingEl.textContent = 'Online'; }, typingDelay);
     }
-  });
+  }
+});
 
-  msgInput.addEventListener('input', () => {
-    sendBtn.disabled = !msgInput.value.trim() && !fileInput.files.length;
-    if (typingEl) {
-      typingEl.textContent = msgInput.value.trim() ? 'Typing...' : 'Online';
-      clearTimeout(typingTimer);
-      if (msgInput.value.trim()) {
-        typingTimer = setTimeout(() => { if (typingEl) typingEl.textContent = 'Online'; }, typingDelay);
-      }
-    }
-  });
+fileInput.addEventListener("change", refreshSend);
 
-  sendBtn.addEventListener('click', () => sendMessage());
-  sendBtn.disabled = true;
+sendBtn.addEventListener('click', () => sendMessage());
+sendBtn.disabled = true;
 
-  // mulai dengarkan chat saya
-  listenToChat(); // tanpa arg
+listenToChat();
 }
 
 async function sendMessage() {
@@ -782,6 +789,18 @@ async function sendMessage() {
   const fileInput = document.getElementById('fileInput');
   const msg  = (msgInput.value || '').trim();
   const file = fileInput.files[0];
+  // ✅ Pastikan hanya image boleh dihantar
+if (file) {
+  if (!file.type.startsWith("image/")) {
+    alert("❌ Only image allowed");
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert("❌ Image too large (max 5MB)");
+    return;
+  }
+}
 
   if (!msg && !file) return;
 
@@ -816,9 +835,10 @@ async function sendMessage() {
     // 👉 paksa scroll ke bawah setelah pesan kita terkirim
     setTimeout(() => onNewMessageRendered({ forceToBottom: true }), 0);
 
-    msgInput.value = '';
-    fileInput.value = '';
-    document.querySelector('.send-box button').disabled = true;
+msgInput.value = '';
+fileInput.value = '';
+const sendBtn = document.getElementById("sendBtn");
+if (sendBtn) sendBtn.disabled = true;
 
   } catch (error) {
     console.error("Error sending message:", error);
