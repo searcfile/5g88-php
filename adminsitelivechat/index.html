@@ -376,7 +376,7 @@ body {
       <div style="display: flex; gap: 10px; margin-top: 10px; align-items: center;">
         <button id="filterAll" class="active-filter">All</button>
         <button id="filterUnread">Unread</button>
-        <button id="enableSoundBtn" type="button" style="margin-top:10px;">Enable Sound</button>
+        <button id="enableSoundBtn" type="button" style="margin-top:10px;" class="active-filter">Enable Sound</button>
         
         <div style="margin-left: auto; color:#fff; font-size: 14px;">
           Total Users: <span id="totalUsers">0</span> | Online: <span id="onlineUsers">0</span>
@@ -529,21 +529,52 @@ function getLabelParts(id, data){
 
 /* ======================= SOUND (ENABLE ONCE) ======================= */
 let soundEnabled = false;
+let soundQueued = 0;
+
 async function enableSound(){
   const a = document.getElementById("notifSound");
   if(!a) return console.log("[SOUND] ❌ notifSound not found");
+
   try{
+    // unlock trick
     a.muted = true;
     await a.play();
     a.pause();
     a.currentTime = 0;
     a.muted = false;
+
     soundEnabled = true;
     console.log("[SOUND] ✅ enabled");
+
+    // ✅ test bunyi sekali (confirm memang boleh)
+    try { a.currentTime = 0; await a.play(); } catch(e) {}
+    try { a.pause(); a.currentTime = 0; } catch(e) {}
+
+    // ✅ kalau ada bunyi yang “queue” masa belum enable
+    if(soundQueued > 0){
+      soundQueued = 0;
+      beep();
+    }
   }catch(e){
     soundEnabled = false;
     console.log("[SOUND] ❌ blocked:", e.name, e.message);
+    alert("Sound kena unblock dulu bro. Klik Enable Sound sekali lagi.");
   }
+}
+
+function beep(){
+  const a = document.getElementById("notifSound");
+  if(!a) return;
+
+  if(!soundEnabled){
+    soundQueued++;
+    return;
+  }
+
+  try{ a.currentTime = 0; }catch(e){}
+  a.play().catch(err=>{
+    console.log("[SOUND] ❌ play failed:", err?.name, err?.message);
+  });
 }
 function beep(){
   if(!soundEnabled) return;
