@@ -706,15 +706,13 @@ function ensureChatMetaListener(sanitized){
         photoURL: m.photoURL
       };
 
-      const prevUnread = !!chatMeta[sanitized].hasUnread;
-      const unreadNow  = (m.readByAdmin !== true);
+const unreadNow = (m.readByAdmin !== true);
+chatMeta[sanitized].hasUnread = unreadNow;
 
-      chatMeta[sanitized].hasUnread = unreadNow;
-
-      // bunyi bila benar-benar ada unread baru & admin tak buka chat tu
-      if (initialUserListLoaded && !prevUnread && unreadNow && sanitized !== activeUserIdSanitized){
-        playNotificationSound();
-      }
+// ✅ bunyi setiap kali ada msg user baru (selagi admin tak buka chat tu)
+if (initialUserListLoaded && unreadNow && sanitized !== activeUserIdSanitized){
+  playNotificationSound();
+}
     }
 
     // bump activity + sort list
