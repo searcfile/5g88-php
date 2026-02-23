@@ -426,24 +426,33 @@ body {
 <script>
 "use strict";
 
+/* =========================================================
+   ✅ LIVECHAT ADMIN (FAST + NO DUPLICATE)
+   - Cache meta chat (last msg / unread / identity) in chatMeta
+   - Render list guna renderUserListFast + scheduleRender
+   - Buang heavy updateUserListFlags / updateUserLastTime (tak ada lagi)
+   - User naik atas ikut activity = max(lastChatTime, lastLoginTime)
+   ========================================================= */
+
 /* ======================= STATE GLOBAL ======================= */
 let isLoadingUserList = true;
-let renderedUserIds = new Set();
-let justOpenedChat = false;            // dipakai di listenToChat / onclick
-let initialUserListLoaded = false;     // keamanan di loadUserList
-let userHasInteracted = false;         // untuk play sound notif
-let currentFilterMode = 'all';
+let initialUserListLoaded = false;
+let userHasInteracted = false;
+let currentFilterMode = "all";
 
-let activeUserIdSanitized = '';
-let activeUserIdEmail = '';
+let activeUserIdSanitized = "";
+let activeUserIdEmail = "";
 let selectedUserId = null;
 
-let allUsersData = [];                 // [ [id, data, lastTime], ... ]
-let lastMessageTimestamps = {};
+let allUsersData = []; // [ [sanitized, userData, activityTime], ... ]
 let allMessages = [];
 let isInitialChatLoad = true;
+let justOpenedChat = false;
 
-let lastPresenceId = null;             // untuk matiin presence listener lama
+let lastPresenceId = null;
+
+const chatMeta = {}; // { sanitized: { listening, lastChatTime, hasUnread, identity } }
+let renderTimer = null;
 
 /* ======================= INIT FIREBASE ======================= */
 const firebaseConfig = {
@@ -459,44 +468,50 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+/* ======================= SCHEDULE RENDER ======================= */
+function scheduleRender(){
+  clearTimeout(renderTimer);
+  renderTimer = setTimeout(()=>{
+    const displayList = allUsersData.map(([id,user])=> [id, user]);
+    renderUserListFast(displayList, currentFilterMode, document.getElementById("searchUser")?.value || "");
+  }, 80);
+}
+
 /* ======================= HELPERS ======================= */
-function sanitizeUserId(email){ return String(email||'').toLowerCase().replace(/\./g,'_'); }
+function sanitizeUserId(email){ return String(email||"").toLowerCase().replace(/\./g,"_"); }
+
 function desanitizeUserId(sanitized){
-  const str = String(sanitized || '');
-  const at = str.indexOf('@');
-  if (at === -1) return str.replace(/_/g, '.'); // fallback kalau bukan email
-  const local  = str.slice(0, at);                  // biarkan underscore di local-part
-  const domain = str.slice(at + 1).replace(/_/g,'.'); // hanya domain yang diubah
+  const str = String(sanitized || "");
+  const at = str.indexOf("@");
+  if (at === -1) return str.replace(/_/g, ".");
+  const local  = str.slice(0, at);
+  const domain = str.slice(at + 1).replace(/_/g,".");
   return `${local}@${domain}`;
 }
+
 function dedupeName(str){
-  const s = String(str || '').trim().replace(/\s+/g, ' ');
-  const parts = s.split(' ');
-  // Jika tepat 2 kata dan sama (abaikan huruf besar/kecil), ambil satu saja
-  if (parts.length === 2 && parts[0].toLowerCase() === parts[1].toLowerCase()) {
-    return parts[0];
-  }
+  const s = String(str || "").trim().replace(/\s+/g," ");
+  const parts = s.split(" ");
+  if (parts.length === 2 && parts[0].toLowerCase() === parts[1].toLowerCase()) return parts[0];
   return s;
 }
+
 function formatUserName(name){
-  if(!name) return 'Unknown';
-  const words = String(name).trim().split(' ');
+  if(!name) return "Unknown";
+  const words = String(name).trim().split(" ");
   if (words.length === 2 && words[0] === words[1]) return words[0];
   return name;
 }
 
 function getLabelParts(id, data){
   const tryEmailFromId = desanitizeUserId(id);
+  const email = (data?.email || "").trim() || (tryEmailFromId.includes("@") ? tryEmailFromId : "");
 
-  // email: dari data > dari id (jika id memang email yang disanitasi)
-  const email = (data?.email || '').trim() || (tryEmailFromId.includes('@') ? tryEmailFromId : '');
+  const rawName  = (data?.name || "").trim();
+  const photoURL = data?.photoURL || "";
 
-  const rawName  = (data?.name || '').trim();
-  const photoURL = data?.photoURL || '';
-
-  // displayName: name > local-part email > Guest-XXXXX
-  let displayName = rawName || (email ? email.split('@')[0] : '');
-  displayName = dedupeName(displayName); // ⬅️ hilangkan duplikasi "A A"
+  let displayName = rawName || (email ? email.split("@")[0] : "");
+  displayName = dedupeName(displayName);
 
   if (!displayName){
     const code = String(id).slice(-5).toUpperCase();
@@ -515,44 +530,44 @@ function playNotificationSound(){
   }
 }
 
-document.addEventListener('click', () => { userHasInteracted = true; });
-document.addEventListener('touchstart', () => { userHasInteracted = true; });
-document.addEventListener('keydown', () => { userHasInteracted = true; });
+document.addEventListener("click", ()=> userHasInteracted = true);
+document.addEventListener("touchstart", ()=> userHasInteracted = true);
+document.addEventListener("keydown", ()=> userHasInteracted = true);
 
-/* ======================= COUNTERS (opsional) ======================= */
+/* ======================= ACTIVITY TIME ======================= */
+function getLoginTimeFromUser(data){
+  return Number(data?.lastLoginTime || data?.lastLoginAt || 0);
+}
+function makeActivityTime(lastChatTime, userData){
+  const loginTime = getLoginTimeFromUser(userData);
+  return Math.max(Number(lastChatTime||0), loginTime);
+}
+
+/* ======================= COUNTERS ======================= */
 function updateUserCounts(){
-  const totalUsersElem  = document.getElementById('totalUsers');
-  const onlineUsersElem = document.getElementById('onlineUsers');
-  if (!totalUsersElem || !onlineUsersElem) return; // kalau ga ada elemennya, skip
+  const totalUsersElem  = document.getElementById("totalUsers");
+  const onlineUsersElem = document.getElementById("onlineUsers");
+  if (!totalUsersElem || !onlineUsersElem) return;
 
-  db.ref('users').on('value', snapshot => {
-    const users = snapshot.val() || {};
-    const totalUsers = Object.keys(users).length;
-    const onlineUsers = Object.values(users).filter(u => u && u.online).length;
-    totalUsersElem.textContent = totalUsers;
-    onlineUsersElem.textContent = onlineUsers;
+  db.ref("users").on("value", snap=>{
+    const users = snap.val() || {};
+    totalUsersElem.textContent = Object.keys(users).length;
+    onlineUsersElem.textContent = Object.values(users).filter(u=>u && u.online).length;
   });
 }
 
-/* ======================= TANGGAL LABEL ======================= */
+/* ======================= DATE LABEL ======================= */
 function formatDateLabel(dateInput){
   const today = new Date();
   const date  = new Date(dateInput);
   const reset = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const diff  = reset(today) - reset(date);
-
   const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 
   if (diff === 0){
-    return {
-      day: "Today",
-      full: date.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})
-    };
+    return { day:"Today", full: date.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"}) };
   } else if (diff === 86400000){
-    return {
-      day: "Yesterday",
-      full: date.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})
-    };
+    return { day:"Yesterday", full: date.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"}) };
   } else {
     return {
       day: cap(date.toLocaleDateString("en-GB",{weekday:"long"})),
@@ -561,7 +576,7 @@ function formatDateLabel(dateInput){
   }
 }
 
-/* ======================= RENDER PESAN ======================= */
+/* ======================= RENDER CHAT ======================= */
 function renderChatMessages(messages){
   const chatBox = document.getElementById("chatBox");
   if (!chatBox) return;
@@ -569,10 +584,10 @@ function renderChatMessages(messages){
 
   let lastDate = null;
 
-  messages.forEach(msg => {
+  messages.forEach(msg=>{
     const msgDate = new Date(msg.time);
     const dateLabels = formatDateLabel(msgDate);
-    const dateStr = dateLabels.day + ', ' + dateLabels.full;
+    const dateStr = dateLabels.day + ", " + dateLabels.full;
 
     if (lastDate !== dateStr){
       lastDate = dateStr;
@@ -587,13 +602,13 @@ function renderChatMessages(messages){
     }
 
     const div = document.createElement("div");
-    div.className = 'message ' + (msg.from === 'admin' ? 'mine' : 'theirs');
+    div.className = "message " + (msg.from === "admin" ? "mine" : "theirs");
 
-    const timeStr = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const isUser = msg.from !== 'admin';
-    const rawName = isUser ? (msg.name || msg.email || 'User') : 'Admin';
+    const timeStr = msgDate.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+    const isUser = msg.from !== "admin";
+    const rawName = isUser ? (msg.name || msg.email || "User") : "Admin";
     const senderName = formatUserName(rawName);
-    const avatarURL = msg.photoURL || (isUser ? 'https://i.pravatar.cc/40' : 'https://i.imgur.com/UhV9EWa.png');
+    const avatarURL = msg.photoURL || (isUser ? "https://i.pravatar.cc/40" : "https://i.imgur.com/UhV9EWa.png");
 
     let html = `
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
@@ -615,17 +630,221 @@ function renderChatMessages(messages){
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-/* ======================= STREAM CHAT AKTIF ======================= */
+/* ======================= CHAT META LISTENER (PER USER) ======================= */
+function ensureChatMetaListener(sanitized){
+  if (chatMeta[sanitized]?.listening) return;
+
+  chatMeta[sanitized] = chatMeta[sanitized] || {};
+  chatMeta[sanitized].listening = true;
+
+  // ✅ hanya ambil last msg sahaja (ringan)
+  db.ref(`chats/${sanitized}`).orderByChild("time").limitToLast(1).on("child_added", snap=>{
+    const m = snap.val() || {};
+    const t = Number(m.time || 0);
+
+    chatMeta[sanitized].lastChatTime = t;
+
+    if (m.from === "user"){
+      chatMeta[sanitized].identity = { name:m.name, email:m.email, photoURL:m.photoURL };
+      chatMeta[sanitized].hasUnread = !m.readByAdmin;
+
+      // sound kalau bukan initial load dan admin bukan sedang buka chat itu
+      if (!isInitialChatLoad && sanitized !== activeUserIdSanitized && !m.readByAdmin){
+        playNotificationSound();
+      }
+    }
+
+    // bump activity + sort
+    const idx = allUsersData.findIndex(([id])=> id === sanitized);
+    if (idx !== -1){
+      const userData = allUsersData[idx][1] || {};
+      allUsersData[idx][2] = makeActivityTime(t, userData);
+      allUsersData.sort((a,b)=> (b[2]||0)-(a[2]||0));
+    }
+
+    scheduleRender();
+  });
+
+  // ✅ kalau last msg berubah (child_changed juga), update unread/meta
+  db.ref(`chats/${sanitized}`).orderByChild("time").limitToLast(1).on("child_changed", snap=>{
+    const m = snap.val() || {};
+    const t = Number(m.time || 0);
+
+    chatMeta[sanitized].lastChatTime = t;
+
+    if (m.from === "user"){
+      chatMeta[sanitized].identity = { name:m.name, email:m.email, photoURL:m.photoURL };
+      chatMeta[sanitized].hasUnread = !m.readByAdmin;
+    }
+
+    const idx = allUsersData.findIndex(([id])=> id === sanitized);
+    if (idx !== -1){
+      const userData = allUsersData[idx][1] || {};
+      allUsersData[idx][2] = makeActivityTime(t, userData);
+      allUsersData.sort((a,b)=> (b[2]||0)-(a[2]||0));
+    }
+
+    scheduleRender();
+  });
+}
+
+/* ======================= FAST RENDER USER LIST ======================= */
+function renderUserListFast(userList, filter="all", searchTerm=""){
+  const userListBox = document.getElementById("userListBox");
+  if (!userListBox) return;
+
+  userListBox.innerHTML = "";
+
+  const q = String(searchTerm||"").toLowerCase();
+
+  userList.forEach(([sanitized, userData])=>{
+    const meta = chatMeta[sanitized] || {};
+    const hasUnread = !!meta.hasUnread;
+
+    if (filter === "unread" && !hasUnread) return;
+
+    const mergedIdentity = {
+      name:     userData?.name     ?? meta.identity?.name,
+      email:    userData?.email    ?? meta.identity?.email,
+      photoURL: userData?.photoURL ?? meta.identity?.photoURL
+    };
+
+    const { label, displayName, email, photoURL } = getLabelParts(sanitized, mergedIdentity);
+
+    if (q && !label.toLowerCase().includes(q)) return;
+
+    const userDiv = document.createElement("div");
+    userDiv.className = "user-item";
+    if (sanitized === activeUserIdSanitized) userDiv.classList.add("active");
+    userDiv.setAttribute("data-sanitized", sanitized);
+
+    const userLabel = document.createElement("span");
+    userLabel.innerHTML = `
+      <span class="label-text">${label}</span>
+      ${hasUnread ? '<svg class="unread-icon" width="14" height="14" viewBox="0 0 24 24" fill="red" style="margin-left:4px;"><path d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 4a1 1 0 0 0-1 1v6a1 1 0 1 0 2 0V7a1 1 0 0 0-1-1zm0 10a1.5 1.5 0 1 0 0 3a1.5 1.5 0 0 0 0-3z"/></svg>' : ''}
+      <svg class="online-indicator" width="10" height="10" viewBox="0 0 24 24" fill="#00ff00" style="margin-left:6px;display:${userData?.online ? "inline-block":"none"};">
+        <circle cx="12" cy="12" r="10"/>
+      </svg>
+    `;
+    userLabel.style.fontWeight = hasUnread ? "bold" : "normal";
+
+    userDiv.appendChild(userLabel);
+
+    userDiv.onclick = ()=>{
+      justOpenedChat = true;
+      activeUserIdSanitized = sanitized;
+      selectedUserId = sanitized;
+      activeUserIdEmail = email || "";
+
+      const nameEl = document.getElementById("chatUserName");
+      if (nameEl) nameEl.textContent = displayName;
+
+      const avatarImg = document.getElementById("chatUserAvatar");
+      if (avatarImg){
+        avatarImg.src = photoURL || "https://i.pravatar.cc/40";
+        avatarImg.style.display = "block";
+      }
+
+      document.querySelectorAll(".user-item").forEach(el=> el.classList.remove("active"));
+      userDiv.classList.add("active");
+
+      const searchMsg = document.getElementById("searchMessage");
+      if (searchMsg) searchMsg.value = "";
+
+      updateUserPresenceById(sanitized);
+      listenToChat();
+      scheduleRender();
+    };
+
+    userListBox.appendChild(userDiv);
+  });
+}
+
+/* ======================= LOAD USER LIST ======================= */
+function loadUserList(){
+  const userListBox = document.getElementById("userListBox");
+  if (userListBox) userListBox.innerHTML = '<p style="text-align:center;color:gray;">Memuat...</p>';
+
+  db.ref("users").once("value", snap=>{
+    const users = snap.val() || {};
+    const entries = Object.entries(users);
+
+    // kalau users kosong, fallback dari chats (optional)
+    if (!entries.length){
+      isLoadingUserList = false;
+      initialUserListLoaded = true;
+
+      db.ref("chats").once("value").then(s2=>{
+        const chats = s2.val() || {};
+        const ids = Object.keys(chats);
+        if (!ids.length){
+          if (userListBox) userListBox.innerHTML = '<p style="text-align:center;color:gray;">Belum ada user</p>';
+          return;
+        }
+
+        // buat dummy userData dari last msg
+        const jobs = ids.map(id =>
+          db.ref(`chats/${id}`).orderByChild("time").limitToLast(1).once("value")
+            .then(x=>{
+              let lastTime = 0, lastMsg = {};
+              x.forEach(m => { lastTime = m.val()?.time || 0; lastMsg = m.val() || {}; });
+              chatMeta[id] = chatMeta[id] || {};
+              chatMeta[id].identity = { name:lastMsg.name, email:lastMsg.email, photoURL:lastMsg.photoURL };
+              chatMeta[id].hasUnread = (lastMsg.from === "user" && !lastMsg.readByAdmin);
+              chatMeta[id].lastChatTime = lastTime;
+              return { sanitized:id, data:{}, lastTime };
+            })
+        );
+
+        Promise.all(jobs).then(results=>{
+          results.sort((a,b)=> (b.lastTime||0)-(a.lastTime||0));
+          allUsersData = results.map(u=> [u.sanitized, u.data, u.lastTime]);
+
+          allUsersData.forEach(([sid])=> ensureChatMetaListener(sid));
+          if (userListBox) userListBox.innerHTML = "";
+          scheduleRender();
+        });
+      });
+
+      return;
+    }
+
+    // normal: users ada
+    allUsersData = entries.map(([sanitized, data])=>{
+      // activity awal guna lastLoginTime, chatMeta akan update bila listener jalan
+      const activity = makeActivityTime(Number(chatMeta[sanitized]?.lastChatTime || 0), data);
+      return [sanitized, data, activity];
+    });
+
+    allUsersData.sort((a,b)=> (b[2]||0)-(a[2]||0));
+
+    // start chat meta listener utk semua user
+    allUsersData.forEach(([sid])=> ensureChatMetaListener(sid));
+
+    isLoadingUserList = false;
+    initialUserListLoaded = true;
+
+    if (userListBox) userListBox.innerHTML = "";
+    scheduleRender();
+
+    // tandakan initial chat load selesai (untuk sound)
+    setTimeout(()=>{ isInitialChatLoad = false; }, 600);
+  });
+}
+
+/* ======================= STREAM CHAT (ACTIVE USER) ======================= */
 function listenToChat(){
   if (!activeUserIdSanitized) return;
-  const chatRef = db.ref('chats/' + activeUserIdSanitized);
+
+  const chatRef = db.ref("chats/" + activeUserIdSanitized);
+  const chatBox = document.getElementById("chatBox");
   isInitialChatLoad = true;
-  const chatBox = document.getElementById('chatBox');
+
   if (chatBox) chatBox.innerHTML = '<p style="text-align:center;color:white;">Loading...</p>';
 
   chatRef.off();
-  chatRef.on('value', snapshot => {
-    const chats = snapshot.val();
+  chatRef.on("value", snap=>{
+    const chats = snap.val();
     if (!chats){
       if (chatBox) chatBox.innerHTML = '<p style="text-align:center;color:white;">Start Message.</p>';
       allMessages = [];
@@ -633,329 +852,108 @@ function listenToChat(){
     }
 
     const chatEntries = Object.entries(chats).sort((a,b)=>(a[1].time||0)-(b[1].time||0));
-    let shouldUpdatePosition = false;
-    let messagesToMarkRead = [];
+    const messagesToMarkRead = [];
 
     allMessages = chatEntries.map(([key, msg])=>{
-      const isUnread = msg.from === 'user' && !msg.readByAdmin;
-      const isFromUserAndNew = isUnread && !justOpenedChat;
-      if (isFromUserAndNew) shouldUpdatePosition = true;
-
-      if (isUnread){
-        messagesToMarkRead.push(key);
-        if (!lastMessageTimestamps[activeUserIdSanitized] || msg.time > lastMessageTimestamps[activeUserIdSanitized]){
-          lastMessageTimestamps[activeUserIdSanitized] = msg.time;
-          if (!isInitialChatLoad) playNotificationSound();
-        }
-      }
+      const isUnread = msg.from === "user" && !msg.readByAdmin;
+      if (isUnread) messagesToMarkRead.push(key);
       return msg;
     });
 
     renderChatMessages(allMessages);
     isInitialChatLoad = false;
 
-    // tandai sudah dibaca saat chat dibuka
-    if (justOpenedChat){
+    // bila admin buka chat → mark read
+    if (justOpenedChat && messagesToMarkRead.length){
       justOpenedChat = false;
-      messagesToMarkRead.forEach(key=>{
-        db.ref(`chats/${activeUserIdSanitized}/${key}/readByAdmin`).set(true);
-      });
-      if (messagesToMarkRead.length > 0) updateUserListFlags();
-    }
-    // ✅ kalau admin sedang view chat ini, pastikan semua msg user jadi read
-if (!justOpenedChat && selectedUserId === activeUserIdSanitized && messagesToMarkRead.length){
-  const updates = {};
-  messagesToMarkRead.forEach(key=>{
-    updates[`${key}/readByAdmin`] = true;
-  });
-  db.ref(`chats/${activeUserIdSanitized}`).update(updates).catch(()=>{});
-  updateUserListFlags();
-}
-    // jika ada pesan user baru, naikkan posisinya
-    if (shouldUpdatePosition){
-      const userIndex = allUsersData.findIndex(([id])=> id === activeUserIdSanitized);
-      if (userIndex !== -1){
-        const lastMsg = allMessages[allMessages.length - 1];
-        const lastTime = lastMsg?.time || 0;
-        allUsersData[userIndex][2] = lastTime;
-        allUsersData.sort((a,b)=> b[2]-a[2]);
-        const displayList = allUsersData.map(([s,d])=>[s,d]);
-        renderUserList(displayList, 'all', document.getElementById('searchUser')?.value || '');
+
+      const updates = {};
+      messagesToMarkRead.forEach(k=> updates[`${k}/readByAdmin`] = true);
+
+      db.ref(`chats/${activeUserIdSanitized}`).update(updates).catch(()=>{});
+
+      // update cache unread
+      chatMeta[activeUserIdSanitized] = chatMeta[activeUserIdSanitized] || {};
+      chatMeta[activeUserIdSanitized].hasUnread = false;
+      scheduleRender();
+    } else if (justOpenedChat){
+      justOpenedChat = false;
+      // kalau memang tiada unread, tetap clear cache
+      if (chatMeta[activeUserIdSanitized]){
+        chatMeta[activeUserIdSanitized].hasUnread = false;
+        scheduleRender();
       }
     }
   });
 }
 
-/* ======================= RENDER LIST USER ======================= */
-function renderUserList(userList, filter='all', searchTerm=''){
-  const userListBox = document.getElementById('userListBox');
-  if (!userListBox) return;
-  userListBox.innerHTML = '';
-  renderedUserIds.clear();
+/* ======================= SEND MESSAGE ======================= */
+let msgInput, sendBtn;
 
-  userList.forEach(([sanitized, userData])=>{
-    // ambil chat untuk cek unread + fallback identitas
-    db.ref(`chats/${sanitized}`).once('value', snapshot => {
-      const chatEntries = Object.values(snapshot.val() || []);
-      const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
-      if (filter === 'unread' && !hasUnread) return;
-
-      const firstMsg = chatEntries.find(m => m.from === 'user') || {};
-      const mergedIdentity = {
-        name:     userData?.name     ?? firstMsg.name,
-        email:    userData?.email    ?? firstMsg.email,
-        photoURL: userData?.photoURL ?? firstMsg.photoURL
-      };
-      const { label, displayName, email, photoURL } = getLabelParts(sanitized, mergedIdentity);
-
-      // filter DI SINI (pakai label final)
-      if (searchTerm && !label.toLowerCase().includes(String(searchTerm).toLowerCase())) return;
-
-      const userDiv = document.createElement('div');
-      userDiv.className = 'user-item';
-      if (sanitized === activeUserIdSanitized) userDiv.classList.add('active');
-      userDiv.setAttribute('data-sanitized', sanitized);
-
-      const userLabel = document.createElement('span');
-      userLabel.innerHTML = `
-        <span class="label-text">${label}</span>
-        ${hasUnread ? '<svg class="unread-icon" width="14" height="14" viewBox="0 0 24 24" fill="red" style="margin-left:4px;"><path d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 4a1 1 0 0 0-1 1v6a1 1 0 1 0 2 0V7a1 1 0 0 0-1-1zm0 10a1.5 1.5 0 1 0 0 3a1.5 1.5 0 0 0 0-3z"/></svg>' : ''}
-        <svg class="online-indicator" width="10" height="10" viewBox="0 0 24 24" fill="#00ff00" style="margin-left:6px;display:none;">
-          <circle cx="12" cy="12" r="10"/>
-        </svg>`;
-      userLabel.style.fontWeight = hasUnread ? 'bold' : 'normal';
-      userDiv.appendChild(userLabel);
-
-      userDiv.onclick = ()=>{
-        justOpenedChat = true;
-        activeUserIdSanitized = sanitized;
-        selectedUserId = sanitized;
-        activeUserIdEmail = email || '';
-
-        document.getElementById("chatUserName") && (document.getElementById("chatUserName").textContent = displayName);
-        const avatarImg = document.getElementById("chatUserAvatar");
-        if (avatarImg){ avatarImg.src = photoURL || 'https://i.pravatar.cc/40'; avatarImg.style.display='block'; }
-
-        document.querySelectorAll('.user-item').forEach(el=> el.classList.remove('active'));
-        userDiv.classList.add('active');
-
-        const searchMsg = document.getElementById("searchMessage");
-        if (searchMsg) searchMsg.value = '';
-
-        updateUserPresenceById(sanitized);
-        listenToChat();
-      };
-
-      userListBox.appendChild(userDiv);
-      renderedUserIds.add(sanitized);
-      db.ref("users/" + sanitized + "/online").once('value').then(s => {
-  const indicator = userDiv.querySelector('.online-indicator');
-  if (indicator) indicator.style.display = s.val() ? 'inline-block' : 'none';
-});
-    });
-  });
+function updateSendButtonState(){
+  const msg = msgInput?.value.trim();
+  const isUserSelected = !!selectedUserId;
+  if (sendBtn) sendBtn.disabled = !(isUserSelected && msg);
 }
 
-/* ======================= LOAD LIST USER AWAL ======================= */
-function loadUserList(){
-  const userListBox = document.getElementById('userListBox');
-  if (userListBox){ userListBox.innerHTML = '<p style="text-align:center;color:gray;">Memuat...</p>'; }
-  renderedUserIds.clear();
-
-  db.ref('users').once('value', snapshot=>{
-    const users = snapshot.val() || {};
-    const entries = Object.entries(users); // [ [id, data], ... ]
-
-    // === KASUS: /users KOSONG → fallback dari /chats ===
-    if (entries.length === 0){
-      // JANGAN lupa matikan "loading" supaya listener child_added jalan
-      isLoadingUserList = false;
-      initialUserListLoaded = true;
-
-      db.ref('chats').once('value').then(s=>{
-        const chats = s.val() || {};
-        const ids = Object.keys(chats);
-        if (ids.length === 0){
-          if (userListBox) userListBox.innerHTML = '<p style="text-align:center;color:gray;">Belum ada user</p>';
-          return;
-        }
-
-        const jobs = ids.map(id =>
-          db.ref(`chats/${id}`).orderByChild('time').limitToLast(1).once('value')
-            .then(s2=>{
-              let lastTime = 0, lastMsg = {};
-              s2.forEach(m => { lastTime = m.val()?.time || 0; lastMsg = m.val() || {}; });
-              const identity = { name:lastMsg.name, email:lastMsg.email, photoURL:lastMsg.photoURL };
-              return { sanitized:id, data: identity, lastTime };
-            })
-        );
-
-        Promise.all(jobs).then(results=>{
-          results.sort((a,b)=> b.lastTime - a.lastTime);
-          allUsersData = results.map(u => [u.sanitized, u.data, u.lastTime]);
-
-          if (userListBox) userListBox.innerHTML = '';
-          renderUserList(allUsersData.map(([s,d])=>[s,d]));
-
-          allUsersData.forEach(([sid])=> renderedUserIds.add(sid));
-          updateUserListFlags();
-        });
-      });
-      return; // selesai di fallback
-    }
-
-    // === KASUS NORMAL: /users ADA ===
-    const jobs = entries.map(([sanitized, data])=>
-      db.ref(`chats/${sanitized}`).orderByChild('time').limitToLast(1).once('value')
-        .then(snap=>{
-          let lastTime = 0;
-          snap.forEach(msg => { lastTime = msg.val()?.time || 0; });
-          return { sanitized, data, lastTime };
-        })
-        .catch(()=>({ sanitized, data, lastTime: 0 }))
-    );
-
-    Promise.all(jobs).then(results=>{
-      results.sort((a,b)=> b.lastTime - a.lastTime);
-      allUsersData = results.map(u => [u.sanitized, u.data, u.lastTime]);
-
-      if (userListBox) userListBox.innerHTML = '';
-      renderUserList(allUsersData.map(([s,d])=>[s,d]));
-
-      allUsersData.forEach(([sanitized])=> renderedUserIds.add(sanitized));
-      isLoadingUserList = false;           // ⬅️ penting
-      initialUserListLoaded = true;        // ⬅️ penting
-      updateUserListFlags();
-    });
-  });
-}
-
-/* ======================= PERUBAHAN CHATS (posisi list) ======================= */
-db.ref("chats").on("child_changed", snapshot=>{
-  const sanitizedId = snapshot.key;
-  const messages = snapshot.val() || {};
-  const entries = Object.entries(messages);
-  if (entries.length === 0) return;
-
-  const latest = entries.reduce((a,b)=> (a[1].time > b[1].time ? a : b), [null,{time:0}]);
-  const latestTime = latest[1]?.time || 0;
-
-  const idx = allUsersData.findIndex(([id])=> id === sanitizedId);
-  if (idx !== -1){
-    allUsersData[idx][2] = latestTime;
-    allUsersData.sort((a,b)=> b[2]-a[2]);
-
-    const displayList = allUsersData.map(([s,d])=>[s,d]);
-    renderUserList(displayList, currentFilterMode, document.getElementById('searchUser')?.value || '');
-  }
-});
-
-/* ======================= UNREAD BADGE & LABEL REFRESH ======================= */
-function updateUserListFlags(){
-  const items = document.querySelectorAll('.user-item');
-  items.forEach(item=>{
-    const sanitized = item.getAttribute('data-sanitized');
-    const span = item.querySelector('span');
-    if (!sanitized || !span) return;
-
-    db.ref(`chats/${sanitized}`).once('value', snapshot=>{
-      const chatEntries = Object.values(snapshot.val() || []);
-      const hasUnread = chatEntries.some(m => m.from === 'user' && !m.readByAdmin);
-
-      // fallback identitas dari pesan user pertama
-      const firstMsg = chatEntries.find(m => m.from === 'user') || {};
-      const { label } = getLabelParts(sanitized, { name:firstMsg.name, email:firstMsg.email });
-
-      // update hanya teks label (biar ikon online tetap ada)
-      const labelTextEl = span.querySelector('.label-text');
-      if (labelTextEl) labelTextEl.textContent = label;
-
-      // toggle ikon unread
-      let unreadIcon = span.querySelector('.unread-icon');
-      if (hasUnread){
-        if (!unreadIcon){
-          span.insertAdjacentHTML('beforeend',
-            '<svg class="unread-icon" width="14" height="14" viewBox="0 0 24 24" fill="red" style="margin-left:4px;"><path d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 4a1 1 0 0 0-1 1v6a1 1 0 1 0 2 0V7a1 1 0 0 0-1-1zm0 10a1.5 1.5 0 1 0 0 3a1.5 1.5 0 0 0 0-3z"/></svg>'
-          );
-        }
-      } else if (unreadIcon){
-        unreadIcon.remove();
-      }
-
-      span.style.fontWeight = hasUnread ? 'bold' : 'normal';
-    });
-  });
-}
-
-/* ======================= PENCARIAN PESAN ======================= */
-function filterMessages(query){
-  if (!query){ renderChatMessages(allMessages); return; }
-  const q = String(query).toLowerCase();
-  const filtered = allMessages.filter(m => String(m.text || '').toLowerCase().includes(q));
-  renderChatMessages(filtered);
-}
-
-/* ======================= KIRIM PESAN ADMIN ======================= */
 function sendMessage(){
-  const msgInput = document.getElementById('msg');
   const msg = msgInput?.value.trim();
   if (!selectedUserId || !msg) return alert("Pilih user dan tulis pesan dulu!");
 
   const now = Date.now();
-const newMsg = {
-  from: 'admin',
-  name: 'Admin',
-  email: 'admin@domain.com',
-  photoURL: 'https://i.imgur.com/qiZFOs9.png',
-  text: msg,
-  time: now,
-  readByAdmin: true,
-  seenByUser: false,
-  deliveredAt: now,
-  readAt: null
-};
+  const newMsg = {
+    from: "admin",
+    name: "Admin",
+    email: "admin@domain.com",
+    photoURL: "https://i.imgur.com/qiZFOs9.png",
+    text: msg,
+    time: now,
+    readByAdmin: true,
+    seenByUser: false,
+    deliveredAt: now,
+    readAt: null
+  };
 
   db.ref(`chats/${selectedUserId}`).push(newMsg, err=>{
-    if (!err){
-      if (msgInput){ msgInput.value = ''; updateSendButtonState(); }
+    if (err) return alert("Gagal mengirim pesan");
 
-      // notifikasi ke user
-      db.ref(`notifications/${selectedUserId}`).set({
-        from: 'admin', text: msg, time: now, unread: true
-      });
+    msgInput.value = "";
+    updateSendButtonState();
 
-      // update posisi user di list
-      const idx = allUsersData.findIndex(([id])=> id === selectedUserId);
-      if (idx !== -1){
-        allUsersData[idx][2] = now;
-        allUsersData.sort((a,b)=> b[2]-a[2]);
-        const displayList = allUsersData.map(([s,d])=>[s,d]);
-        renderUserList(displayList, 'all', document.getElementById('searchUser')?.value || '');
-      }
-    } else {
-      alert('Gagal mengirim pesan');
+    // notifikasi ke user
+    db.ref(`notifications/${selectedUserId}`).set({
+      from:"admin", text: msg, time: now, unread:true
+    });
+
+    // bump activity
+    const idx = allUsersData.findIndex(([id])=> id === selectedUserId);
+    if (idx !== -1){
+      const userData = allUsersData[idx][1] || {};
+      allUsersData[idx][2] = makeActivityTime(now, userData);
+      allUsersData.sort((a,b)=> (b[2]||0)-(a[2]||0));
+      scheduleRender();
     }
   });
 }
 
-/* ======================= STATUS HEADER (ONLINE / TYPING) ======================= */
+/* ======================= PRESENCE (ONLINE / TYPING) ======================= */
 function updateUserPresenceById(id){
-  // matikan listener lama
   const prev = lastPresenceId;
   if (prev && prev !== id){
-    db.ref('users/' + prev).off();
-    db.ref('users/' + prev + '/typing').off();
+    db.ref("users/" + prev).off();
+    db.ref("users/" + prev + "/typing").off();
   }
   lastPresenceId = id;
 
-  const userRef   = db.ref('users/' + id);
-  const typingRef = db.ref('users/' + id + '/typing');
-  const statusElem = document.getElementById('chatUserStatus');
+  const userRef   = db.ref("users/" + id);
+  const typingRef = db.ref("users/" + id + "/typing");
+  const statusElem = document.getElementById("chatUserStatus");
   if (!statusElem) return;
 
-  userRef.on('value', snap=>{
+  userRef.on("value", snap=>{
     const data = snap.val() || {};
-    if (data.typing) return; // biar typing handler yang render
+    if (data.typing) return;
+
     if (data.online){
       statusElem.innerHTML = `<span class="status-main">Online</span>`;
     } else {
@@ -963,29 +961,29 @@ function updateUserPresenceById(id){
       if (!t){ statusElem.innerHTML = ``; return; }
       const d = new Date(t), now = new Date();
       const isToday = d.toDateString() === now.toDateString();
-      const h = d.getHours(), m = String(d.getMinutes()).padStart(2,'0');
-      const ampm = h >= 12 ? 'PM' : 'AM';
+      const h = d.getHours(), m = String(d.getMinutes()).padStart(2,"0");
+      const ampm = h >= 12 ? "PM" : "AM";
       const hh = h % 12 || 12;
-      statusElem.innerHTML = `<span class="status-sub">Last seen ${isToday ? 'today' : d.toLocaleDateString()} at ${hh}:${m} ${ampm}</span>`;
+      statusElem.innerHTML = `<span class="status-sub">Last seen ${isToday ? "today" : d.toLocaleDateString()} at ${hh}:${m} ${ampm}</span>`;
     }
   });
 
-  typingRef.on('value', snap=>{
+  typingRef.on("value", snap=>{
     const isTyping = !!snap.val();
     if (isTyping){
       statusElem.innerHTML = `<span class="status-typing">Typing...</span>`;
     } else {
-      userRef.once('value').then(s=>{
+      userRef.once("value").then(s=>{
         const d = s.val() || {};
         if (d.online){
           statusElem.innerHTML = `<span class="status-main">Online</span>`;
         } else if (d.lastLoginTime){
           const dt = new Date(d.lastLoginTime), now = new Date();
           const isToday = dt.toDateString() === now.toDateString();
-          const h = dt.getHours(), m = String(dt.getMinutes()).padStart(2,'0');
-          const ampm = h >= 12 ? 'PM' : 'AM';
+          const h = dt.getHours(), m = String(dt.getMinutes()).padStart(2,"0");
+          const ampm = h >= 12 ? "PM" : "AM";
           const hh = h % 12 || 12;
-          statusElem.innerHTML = `<span class="status-sub">Last seen ${isToday ? 'today' : dt.toLocaleDateString()} at ${hh}:${m} ${ampm}</span>`;
+          statusElem.innerHTML = `<span class="status-sub">Last seen ${isToday ? "today" : dt.toLocaleDateString()} at ${hh}:${m} ${ampm}</span>`;
         } else {
           statusElem.innerHTML = ``;
         }
@@ -994,83 +992,47 @@ function updateUserPresenceById(id){
   });
 }
 
-/* ======================= LISTENER GLOBAL ONLINE (tanpa numpuk) ======================= */
-db.ref('users').on('child_changed', snap=>{
+/* ======================= LISTENER ONLINE UPDATE (LIGHT) ======================= */
+db.ref("users").on("child_changed", snap=>{
   const id = snap.key;
-  const isOnline = !!(snap.val() || {}).online;
-  const item = document.querySelector(`.user-item[data-sanitized="${id}"]`);
-  if (item) {
-    const indicator = item.querySelector('.online-indicator');
-    if (indicator) indicator.style.display = isOnline ? 'inline-block' : 'none';
+  const data = snap.val() || {};
+
+  // update data dalam allUsersData
+  const idx = allUsersData.findIndex(([sid])=> sid === id);
+  if (idx !== -1){
+    allUsersData[idx][1] = data;
+
+    const lastChat = Number(chatMeta[id]?.lastChatTime || 0);
+    allUsersData[idx][2] = makeActivityTime(lastChat, data);
+    allUsersData.sort((a,b)=> (b[2]||0)-(a[2]||0));
+    scheduleRender();
   }
-  updateUserListFlags(); 
 });
 
-/* ======================= UTIL KECIL ======================= */
-let msgInput, sendBtn;
-function updateSendButtonState(){
-  const msg = msgInput?.value.trim();
-  const isUserSelected = !!selectedUserId;
-  if (sendBtn) sendBtn.disabled = !(isUserSelected && msg);
-}
-
-function addOrUpdateUser(sanitized, data){
-  if (renderedUserIds.has(sanitized)) return;
-  if (allUsersData.some(([id])=> id === sanitized)) return;
-
-  db.ref(`chats/${sanitized}`).orderByChild('time').limitToLast(1).once('value')
-    .then(lastSnap=>{
-      let lastTime = 0;
-      lastSnap.forEach(m => { lastTime = m.val()?.time || 0; });
-      if (lastTime === 0) lastTime = Date.now();
-
-      const existingIndex = allUsersData.findIndex(([id])=> id === sanitized);
-      if (existingIndex !== -1) allUsersData.splice(existingIndex, 1);
-
-      allUsersData.push([sanitized, data, lastTime]);
-      allUsersData.sort((a,b)=> b[2]-a[2]);
-
-      const displayList = allUsersData.map(([id,user])=> [id, user]);
-      renderUserList(displayList, 'all', document.getElementById("searchUser")?.value || '');
-      renderedUserIds.add(sanitized);
-    });
-}
-
-function updateUserLastTime(sanitizedId, messages){
-  const messageEntries = Object.entries(messages || {});
-  if (messageEntries.length === 0) return;
-  const latest = messageEntries.reduce((a,b)=> (a[1].time > b[1].time ? a : b), [null,{time:0}]);
-  const latestTime = latest[1]?.time || 0;
-
-  const idx = allUsersData.findIndex(([id])=> id === sanitizedId);
-  if (idx !== -1){
-    allUsersData[idx][2] = latestTime;
-    allUsersData.sort((a,b)=> b[2]-a[2]);
-
-    const displayList = allUsersData.map(([s,d])=>[s,d]);
-    renderUserList(displayList, currentFilterMode, document.getElementById('searchUser')?.value || '');
-  }
+/* ======================= SEARCH MSG ======================= */
+function filterMessages(query){
+  if (!query){ renderChatMessages(allMessages); return; }
+  const q = String(query).toLowerCase();
+  const filtered = allMessages.filter(m => String(m.text || "").toLowerCase().includes(q));
+  renderChatMessages(filtered);
 }
 
 /* ======================= BOOTSTRAP ======================= */
 window.onload = ()=>{
-  // init list
   selectedUserId = null;
-  activeUserIdSanitized = '';
-  activeUserIdEmail = '';
+  activeUserIdSanitized = "";
+  activeUserIdEmail = "";
 
   loadUserList();
   updateUserCounts();
 
-  // UI refs
-  msgInput = document.getElementById('msg');
-  sendBtn  = document.getElementById('sendBtn');
+  msgInput = document.getElementById("msg");
+  sendBtn  = document.getElementById("sendBtn");
 
-  // input message
   if (msgInput){
-    msgInput.addEventListener('input', updateSendButtonState);
-    msgInput.addEventListener('keydown', e=>{
-      if (e.key === 'Enter' && !(e.shiftKey || e.ctrlKey)){
+    msgInput.addEventListener("input", updateSendButtonState);
+    msgInput.addEventListener("keydown", e=>{
+      if (e.key === "Enter" && !(e.shiftKey || e.ctrlKey)){
         e.preventDefault();
         const text = msgInput.value.trim();
         if (!selectedUserId || !text) return;
@@ -1079,60 +1041,74 @@ window.onload = ()=>{
     });
   }
   if (sendBtn){
-    sendBtn.addEventListener('click', sendMessage);
+    sendBtn.addEventListener("click", sendMessage);
     updateSendButtonState();
   }
 
-  // filter tombol
-  const btnAll    = document.getElementById('filterAll');
-  const btnUnread = document.getElementById('filterUnread');
-  btnAll?.addEventListener('click', ()=>{
-    currentFilterMode = 'all';
-    btnAll.classList.add('active-filter');
-    btnUnread?.classList.remove('active-filter');
-    renderUserList(allUsersData, 'all', document.getElementById('searchUser')?.value || '');
-  });
-  btnUnread?.addEventListener('click', ()=>{
-    currentFilterMode = 'unread';
-    btnUnread.classList.add('active-filter');
-    btnAll?.classList.remove('active-filter');
-    renderUserList(allUsersData, 'unread', document.getElementById('searchUser')?.value || '');
+  const btnAll    = document.getElementById("filterAll");
+  const btnUnread = document.getElementById("filterUnread");
+
+  btnAll?.addEventListener("click", ()=>{
+    currentFilterMode = "all";
+    btnAll.classList.add("active-filter");
+    btnUnread?.classList.remove("active-filter");
+    scheduleRender();
   });
 
-  // search user
-  const searchUserInput = document.getElementById('searchUser');
-  searchUserInput?.addEventListener('input', e=>{
-    const filterType = currentFilterMode;
-    const box = document.getElementById('userListBox');
-    if (box) box.innerHTML = '';
-    renderUserList(allUsersData, filterType, e.target.value);
+  btnUnread?.addEventListener("click", ()=>{
+    currentFilterMode = "unread";
+    btnUnread.classList.add("active-filter");
+    btnAll?.classList.remove("active-filter");
+    scheduleRender();
   });
 
-  // search message
-  const searchMessageInput = document.getElementById('searchMessage');
-  searchMessageInput?.addEventListener('input', e=> filterMessages(e.target.value) );
+  const searchUserInput = document.getElementById("searchUser");
+  searchUserInput?.addEventListener("input", ()=> scheduleRender());
 
-  // watchers untuk users (tambah/perubahan data)
-  db.ref('users').on('child_added', snap=>{
+  const searchMessageInput = document.getElementById("searchMessage");
+  searchMessageInput?.addEventListener("input", e=> filterMessages(e.target.value));
+
+  // users listener (add + change) → update list data
+  db.ref("users").on("child_added", snap=>{
     const sanitized = snap.key;
-    const data = snap.val();
-    if (!renderedUserIds.has(sanitized)){
-      addOrUpdateUser(sanitized, data);
-      renderedUserIds.add(sanitized);
+    const data = snap.val() || {};
+
+    const idx = allUsersData.findIndex(([sid])=> sid === sanitized);
+    const lastChat = Number(chatMeta[sanitized]?.lastChatTime || 0);
+    const activity = makeActivityTime(lastChat, data);
+
+    if (idx !== -1){
+      allUsersData[idx][1] = data;
+      allUsersData[idx][2] = activity;
+    } else {
+      allUsersData.push([sanitized, data, activity]);
     }
-  });
-  db.ref('users').on('child_changed', snap=>{
-    const sanitized = snap.key;
-    const data = snap.val();
-    addOrUpdateUser(sanitized, data);
+
+    allUsersData.sort((a,b)=> (b[2]||0)-(a[2]||0));
+
+    ensureChatMetaListener(sanitized);
+    scheduleRender();
   });
 
-  // watchers untuk chats -> update urutan
-  db.ref("chats").on("child_changed", snapshot=>{
-    updateUserLastTime(snapshot.key, snapshot.val());
-  });
-  db.ref("chats").on("child_added", snapshot=>{
-    updateUserLastTime(snapshot.key, snapshot.val());
+  db.ref("users").on("child_changed", snap=>{
+    const sanitized = snap.key;
+    const data = snap.val() || {};
+
+    const idx = allUsersData.findIndex(([sid])=> sid === sanitized);
+    const lastChat = Number(chatMeta[sanitized]?.lastChatTime || 0);
+    const activity = makeActivityTime(lastChat, data);
+
+    if (idx !== -1){
+      allUsersData[idx][1] = data;
+      allUsersData[idx][2] = activity;
+    } else {
+      allUsersData.push([sanitized, data, activity]);
+    }
+
+    allUsersData.sort((a,b)=> (b[2]||0)-(a[2]||0));
+
+    ensureChatMetaListener(sanitized);
+    scheduleRender();
   });
 };
 </script>
