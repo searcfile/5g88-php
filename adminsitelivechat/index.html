@@ -478,6 +478,22 @@ function scheduleRender(){
 }
 
 /* ======================= HELPERS ======================= */
+  function formatDateTimeMY(ts){
+  const n = Number(ts || 0);
+  if (!n) return "-";
+  const d = new Date(n);
+
+  // 23/02/2026 13:30:12 (24-hour)
+  const dd = String(d.getDate()).padStart(2,"0");
+  const mm = String(d.getMonth()+1).padStart(2,"0");
+  const yy = d.getFullYear();
+
+  const HH = String(d.getHours()).padStart(2,"0");
+  const MM = String(d.getMinutes()).padStart(2,"0");
+  const SS = String(d.getSeconds()).padStart(2,"0");
+
+  return `${dd}/${mm}/${yy} ${HH}:${MM}:${SS}`;
+}
 function sanitizeUserId(email){ return String(email||"").toLowerCase().replace(/\./g,"_"); }
 
 function desanitizeUserId(sanitized){
@@ -631,56 +647,65 @@ function renderChatMessages(messages){
 }
 
 /* ======================= CHAT META LISTENER (PER USER) ======================= */
+// ✅ berapa banyak message terakhir untuk kira unread (besar = lebih tepat, kecil = lebih ringan)
+const META_WINDOW = 120;
+
+/* ======================= CHAT META LISTENER (PER USER) ======================= */
 function ensureChatMetaListener(sanitized){
   if (chatMeta[sanitized]?.listening) return;
 
   chatMeta[sanitized] = chatMeta[sanitized] || {};
   chatMeta[sanitized].listening = true;
+  chatMeta[sanitized].hasUnread = !!chatMeta[sanitized].hasUnread;
 
-  // ✅ hanya ambil last msg sahaja (ringan)
-  db.ref(`chats/${sanitized}`).orderByChild("time").limitToLast(1).on("child_added", snap=>{
-    const m = snap.val() || {};
-    const t = Number(m.time || 0);
+  // ✅ dengar "value" untuk last N messages → realtime confirm (no need refresh)
+  const qref = db.ref(`chats/${sanitized}`).orderByChild("time").limitToLast(META_WINDOW);
 
-    chatMeta[sanitized].lastChatTime = t;
+  qref.on("value", snap=>{
+    const chats = snap.val();
+    if (!chats) return;
 
-    if (m.from === "user"){
-      chatMeta[sanitized].identity = { name:m.name, email:m.email, photoURL:m.photoURL };
-      chatMeta[sanitized].hasUnread = !m.readByAdmin;
+    const entries = Object.values(chats);
+    if (!entries.length) return;
 
-      // sound kalau bukan initial load dan admin bukan sedang buka chat itu
-      if (!isInitialChatLoad && sanitized !== activeUserIdSanitized && !m.readByAdmin){
-        playNotificationSound();
-      }
+    // last message (ikut time)
+    const lastMsg = entries.reduce((a,b)=> (Number(a.time||0) > Number(b.time||0) ? a : b));
+    const lastTime = Number(lastMsg.time || 0);
+
+    // kira unread: mana-mana message dari user yang readByAdmin !== true
+    const hasUnreadNow = entries.some(m => m && m.from === "user" && m.readByAdmin !== true);
+
+    // simpan meta
+    const prevUnread = !!chatMeta[sanitized].hasUnread;
+    chatMeta[sanitized].lastChatTime = lastTime;
+    chatMeta[sanitized].hasUnread = hasUnreadNow;
+
+    // identity (ambil dari message user paling latest yang ada identity)
+    const lastUserMsg = entries
+      .slice()
+      .reverse()
+      .find(m => m && m.from === "user" && (m.name || m.email || m.photoURL));
+
+    if (lastUserMsg){
+      chatMeta[sanitized].identity = {
+        name: lastUserMsg.name,
+        email: lastUserMsg.email,
+        photoURL: lastUserMsg.photoURL
+      };
     }
 
-    // bump activity + sort
+    if (
+      initialUserListLoaded &&
+      !prevUnread &&
+      hasUnreadNow &&
+      sanitized !== activeUserIdSanitized
+    ){
+      playNotificationSound();
+    }
     const idx = allUsersData.findIndex(([id])=> id === sanitized);
     if (idx !== -1){
       const userData = allUsersData[idx][1] || {};
-      allUsersData[idx][2] = makeActivityTime(t, userData);
-      allUsersData.sort((a,b)=> (b[2]||0)-(a[2]||0));
-    }
-
-    scheduleRender();
-  });
-
-  // ✅ kalau last msg berubah (child_changed juga), update unread/meta
-  db.ref(`chats/${sanitized}`).orderByChild("time").limitToLast(1).on("child_changed", snap=>{
-    const m = snap.val() || {};
-    const t = Number(m.time || 0);
-
-    chatMeta[sanitized].lastChatTime = t;
-
-    if (m.from === "user"){
-      chatMeta[sanitized].identity = { name:m.name, email:m.email, photoURL:m.photoURL };
-      chatMeta[sanitized].hasUnread = !m.readByAdmin;
-    }
-
-    const idx = allUsersData.findIndex(([id])=> id === sanitized);
-    if (idx !== -1){
-      const userData = allUsersData[idx][1] || {};
-      allUsersData[idx][2] = makeActivityTime(t, userData);
+      allUsersData[idx][2] = makeActivityTime(lastTime, userData);
       allUsersData.sort((a,b)=> (b[2]||0)-(a[2]||0));
     }
 
@@ -694,7 +719,6 @@ function renderUserListFast(userList, filter="all", searchTerm=""){
   if (!userListBox) return;
 
   userListBox.innerHTML = "";
-
   const q = String(searchTerm||"").toLowerCase();
 
   userList.forEach(([sanitized, userData])=>{
@@ -710,8 +734,11 @@ function renderUserListFast(userList, filter="all", searchTerm=""){
     };
 
     const { label, displayName, email, photoURL } = getLabelParts(sanitized, mergedIdentity);
-
     if (q && !label.toLowerCase().includes(q)) return;
+
+    // ✅ ambil login time dari users node
+    const loginTs   = getLoginTimeFromUser(userData);
+    const loginText = formatDateTimeMY(loginTs);
 
     const userDiv = document.createElement("div");
     userDiv.className = "user-item";
@@ -719,15 +746,30 @@ function renderUserListFast(userList, filter="all", searchTerm=""){
     userDiv.setAttribute("data-sanitized", sanitized);
 
     const userLabel = document.createElement("span");
-    userLabel.innerHTML = `
-      <span class="label-text">${label}</span>
-      ${hasUnread ? '<svg class="unread-icon" width="14" height="14" viewBox="0 0 24 24" fill="red" style="margin-left:4px;"><path d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 4a1 1 0 0 0-1 1v6a1 1 0 1 0 2 0V7a1 1 0 0 0-1-1zm0 10a1.5 1.5 0 1 0 0 3a1.5 1.5 0 0 0 0-3z"/></svg>' : ''}
-      <svg class="online-indicator" width="10" height="10" viewBox="0 0 24 24" fill="#00ff00" style="margin-left:6px;display:${userData?.online ? "inline-block":"none"};">
-        <circle cx="12" cy="12" r="10"/>
-      </svg>
-    `;
-    userLabel.style.fontWeight = hasUnread ? "bold" : "normal";
+    userLabel.style.display = "block";           // penting supaya 2 baris jadi cantik
+    userLabel.style.width = "100%";
 
+    userLabel.innerHTML = `
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;width:100%;">
+        <span class="label-text">${label}</span>
+
+        ${hasUnread ? `
+          <svg class="unread-icon" width="14" height="14" viewBox="0 0 24 24" fill="red" style="margin-left:4px;">
+            <path d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 4a1 1 0 0 0-1 1v6a1 1 0 1 0 2 0V7a1 1 0 0 0-1-1zm0 10a1.5 1.5 0 1 0 0 3a1.5 1.5 0 0 0 0-3z"/>
+          </svg>` : ""}
+
+        <svg class="online-indicator" width="10" height="10" viewBox="0 0 24 24" fill="#00ff00"
+          style="margin-left:auto;display:${userData?.online ? "inline-block":"none"};">
+          <circle cx="12" cy="12" r="10"/>
+        </svg>
+      </div>
+
+      <div style="margin-top:4px;font-size:12px;color:rgba(255,255,255,.65);">
+        Date time ${loginText}
+      </div>
+    `;
+
+    userLabel.style.fontWeight = hasUnread ? "bold" : "normal";
     userDiv.appendChild(userLabel);
 
     userDiv.onclick = ()=>{
@@ -875,6 +917,7 @@ function listenToChat(){
       // update cache unread
       chatMeta[activeUserIdSanitized] = chatMeta[activeUserIdSanitized] || {};
       chatMeta[activeUserIdSanitized].hasUnread = false;
+      chatMeta[activeUserIdSanitized].lastChatTime = Date.now();
       scheduleRender();
     } else if (justOpenedChat){
       justOpenedChat = false;
@@ -991,23 +1034,6 @@ function updateUserPresenceById(id){
     }
   });
 }
-
-/* ======================= LISTENER ONLINE UPDATE (LIGHT) ======================= */
-db.ref("users").on("child_changed", snap=>{
-  const id = snap.key;
-  const data = snap.val() || {};
-
-  // update data dalam allUsersData
-  const idx = allUsersData.findIndex(([sid])=> sid === id);
-  if (idx !== -1){
-    allUsersData[idx][1] = data;
-
-    const lastChat = Number(chatMeta[id]?.lastChatTime || 0);
-    allUsersData[idx][2] = makeActivityTime(lastChat, data);
-    allUsersData.sort((a,b)=> (b[2]||0)-(a[2]||0));
-    scheduleRender();
-  }
-});
 
 /* ======================= SEARCH MSG ======================= */
 function filterMessages(query){
