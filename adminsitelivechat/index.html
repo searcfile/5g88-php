@@ -428,12 +428,10 @@ body {
 "use strict";
 
 /* ======================= STATE GLOBAL ======================= */
-let isLoadingUserList = true;
 let initialUserListLoaded = false;
 let currentFilterMode = "all";
 
 let activeUserIdSanitized = "";
-let activeUserIdEmail = "";
 let selectedUserId = null;
 
 let allUsersData = []; // [ [sanitized, userData, activityTime], ... ]
@@ -442,7 +440,8 @@ let justOpenedChat = false;
 
 let lastPresenceId = null;
 
-const chatMeta = {}; // { sanitized: { listening, lastChatTime, identity } }
+// chatMeta: simpan info realtime chat (listener sekali saja per user)
+const chatMeta = {}; // { sid: { listening:true, lastChatTime:number, identity:{...}, booted:true/false } }
 let renderTimer = null;
 
 /* ======================= INIT FIREBASE ======================= */
@@ -456,7 +455,7 @@ const firebaseConfig = {
   appId: "1:593904200464:web:cea7bc1360532c20d99395",
   measurementId: "G-R494S2DPZ5"
 };
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 /* ======================= SCHEDULE RENDER ======================= */
@@ -464,7 +463,11 @@ function scheduleRender(){
   clearTimeout(renderTimer);
   renderTimer = setTimeout(()=>{
     const displayList = allUsersData.map(([id,user])=> [id, user]);
-    renderUserListFast(displayList, currentFilterMode, document.getElementById("searchUser")?.value || "");
+    renderUserListFast(
+      displayList,
+      currentFilterMode,
+      document.getElementById("searchUser")?.value || ""
+    );
   }, 80);
 }
 
@@ -526,11 +529,9 @@ function getLabelParts(id, data){
 
 /* ======================= SOUND (ENABLE ONCE) ======================= */
 let soundEnabled = false;
-
 async function enableSound(){
   const a = document.getElementById("notifSound");
   if(!a) return console.log("[SOUND] ❌ notifSound not found");
-
   try{
     a.muted = true;
     await a.play();
@@ -544,12 +545,11 @@ async function enableSound(){
     console.log("[SOUND] ❌ blocked:", e.name, e.message);
   }
 }
-
 function beep(){
   if(!soundEnabled) return;
   const a = document.getElementById("notifSound");
   if(!a) return;
-  a.currentTime = 0;
+  try{ a.currentTime = 0; }catch(e){}
   a.play().catch(()=>{});
 }
 
@@ -648,18 +648,84 @@ function renderChatMessages(messages){
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-/* ======================= META LISTENER (ONLY lastChatTime + identity) ======================= */
+/* ======================= UNREAD SEED (FOR OLD UNREAD) ======================= */
+// ✅ untuk unread lama yang belum pernah set users/unreadForAdmin
+function seedUnreadFlagOnce(sid){
+  // kalau dah true, skip
+  db.ref(`users/${sid}/unreadForAdmin`).once("value").then(s=>{
+    if (s.val() === true) return;
+
+    return db.ref(`chats/${sid}`)
+      .orderByChild("time")
+      .limitToLast(50)
+      .once("value")
+      .then(cs=>{
+        const chats = cs.val() || {};
+        const list = Object.values(chats).filter(Boolean);
+        const hasUnread = list.some(m => m && m.from === "user" && m.readByAdmin !== true);
+        if (hasUnread){
+          return db.ref(`users/${sid}`).update({ unreadForAdmin:true }).catch(()=>{});
+        }
+      });
+  }).catch(()=>{});
+}
+
+/* ======================= META LISTENER (REALTIME + AUTO FLAG UNREAD) ======================= */
 function ensureChatMetaListener(sanitized){
   if (chatMeta[sanitized]?.listening) return;
 
   chatMeta[sanitized] = chatMeta[sanitized] || {};
   chatMeta[sanitized].listening = true;
+  chatMeta[sanitized].booted = false;
 
   const lastRef = db.ref(`chats/${sanitized}`).limitToLast(1);
 
   lastRef.on("child_added", snap=>{
     const m = snap.val() || {};
     const t = Number(m.time) || Date.now();
+    chatMeta[sanitized].lastChatTime = t;
+
+    // ✅ detect message lama vs baru
+    const wasBooted = !!chatMeta[sanitized].booted;
+    if(!wasBooted) chatMeta[sanitized].booted = true;
+
+    // identity
+    if (m.name || m.email || m.photoURL){
+      chatMeta[sanitized].identity = { name:m.name, email:m.email, photoURL:m.photoURL };
+    }
+
+    // ✅ bila user msg unread → set users/unreadForAdmin TRUE (supaya icon merah muncul)
+    if (m.from === "user" && m.readByAdmin !== true){
+      db.ref(`users/${sanitized}`).update({
+        unreadForAdmin: true,
+        lastChatTime: t
+      }).catch(()=>{});
+
+      // ✅ bunyi hanya untuk msg baru (bukan masa boot attach)
+      if (initialUserListLoaded && wasBooted && sanitized !== activeUserIdSanitized){
+        beep();
+      }
+    }
+
+    // bump activity + sort list
+    const idx = allUsersData.findIndex(([id])=> id === sanitized);
+    if (idx !== -1){
+      const userData = allUsersData[idx][1] || {};
+      allUsersData[idx][2] = makeActivityTime(t, userData);
+      allUsersData.sort((a,b)=> (b[2]||0)-(a[2]||0));
+      scheduleRender();
+    } else {
+      // kalau user belum ada dalam list (rare), add dummy
+      allUsersData.push([sanitized, {}, t]);
+      allUsersData.sort((a,b)=> (b[2]||0)-(a[2]||0));
+      scheduleRender();
+    }
+  });
+
+  // ✅ kalau ada update (contoh readByAdmin berubah), refresh activity juga
+  lastRef.on("child_changed", snap=>{
+    const m = snap.val() || {};
+    const t = Number(m.time) || chatMeta[sanitized].lastChatTime || Date.now();
     chatMeta[sanitized].lastChatTime = t;
 
     if (m.name || m.email || m.photoURL){
@@ -685,7 +751,7 @@ function renderUserListFast(userList, filter="all", searchTerm=""){
   const q = String(searchTerm||"").toLowerCase();
 
   userList.forEach(([sanitized, userData])=>{
-    const hasUnread = (userData?.unreadForAdmin === true); // ✅ NEW SOURCE
+    const hasUnread = (userData?.unreadForAdmin === true);
 
     if (filter === "unread" && !hasUnread) return;
 
@@ -738,7 +804,6 @@ function renderUserListFast(userList, filter="all", searchTerm=""){
       justOpenedChat = true;
       activeUserIdSanitized = sanitized;
       selectedUserId = sanitized;
-      activeUserIdEmail = email || "";
 
       const nameEl = document.getElementById("chatUserName");
       if (nameEl) nameEl.textContent = displayName;
@@ -780,9 +845,13 @@ function loadUserList(){
     });
 
     allUsersData.sort((a,b)=> (b[2]||0)-(a[2]||0));
-    allUsersData.forEach(([sid])=> ensureChatMetaListener(sid));
 
-    isLoadingUserList = false;
+    // ✅ attach listeners + seed unread lama
+    allUsersData.forEach(([sid])=>{
+      ensureChatMetaListener(sid);
+      seedUnreadFlagOnce(sid);
+    });
+
     initialUserListLoaded = true;
 
     if (userListBox) userListBox.innerHTML = "";
@@ -833,6 +902,13 @@ function listenToChat(){
       db.ref(`users/${activeUserIdSanitized}`).update({
         unreadForAdmin: false
       }).catch(()=>{});
+
+      // ✅ update cache terus (supaya icon merah hilang terus)
+      const idx = allUsersData.findIndex(([sid])=> sid === activeUserIdSanitized);
+      if(idx !== -1){
+        allUsersData[idx][1] = { ...(allUsersData[idx][1]||{}), unreadForAdmin:false };
+      }
+      scheduleRender();
     }
   });
 }
@@ -874,6 +950,7 @@ function sendMessage(){
       from:"admin", text: msg, time: now, unread:true
     });
 
+    // update lastChatTime
     db.ref(`users/${selectedUserId}`).update({
       lastChatTime: now
     }).catch(()=>{});
@@ -932,9 +1009,8 @@ function filterMessages(query){
 window.onload = ()=>{
   selectedUserId = null;
   activeUserIdSanitized = "";
-  activeUserIdEmail = "";
 
-  // ✅ sound enable button
+  // ✅ sound enable button (WAJIB click sekali sebab browser block autoplay)
   document.getElementById("enableSoundBtn")?.addEventListener("click", enableSound);
 
   loadUserList();
@@ -979,7 +1055,7 @@ window.onload = ()=>{
   document.getElementById("searchUser")?.addEventListener("input", ()=> scheduleRender());
   document.getElementById("searchMessage")?.addEventListener("input", e=> filterMessages(e.target.value));
 
-  // ✅ users realtime (notif merah + bunyi)
+  // ✅ users realtime refresh list + (bunyi disini kalau berubah)
   db.ref("users").on("child_added", snap=>{
     const sanitized = snap.key;
     const data = snap.val() || {};
@@ -997,6 +1073,7 @@ window.onload = ()=>{
 
     allUsersData.sort((a,b)=> (b[2]||0)-(a[2]||0));
     ensureChatMetaListener(sanitized);
+    seedUnreadFlagOnce(sanitized);
     scheduleRender();
   });
 
@@ -1004,7 +1081,7 @@ window.onload = ()=>{
     const sanitized = snap.key;
     const data = snap.val() || {};
 
-    // ✅ bunyi bila unreadForAdmin true (dan bukan chat yang tengah buka)
+    // ✅ bunyi bila server set unreadForAdmin true
     if (initialUserListLoaded && data.unreadForAdmin === true && sanitized !== activeUserIdSanitized){
       beep();
     }
