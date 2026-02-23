@@ -545,7 +545,35 @@ function playNotificationSound(){
     audio.play().catch(()=>{});
   }
 }
+// ✅ Unlock audio sekali sahaja lepas user pertama kali interact
+(function initAudioUnlock(){
+  const audio = document.getElementById("notifSound");
+  if(!audio) return;
 
+  let unlocked = false;
+
+  async function unlock(){
+    if(unlocked) return;
+    unlocked = true;
+    userHasInteracted = true;
+
+    try{
+      audio.muted = true;
+      await audio.play();     // trigger permission
+      audio.pause();
+      audio.currentTime = 0;
+      audio.muted = false;
+      // console.log("Audio unlocked");
+    }catch(e){
+      // kalau masih block, user kena click lagi
+      // console.log("Audio unlock blocked:", e);
+      unlocked = false;
+    }
+  }
+
+  window.addEventListener("pointerdown", unlock, { once:true });
+  window.addEventListener("keydown", unlock, { once:true });
+})();
 document.addEventListener("click", ()=> userHasInteracted = true);
 document.addEventListener("touchstart", ()=> userHasInteracted = true);
 document.addEventListener("keydown", ()=> userHasInteracted = true);
