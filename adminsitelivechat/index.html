@@ -538,45 +538,85 @@ function getLabelParts(id, data){
   return { displayName, email, photoURL, label };
 }
 
-function playNotificationSound(){
+// ===============================
+// ✅ SOUND SYSTEM (ANTI-BLOCK + RETRY + QUEUE + DEBUG)
+// ===============================
+let soundUnlocked = false;
+let pendingBeeps = 0;
+
+function logSound(...a){ console.log("[SOUND]", ...a); }
+
+function tryPlaySoundNow(){
   const audio = document.getElementById("notifSound");
-  if (audio && userHasInteracted){
-    audio.currentTime = 0;
-    audio.play().catch(()=>{});
+  if(!audio){
+    logSound("❌ #notifSound not found");
+    return;
+  }
+
+  try { audio.load(); } catch(e){}
+
+  audio.currentTime = 0;
+
+  const p = audio.play();
+  if (p && typeof p.then === "function"){
+    p.then(()=>{
+      soundUnlocked = true;
+      logSound("✅ played");
+    }).catch(err=>{
+      logSound("❌ play blocked:", err?.name || err, err?.message || "");
+      pendingBeeps++;
+    });
+  } else {
+    soundUnlocked = true;
+    logSound("✅ played (no promise)");
   }
 }
-// ✅ Unlock audio sekali sahaja lepas user pertama kali interact
-(function initAudioUnlock(){
+
+function requestBeep(){
+  if(!soundUnlocked){
+    pendingBeeps++;
+    logSound("🔸 queued beep. pending =", pendingBeeps);
+    return;
+  }
+  tryPlaySoundNow();
+}
+
+function unlockSound(){
   const audio = document.getElementById("notifSound");
   if(!audio) return;
 
-  let unlocked = false;
+  audio.muted = true;
 
-  async function unlock(){
-    if(unlocked) return;
-    unlocked = true;
-    userHasInteracted = true;
-
-    try{
-      audio.muted = true;
-      await audio.play();     // trigger permission
+  const p = audio.play();
+  if(p && typeof p.then === "function"){
+    p.then(()=>{
       audio.pause();
       audio.currentTime = 0;
       audio.muted = false;
-      // console.log("Audio unlocked");
-    }catch(e){
-      // kalau masih block, user kena click lagi
-      // console.log("Audio unlock blocked:", e);
-      unlocked = false;
-    }
-  }
+      soundUnlocked = true;
+      logSound("✅ unlocked");
 
-  window.addEventListener("pointerdown", unlock, { once:true });
-  window.addEventListener("keydown", unlock, { once:true });
-})();
-document.addEventListener("click", ()=> userHasInteracted = true);
-document.addEventListener("touchstart", ()=> userHasInteracted = true);
-document.addEventListener("keydown", ()=> userHasInteracted = true);
+      if(pendingBeeps > 0){
+        pendingBeeps = 0;
+        tryPlaySoundNow();
+      }
+    }).catch(err=>{
+      audio.muted = false;
+      logSound("❌ unlock blocked:", err?.name || err, err?.message || "");
+    });
+  } else {
+    audio.pause();
+    audio.currentTime = 0;
+    audio.muted = false;
+    soundUnlocked = true;
+    logSound("✅ unlocked (no promise)");
+  }
+}
+
+// ✅ unlock audio bila admin first time click/press dalam page ni
+window.addEventListener("pointerdown", unlockSound, { passive:true });
+window.addEventListener("touchstart", unlockSound, { passive:true });
+window.addEventListener("keydown", unlockSound);
 
 /* ======================= ACTIVITY TIME ======================= */
 function getLoginTimeFromUser(data){
@@ -711,7 +751,7 @@ chatMeta[sanitized].hasUnread = unreadNow;
 
 // ✅ bunyi setiap kali ada msg user baru (selagi admin tak buka chat tu)
 if (initialUserListLoaded && unreadNow && sanitized !== activeUserIdSanitized){
-  playNotificationSound();
+  requestBeep();
 }
     }
 
