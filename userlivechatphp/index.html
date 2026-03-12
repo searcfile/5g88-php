@@ -507,6 +507,33 @@ function sanitizeEmail(email){
     .replace(/\./g, "_")
     .replace(/[#$\[\]/]/g,"_");
 }
+function getMainLogin() {
+  try {
+    const data = JSON.parse(localStorage.getItem("gmailLogin") || "{}");
+    if (data && data.email) {
+      return {
+        name: data.name || "User",
+        email: String(data.email).toLowerCase(),
+        photo: data.photo || ""
+      };
+    }
+  } catch (e) {}
+  return null;
+}
+
+function applyMainLogin(login) {
+  if (!login || !login.email) return false;
+
+  currentIsGuest = false;
+  currentUserEmail = login.email;
+  currentActiveId = sanitizeEmail(login.email);
+
+  localStorage.setItem("username", login.name || "User");
+  localStorage.setItem("userphoto", login.photo || "");
+  localStorage.setItem("useremail", login.email);
+
+  return true;
+}
 function getChatPath(){ return currentActiveId ? 'chats/' + currentActiveId : null; }
 function getUserPath(){ return currentActiveId ? 'users/' + currentActiveId : null; }
 function getNotifPath(){ return currentActiveId ? 'notifications/' + currentActiveId : null; }
@@ -520,7 +547,9 @@ const firebaseConfig = {
   messagingSenderId: "593904200464",
   appId: "1:593904200464:web:cea7bc1360532c20d99395"
 };
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 const auth = firebase.auth();
 const db = firebase.database();
 const storage = firebase.storage();
@@ -661,39 +690,46 @@ const PARENT_ORIGIN = getParentOrigin();
 
 // PATCH START: postMessage handler
 window.addEventListener("message", (e) => {
-  if (!ALLOWED_PARENTS.includes(e.origin)) return;
+  if (!ALLOWED_PARENTS.includes(e.origin) && e.origin !== window.location.origin) return;
 
   const data = e.data || {};
-  if (data.type === "user-login" && data.user){
+
+  if (data.type === "user-login" && data.user) {
     const { name, email, photo, uid, isGuest } = data.user;
 
     localStorage.setItem("username", name || (isGuest ? "Guest" : "User"));
     localStorage.setItem("userphoto", photo || "");
 
     if (isGuest && uid) {
-      currentIsGuest   = true;
-      currentActiveId  = String(uid);          // gunakan UID guest
+      currentIsGuest = true;
+      currentActiveId = String(uid);
       currentUserEmail = null;
       localStorage.removeItem("useremail");
     } else if (email) {
-      currentIsGuest   = false;
-      currentUserEmail = email;
-      currentActiveId  = sanitizeEmail(email); // email_sanitized
-      localStorage.setItem("useremail", email);
+      currentIsGuest = false;
+      currentUserEmail = String(email).toLowerCase();
+      currentActiveId = sanitizeEmail(email);
+      localStorage.setItem("useremail", String(email).toLowerCase());
     } else {
-      return; // identitas tak valid
+      return;
     }
 
     updateUserHeader();
-    writeUserProfile(); 
+    writeUserProfile();
     bindPresenceAndNotif();
     initChatWithUserData();
     notifyRead();
+    markAdminSeenInDB();
   }
 
-  // opsional status dari parent
-  if (data.action === "panel-open")  notifyRead();
-  if (data.action === "panel-close") {/* no-op */}
+  if (data.action === "panel-open") {
+    notifyRead();
+    markAdminSeenInDB();
+  }
+
+  if (data.action === "panel-close") {
+    // no-op
+  }
 });
   
 
@@ -1104,12 +1140,15 @@ function onNewMessageRendered({forceToBottom=false} = {}){
   updateFab();
   if (lastQuery) doSearch(lastQuery);
 }
-function notifyUnread(){
-  const target = ALLOWED_PARENTS.includes(PARENT_ORIGIN) ? PARENT_ORIGIN : "*";
+function notifyUnread() {
+  if (!IS_EMBEDDED) return;
+  const target = ALLOWED_PARENTS.includes(PARENT_ORIGIN) ? PARENT_ORIGIN : window.location.origin;
   window.parent.postMessage({ action: "show-livechat-notif" }, target);
 }
-function notifyRead(){
-  const target = ALLOWED_PARENTS.includes(PARENT_ORIGIN) ? PARENT_ORIGIN : "*";
+
+function notifyRead() {
+  if (!IS_EMBEDDED) return;
+  const target = ALLOWED_PARENTS.includes(PARENT_ORIGIN) ? PARENT_ORIGIN : window.location.origin;
   window.parent.postMessage({ action: "hide-livechat-notif" }, target);
 }
 function playNotificationSound() {
@@ -1121,59 +1160,93 @@ function playNotificationSound() {
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
-const sendBoxEl = document.querySelector('.send-box');
-function setFabOffset(){
-  if (!sendBoxEl) return;
-  document.documentElement.style.setProperty('--composer-h', sendBoxEl.offsetHeight + 'px');
-}
-setFabOffset();
-if (window.ResizeObserver && sendBoxEl) {
-  new ResizeObserver(() => setFabOffset()).observe(sendBoxEl);
-} else {
-  window.addEventListener('resize', setFabOffset);
-}
-  // 1) kalau sebelumnya sudah login email, pakai dulu
-  const email = localStorage.getItem("useremail");
-  if (!currentActiveId && email){
-    currentIsGuest   = false;
-    currentUserEmail = email;
-    currentActiveId  = sanitizeEmail(email);
+  const sendBoxEl = document.querySelector('.send-box');
+
+  function setFabOffset() {
+    if (!sendBoxEl) return;
+    document.documentElement.style.setProperty('--composer-h', sendBoxEl.offsetHeight + 'px');
   }
 
-  if (IS_EMBEDDED) {
-  const target = getParentOrigin();
-  window.parent.postMessage({ type: "request-login" }, target);
-    // 2) di iframe: tunggu parent. kalau 2.5s masih belum ada ID, pakai ID lokal
-    if (!currentActiveId) {
-      setTimeout(() => {
-        if (!currentActiveId) {
-          const id = getOrCreateLocalGuestId();
-          currentIsGuest  = true;
-          localStorage.removeItem("useremail");
-          currentActiveId = id;
-          if (!localStorage.getItem("username")) {
-            localStorage.setItem("username", "Guest-" + id.slice(-5).toUpperCase());
-          }
-          updateUserHeader();
-          bindPresenceAndNotif();
-          initChatWithUserData();
-        }
-      }, 2500);
-    } else {
-      // sudah ada ID dari email/parent → langsung jalan
-      updateUserHeader();
-      bindPresenceAndNotif();
-      initChatWithUserData();
-    }
+  setFabOffset();
+  if (window.ResizeObserver && sendBoxEl) {
+    new ResizeObserver(() => setFabOffset()).observe(sendBoxEl);
   } else {
-    if (!currentActiveId) {
-      await ensureGuestLocalIdentity();
-    } else {
-      updateUserHeader();
-      bindPresenceAndNotif();
-      initChatWithUserData();
+    window.addEventListener('resize', setFabOffset);
+  }
+
+  // 1) Prioritas utama: ambil terus dari gmailLogin main page
+  const mainLogin = getMainLogin();
+  if (!currentActiveId && mainLogin) {
+    applyMainLogin(mainLogin);
+  }
+
+  // 2) fallback lama: useremail
+  if (!currentActiveId) {
+    const email = localStorage.getItem("useremail");
+    if (email) {
+      currentIsGuest = false;
+      currentUserEmail = String(email).toLowerCase();
+      currentActiveId = sanitizeEmail(email);
     }
   }
+
+  // 3) kalau sudah ada ID, langsung init
+  if (currentActiveId) {
+    updateUserHeader();
+    writeUserProfile();
+    bindPresenceAndNotif();
+    initChatWithUserData();
+    notifyRead();
+    markAdminSeenInDB();
+    return;
+  }
+
+  // 4) kalau embedded tapi belum ada login, minta parent kirim
+  if (IS_EMBEDDED) {
+    const target = getParentOrigin();
+    window.parent.postMessage({ type: "request-login" }, target);
+
+    setTimeout(async () => {
+      if (currentActiveId) return;
+
+      const retryLogin = getMainLogin();
+      if (retryLogin) {
+        applyMainLogin(retryLogin);
+        updateUserHeader();
+        writeUserProfile();
+        bindPresenceAndNotif();
+        initChatWithUserData();
+        notifyRead();
+        markAdminSeenInDB();
+        return;
+      }
+
+      // fallback paling akhir baru guest
+      const id = getOrCreateLocalGuestId();
+      currentIsGuest = true;
+      currentUserEmail = null;
+      currentActiveId = id;
+      localStorage.removeItem("useremail");
+
+      if (!localStorage.getItem("username")) {
+        localStorage.setItem("username", "Guest-" + id.slice(-5).toUpperCase());
+      }
+      if (!localStorage.getItem("userphoto")) {
+        localStorage.setItem("userphoto", "");
+      }
+
+      updateUserHeader();
+      writeUserProfile();
+      bindPresenceAndNotif();
+      initChatWithUserData();
+      notifyRead();
+    }, 1200);
+
+    return;
+  }
+
+  // 5) standalone page → guest
+  await ensureGuestLocalIdentity();
   updateUserHeader();
 });
 </script>
