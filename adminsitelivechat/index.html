@@ -457,6 +457,88 @@ const firebaseConfig = {
 };
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+const ADMIN_PRESENCE_PATH = "adminPresence/main";
+
+function getAdminIdentity(){
+  return {
+    name:
+      localStorage.getItem("username") ||
+      localStorage.getItem("adminName") ||
+      "Admin",
+    photoURL:
+      localStorage.getItem("userphoto") ||
+      localStorage.getItem("adminPhoto") ||
+      "https://i.imgur.com/qiZFOs9.png",
+    email:
+      localStorage.getItem("useremail") ||
+      localStorage.getItem("adminEmail") ||
+      "admin@domain.com"
+  };
+}
+
+function bindAdminPresence(){
+  const ref = db.ref(ADMIN_PRESENCE_PATH);
+  const connectedRef = db.ref(".info/connected");
+
+  connectedRef.on("value", snap => {
+    if (snap.val() === true) {
+      const admin = getAdminIdentity();
+
+      ref.update({
+        name: admin.name,
+        photoURL: admin.photoURL,
+        email: admin.email,
+        online: true,
+        typing: false,
+        lastSeen: Date.now()
+      });
+
+      ref.onDisconnect().update({
+        online: false,
+        typing: false,
+        lastSeen: Date.now()
+      });
+    }
+  });
+
+  window.addEventListener("beforeunload", () => {
+    ref.update({
+      online: false,
+      typing: false,
+      lastSeen: Date.now()
+    }).catch(()=>{});
+  });
+}
+
+let adminTypingTimer = null;
+
+function bindAdminTyping(){
+  if (!msgInput) return;
+
+  const typingRef = db.ref(ADMIN_PRESENCE_PATH + "/typing");
+  const baseRef   = db.ref(ADMIN_PRESENCE_PATH);
+
+  msgInput.addEventListener("input", () => {
+    const hasText = !!msgInput.value.trim();
+
+    typingRef.set(hasText).catch(()=>{});
+    baseRef.update({
+      ...getAdminIdentity(),
+      online: true,
+      lastSeen: Date.now()
+    }).catch(()=>{});
+
+    clearTimeout(adminTypingTimer);
+    adminTypingTimer = setTimeout(() => {
+      typingRef.set(false).catch(()=>{});
+      baseRef.update({
+        ...getAdminIdentity(),
+        online: true,
+        lastSeen: Date.now()
+      }).catch(()=>{});
+    }, 1500);
+  });
+}
 
 /* ======================= SCHEDULE RENDER ======================= */
 function scheduleRender(){
@@ -957,29 +1039,38 @@ function sendMessage(){
   const msg = msgInput?.value.trim();
   if (!selectedUserId || !msg) return alert("Pilih user dan tulis pesan dulu!");
 
-  const now = Date.now();
-  const newMsg = {
-    from: "admin",
-    name: "Admin",
-    email: "admin@domain.com",
-    photoURL: "https://i.imgur.com/qiZFOs9.png",
-    text: msg,
-    time: now,
-    readByAdmin: true,
-    seenByUser: false,
-    deliveredAt: now,
-    readAt: null
-  };
+const now = Date.now();
+const admin = getAdminIdentity();
+const newMsg = {
+  from: "admin",
+  name: admin.name,
+  email: admin.email,
+  photoURL: admin.photoURL,
+  text: msg,
+  time: now,
+  readByAdmin: true,
+  seenByUser: false,
+  deliveredAt: now,
+  readAt: null
+};
 
   db.ref(`chats/${selectedUserId}`).push(newMsg, err=>{
     if (err) return alert("Gagal mengirim pesan");
 
-    msgInput.value = "";
-    updateSendButtonState();
+msgInput.value = "";
+updateSendButtonState();
 
-    db.ref(`notifications/${selectedUserId}`).set({
-      from:"admin", text: msg, time: now, unread:true
-    });
+db.ref(ADMIN_PRESENCE_PATH + "/typing").set(false).catch(()=>{});
+db.ref(ADMIN_PRESENCE_PATH).update({
+  ...getAdminIdentity(),
+  online: true,
+  typing: false,
+  lastSeen: Date.now()
+}).catch(()=>{});
+
+db.ref(`notifications/${selectedUserId}`).set({
+  from:"admin", text: msg, time: now, unread:true
+});
 
     // update lastChatTime
     db.ref(`users/${selectedUserId}`).update({
@@ -1049,7 +1140,8 @@ window.onload = ()=>{
 
   msgInput = document.getElementById("msg");
   sendBtn  = document.getElementById("sendBtn");
-
+  bindAdminPresence();
+  bindAdminTyping();
   if (msgInput){
     msgInput.addEventListener("input", updateSendButtonState);
     msgInput.addEventListener("keydown", e=>{
