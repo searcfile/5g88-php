@@ -737,7 +737,9 @@ function renderChatMessages(messages){
 
     const timeStr = msgDate.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
     const isUser = msg.from !== "admin";
-    const rawName = isUser ? (msg.name || msg.email || "User") : "Admin";
+    const rawName = isUser
+    ? (msg.name || msg.email || "User")
+    : (msg.name || "Admin");
     const senderName = formatUserName(rawName);
     const avatarURL = msg.photoURL || (isUser ? "https://i.pravatar.cc/40" : "https://i.imgur.com/UhV9EWa.png");
 
@@ -918,13 +920,23 @@ function renderUserListFast(userList, filter="all", searchTerm=""){
       activeUserIdSanitized = sanitized;
       selectedUserId = sanitized;
 
+      const selectedUserName =
+      userData?.name ||
+      displayName ||
+      "User";
+
+      const selectedUserPhoto =
+      userData?.photoURL ||
+      photoURL ||
+      "https://i.pravatar.cc/40";
+
       const nameEl = document.getElementById("chatUserName");
-      if (nameEl) nameEl.textContent = displayName;
+      if (nameEl) nameEl.textContent = selectedUserName;
 
       const avatarImg = document.getElementById("chatUserAvatar");
       if (avatarImg){
-        avatarImg.src = photoURL || "https://i.pravatar.cc/40";
-        avatarImg.style.display = "block";
+      avatarImg.src = selectedUserPhoto;
+      avatarImg.style.display = "block";
       }
 
       document.querySelectorAll(".user-item").forEach(el=> el.classList.remove("active"));
