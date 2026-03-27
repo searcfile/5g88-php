@@ -1110,31 +1110,6 @@ function updateUserPresenceById(id){
       statusElem.innerHTML = `<span class="status-main">Online</span>`;
     } else {
       const t = data.lastLoginTime;
-      if (!t){ statusElem.innerHTML = ``; return; }
-      const d = new Date(t), now = new Date();
-      const isToday = d.toDateString() === now.toDateString();
-      const h = d.getHours(), m = String(d.getMinutes()).padStart(2,"0");
-      const ampm = h >= 12 ? "PM" : "AM";
-      const hh = h % 12 || 12;
-      statusElem.innerHTML = `<span class="status-sub">Last seen ${isToday ? "today" : d.toLocaleDateString()} at ${hh}:${m} ${ampm}</span>`;
-    }
-  });
-
-typingRef.on("value", snap=>{
-  const isTyping = !!snap.val();
-
-  if (isTyping){
-    statusElem.innerHTML = `<span class="status-typing">Typing...</span>`;
-    return;
-  }
-
-  userRef.once("value", s => {
-    const data = s.val() || {};
-
-    if (data.online){
-      statusElem.innerHTML = `<span class="status-main">Online</span>`;
-    } else {
-      const t = data.lastLoginTime;
       if (!t){ 
         statusElem.innerHTML = ``; 
         return; 
@@ -1149,7 +1124,37 @@ typingRef.on("value", snap=>{
       statusElem.innerHTML = `<span class="status-sub">Last seen ${isToday ? "today" : d.toLocaleDateString()} at ${hh}:${m} ${ampm}</span>`;
     }
   });
-});
+
+  typingRef.on("value", snap=>{
+    const isTyping = !!snap.val();
+
+    if (isTyping){
+      statusElem.innerHTML = `<span class="status-typing">Typing...</span>`;
+      return;
+    }
+
+    userRef.once("value", s => {
+      const data = s.val() || {};
+
+      if (data.online){
+        statusElem.innerHTML = `<span class="status-main">Online</span>`;
+      } else {
+        const t = data.lastLoginTime;
+        if (!t){ 
+          statusElem.innerHTML = ``; 
+          return; 
+        }
+
+        const d = new Date(t), now = new Date();
+        const isToday = d.toDateString() === now.toDateString();
+        const h = d.getHours(), m = String(d.getMinutes()).padStart(2,"0");
+        const ampm = h >= 12 ? "PM" : "AM";
+        const hh = h % 12 || 12;
+
+        statusElem.innerHTML = `<span class="status-sub">Last seen ${isToday ? "today" : d.toLocaleDateString()} at ${hh}:${m} ${ampm}</span>`;
+      }
+    });
+  });
 }
 /* ======================= SEARCH MSG ======================= */
 function filterMessages(query){
