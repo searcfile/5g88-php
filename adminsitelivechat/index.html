@@ -482,26 +482,23 @@ function bindAdminPresence(){
 
   connectedRef.on("value", snap => {
     if (snap.val() === true) {
-      const admin = getAdminIdentity();
-
-      ref.update({
-        name: admin.name,
-        photoURL: admin.photoURL,
-        email: admin.email,
-        online: true,
-        typing: false,
-        lastSeen: Date.now()
-      });
+      touchAdminPresence({ typing: false });
 
       ref.onDisconnect().update({
         online: false,
         typing: false,
         lastSeen: Date.now()
       });
+
+      clearInterval(adminPresenceHeartbeat);
+      adminPresenceHeartbeat = setInterval(() => {
+        touchAdminPresence();
+      }, 10000);
     }
   });
 
   window.addEventListener("beforeunload", () => {
+    clearInterval(adminPresenceHeartbeat);
     ref.update({
       online: false,
       typing: false,
@@ -509,34 +506,39 @@ function bindAdminPresence(){
     }).catch(()=>{});
   });
 }
-
 let adminTypingTimer = null;
+let adminPresenceHeartbeat = null;
 
+function touchAdminPresence(extra = {}) {
+  db.ref(ADMIN_PRESENCE_PATH).update({
+    ...getAdminIdentity(),
+    online: true,
+    typing: false,
+    lastSeen: Date.now(),
+    ...extra
+  }).catch(()=>{});
+}
 function bindAdminTyping(){
   if (!msgInput) return;
 
   const typingRef = db.ref(ADMIN_PRESENCE_PATH + "/typing");
-  const baseRef   = db.ref(ADMIN_PRESENCE_PATH);
 
   msgInput.addEventListener("input", () => {
     const hasText = !!msgInput.value.trim();
 
     typingRef.set(hasText).catch(()=>{});
-    baseRef.update({
-      ...getAdminIdentity(),
-      online: true,
-      lastSeen: Date.now()
-    }).catch(()=>{});
+    touchAdminPresence({ typing: hasText });
 
     clearTimeout(adminTypingTimer);
     adminTypingTimer = setTimeout(() => {
       typingRef.set(false).catch(()=>{});
-      baseRef.update({
-        ...getAdminIdentity(),
-        online: true,
-        lastSeen: Date.now()
-      }).catch(()=>{});
+      touchAdminPresence({ typing: false });
     }, 1500);
+  });
+
+  msgInput.addEventListener("blur", () => {
+    typingRef.set(false).catch(()=>{});
+    touchAdminPresence({ typing: false });
   });
 }
 
@@ -1073,12 +1075,7 @@ msgInput.value = "";
 updateSendButtonState();
 
 db.ref(ADMIN_PRESENCE_PATH + "/typing").set(false).catch(()=>{});
-db.ref(ADMIN_PRESENCE_PATH).update({
-  ...getAdminIdentity(),
-  online: true,
-  typing: false,
-  lastSeen: Date.now()
-}).catch(()=>{});
+touchAdminPresence({ typing: false });
 
 db.ref(`notifications/${selectedUserId}`).set({
   from:"admin", text: msg, time: now, unread:true
@@ -1123,14 +1120,36 @@ function updateUserPresenceById(id){
     }
   });
 
-  typingRef.on("value", snap=>{
-    const isTyping = !!snap.val();
-    if (isTyping){
-      statusElem.innerHTML = `<span class="status-typing">Typing...</span>`;
+typingRef.on("value", snap=>{
+  const isTyping = !!snap.val();
+
+  if (isTyping){
+    statusElem.innerHTML = `<span class="status-typing">Typing...</span>`;
+    return;
+  }
+
+  userRef.once("value", s => {
+    const data = s.val() || {};
+
+    if (data.online){
+      statusElem.innerHTML = `<span class="status-main">Online</span>`;
+    } else {
+      const t = data.lastLoginTime;
+      if (!t){ 
+        statusElem.innerHTML = ``; 
+        return; 
+      }
+
+      const d = new Date(t), now = new Date();
+      const isToday = d.toDateString() === now.toDateString();
+      const h = d.getHours(), m = String(d.getMinutes()).padStart(2,"0");
+      const ampm = h >= 12 ? "PM" : "AM";
+      const hh = h % 12 || 12;
+
+      statusElem.innerHTML = `<span class="status-sub">Last seen ${isToday ? "today" : d.toLocaleDateString()} at ${hh}:${m} ${ampm}</span>`;
     }
   });
-}
-
+});
 /* ======================= SEARCH MSG ======================= */
 function filterMessages(query){
   if (!query){ renderChatMessages(allMessages); return; }
